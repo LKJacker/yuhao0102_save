@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-barber-shop.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="给师兄debug测试的时候深深觉得自己太垃圾了，gdb用的不熟，所以去找了一篇gdb的博文搬过来整理好，纯当复习了。贴原文链接：https://blog.csdn.net/zb872676223/article/details/37906049 测试程序我们先看看我们的测试程序:123456789101112131415161718192021222324252627282930313233343">
+<meta name="keywords" content="Linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="gdb调试相关">
+<meta property="og:url" content="http://yoursite.com/2019/04/09/gdb调试相关/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="给师兄debug测试的时候深深觉得自己太垃圾了，gdb用的不熟，所以去找了一篇gdb的博文搬过来整理好，纯当复习了。贴原文链接：https://blog.csdn.net/zb872676223/article/details/37906049 测试程序我们先看看我们的测试程序:123456789101112131415161718192021222324252627282930313233343">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2019-04-09T08:47:18.833Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="gdb调试相关">
+<meta name="twitter:description" content="给师兄debug测试的时候深深觉得自己太垃圾了，gdb用的不熟，所以去找了一篇gdb的博文搬过来整理好，纯当复习了。贴原文链接：https://blog.csdn.net/zb872676223/article/details/37906049 测试程序我们先看看我们的测试程序:123456789101112131415161718192021222324252627282930313233343">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/04/09/gdb调试相关/">
+
+
+
+
+
+  <title>gdb调试相关 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/09/gdb调试相关/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">gdb调试相关</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-04-09T12:47:34+08:00">
+                2019-04-09
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>给师兄debug测试的时候深深觉得自己太垃圾了，gdb用的不熟，所以去找了一篇gdb的博文搬过来整理好，纯当复习了。<br>贴原文链接：<a href="https://blog.csdn.net/zb872676223/article/details/37906049" target="_blank" rel="noopener">https://blog.csdn.net/zb872676223/article/details/37906049</a></p>
+<h1 id="测试程序"><a href="#测试程序" class="headerlink" title="测试程序"></a>测试程序</h1><p>我们先看看我们的测试程序:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">/* in eg1.c */</span><br><span class="line">int wib(int no1, int no2)</span><br><span class="line">&#123;</span><br><span class="line">    int result, diff;</span><br><span class="line">    diff = no1 - no2;</span><br><span class="line">    result = no1 / diff;</span><br><span class="line">    return result;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">    pid_t pid;</span><br><span class="line"></span><br><span class="line">    pid = fork();</span><br><span class="line">    if (pid &lt;0) &#123;</span><br><span class="line">        printf(&quot;fork err\n&quot;);</span><br><span class="line">        exit(-1);</span><br><span class="line">    &#125; else if (pid == 0) &#123;</span><br><span class="line">        /* in child process */</span><br><span class="line">        sleep(60); ------------------ (!)</span><br><span class="line"></span><br><span class="line">        int value = 10;</span><br><span class="line">        int div = 6;</span><br><span class="line">        int total = 0;</span><br><span class="line">        int i     = 0;</span><br><span class="line">        int result = 0;</span><br><span class="line"></span><br><span class="line">        for (i = 0; i &lt; 10; i++) &#123;</span><br><span class="line">                result = wib(value, div);</span><br><span class="line">                total += result;</span><br><span class="line">                div++;</span><br><span class="line">                value--;</span><br><span class="line">        &#125;</span><br><span class="line">        printf(&quot;%d wibed by %d equals %d\n&quot;, value, div, total);</span><br><span class="line">        exit(0);</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">         /* in parent process */</span><br><span class="line">         sleep(4);</span><br><span class="line">         wait(-1);</span><br><span class="line">         exit(0);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>该测试程序中子进程运行过程中会在wib函数中出现一个’除0’异常。现在我们就要调试该子进程。</p>
+<h1 id="调试原理"><a href="#调试原理" class="headerlink" title="调试原理"></a>调试原理</h1><p>不知道大家发现没有，在(!)处在我们的测试程序在父进程fork后，子进程调用sleep睡了60秒。这就是关键，这个sleep本来是不该存在于子进程代码中的，而是而了使用GDB调试后加入的，它是我们调试的一个关键点。为什么要让子进程刚刚运行就开始sleep呢？因为我们要在子进程睡眠期间，利用 shell命令获取其process id，然后再利用gdb调试外部进程的方法attach到该process id上，调试该进程。<br>我们现在调试的是mpi程序，intel的mpiexec可以直接-gdb进行调试，但是用gnu的话就不行了，只能gdb attach来调试，下述。</p>
+<h1 id="调试过程"><a href="#调试过程" class="headerlink" title="调试过程"></a>调试过程</h1><p>GDB 调试程序的前提条件就是你编译程序时必须加入调试符号信息，即使用’-g’编译选项。首先编译我们的源程序<code>gcc -g -o eg1 eg1.c</code>。编译好之后，我们就有了我们的调试目标eg1。由于我们在调试过程中需要多个工具配合，所以你最好多打开几个终端窗口，另外一点需要注意的是最好在eg1的working directory下执行gdb程序，否则gdb回提示’No symbol table is loaded’。你还得手工load symbol table。好了，下面我们就’按部就班’的开始调试我们的eg1。</p>
+<p>执行eg1:<code>eg1 &amp;   --- 让eg1后台运行</code></p>
+<p>查找进程id:<code>ps -fu YOUR_USER_NAME</code><br>或在linux下使用<code>getpid()</code>函数</p>
+<p>运行gdb:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">gdb</span><br><span class="line">(gdb) attach xxxxx --- xxxxx为利用ps命令获得的子进程process id</span><br><span class="line">(gdb) stop --- 这点很重要，你需要先暂停那个子进程，然后设置一些断点和一些Watch</span><br><span class="line">(gdb) break 37 -- 在result = wib(value, div);这行设置一个断点,可以使用list命令察看源代码</span><br><span class="line">Breakpoint 1 at 0x10808: file eg1.c, line 37.</span><br><span class="line">(gdb) continue</span><br><span class="line">Continuing.</span><br><span class="line">这里一定要continue，要不的话。。。。。。傻呼呼的等那么久还不运行。</span><br><span class="line"></span><br><span class="line">Breakpoint 1, main () at eg1.c:37</span><br><span class="line">37                              result = wib(value, div);</span><br><span class="line">(gdb) step</span><br><span class="line">wib (no1=10, no2=6) at eg1.c:13</span><br><span class="line">13              diff = no1 - no2;</span><br><span class="line">(gdb) continue</span><br><span class="line">Continuing.</span><br><span class="line"></span><br><span class="line">Breakpoint 1, main () at eg1.c:37</span><br><span class="line">37                              result = wib(value, div);</span><br><span class="line">(gdb) step</span><br><span class="line">wib (no1=9, no2=7) at eg1.c:13</span><br><span class="line">13              diff = no1 - no2;</span><br><span class="line">(gdb) continue</span><br><span class="line">Continuing.</span><br><span class="line"></span><br><span class="line">Breakpoint 1, main () at eg1.c:37</span><br><span class="line">37                              result = wib(value, div);</span><br><span class="line">(gdb) step</span><br><span class="line">wib (no1=8, no2=8) at eg1.c:13</span><br><span class="line">13              diff = no1 - no2;</span><br><span class="line">(gdb) next</span><br><span class="line">14              result = no1 / diff;</span><br><span class="line">(gdb) print diff</span><br><span class="line">$6 = 0        ------- 除数为0，我们找到罪魁祸首了。</span><br><span class="line">(gdb) next</span><br><span class="line">Program received signal SIGFPE, Arithmetic exception.</span><br><span class="line">0xff29d830 in .div () from /usr/lib/libc.so.1</span><br></pre></td></tr></table></figure></p>
+<p>至此，我们调试完毕。</p>
+<h1 id="GDB调试精粹"><a href="#GDB调试精粹" class="headerlink" title="GDB调试精粹"></a>GDB调试精粹</h1><h2 id="一、列文件清单"><a href="#一、列文件清单" class="headerlink" title="一、列文件清单"></a>一、列文件清单</h2><p><code>list / l</code><br>列出产生执行文件的源代码的一部分</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">//列出 line1 到 line2 行之间的源代码  </span><br><span class="line">(gdb) list line1, line2  </span><br><span class="line">  </span><br><span class="line">//输出从上次调用list命令开始往后的10行程序代码  </span><br><span class="line">(gdb) list  </span><br><span class="line">  </span><br><span class="line">//输出第 n 行附近的10行程序代码  </span><br><span class="line">(gdb) list n  </span><br><span class="line">  </span><br><span class="line">//输出函数function前后的10行程序代码  </span><br><span class="line">(gdb) list function</span><br></pre></td></tr></table></figure>
+<h2 id="二、执行程序"><a href="#二、执行程序" class="headerlink" title="二、执行程序"></a>二、执行程序</h2><p><code>run / r</code><br>运行准备调试的程序，在它后面可以跟随发给该程序的任何参数，包括标准输入和标准输出说明符(&lt;和&gt;)和shell通配符（*、？、[、]）在内。<br>如果你使用不带参数的run命令，gdb就再次使用你给予前一条run命令的参数，这是很有用的。</p>
+<p><code>set args</code><br>命令就可以修改发送给程序的参数，而使用</p>
+<p><code>show args</code><br>命令就可以查看其缺省参数的列表。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(gdb) set args –b –x  </span><br><span class="line">(gdb) show args</span><br></pre></td></tr></table></figure>
+<h2 id="三、显示数据"><a href="#三、显示数据" class="headerlink" title="三、显示数据"></a>三、显示数据</h2><p><code>print / p</code><br>查看变量的值</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">//利用print 命令可以检查各个变量的值。  </span><br><span class="line">(gdb) print p (p为变量名)  </span><br><span class="line">print 是 gdb 的一个功能很强的命令，利用它可以显示被调试的语言中任何有效的表达式。表达式除了包含你程序中的变量外，还可以包含以下内容：</span><br><span class="line"></span><br><span class="line">//对程序中函数的调用  </span><br><span class="line">(gdb) print find_entry(1, 0)  </span><br><span class="line">  </span><br><span class="line">//数据结构和其他复杂对象  </span><br><span class="line">(gdb) print *table_start  </span><br><span class="line">$8=&#123;e=reference=’\000’,location=0x0,next=0x0&#125;  </span><br><span class="line">  </span><br><span class="line">//值的历史成分  </span><br><span class="line">(gdb)print $1 ($1为历史记录变量,在以后可以直接引用 $1 的值)  </span><br><span class="line">whatis </span><br><span class="line"></span><br><span class="line">查看变量的类型</span><br><span class="line"></span><br><span class="line">//whatis 命令可以显示某个变量的类型  </span><br><span class="line">(gdb) whatis p  </span><br><span class="line">type = int *</span><br></pre></td></tr></table></figure>
+<p>四、设置与清除断点</p>
+<p><code>break / b</code><br>可以用来在调试的程序中设置断点，该命令有如下四种形式：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">//使程序恰好在执行给定行之前停止  </span><br><span class="line">break line-number  </span><br><span class="line">  </span><br><span class="line">//使程序恰好在进入指定的函数之前停止  </span><br><span class="line">  </span><br><span class="line">break function-name  </span><br><span class="line">  </span><br><span class="line">//如果condition（条件）是真，程序到达指定行或函数时停止  </span><br><span class="line">break line-or-function if condition  </span><br><span class="line">   </span><br><span class="line">//在指定例程的入口处设置断点  </span><br><span class="line">break routine-name</span><br></pre></td></tr></table></figure></p>
+<p>如果该程序是由很多原文件构成的，你可以在各个原文件中设置断点，而不是在当前的原文件中设置断点，其方法如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(gdb) break filename:line-number  </span><br><span class="line">  </span><br><span class="line">(gdb) break filename:function-name  </span><br><span class="line">break  if</span><br></pre></td></tr></table></figure></p>
+<p>要想设置一个条件断点，可以利用break if命令，如下所示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(gdb) break line-or-function if expr  </span><br><span class="line">  </span><br><span class="line">(gdb) break 46 if testsize==100  </span><br><span class="line">clean number</span><br></pre></td></tr></table></figure></p>
+<p>清除原文件中某一代码行上的所有断点</p>
+<p>注：number 为原文件的某个代码行的行号</p>
+<h2 id="五、断点的管理"><a href="#五、断点的管理" class="headerlink" title="五、断点的管理"></a>五、断点的管理</h2><ol>
+<li><p>显示当前gdb的断点信息<br><code>info break</code></p>
+</li>
+<li><p>delete 删除指定的某个断点<br><code>delete breakpoint</code></p>
+</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">//该命令将会删除编号为1的断点  </span><br><span class="line">(gdb) delete breakpoint 1  </span><br><span class="line">  </span><br><span class="line">//如果不带编号参数，将删除所有的断点  </span><br><span class="line">(gdb) delete breakpoint</span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li>禁止、允许使用某个断点<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">disable breakpoint 1</span><br><span class="line">enable breakpoint 1</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>该命令将禁止、允许断点 1，同时断点信息的 (Enb)域将变为 n、y</p>
+<h2 id="六、单步执行"><a href="#六、单步执行" class="headerlink" title="六、单步执行"></a>六、单步执行</h2><p><code>next / n</code><br>不进入的单步执行</p>
+<p><code>step</code><br>进入的单步执行</p>
+<p><code>finish</code><br>如果已经进入了某函数，而想退出该函数返回到它的调用函数中，可使用命令finish</p>
+<p><code>until</code><br>结束当前循环</p>
+<h2 id="七、函数的调用"><a href="#七、函数的调用" class="headerlink" title="七、函数的调用"></a>七、函数的调用</h2><p><code>call name</code><br>调用和执行一个函数<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">(gdb) call gen_and_sork( 1234,1,0 )  </span><br><span class="line">(gdb) call printf(“abcd”)  </span><br><span class="line">$1=4</span><br></pre></td></tr></table></figure></p>
+<h2 id="八、-原文件的搜索"><a href="#八、-原文件的搜索" class="headerlink" title="八、 原文件的搜索"></a>八、 原文件的搜索</h2><p>search text</p>
+<p>该命令可显示在当前文件中包含text串的下一行。</p>
+<p>reverse-search text</p>
+<p>该命令可以显示包含text 的前一行。</p>
+<p>小结：常用的 gdb 命令</p>
+<p>backtrace / bt 显示程序中的当前位置和表示如何到达当前位置的栈跟踪（同义词：where）</p>
+<p>breakpoint / b 在程序中设置一个断点</p>
+<p>cd 改变当前工作目录</p>
+<p>clear 删除刚才停止处的断点</p>
+<p>commands 命中断点时，列出将要执行的命令</p>
+<p>continue 从断点开始继续执行</p>
+<p>delete 删除一个断点或监测点；也可与其他命令一起使用</p>
+<p>display 程序停止时显示变量和表达时</p>
+<p>down 下移栈帧，使得另一个函数成为当前函数</p>
+<p>frame 选择下一条continue命令的帧</p>
+<p>info 显示与该程序有关的各种信息</p>
+<p>jump 在源程序中的另一点开始运行</p>
+<p>kill 异常终止在gdb 控制下运行的程序</p>
+<p>list 列出相应于正在执行的程序的原文件内容</p>
+<p>next 执行下一个源程序行，从而执行其整体中的一个函数</p>
+<p>print 显示变量或表达式的值</p>
+<p>pwd 显示当前工作目录</p>
+<p>ptype 显示一个数据结构（如一个结构或C++类）的内容</p>
+<p>quit 退出gdb</p>
+<p>reverse-search 在源文件中反向搜索正规表达式</p>
+<p>run 执行该程序</p>
+<p>search 在源文件中搜索正规表达式</p>
+<p>set variable 给变量赋值</p>
+<p>signal 将一个信号发送到正在运行的进程</p>
+<p>step 执行下一个源程序行，必要时进入下一个函数</p>
+<p>undisplay display 命令的反命令，不要显示表达式</p>
+<p>until 结束当前循环</p>
+<p>up 上移栈帧，使另一函数成为当前函数</p>
+<p>watch 在程序中设置一个监测点（即数据断点）</p>
+<p>whatis 显示变量或函数类型</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/09/由Leetcode807引发的memset问题/" rel="next" title="由Leetcode807引发的memset问题">
+                <i class="fa fa-chevron-left"></i> 由Leetcode807引发的memset问题
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/04/09/二叉树高频面试题和答案/" rel="prev" title="二叉树高频面试题和答案">
+                二叉树高频面试题和答案 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#测试程序"><span class="nav-number">1.</span> <span class="nav-text">测试程序</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#调试原理"><span class="nav-number">2.</span> <span class="nav-text">调试原理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#调试过程"><span class="nav-number">3.</span> <span class="nav-text">调试过程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#GDB调试精粹"><span class="nav-number">4.</span> <span class="nav-text">GDB调试精粹</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、列文件清单"><span class="nav-number">4.1.</span> <span class="nav-text">一、列文件清单</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、执行程序"><span class="nav-number">4.2.</span> <span class="nav-text">二、执行程序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、显示数据"><span class="nav-number">4.3.</span> <span class="nav-text">三、显示数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#五、断点的管理"><span class="nav-number">4.4.</span> <span class="nav-text">五、断点的管理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#六、单步执行"><span class="nav-number">4.5.</span> <span class="nav-text">六、单步执行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#七、函数的调用"><span class="nav-number">4.6.</span> <span class="nav-text">七、函数的调用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#八、-原文件的搜索"><span class="nav-number">4.7.</span> <span class="nav-text">八、 原文件的搜索</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
