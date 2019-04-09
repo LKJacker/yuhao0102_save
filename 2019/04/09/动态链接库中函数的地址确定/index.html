@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-flash.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="有一个问题是我们调用了动态链接库里面的函数，我们怎么知道动态链接库里面的函数的地址呢？事实上，直到我们第一次调用这个函数，我们并不知道这个函数的地址，这个功能要做延迟绑定 lazy bind。 因为程序的分支很多，并不是所有的分支都能跑到，想想我们的异常处理，异常处理分支的动态链接库里面的函数也许永远跑不到，所以，一上来就解析所有出现过的动态库里面的函数是个浪费的办法，降低性能并且没有必要。">
+<meta name="keywords" content="Linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="动态链接库中函数的地址确定">
+<meta property="og:url" content="http://yoursite.com/2019/04/09/动态链接库中函数的地址确定/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="有一个问题是我们调用了动态链接库里面的函数，我们怎么知道动态链接库里面的函数的地址呢？事实上，直到我们第一次调用这个函数，我们并不知道这个函数的地址，这个功能要做延迟绑定 lazy bind。 因为程序的分支很多，并不是所有的分支都能跑到，想想我们的异常处理，异常处理分支的动态链接库里面的函数也许永远跑不到，所以，一上来就解析所有出现过的动态库里面的函数是个浪费的办法，降低性能并且没有必要。">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://blog.chinaunix.net/attachment/201209/16/24774106_13478011589N9A.png">
+<meta property="og:updated_time" content="2019-04-09T13:31:39.671Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="动态链接库中函数的地址确定">
+<meta name="twitter:description" content="有一个问题是我们调用了动态链接库里面的函数，我们怎么知道动态链接库里面的函数的地址呢？事实上，直到我们第一次调用这个函数，我们并不知道这个函数的地址，这个功能要做延迟绑定 lazy bind。 因为程序的分支很多，并不是所有的分支都能跑到，想想我们的异常处理，异常处理分支的动态链接库里面的函数也许永远跑不到，所以，一上来就解析所有出现过的动态库里面的函数是个浪费的办法，降低性能并且没有必要。">
+<meta name="twitter:image" content="http://blog.chinaunix.net/attachment/201209/16/24774106_13478011589N9A.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/04/09/动态链接库中函数的地址确定/">
+
+
+
+
+
+  <title>动态链接库中函数的地址确定 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/09/动态链接库中函数的地址确定/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">动态链接库中函数的地址确定</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-04-09T21:25:00+08:00">
+                2019-04-09
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>有一个问题是我们调用了动态链接库里面的函数，我们怎么知道动态链接库里面的函数的地址呢？事实上，直到我们第一次调用这个函数，我们并不知道这个函数的地址，这个功能要做延迟绑定 lazy bind。 因为程序的分支很多，并不是所有的分支都能跑到，想想我们的异常处理，异常处理分支的动态链接库里面的函数也许永远跑不到，所以，一上来就解析所有出现过的动态库里面的函数是个浪费的办法，降低性能并且没有必要。<br>    下面我们看下延迟绑定的效果。我写了个程序，先睡15s，然后pthread_create 一个线程。我们用LD_DEBUG观察符号的解析。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">#include&lt;&lt;/span&gt;stdio.h&gt;</span><br><span class="line">#include&lt;&lt;/span&gt;stdlib.h&gt;</span><br><span class="line">#include&lt;&lt;/span&gt;pthread.h&gt;</span><br><span class="line"></span><br><span class="line">void* myfunc()</span><br><span class="line">&#123;</span><br><span class="line">        while(1)</span><br><span class="line">        &#123;</span><br><span class="line">         sleep(10);</span><br><span class="line">        &#125;</span><br><span class="line">        return NULL;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">        sleep(15);</span><br><span class="line">        pthread_t tid = 0;</span><br><span class="line">        int ret = pthread_create(&amp;tid,NULL,myfunc,NULL);</span><br><span class="line">        if(ret)</span><br><span class="line">        &#123;</span><br><span class="line">                fprintf(stderr,&quot;pthread create failed %m \n&quot;);</span><br><span class="line">                return -1;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        ret = pthread_join(tid,NULL);</span><br><span class="line">        if(ret)</span><br><span class="line">        &#123;</span><br><span class="line">                fprintf(stderr,&quot;pthread join failed %m\n&quot;);</span><br><span class="line">                return -2;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">root@libin:~/program/C/plt_got# LD_DEBUG=symbols ./test</span><br><span class="line">2849: symbol=_res;  lookup in file=./test [0]</span><br><span class="line">2849: symbol=_res;  lookup in file=/lib/tls/i686/cmov/libpthread.so.0 [0]</span><br><span class="line">2849: symbol=_res;  lookup in file=/lib/tls/i686/cmov/libc.so.6 [0]</span><br><span class="line">2849: symbol=_IO_file_close;  lookup in file=./test [0]</span><br><span class="line">2849: symbol=_IO_file_close;  lookup in file=/lib/tls/i686/cmov/libpthread.so.0 [0]</span><br><span class="line">2849: symbol=_IO_file_close;  lookup in file=/lib/tls/i686/cmov/libc.so.6 [0]</span><br><span class="line">2849: symbol=rpc_createerr;  lookup in file=./test [0]</span><br><span class="line">2849: symbol=rpc_createerr;  lookup in file=/lib/tls/i686/cmov/libpthread.so.0 [0]</span><br><span class="line">2849: symbol=rpc_createerr;  lookup in file=/lib/tls/i686/cmov/libc.so.6 [0]</span><br><span class="line">...................</span><br><span class="line">2849:    transferring control: ./test</span><br><span class="line">2849:</span><br><span class="line">2849:    symbol=sleep;  lookup in file=./test [0]</span><br><span class="line">2849:    symbol=sleep;  lookup in file=/lib/tls/i686/cmov/libpthread.so.0 [0]</span><br><span class="line">2849:    symbol=sleep;  lookup in file=/lib/tls/i686/cmov/libc.so.6 [0]</span><br><span class="line">===================================================================================</span><br></pre></td></tr></table></figure>
+<pre><code>然后停了15s，才解析出pthread_create的地址，由此可见，得确是运行时重定位，知道用到这个函数pthread_create才真正去找这个函数的地址。
+</code></pre><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">2849:    </span><br><span class="line">2849:    symbol=sleep; lookup in file=./test [0]</span><br><span class="line">2849:    symbol=sleep; lookup in file=/lib/tls/i686/cmov/libpthread.so.0 [0]</span><br><span class="line">2849:    symbol=sleep; lookup in file=/lib/tls/i686/cmov/libc.so.6 [0]</span><br><span class="line">===================================================================================</span><br><span class="line">2849:    symbol=pthread_create; lookup in file=./test [0]</span><br><span class="line">2849:    symbol=pthread_create; lookup in file=/lib/tls/i686/cmov/libpthread.so.0 [0]</span><br><span class="line">2849:    symbol=__getpagesize; lookup in file=./test [0]</span><br><span class="line">2849:    symbol=__getpagesize; lookup in file=/lib/tls/i686/cmov/libpthread.so.0 [0]</span><br><span class="line">2849:    symbol=__getpagesize; lookup in file=/lib/tls/i686/cmov/libc.so.6 [0]</span><br><span class="line">2849:    symbol=mmap; lookup in file=./test [0]</span><br><span class="line">2849:    symbol=mmap; lookup in file=/lib/tls/i686/cmov/libpthread.so.0 [0]</span><br><span class="line">2849:    symbol=mmap; lookup in file=/lib/tls/i686/cmov/libc.so.6 [0]</span><br><span class="line">```   </span><br><span class="line"> 真正动态库中函数地址的解析是第一次调用的时候做的，然后如果再次用到动态库的解析过的函数，就直接用第一次解析的结果。很自然的想法就是，一定有地方存储函数的地址，否则第一次解析出来的结果，第二次调用也没法利用。 这个存储动态库函数的地方就要GOT，Global Offset Table。 OK，我们可以想象，如果我的程序里面用到了6个动态库里面的函数，那个这个GOT里面就应该存有6个条目，每个条目里面存储着对应函数的地址。事实的确是这样：</span><br></pre></td></tr></table></figure>
+<p>root@libin:~/program/C/plt_got# readelf -r test</p>
+<p>Relocation section ‘.rel.dyn’ at offset 0x394 contains 2 entries:<br>Offset Info Type Sym.Value Sym. Name<br>08049ff0 00000206 R_386_GLOB_DAT 00000000 <strong>gmon_start</strong><br>0804a020 00000905 R_386_COPY 0804a020 stderr</p>
+<p>Relocation section ‘.rel.plt’ at offset 0x3a4 contains 6 entries:<br>Offset Info Type Sym.Value Sym. Name<br>0804a000 00000107 R_386_JUMP_SLOT 00000000 pthread_join<br>0804a004 00000207 R_386_JUMP_SLOT 00000000 <strong>gmon_start</strong><br>0804a008 00000407 R_386_JUMP_SLOT 00000000 __libc_start_main<br>0804a00c 00000507 R_386_JUMP_SLOT 00000000 fprintf<br>0804a010 00000607 R_386_JUMP_SLOT 00000000 pthread_create<br>0804a014 00000707 R_386_JUMP_SLOT 00000000 sleep<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">    我们看到了有全局变量stderr和__gmon_start__需要重定位，这些本文并不关心。下面是需要重定位的函数，可以看出，我们调用动态库里面的函数都在这了，fprintf是Glibc库的，pthread_create是pthread库的等等。</span><br><span class="line"></span><br><span class="line"> .got.plt这个段的起始地址是0x8049ff4。 .got.plt这个section大小为0x24 = 36,可是我们只有6个需要解析地址的function，4*6=24个字节，只需要24个字节就能存放这6个函数指针。多出来的12个字节是dynamic段地址，ModuleID 和 _dl_runtime_resolve的地址，如下图所示</span><br><span class="line">![](http://blog.chinaunix.net/attachment/201209/16/24774106_1347798530g9dm.png)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    OK 。我们看一下：</span><br></pre></td></tr></table></figure></p>
+<p>(gdb) b main<br>Breakpoint 1 at 0x8048551: file test.c, line 19.<br>(gdb) r<br>Starting program: /home/libin/program/C/plt_got/test<br>[Thread debugging using libthread_db enabled]</p>
+<p>Breakpoint 1, main () at test.c:19<br>19 sleep(15);<br>(gdb) x/24x 0x8049ff4<br>0x8049ff4 &lt;_GLOBAL_OFFSET_TABLE_&gt;: 0x08049f18 0x0012c8f8 0x00123270 0x0804841a<br>0x804a004 &lt;_GLOBAL_OFFSET_TABLE_+16&gt;: 0x0804842a 0x0015daf0 0x0804844a 0x0804845a<br>0x804a014 &lt;_GLOBAL_OFFSET_TABLE_+32&gt;: 0x0804846a 0x00000000 0x00000000 0x0029c580<br>0x804a024 : 0x00000000 0x00000000 0x00000000 0x00000000<br>0x804a034: 0x00000000 0x00000000 0x00000000 0x00000000<br>0x804a044: 0x00000000 0x00000000 0x00000000 0x00000000<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">蓝色的0x0849f18是dynamic段的地址</span><br></pre></td></tr></table></figure></p>
+<p>[21] .dynamic DYNAMIC 08049f18 000f18 0000d8 08 WA 7 0 4<br> <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">接下来，我们要分析PLT 和GOT的关系了。</span><br></pre></td></tr></table></figure></p>
+<p>(gdb) disas main<br>….</p>
+<p>0x0804857e &lt;+54&gt;: lea 0x1c(%esp),�x<br>0x08048582 &lt;+58&gt;: mov �x,(%esp)<br>0x08048585 &lt;+61&gt;: call 0x8048454<br>0x0804858a &lt;+66&gt;: mov �x,0x18(%esp)<br>0x0804858e &lt;+70&gt;: cmpl $0x0,0x18(%esp)<br>…..<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">要执行pthread_create 函数，跳到PLT部分。</span><br></pre></td></tr></table></figure></p>
+<p>libin@libin:~/program/C/plt_got$ objdump -dj .plt test</p>
+<p>test: file format elf32-i386</p>
+<p>Disassembly of section .plt:</p>
+<p>08048404 :<br>8048404: ff 35 f8 9f 04 08 pushl 0x8049ff8<br>804840a: ff 25 fc 9f 04 08 jmp *0x8049ffc<br>8048410: 00 00 add %al,(�x)<br>…</p>
+<p>08048414 :<br>8048414: ff 25 00 a0 04 08 jmp *0x804a000<br>804841a: 68 00 00 00 00 push $0x0<br>804841f: e9 e0 ff ff ff jmp 8048404 &lt;_init+0x30&gt;</p>
+<p>08048424 &lt;<strong>gmon_start</strong>@plt&gt;:<br>8048424: ff 25 04 a0 04 08 jmp *0x804a004<br>804842a: 68 08 00 00 00 push $0x8<br>804842f: e9 d0 ff ff ff jmp 8048404 &lt;_init+0x30&gt;</p>
+<p>08048434 &lt;__libc_start_main@plt&gt;:<br>8048434: ff 25 08 a0 04 08 jmp *0x804a008<br>804843a: 68 10 00 00 00 push $0x10<br>804843f: e9 c0 ff ff ff jmp 8048404 &lt;_init+0x30&gt;</p>
+<p>08048444 :<br>8048444: ff 25 0c a0 04 08 jmp *0x804a00c<br>804844a: 68 18 00 00 00 push $0x18<br>804844f: e9 b0 ff ff ff jmp 8048404 &lt;_init+0x30&gt;</p>
+<p>08048454 :<br>8048454: ff 25 10 a0 04 08 jmp *0x804a010<br>804845a: 68 20 00 00 00 push $0x20<br>804845f: e9 a0 ff ff ff jmp 8048404 &lt;_init+0x30&gt;</p>
+<p>08048464 :<br>8048464: ff 25 14 a0 04 08 jmp *0x804a014<br>804846a: 68 28 00 00 00 push $0x28<br>804846f: e9 90 ff ff ff jmp 8048404 &lt;_init+0x30&gt;<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">PLT部分认为pthread_create函数存放在GOT，0x804a010是GOT里面的一个条目，这个条目存储着pthread_create函数的地址。当第二次以至于第N次调用pthead_create的时候，的的确确存放着pthread_create的地址，但是第一次不行，第一次这个条目里面还没记录这个地址。那么这个条目记录的是什么呢？</span><br></pre></td></tr></table></figure></p>
+<p>(gdb) x/10i 0x8048454<br>0x8048454 : jmp <em>0x804a010<br>0x804845a : push $0x20<br>0x804845f : jmp 0x8048404<br>0x8048464 : jmp </em>0x804a014<br>0x804846a : push $0x28<br>0x804846f : jmp 0x8048404<br>0x8048474: add %al,(�x)<br>0x8048476: add %al,(�x)<br>0x8048478: add %al,(�x)<br>0x804847a: add %al,(�x)<br>(gdb) x/10x 0x804a010<br>0x804a010 &lt;_GLOBAL_OFFSET_TABLE_+28&gt;: 0x0804845a 0x0804846a 0x00000000 0x00000000<br>0x804a020 : 0x0029c580 0x00000000 0x00000000 0x00000000<br>0x804a030: 0x00000000 0x00000000<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">0x804a010这个地址最终应该记录的是pthread_create的地址，但是目前还不是，记录的是0x084845a</span><br></pre></td></tr></table></figure></p>
+<p> 08048454 :<br> 8048454: ff 25 10 a0 04 08     jmp    *0x804a010<br> 804845a: 68 20 00 00 00        push   $0x20<br> 804845f: e9 a0 ff ff ff        jmp    8048404 &lt;_init+0x30&gt;<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"> 从PLT跳到GOT 找地址，但是第一次找的时候，并不是pthread_create的地址，而是又跳回来PLT，我们看到push了0x20之后，跳到了0x8048404。 每一个PLT的代码段，都是push了一个值之后，跳到了0x8048404。大家可以去上面的图验证。</span><br><span class="line">![](http://blog.chinaunix.net/attachment/201209/16/24774106_1347800246pw43.png)</span><br><span class="line"></span><br><span class="line"> 接下来，我们看0x8048404存放的是啥指令：</span><br></pre></td></tr></table></figure></p>
+<p>(gdb) x/10i 0x8048404<br>   0x8048404:    pushl 0x8049ff8<br>   0x804840a:    jmp <em>0x8049ffc<br>   0x8048410:    add %al,(%eax)<br>   0x8048412:    add %al,(%eax)<br>   0x8048414 &lt;pthread_join@plt&gt;:    jmp </em>0x804a000<br>   0x804841a &lt;pthread_join@plt+6&gt;:    push $0x0<br>   0x804841f &lt;pthread_join@plt+11&gt;:    jmp 0x8048404<br>   0x8048424 &lt;<strong>gmon_start</strong>@plt&gt;:    jmp *0x804a004<br>   0x804842a &lt;<strong>gmon_start</strong>@plt+6&gt;:    push $0x8<br>   0x804842f &lt;<strong>gmon_start</strong>@plt+11&gt;:    jmp 0x8048404<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">```</span><br><span class="line">(gdb) x/10x 0x8049ffc</span><br><span class="line">0x8049ffc &lt;&lt;/span&gt;_GLOBAL_OFFSET_TABLE_+8&gt;:    0x00123270    0x0804841a    0x0804842a    0x0015daf0</span><br><span class="line">0x804a00c &lt;&lt;/span&gt;_GLOBAL_OFFSET_TABLE_+24&gt;:    0x0804844a    0x0804845a    0x0804846a    0x00000000</span><br><span class="line">0x804a01c &lt;&lt;/span&gt;__dso_handle&gt;:    0x00000000    0x0029c580</span><br><span class="line">(gdb) x/10i 0x00123270</span><br><span class="line">   0x123270 &lt;&lt;/span&gt;_dl_runtime_resolve&gt;:    push %eax</span><br><span class="line">   0x123271 &lt;&lt;/span&gt;_dl_runtime_resolve+1&gt;:    push %ecx</span><br><span class="line">   0x123272 &lt;&lt;/span&gt;_dl_runtime_resolve+2&gt;:    push %edx</span><br><span class="line">   0x123273 &lt;&lt;/span&gt;_dl_runtime_resolve+3&gt;:    mov 0x10(%esp),%edx</span><br><span class="line">   0x123277 &lt;&lt;/span&gt;_dl_runtime_resolve+7&gt;:    mov 0xc(%esp),%eax</span><br><span class="line">   0x12327b &lt;&lt;/span&gt;_dl_runtime_resolve+11&gt;:    call 0x11d5a0 &lt;&lt;/span&gt;_dl_fixup&gt;</span><br><span class="line">   0x123280 &lt;&lt;/span&gt;_dl_runtime_resolve+16&gt;:    pop %edx</span><br><span class="line">   0x123281 &lt;&lt;/span&gt;_dl_runtime_resolve+17&gt;:    mov (%esp),%ecx</span><br><span class="line">   0x123284 &lt;&lt;/span&gt;_dl_runtime_resolve+20&gt;:    mov %eax,(%esp)</span><br><span class="line">   0x123287 &lt;&lt;/span&gt;_dl_runtime_resolve+23&gt;:    mov 0x4(%esp),%eax</span><br><span class="line">```   </span><br><span class="line"> 我们看到0x8049ffc就是GOT的第三项，前文提到的dl_runtime_resolve的地址。这个函数将帮助我们将pthread_create函数地址定位，并且填入GOT表的相应位置 0x804a010。</span><br><span class="line"></span><br><span class="line">    我们watch下GOT pthread_create对应条目，看下这个条目啥时候变化：</span><br></pre></td></tr></table></figure></p>
+<p>(gdb) b main<br>Breakpoint 1 at 0x8048551: file test.c, line 19.<br>(gdb) r<br>Starting program: /home/libin/program/C/plt_got/test<br>[Thread debugging using libthread_db enabled]</p>
+<p>Breakpoint 1, main () at test.c:19<br>19     sleep(15);<br>(gdb) watch <em>0x804a010<br>Hardware watchpoint 2: </em>0x804a010<br>(gdb) c<br>Continuing.<br>Hardware watchpoint 2: *0x804a010</p>
+<p>Old value = 134513754<br>New value = 1260912<br>_dl_fixup (l=&lt;value optimized out&gt;, reloc_arg=&lt;value optimized out&gt;) at dl-runtime.c:155<br>155    dl-runtime.c: 没有那个文件或目录.<br>    in dl-runtime.c<br>(gdb) bt</p>
+<p>#0 _dl_fixup (l=&lt;value optimized out&gt;, reloc_arg=&lt;value optimized out&gt;) at dl-runtime.c:155</p>
+<p>#1 0x00123280 in _dl_runtime_resolve () at ../sysdeps/i386/dl-trampoline.S:37</p>
+<p>#2 0x0804858a in main () at test.c:21<br>(gdb)<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">看到了，是_dl_runtime_resolve调用了_dl_fixup修改了GOT的对应条目。</span><br></pre></td></tr></table></figure></p>
+<p>(gdb) x/10i 1260912<br>   0x133d70 &lt;<strong>pthread_create_2_1&gt;:    push %ebp<br>   0x133d71 &lt;</strong>pthread_create_2_1+1&gt;:    mov %esp,%ebp<br>   0x133d73 &lt;<strong>pthread_create_2_1+3&gt;:    push %edi<br>   0x133d74 &lt;</strong>pthread_create_2_1+4&gt;:    push %esi<br>   0x133d75 &lt;<strong>pthread_create_2_1+5&gt;:    push %ebx<br>   0x133d76 &lt;</strong>pthread_create_2_1+6&gt;:    call 0x132340 &lt;<strong>i686.get_pc_thunk.bx&gt;<br>   0x133d7b &lt;</strong>pthread_create_2_1+11&gt;:    add $0x10279,%ebx<br>   0x133d81 &lt;<strong>pthread_create_2_1+17&gt;:    sub $0x4c,%esp<br>   0x133d84 &lt;</strong>pthread_create_2_1+20&gt;:    mov 0xc(%ebp),%edx<br>   0x133d87 &lt;__pthread_create_2_1+23&gt;:    test %edx,%edx<br><code>`</code><br> 这是第一次。第二次就比较简单了，因为GOT里面有一个条目已经有了pthread_create函数的地址。<br><img src="http://blog.chinaunix.net/attachment/201209/16/24774106_13478011589N9A.png" alt></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/09/cpp内存管理/" rel="next" title="C++内存管理">
+                <i class="fa fa-chevron-left"></i> C++内存管理
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="450" src="//music.163.com/outchain/player?type=0&id=101039122&auto=0&height=430">
+          </iframe>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
