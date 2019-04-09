@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-flash.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="简单地说，CPU 亲和性（affinity） 就是进程要在某个给定的 CPU 上尽量长时间地运行而不被迁移到其他处理器的倾向性。Linux 内核进程调度器天生就具有被称为 软 CPU 亲和性（affinity） 的特性，这意味着进程通常不会在处理器之间频繁迁移。这种状态正是我们希望的，因为进程迁移的频率小就意味着产生的负载小。 2.6 版本的 Linux 内核还包含了一种机制，它让开发人员可以编程">
+<meta name="keywords" content="Linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="管理处理器的亲和性（affinity）">
+<meta property="og:url" content="http://yoursite.com/2019/04/09/管理处理器的亲和性affinity/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="简单地说，CPU 亲和性（affinity） 就是进程要在某个给定的 CPU 上尽量长时间地运行而不被迁移到其他处理器的倾向性。Linux 内核进程调度器天生就具有被称为 软 CPU 亲和性（affinity） 的特性，这意味着进程通常不会在处理器之间频繁迁移。这种状态正是我们希望的，因为进程迁移的频率小就意味着产生的负载小。 2.6 版本的 Linux 内核还包含了一种机制，它让开发人员可以编程">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2019-04-09T11:37:15.141Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="管理处理器的亲和性（affinity）">
+<meta name="twitter:description" content="简单地说，CPU 亲和性（affinity） 就是进程要在某个给定的 CPU 上尽量长时间地运行而不被迁移到其他处理器的倾向性。Linux 内核进程调度器天生就具有被称为 软 CPU 亲和性（affinity） 的特性，这意味着进程通常不会在处理器之间频繁迁移。这种状态正是我们希望的，因为进程迁移的频率小就意味着产生的负载小。 2.6 版本的 Linux 内核还包含了一种机制，它让开发人员可以编程">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/04/09/管理处理器的亲和性affinity/">
+
+
+
+
+
+  <title>管理处理器的亲和性（affinity） | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/09/管理处理器的亲和性affinity/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">管理处理器的亲和性（affinity）</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-04-09T19:33:34+08:00">
+                2019-04-09
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>简单地说，CPU 亲和性（affinity） 就是进程要在某个给定的 CPU 上尽量长时间地运行而不被迁移到其他处理器的倾向性。Linux 内核进程调度器天生就具有被称为 软 CPU 亲和性（affinity） 的特性，这意味着进程通常不会在处理器之间频繁迁移。这种状态正是我们希望的，因为进程迁移的频率小就意味着产生的负载小。</p>
+<p>2.6 版本的 Linux 内核还包含了一种机制，它让开发人员可以编程实现 硬 CPU 亲和性（affinity）。这意味着应用程序可以显式地指定进程在哪个（或哪些）处理器上运行。</p>
+<h1 id="什么是-Linux-内核硬亲和性（affinity）？"><a href="#什么是-Linux-内核硬亲和性（affinity）？" class="headerlink" title="什么是 Linux 内核硬亲和性（affinity）？"></a>什么是 Linux 内核硬亲和性（affinity）？</h1><p>在 Linux 内核中，所有的进程都有一个相关的数据结构，称为 task_struct。这个结构非常重要，原因有很多；其中与 亲和性（affinity）相关度最高的是 cpus_allowed 位掩码。这个位掩码由 n 位组成，与系统中的 n 个逻辑处理器一一对应。 具有 4 个物理 CPU 的系统可以有 4 位。如果这些 CPU 都启用了超线程，那么这个系统就有一个 8 位的位掩码。</p>
+<p>如果为给定的进程设置了给定的位，那么这个进程就可以在相关的 CPU 上运行。因此，如果一个进程可以在任何 CPU 上运行，并且能够根据需要在处理器之间进行迁移，那么位掩码就全是 1。实际上，这就是 Linux 中进程的缺省状态。</p>
+<p>Linux 内核 API 提供了一些方法，让用户可以修改位掩码或查看当前的位掩码：</p>
+<p>sched_set_affinity() （用来修改位掩码）<br>sched_get_affinity() （用来查看当前的位掩码）<br>注意，cpu_affinity 会被传递给子线程，因此应该适当地调用 sched_set_affinity。</p>
+<p>#为什么应该使用硬亲和性（affinity）？<br>通常 Linux 内核都可以很好地对进程进行调度，在应该运行的地方运行进程（这就是说，在可用的处理器上运行并获得很好的整体性能）。内核包含了一些用来检测 CPU 之间任务负载迁移的算法，可以启用进程迁移来降低繁忙的处理器的压力。</p>
+<p>一般情况下，在应用程序中只需使用缺省的调度器行为。然而，您可能会希望修改这些缺省行为以实现性能的优化。让我们来看一下使用硬亲和性（affinity） 的 3 个原因。</p>
+<p>原因 1. 有大量计算要做<br>基于大量计算的情形通常出现在科学和理论计算中，但是通用领域的计算也可能出现这种情况。一个常见的标志是您发现自己的应用程序要在多处理器的机器上花费大量的计算时间。</p>
+<p>原因 2. 您在测试复杂的应用程序<br>测试复杂软件是我们对内核的亲和性（affinity）技术感兴趣的另外一个原因。考虑一个需要进行线性可伸缩性测试的应用程序。有些产品声明可以在 使用更多硬件 时执行得更好。</p>
+<p>我们不用购买多台机器（为每种处理器配置都购买一台机器），而是可以：</p>
+<p>购买一台多处理器的机器<br>不断增加分配的处理器<br>测量每秒的事务数<br>评估结果的可伸缩性<br>如果应用程序随着 CPU 的增加可以线性地伸缩，那么每秒事务数和 CPU 个数之间应该会是线性的关系（例如斜线图 —— 请参阅下一节的内容）。这样建模可以确定应用程序是否可以有效地使用底层硬件。</p>
+<p>Amdahl 法则<br>Amdahl 法则是有关使用并行处理器来解决问题相对于只使用一个串行处理器来解决问题的加速比的法则。加速比（Speedup） 等于串行执行（只使用一个处理器）的时间除以程序并行执行（使用多个处理器）的时间：</p>
+<p>其中 T(j) 是在使用 j 个处理器执行程序时所花费的时间。</p>
+<p>Amdahl 法则说明这种加速比在现实中可能并不会发生，但是可以非常接近于该值。对于通常情况来说，我们可以推论出每个程序都有一些串行的组件。随着问题集不断变大，串行组件最终会在优化解决方案时间方面达到一个上限。</p>
+<p>Amdahl 法则在希望保持高 CPU 缓存命中率时尤其重要。如果一个给定的进程迁移到其他地方去了，那么它就失去了利用 CPU 缓存的优势。实际上，如果正在使用的 CPU 需要为自己缓存一些特殊的数据，那么所有其他 CPU 都会使这些数据在自己的缓存中失效。</p>
+<p>因此，如果有多个线程都需要相同的数据，那么将这些线程绑定到一个特定的 CPU 上是非常有意义的，这样就确保它们可以访问相同的缓存数据（或者至少可以提高缓存的命中率）。否则，这些线程可能会在不同的 CPU 上执行，这样会频繁地使其他缓存项失效。</p>
+<p>原因 3. 您正在运行时间敏感的、决定性的进程<br>我们对 CPU 亲和性（affinity）感兴趣的最后一个原因是实时（对时间敏感的）进程。例如，您可能会希望使用硬亲和性（affinity）来指定一个 8 路主机上的某个处理器，而同时允许其他 7 个处理器处理所有普通的系统调度。这种做法确保长时间运行、对时间敏感的应用程序可以得到运行，同时可以允许其他应用程序独占其余的计算资源。</p>
+<p>下面的样例应用程序显示了这是如何工作的。</p>
+<h1 id="如何利用硬亲和性（affinity）"><a href="#如何利用硬亲和性（affinity）" class="headerlink" title="如何利用硬亲和性（affinity）"></a>如何利用硬亲和性（affinity）</h1><p>现在让我们来设计一个程序，它可以让 Linux 系统非常繁忙。可以使用前面介绍的系统调用和另外一些用来说明系统中有多少处理器的 API 来构建这个应用程序。实际上，我们的目标是编写这样一个程序：它可以让系统中的每个处理器都繁忙几秒钟。</p>
+<p>清单 1. 让处理器繁忙<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">/* This method will create threads, then bind each to its own cpu. */</span><br><span class="line">bool do_cpu_stress(int numthreads)</span><br><span class="line">&#123;</span><br><span class="line">   int ret = TRUE;</span><br><span class="line">   int created_thread = 0;</span><br><span class="line">   /* We need a thread for each cpu we have... */</span><br><span class="line">   while ( created_thread &lt; numthreads - 1 )</span><br><span class="line">   &#123;</span><br><span class="line">      int mypid = fork();</span><br><span class="line">      if (mypid == 0) /* Child process */</span><br><span class="line">       &#123;</span><br><span class="line">          printf(&quot;\tCreating Child Thread: #%i\n&quot;, created_thread);</span><br><span class="line">          break;</span><br><span class="line">      &#125;</span><br><span class="line">      else /* Only parent executes this */</span><br><span class="line">      &#123;</span><br><span class="line">          /* Continue looping until we spawned enough threads! */ ;</span><br><span class="line">          created_thread++;</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">   /* NOTE: All threads execute code from here down! */</span><br></pre></td></tr></table></figure></p>
+<p>正如您可以看到的一样，这段代码只是通过 fork 调用简单地创建一组线程。每个线程都执行这个方法中后面的代码。现在我们让每个线程都将亲和性（affinity）设置为自己的 CPU。</p>
+<p>清单 2. 为每个线程设置 CPU 亲和性（affinity）<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">cpu_set_t mask;</span><br><span class="line">/* CPU_ZERO initializes all the bits in the mask to zero. */</span><br><span class="line">     CPU_ZERO( &amp;mask );</span><br><span class="line">/* CPU_SET sets only the bit corresponding to cpu. */</span><br><span class="line">     CPU_SET( created_thread, &amp;mask );</span><br><span class="line">/* sched_setaffinity returns 0 in success */</span><br><span class="line">     if( sched_setaffinity( 0, sizeof(mask), &amp;mask ) == -1 )</span><br><span class="line">&#123;</span><br><span class="line">   printf(&quot;WARNING: Could not set CPU Affinity, continuing...\n&quot;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>如果程序可以执行到这儿，那么我们的线程就已经设置了自己的亲和性（affinity）。调用 sched_setaffinity 会设置由 pid 所引用的进程的 CPU 亲和性（affinity）掩码。如果 pid 为 0，那么就使用当前进程。</p>
+<p>亲和性（affinity）掩码是使用在 mask 中存储的位掩码来表示的。最低位对应于系统中的第一个逻辑处理器，而最高位则对应于系统中最后一个逻辑处理器。</p>
+<p>每个设置的位都对应一个可以合法调度的 CPU，而未设置的位则对应一个不可调度的 CPU。换而言之，进程都被绑定了，只能在那些对应位被设置了的处理器上运行。通常，掩码中的所有位都被置位了。这些线程的亲和性（affinity）都会传递给从它们派生的子进程中。</p>
+<p>注意不应该直接修改位掩码。应该使用下面的宏。虽然在我们的例子中并没有全部使用这些宏，但是在本文中还是详细列出了这些宏，您在自己的程序中可能需要这些宏。</p>
+<p>清单 3. 间接修改位掩码的宏<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">void CPU_ZERO (cpu_set_t *set)</span><br><span class="line">这个宏对 CPU 集 set 进行初始化，将其设置为空集。</span><br><span class="line">void CPU_SET (int cpu, cpu_set_t *set)</span><br><span class="line">这个宏将 cpu 加入 CPU 集 set 中。</span><br><span class="line">void CPU_CLR (int cpu, cpu_set_t *set)</span><br><span class="line">这个宏将 cpu 从 CPU 集 set 中删除。</span><br><span class="line">int CPU_ISSET (int cpu, const cpu_set_t *set)</span><br><span class="line">如果 cpu 是 CPU 集 set 的一员，这个宏就返回一个非零值（true），否则就返回零（false）。</span><br></pre></td></tr></table></figure></p>
+<p>对于本文来说，样例代码会继续让每个线程都执行某些计算量较大的操作。</p>
+<p>清单 4. 每个线程都执行一个计算敏感的操作<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">/* Now we have a single thread bound to each cpu on the system */</span><br><span class="line">    int computation_res = do_cpu_expensive_op(41);</span><br><span class="line">    cpu_set_t mycpuid;</span><br><span class="line">    sched_getaffinity(0, sizeof(mycpuid), &amp;mycpuid);</span><br><span class="line">    if ( check_cpu_expensive_op(computation_res) )</span><br><span class="line">    &#123;</span><br><span class="line">      printf(&quot;SUCCESS: Thread completed, and PASSED integrity check!\n&quot;,</span><br><span class="line">         mycpuid);</span><br><span class="line">      ret = TRUE;</span><br><span class="line">    &#125;</span><br><span class="line">    else</span><br><span class="line">    &#123;</span><br><span class="line">      printf(&quot;FAILURE: Thread failed integrity check!\n&quot;,</span><br><span class="line">         mycpuid);</span><br><span class="line">      ret = FALSE;</span><br><span class="line">    &#125;</span><br><span class="line">   return ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>我们使用一个 main 程序来封装这些方法，它使用一个用户指定的参数来说明要让多少个 CPU 繁忙。我们可以使用另外一个方法来确定系统中有多少个处理器：</p>
+<p>int NUM_PROCS = sysconf(_SC_NPROCESSORS_CONF);</p>
+<p>这个方法让程序能够自己确定要让多少个处理器保持繁忙，例如缺省让所有的处理器都处于繁忙状态，并允许用户指定系统中实际处理器范围的一个子集。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/09/linux命令速查表/" rel="next" title="linux命令速查表">
+                <i class="fa fa-chevron-left"></i> linux命令速查表
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/04/09/Glibc+Binutils+GCC安装/" rel="prev" title="Glibc Binutils GCC 安装">
+                Glibc Binutils GCC 安装 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">22</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="450" src="//music.163.com/outchain/player?type=0&id=101039122&auto=0&height=430">
+          </iframe>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#什么是-Linux-内核硬亲和性（affinity）？"><span class="nav-number">1.</span> <span class="nav-text">什么是 Linux 内核硬亲和性（affinity）？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#如何利用硬亲和性（affinity）"><span class="nav-number">2.</span> <span class="nav-text">如何利用硬亲和性（affinity）</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
