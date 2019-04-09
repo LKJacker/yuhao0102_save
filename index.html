@@ -55,6 +55,204 @@
     <header>
       
   
+    <h1 class="title"><a href="/2019/04/09/由Leetcode807引发的memset问题/">由Leetcode807引发的memset问题</a></h1>
+  
+
+      
+        <time datetime="2019-04-09T02:41:26.000Z">2019-04-09</time>
+      
+    </header>
+    <div class="entry">
+      
+        <p>做Leetcode807时遇到了memset初始化整个数组的问题，好久不用memset了，有些生疏了。</p>
+<p>对数组来说，只能初始化为0，或者-1，其他的时候数字是不正确的。而对于字符数组来说，任意字符都可以。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">// 1. 字符数组初始化为&apos;A&apos;</span><br><span class="line">char a[5];</span><br><span class="line">memset(a, &apos;A&apos;, 5);  // OK!</span><br><span class="line">memset(a, 0, sizeof(char) * 5);  // OK!</span><br><span class="line"> </span><br><span class="line">// 2. 整数数组初始化为0</span><br><span class="line">int a[5];</span><br><span class="line">memset(a, 0, sizeof(int) * 5);  // OK!</span><br><span class="line">memset(a, 0, 20);  // OK!</span><br><span class="line"> </span><br><span class="line">// 3. 动态字符数组初始化为&apos;A&apos;</span><br><span class="line">char* a = new char[5];</span><br><span class="line">memset(a, &apos;A&apos;, 5);  // OK!</span><br><span class="line">memset(a, 0, sizeof(char) * 5);  // OK!</span><br><span class="line"> </span><br><span class="line">// 错误用法及改正用法示例：</span><br><span class="line">memset(a, &apos;A&apos;, sizeof(a));  // wrong! sizeof(a)相当于sizeof(char*)</span><br><span class="line">memset(a, &apos;A&apos;, sizeof(a[0]) * 5);  // OK!</span><br><span class="line"> </span><br><span class="line">// 4. 整数数组初始化为非0</span><br><span class="line">int a[5];</span><br><span class="line">fill(a, a+5, 1);  // OK!</span><br><span class="line">fill_n(a, 5, 1);  // OK!</span><br><span class="line"> </span><br><span class="line">// 错误用法示例：</span><br><span class="line">memset(a, 1, 5);  // wrong!</span><br><span class="line">memset(a, 1, sizeof(int) * 5)  // wrong!</span><br></pre></td></tr></table></figure>
+<p>字符数组是字符型的，字符型占据内存大小是1Byte，而memset函数也是以字节为单位进行赋值的，所以你输出没有问题。而int数组是整型的，使用 memset还是按字节赋值，这样赋值完以后，每个数组元素的值实际上是0x01010101即十进制的16843009</p>
+<p>memset主要用于字符型数组的初始化，整数型数组初始化为0时可以用memset。</p>
+<p>memset在初始化动态数组时不能sizeof(数组名)，而应该sizeof(元素)*元素个数。</p>
+<p>fill (fill_n)是超级大法，万物皆可fill。</p>
+
+      
+    </div>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+      
+  </div>
+</article>
+
+
+
+
+
+  <article class="post">
+  <div class="post-content">
+    <header>
+      
+  
+    <h1 class="title"><a href="/2019/04/09/Leetcode807-Max-Increase-to-Keep-City-Skyline/">Leetcode807. Max Increase to Keep City Skyline</a></h1>
+  
+
+      
+        <time datetime="2019-04-09T02:37:05.000Z">2019-04-09</time>
+      
+    </header>
+    <div class="entry">
+      
+        <ol start="807">
+<li>Max Increase to Keep City Skyline<br>Medium</li>
+</ol>
+<p>In a 2 dimensional array grid, each value grid[i][j] represents the height of a building located there. We are allowed to increase the height of any number of buildings, by any amount (the amounts can be different for different buildings). Height 0 is considered to be a building as well. </p>
+<p>At the end, the “skyline” when viewed from all four directions of the grid, i.e. top, bottom, left, and right, must be the same as the skyline of the original grid. A city’s skyline is the outer contour of the rectangles formed by all the buildings when viewed from a distance. See the following example.</p>
+<p>What is the maximum total sum that the height of the buildings can be increased?</p>
+<p>Example:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">Input: grid = [[3,0,8,4],[2,4,5,7],[9,2,6,3],[0,3,1,0]]</span><br><span class="line">Output: 35</span><br><span class="line">Explanation: </span><br><span class="line">The grid is:</span><br><span class="line">[ [3, 0, 8, 4], </span><br><span class="line">  [2, 4, 5, 7],</span><br><span class="line">  [9, 2, 6, 3],</span><br><span class="line">  [0, 3, 1, 0] ]</span><br><span class="line"></span><br><span class="line">The skyline viewed from top or bottom is: [9, 4, 8, 7]</span><br><span class="line">The skyline viewed from left or right is: [8, 7, 9, 3]</span><br><span class="line"></span><br><span class="line">The grid after increasing the height of buildings without affecting skylines is:</span><br><span class="line"></span><br><span class="line">gridNew = [ [8, 4, 8, 7],</span><br><span class="line">            [7, 4, 7, 7],</span><br><span class="line">            [9, 4, 8, 7],</span><br><span class="line">            [3, 3, 3, 3] ]</span><br></pre></td></tr></table></figure></p>
+<p>Notes:</p>
+<ol>
+<li>1 &lt; grid.length = grid[0].length &lt;= 50.</li>
+<li>All heights grid[i][j] are in the range [0, 100].</li>
+<li>All buildings in grid[i][j] occupy the entire grid cell: that is, they are a 1 x 1 x grid[i][j] rectangular prism.</li>
+</ol>
+<p>这道题非常简单，首先找到每行每列的最大值，然后每个元素要小于对应的最大值中的小者，比如grid[0][0]要小于topmax[0]和leftmax[0]之中的最小值，grid[0][1]要小于topmax[0]和leftmax[1]之中的最小值。为什么花了这么长时间呢，是因为傻逼了，max数组设成了4爆了。。。煞笔。。。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:  </span><br><span class="line">    int maxIncreaseKeepingSkyline(vector&lt;vector&lt;int&gt;&gt;&amp; grid) &#123;</span><br><span class="line">        int length = grid[0].size();</span><br><span class="line">        int* topmax,*leftmax;</span><br><span class="line">        topmax=(int*)malloc(sizeof(int)*length);</span><br><span class="line">        leftmax=(int*)malloc(sizeof(int)*length);</span><br><span class="line">        for(int i=0;i&lt;length;i++)</span><br><span class="line">            topmax[i]=leftmax[i]=0;</span><br><span class="line">        for(int i=0;i&lt;length;i++)</span><br><span class="line">            for(int j=0;j&lt;length;j++)&#123;</span><br><span class="line">                if(grid[i][j]&gt;topmax[i])</span><br><span class="line">                    topmax[i]=grid[i][j];</span><br><span class="line">                if(grid[i][j]&gt;leftmax[j])</span><br><span class="line">                    leftmax[j]=grid[i][j];</span><br><span class="line">            &#125;</span><br><span class="line">        int result=0;</span><br><span class="line">        for(int i=0;i&lt;length;i++)</span><br><span class="line">            for(int j=0;j&lt;length;j++)</span><br><span class="line">                result += ((leftmax[j]&gt;topmax[i]?topmax[i]:leftmax[j])-grid[i][j]);</span><br><span class="line">    return result;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+      
+  </div>
+</article>
+
+
+
+
+
+  <article class="post">
+  <div class="post-content">
+    <header>
+      
+  
+    <h1 class="title"><a href="/2019/04/09/C-标准库之stack/">C++标准库之stack</a></h1>
+  
+
+      
+        <time datetime="2019-04-09T02:08:40.000Z">2019-04-09</time>
+      
+    </header>
+    <div class="entry">
+      
+        <table>
+<thead>
+<tr>
+<th>函数名</th>
+<th>功能</th>
+<th>复杂度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>size()</td>
+<td>返回栈的元素数</td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td>top()</td>
+<td>返回栈顶的元素</td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td>pop()</td>
+<td>从栈中取出并删除元素</td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td>push(x)</td>
+<td>向栈中添加元素x</td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td>empty()</td>
+<td>在栈为空时返回true</td>
+<td>O(1)</td>
+</tr>
+</tbody>
+</table>
+<p>贴一些代码<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">#include &quot;stdafx.h&quot;</span><br><span class="line">#include&lt;iostream&gt;</span><br><span class="line">#include&lt;stack&gt;</span><br><span class="line">using namespace std;</span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">    stack&lt;int&gt; S;</span><br><span class="line">    S.push(3);</span><br><span class="line">    S.push(7);</span><br><span class="line">    S.push(1);</span><br><span class="line">    cout &lt;&lt; S.size() &lt;&lt; &quot; &quot;;</span><br><span class="line">    cout &lt;&lt; S.top() &lt;&lt; &quot; &quot;;</span><br><span class="line">    S.pop();</span><br><span class="line">    cout &lt;&lt; S.top() &lt;&lt; &quot; &quot;;</span><br><span class="line">    S.pop();</span><br><span class="line">    cout &lt;&lt; S.top() &lt;&lt; &quot; &quot;;</span><br><span class="line">    S.push(5);</span><br><span class="line">    cout &lt;&lt; S.top() &lt;&lt; &quot; &quot;;</span><br><span class="line">    S.pop();</span><br><span class="line">    cout &lt;&lt; S.top() &lt;&lt; endl;</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+      
+  </div>
+</article>
+
+
+
+
+
+  <article class="post">
+  <div class="post-content">
+    <header>
+      
+  
+    <h1 class="title"><a href="/2019/04/09/Leetcode1021-Remove-Outermost-Parentheses/">Leetcode1021. Remove Outermost Parentheses</a></h1>
+  
+
+      
+        <time datetime="2019-04-09T01:59:26.000Z">2019-04-09</time>
+      
+    </header>
+    <div class="entry">
+      
+        <ol start="1021">
+<li>Remove Outermost Parentheses<br>Easy</li>
+</ol>
+<p>A valid parentheses string is either empty (“”), “(“ + A + “)”, or A + B, where A and B are valid parentheses strings, and + represents string concatenation.  For example, “”, “()”, “(())()”, and “(()(()))” are all valid parentheses strings.</p>
+<p>A valid parentheses string S is primitive if it is nonempty, and there does not exist a way to split it into S = A+B, with A and B nonempty valid parentheses strings.</p>
+<p>Given a valid parentheses string S, consider its primitive decomposition: S = P_1 + P_2 + … + P_k, where P_i are primitive valid parentheses strings.</p>
+<p>Return S after removing the outermost parentheses of every primitive string in the primitive decomposition of S.</p>
+<p>Example 1:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Input: &quot;(()())(())&quot;</span><br><span class="line">Output: &quot;()()()&quot;</span><br><span class="line">Explanation: </span><br><span class="line">The input string is &quot;(()())(())&quot;, with primitive decomposition &quot;(()())&quot; + &quot;(())&quot;.</span><br><span class="line">After removing outer parentheses of each part, this is &quot;()()&quot; + &quot;()&quot; = &quot;()()()&quot;.</span><br></pre></td></tr></table></figure></p>
+<p>Example 2:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Input: &quot;(()())(())(()(()))&quot;</span><br><span class="line">Output: &quot;()()()()(())&quot;</span><br><span class="line">Explanation: </span><br><span class="line">The input string is &quot;(()())(())(()(()))&quot;, with primitive decomposition &quot;(()())&quot; + &quot;(())&quot; + &quot;(()(()))&quot;.</span><br><span class="line">After removing outer parentheses of each part, this is &quot;()()&quot; + &quot;()&quot; + &quot;()(())&quot; = &quot;()()()()(())&quot;.</span><br></pre></td></tr></table></figure></p>
+<p>Example 3:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Input: &quot;()()&quot;</span><br><span class="line">Output: &quot;&quot;</span><br><span class="line">Explanation: </span><br><span class="line">The input string is &quot;()()&quot;, with primitive decomposition &quot;()&quot; + &quot;()&quot;.</span><br><span class="line">After removing outer parentheses of each part, this is &quot;&quot; + &quot;&quot; = &quot;&quot;.</span><br></pre></td></tr></table></figure></p>
+<p>Note:</p>
+<ol>
+<li>S.length &lt;= 10000</li>
+<li>S[i] is “(“ or “)”</li>
+<li>S is a valid parentheses string</li>
+</ol>
+<p>比较简单，把最外边的一层括号移走，可以用栈，也可以用计数器。如果遇到左括号且栈不空说明这个左括号不是外边的括号，加到结果中，再把这个左括号压栈；如果是右括号，就先弹出栈，再判断如果栈不空则说明这个右括号也不是外边的括号，加到结果中。</p>
+<p>不知道为啥我这个这么慢，反正过了就行。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    string removeOuterParentheses(string S) &#123;</span><br><span class="line">        string result=&quot;&quot;;</span><br><span class="line">        int length = S.length();</span><br><span class="line">        int ss=0;</span><br><span class="line">        for(int i=0;i&lt;length;i++)&#123;</span><br><span class="line">            if(S[i]==&apos;(&apos;)&#123;</span><br><span class="line">                if(ss!=0)</span><br><span class="line">                    result=result+&apos;(&apos;;</span><br><span class="line">                ss++;</span><br><span class="line">            &#125;</span><br><span class="line">            else if(S[i]==&apos;)&apos;)&#123;</span><br><span class="line">                ss--;</span><br><span class="line">                if(ss!=0)</span><br><span class="line">                    result=result+&quot;)&quot;;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return result;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+      
+  </div>
+</article>
+
+
+
+
+
+  <article class="post">
+  <div class="post-content">
+    <header>
+      
+  
     <h1 class="title"><a href="/2019/04/07/Leetcode9-Palindrome-Number/">Leetcode9. Palindrome Number</a></h1>
   
 
@@ -286,53 +484,11 @@
 
 
 
-  <article class="post">
-  <div class="post-content">
-    <header>
-      
-  
-    <h1 class="title"><a href="/2019/04/04/bookmark/">What I want to learn</a></h1>
-  
-
-      
-        <time datetime="2019-04-04T12:48:30.000Z">2019-04-04</time>
-      
-    </header>
-    <div class="entry">
-      
-        <h1 id="Markdown参考"><a href="#Markdown参考" class="headerlink" title="Markdown参考"></a>Markdown参考</h1><p><a href="https://blog.csdn.net/u014061630/article/details/81359144" target="_blank" rel="noopener">https://blog.csdn.net/u014061630/article/details/81359144</a></p>
-<h1 id="想读的书"><a href="#想读的书" class="headerlink" title="想读的书"></a>想读的书</h1><p>《深度探索C++对象模型（Inside The C++ Object Model ）》</p>
-<p><a href="https://algs4.cs.princeton.edu/home/" target="_blank" rel="noopener">《algorithm》</a></p>
-<p>《UNIX环境高级编程》</p>
-<p>《数据结构与算法经典问题解析》</p>
-<p>《高性能并行珠玑》</p>
-<h1 id="各种书签"><a href="#各种书签" class="headerlink" title="各种书签"></a>各种书签</h1><p>RDMA相关</p>
-<p><a href="http://www.jinbuguo.com/linux/optimize_guide.html" target="_blank" rel="noopener">C程序编译优化指南</a></p>
-<p><a href="https://www.ibm.com/developerworks/cn/linux/l-affinity.html" target="_blank" rel="noopener">管理处理器的亲和性</a></p>
-<p><a href="https://zhuanlan.zhihu.com/p/24709748" target="_blank" rel="noopener">矩阵求导</a>刘咏彬分享<br>
-      
-    </p></div>
-      
-        
-        <footer>
-          <div class="alignleft">
-            <a href="/2019/04/04/bookmark/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-      </footer>
-  </div>
-</article>
-
-
-
-
-
 
 <nav id="pagination">
   
+  
+    <a href="/page/2/" class="alignright next">Next</a>
   
   <div class="clearfix"></div>
 </nav></div></div>
@@ -352,23 +508,23 @@
   <ul class="entry">
     
       <li>
+        <a href="/2019/04/09/由Leetcode807引发的memset问题/">由Leetcode807引发的memset问题</a>
+      </li>
+    
+      <li>
+        <a href="/2019/04/09/Leetcode807-Max-Increase-to-Keep-City-Skyline/">Leetcode807. Max Increase to Keep City Skyline</a>
+      </li>
+    
+      <li>
+        <a href="/2019/04/09/C-标准库之stack/">C++标准库之stack</a>
+      </li>
+    
+      <li>
+        <a href="/2019/04/09/Leetcode1021-Remove-Outermost-Parentheses/">Leetcode1021. Remove Outermost Parentheses</a>
+      </li>
+    
+      <li>
         <a href="/2019/04/07/Leetcode9-Palindrome-Number/">Leetcode9. Palindrome Number</a>
-      </li>
-    
-      <li>
-        <a href="/2019/04/07/Leetcode26-Remove-Duplicates-from-Sorted-Array/">Leetcode26. Remove Duplicates from Sorted Array</a>
-      </li>
-    
-      <li>
-        <a href="/2019/04/07/Leetcode1-Two-Sum/">Leetcode1.Two Sum</a>
-      </li>
-    
-      <li>
-        <a href="/2019/04/07/Leetcode2-Add-Two-Numbers/">Leetcode2. Add Two Numbers</a>
-      </li>
-    
-      <li>
-        <a href="/2019/04/05/给自己的博客加上图片/">给自己的博客加上图片</a>
       </li>
     
   </ul>
