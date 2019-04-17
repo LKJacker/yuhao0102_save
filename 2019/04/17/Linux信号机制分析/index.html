@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-flash.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="【摘要】本文分析了Linux内核对于信号的实现机制和应用层的相关处理。首先介绍了软中断信号的本质及信号的两种不同分类方法尤其是不可靠信号的原理。接着分析了内核对于信号的处理流程包括信号的触发/注册/执行及注销等。最后介绍了应用层的相关处理，主要包括信号处理函数的安装、信号的发送、屏蔽阻塞等，最后给了几个简单的应用实例。 信号本质软中断信号（signal，又简称为信号）用来通知进程发生了异步事件。在">
+<meta name="keywords" content="Linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux信号（signal) 机制分析">
+<meta property="og:url" content="http://yoursite.com/2019/04/17/Linux信号机制分析/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="【摘要】本文分析了Linux内核对于信号的实现机制和应用层的相关处理。首先介绍了软中断信号的本质及信号的两种不同分类方法尤其是不可靠信号的原理。接着分析了内核对于信号的处理流程包括信号的触发/注册/执行及注销等。最后介绍了应用层的相关处理，主要包括信号处理函数的安装、信号的发送、屏蔽阻塞等，最后给了几个简单的应用实例。 信号本质软中断信号（signal，又简称为信号）用来通知进程发生了异步事件。在">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2019-04-17T06:38:13.829Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Linux信号（signal) 机制分析">
+<meta name="twitter:description" content="【摘要】本文分析了Linux内核对于信号的实现机制和应用层的相关处理。首先介绍了软中断信号的本质及信号的两种不同分类方法尤其是不可靠信号的原理。接着分析了内核对于信号的处理流程包括信号的触发/注册/执行及注销等。最后介绍了应用层的相关处理，主要包括信号处理函数的安装、信号的发送、屏蔽阻塞等，最后给了几个简单的应用实例。 信号本质软中断信号（signal，又简称为信号）用来通知进程发生了异步事件。在">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/04/17/Linux信号机制分析/">
+
+
+
+
+
+  <title>Linux信号（signal) 机制分析 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/17/Linux信号机制分析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Linux信号（signal) 机制分析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-04-17T14:00:43+08:00">
+                2019-04-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>【摘要】本文分析了Linux内核对于信号的实现机制和应用层的相关处理。首先介绍了软中断信号的本质及信号的两种不同分类方法尤其是不可靠信号的原理。接着分析了内核对于信号的处理流程包括信号的触发/注册/执行及注销等。最后介绍了应用层的相关处理，主要包括信号处理函数的安装、信号的发送、屏蔽阻塞等，最后给了几个简单的应用实例。</p>
+<h1 id="信号本质"><a href="#信号本质" class="headerlink" title="信号本质"></a>信号本质</h1><p>软中断信号（signal，又简称为信号）用来通知进程发生了异步事件。在软件层次上是对中断机制的一种模拟，在原理上，一个进程收到一个信号与处理器收到一个中断请求可以说是一样的。信号是进程间通信机制中唯一的异步通信机制，一个进程不必通过任何操作来等待信号的到达，事实上，进程也不知道信号到底什么时候到达。进程之间可以互相通过系统调用kill发送软中断信号。内核也可以因为内部事件而给进程发送信号，通知进程发生了某个事件。信号机制除了基本通知功能外，还可以传递附加信息。</p>
+<p>收到信号的进程对各种信号有不同的处理方法。处理方法可以分为三类：</p>
+<ul>
+<li>第一种是类似中断的处理程序，对于需要处理的信号，进程可以指定处理函数，由该函数来处理。</li>
+<li>第二种方法是，忽略某个信号，对该信号不做任何处理，就象未发生过一样。</li>
+<li>第三种方法是，对该信号的处理保留系统的默认值，这种缺省操作，对大部分的信号的缺省操作是使得进程终止。进程通过系统调用signal来指定进程对某个信号的处理行为。</li>
+</ul>
+<h1 id="信号的种类"><a href="#信号的种类" class="headerlink" title="信号的种类"></a>信号的种类</h1><p>可以从两个不同的分类角度对信号进行分类：</p>
+<ul>
+<li>可靠性方面：可靠信号与不可靠信号；</li>
+<li>与时间的关系上：实时信号与非实时信号。</li>
+</ul>
+<h2 id="可靠信号与不可靠信号"><a href="#可靠信号与不可靠信号" class="headerlink" title="可靠信号与不可靠信号"></a>可靠信号与不可靠信号</h2><p>Linux信号机制基本上是从Unix系统中继承过来的。早期Unix系统中的信号机制比较简单和原始，信号值小于SIGRTMIN的信号都是不可靠信号。这就是”不可靠信号”的来源。它的主要问题是信号可能丢失。</p>
+<p>随着时间的发展，实践证明了有必要对信号的原始机制加以改进和扩充。由于原来定义的信号已有许多应用，不好再做改动，最终只好又新增加了一些信号，并在一开始就把它们定义为可靠信号，这些信号支持排队，不会丢失。</p>
+<p>信号值位于SIGRTMIN和SIGRTMAX之间的信号都是可靠信号，可靠信号克服了信号可能丢失的问题。Linux在支持新版本的信号安装函数sigation()以及信号发送函数sigqueue()的同时，仍然支持早期的signal()信号安装函数，支持信号发送函数kill()。</p>
+<p>信号的可靠与不可靠只与信号值有关，与信号的发送及安装函数无关。目前linux中的signal()是通过sigation()函数实现的，因此，即使通过signal()安装的信号，在信号处理函数的结尾也不必再调用一次信号安装函数。同时，由signal()安装的实时信号支持排队，同样不会丢失。</p>
+<p>对于目前linux的两个信号安装函数：signal()及sigaction()来说，它们都不能把SIGRTMIN以前的信号变成可靠信号（都不支持排队，仍有可能丢失，仍然是不可靠信号），而且对SIGRTMIN以后的信号都支持排队。这两个函数的最大区别在于，经过sigaction安装的信号都能传递信息给信号处理函数，而经过signal安装的信号不能向信号处理函数传递信息。对于信号发送函数来说也是一样的。</p>
+<h2 id="实时信号与非实时信号"><a href="#实时信号与非实时信号" class="headerlink" title="实时信号与非实时信号"></a>实时信号与非实时信号</h2><p>早期Unix系统只定义了32种信号，前32种信号已经有了预定义值，每个信号有了确定的用途及含义，并且每种信号都有各自的缺省动作。如按键盘的CTRL ^C时，会产生SIGINT信号，对该信号的默认反应就是进程终止。后32个信号表示实时信号，等同于前面阐述的可靠信号。这保证了发送的多个实时信号都被接收。</p>
+<p>非实时信号都不支持排队，都是不可靠信号；实时信号都支持排队，都是可靠信号。</p>
+<h1 id="信号处理流程"><a href="#信号处理流程" class="headerlink" title="信号处理流程"></a>信号处理流程</h1><p>对于一个完整的信号生命周期(从信号发送到相应的处理函数执行完毕)来说，可以分为三个阶段：</p>
+<ul>
+<li>信号诞生</li>
+<li>信号在进程中注册</li>
+<li>信号的执行和注销</li>
+</ul>
+<h2 id="信号诞生"><a href="#信号诞生" class="headerlink" title="信号诞生"></a>信号诞生</h2><p>信号事件的发生有两个来源：硬件来源(比如我们按下了键盘或者其它硬件故障)；软件来源，最常用发送信号的系统函数是kill, raise, alarm和setitimer以及sigqueue函数，软件来源还包括一些非法运算等操作。</p>
+<p>这里按发出信号的原因简单分类，以了解各种信号：</p>
+<ol>
+<li>与进程终止相关的信号。当进程退出，或者子进程终止时，发出这类信号。</li>
+<li>与进程例外事件相关的信号。如进程越界，或企图写一个只读的内存区域（如程序正文区），或执行一个特权指令及其他各种硬件错误。</li>
+<li>与在系统调用期间遇到不可恢复条件相关的信号。如执行系统调用exec时，原有资源已经释放，而目前系统资源又已经耗尽。</li>
+<li>与执行系统调用时遇到非预测错误条件相关的信号。如执行一个并不存在的系统调用。</li>
+<li>在用户态下的进程发出的信号。如进程调用系统调用kill向其他进程发送信号。</li>
+<li>与终端交互相关的信号。如用户关闭一个终端，或按下break键等情况。</li>
+<li>跟踪进程执行的信号。</li>
+</ol>
+<p>Linux支持的信号列表如下。很多信号是与机器的体系结构相关的</p>
+<p>信号值 默认处理动作 发出信号的原因</p>
+<p>SIGHUP 1 A 终端挂起或者控制进程终止<br>SIGINT 2 A 键盘中断（如break键被按下）<br>SIGQUIT 3 C 键盘的退出键被按下<br>SIGILL 4 C 非法指令<br>SIGABRT 6 C 由abort(3)发出的退出指令<br>SIGFPE 8 C 浮点异常<br>SIGKILL 9 AEF Kill信号<br>SIGSEGV 11 C 无效的内存引用<br>SIGPIPE 13 A 管道破裂: 写一个没有读端口的管道<br>SIGALRM 14 A 由alarm(2)发出的信号<br>SIGTERM 15 A 终止信号<br>SIGUSR1 30,10,16 A 用户自定义信号1<br>SIGUSR2 31,12,17 A 用户自定义信号2<br>SIGCHLD 20,17,18 B 子进程结束信号<br>SIGCONT 19,18,25 进程继续（曾被停止的进程）<br>SIGSTOP 17,19,23 DEF 终止进程<br>SIGTSTP 18,20,24 D 控制终端（tty）上按下停止键<br>SIGTTIN 21,21,26 D 后台进程企图从控制终端读<br>SIGTTOU 22,22,27 D 后台进程企图从控制终端写</p>
+<blockquote>
+<p>处理动作一项中的字母含义如下<br>A 缺省的动作是终止进程<br>B 缺省的动作是忽略此信号，将该信号丢弃，不做处理<br>C 缺省的动作是终止进程并进行内核映像转储（dump core），内核映像转储是指将进程数据在内存的映像和进程在内核结构中的部分内容以一定格式转储到文件系统，并且进程退出执行，这样做的好处是为程序员提供了方便，使得他们可以得到进程当时执行时的数据值，允许他们确定转储的原因，并且可以调试他们的程序。<br>D 缺省的动作是停止进程，进入停止状况以后还能重新进行下去，一般是在调试的过程中（例如ptrace系统调用）<br>E 信号不能被捕获<br>F 信号不能被忽略</p>
+</blockquote>
+<h2 id="信号在目标进程中注册"><a href="#信号在目标进程中注册" class="headerlink" title="信号在目标进程中注册"></a>信号在目标进程中注册</h2><p>在进程表的表项中有一个软中断信号域，该域中每一位对应一个信号。内核给一个进程发送软中断信号的方法，是在进程所在的进程表项的信号域设置对应于该信号的位。如果信号发送给一个正在睡眠的进程，如果进程睡眠在可被中断的优先级上，则唤醒进程；否则仅设置进程表中信号域相应的位，而不唤醒进程。如果发送给一个处于可运行状态的进程，则只置相应的域即可。</p>
+<p>进程的task_struct结构中有关于本进程中未决信号的数据成员：<code>struct sigpending pending</code><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">struct sigpending&#123;</span><br><span class="line">        struct sigqueue *head, *tail;</span><br><span class="line">        sigset_t signal;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>第三个成员是进程中所有未决信号集，第一、第二个成员分别指向一个sigqueue类型的结构链（称之为”未决信号信息链”）的首尾，信息链中的每个sigqueue结构刻画一个特定信号所携带的信息，并指向下一个sigqueue结构:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">struct sigqueue&#123;</span><br><span class="line">        struct sigqueue *next;</span><br><span class="line">        siginfo_t info;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>信号在进程中注册指的就是信号值加入到进程的未决信号集sigset_t signal（每个信号占用一位）中，并且信号所携带的信息被保留到未决信号信息链的某个sigqueue结构中。只要信号在进程的未决信号集中，表明进程已经知道这些信号的存在，但还没来得及处理，或者该信号被进程阻塞。</p>
+<p>当一个实时信号发送给一个进程时，不管该信号是否已经在进程中注册，都会被再注册一次，因此，信号不会丢失，因此，实时信号又叫做”可靠信号”。这意味着同一个实时信号可以在同一个进程的未决信号信息链中占有多个sigqueue结构（进程每收到一个实时信号，都会为它分配一个结构来登记该信号信息，并把该结构添加在未决信号链尾，即所有诞生的实时信号都会在目标进程中注册）。</p>
+<p>当一个非实时信号发送给一个进程时，如果该信号已经在进程中注册（通过sigset_t signal指示），则该信号将被丢弃，造成信号丢失。因此，非实时信号又叫做”不可靠信号”。这意味着同一个非实时信号在进程的未决信号信息链中，至多占有一个sigqueue结构。</p>
+<p>总之信号注册与否，与发送信号的函数（如kill()或sigqueue()等）以及信号安装函数（signal()及sigaction()）无关，只与信号值有关（信号值小于SIGRTMIN的信号最多只注册一次，信号值在SIGRTMIN及SIGRTMAX之间的信号，只要被进程接收到就被注册）</p>
+<h2 id="信号的执行和注销"><a href="#信号的执行和注销" class="headerlink" title="信号的执行和注销"></a>信号的执行和注销</h2><p>内核处理一个进程收到的软中断信号是在该进程的上下文中，因此，进程必须处于运行状态。当其由于被信号唤醒或者正常调度重新获得CPU时，在其从内核空间返回到用户空间时会检测是否有信号等待处理。如果存在未决信号等待处理且该信号没有被进程阻塞，则在运行相应的信号处理函数前，进程会把信号在未决信号链中占有的结构卸掉。</p>
+<p>对于非实时信号来说，由于在未决信号信息链中最多只占用一个sigqueue结构，因此该结构被释放后，应该把信号在进程未决信号集中删除（信号注销完毕）；而对于实时信号来说，可能在未决信号信息链中占用多个sigqueue结构，因此应该针对占用sigqueue结构的数目区别对待：如果只占用一个sigqueue结构（进程只收到该信号一次），则执行完相应的处理函数后应该把信号在进程的未决信号集中删除（信号注销完毕）。否则待该信号的所有sigqueue处理完毕后再在进程的未决信号集中删除该信号。</p>
+<p>当所有未被屏蔽的信号都处理完毕后，即可返回用户空间。对于被屏蔽的信号，当取消屏蔽后，在返回到用户空间时会再次执行上述检查处理的一套流程。</p>
+<p>内核处理一个进程收到的信号的时机是在一个进程从内核态返回用户态时。所以，当一个进程在内核态下运行时，软中断信号并不立即起作用，要等到将返回用户态时才处理。进程只有处理完信号才会返回用户态，进程在用户态下不会有未处理完的信号。</p>
+<p>处理信号有三种类型：</p>
+<ul>
+<li>进程接收到信号后退出；</li>
+<li>进程忽略该信号；</li>
+<li>进程收到信号后执行用户设定用系统调用signal的函数。</li>
+</ul>
+<p>当进程接收到一个它忽略的信号时，进程丢弃该信号，就象没有收到该信号似的继续运行。如果进程收到一个要捕捉的信号，那么进程从内核态返回用户态时执行用户定义的函数。而且执行用户定义的函数的方法很巧妙，内核是在用户栈上创建一个新的层，该层中将返回地址的值设置成用户定义的处理函数的地址，这样进程从内核返回弹出栈顶时就返回到用户定义的函数处，从函数返回再弹出栈顶时，才返回原先进入内核的地方。这样做的原因是用户定义的处理函数不能且不允许在内核态下执行（如果用户定义的函数在内核态下运行的话，用户就可以获得任何权限）。</p>
+<h1 id="信号的安装"><a href="#信号的安装" class="headerlink" title="信号的安装"></a>信号的安装</h1><p>如果进程要处理某一信号，那么就要在进程中安装该信号。安装信号主要用来确定信号值及进程针对该信号值的动作之间的映射关系，即进程将要处理哪个信号；该信号被传递给进程时，将执行何种操作。</p>
+<p>linux主要有两个函数实现信号的安装：signal()、sigaction()。其中signal()只有两个参数，不支持信号传递信息，主要是用于前32种非实时信号的安装；而sigaction()是较新的函数（由两个系统调用实现：sys_signal以及sys_rt_sigaction），有三个参数，支持信号传递信息，主要用来与 sigqueue() 系统调用配合使用，当然，sigaction()同样支持非实时信号的安装。sigaction()优于signal()主要体现在支持信号带有参数。</p>
+<h2 id="signal"><a href="#signal" class="headerlink" title="signal()"></a>signal()</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;signal.h&gt;</span><br><span class="line">void (*signal(int signum, void (*handler))(int)))(int);</span><br></pre></td></tr></table></figure>
+<p>如果该函数原型不容易理解的话，可以参考下面的分解方式来理解：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">typedef void (*sighandler_t)(int)；</span><br><span class="line">sighandler_t signal(int signum, sighandler_t handler));</span><br></pre></td></tr></table></figure></p>
+<p>第一个参数指定信号的值，第二个参数指定针对前面信号值的处理，可以忽略该信号（参数设为SIG_IGN）；可以采用系统默认方式处理信号(参数设为SIG_DFL)；也可以自己实现处理方式(参数指定一个函数地址)。</p>
+<p>如果signal()调用成功，返回最后一次为安装信号signum而调用signal()时的handler值；失败则返回SIG_ERR。</p>
+<p>传递给信号处理例程的整数参数是信号值，这样可以使得一个信号处理例程处理多个信号。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;signal.h&gt;</span><br><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">void sigroutine(int dunno)</span><br><span class="line">&#123; /* 信号处理例程，其中dunno将会得到信号的值 */</span><br><span class="line">        switch (dunno) &#123;</span><br><span class="line">        case 1:</span><br><span class="line">        printf(&quot;Get a signal -- SIGHUP &quot;);</span><br><span class="line">        break;</span><br><span class="line">        case 2:</span><br><span class="line">        printf(&quot;Get a signal -- SIGINT &quot;);</span><br><span class="line">        break;</span><br><span class="line">        case 3:</span><br><span class="line">        printf(&quot;Get a signal -- SIGQUIT &quot;);</span><br><span class="line">        break;</span><br><span class="line">        &#125;</span><br><span class="line">        return;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int main() &#123;</span><br><span class="line">        printf(&quot;process id is %d &quot;,getpid());</span><br><span class="line">        signal(SIGHUP, sigroutine); //* 下面设置三个信号的处理方法</span><br><span class="line">        signal(SIGINT, sigroutine);</span><br><span class="line">        signal(SIGQUIT, sigroutine);</span><br><span class="line">        for (;;) ;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>其中信号SIGINT由按下Ctrl-C发出，信号SIGQUIT由按下Ctrl-发出。该程序执行的结果如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">localhost:~$ ./sig_test</span><br><span class="line">process id is 463</span><br><span class="line">Get a signal -SIGINT //按下Ctrl-C得到的结果</span><br><span class="line">Get a signal -SIGQUIT //按下Ctrl-得到的结果</span><br><span class="line">//按下Ctrl-z将进程置于后台</span><br><span class="line"> [1]+ Stopped ./sig_test</span><br><span class="line">localhost:~$ bg</span><br><span class="line"> [1]+ ./sig_test &amp;</span><br><span class="line">localhost:~$ kill -HUP 463 //向进程发送SIGHUP信号</span><br><span class="line">localhost:~$ Get a signal – SIGHUP</span><br><span class="line">kill -9 463 //向进程发送SIGKILL信号，终止进程</span><br><span class="line">localhost:~$</span><br></pre></td></tr></table></figure></p>
+<h2 id="sigaction"><a href="#sigaction" class="headerlink" title="sigaction()"></a>sigaction()</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;signal.h&gt;</span><br><span class="line">int sigaction(int signum,const struct sigaction *act,struct sigaction *oldact));</span><br></pre></td></tr></table></figure>
+<p>sigaction函数用于改变进程接收到特定信号后的行为。该函数的第一个参数为信号的值，可以为除SIGKILL及SIGSTOP外的任何一个特定有效的信号（为这两个信号定义自己的处理函数，将导致信号安装错误）。第二个参数是指向结构sigaction的一个实例的指针，在结构sigaction的实例中，指定了对特定信号的处理，可以为空，进程会以缺省方式对信号处理；第三个参数oldact指向的对象用来保存返回的原来对相应信号的处理，可指定oldact为NULL。如果把第二、第三个参数都设为NULL，那么该函数可用于检查信号的有效性。</p>
+<p>第二个参数最为重要，其中包含了对指定信号的处理、信号所传递的信息、信号处理函数执行过程中应屏蔽掉哪些信号等等。</p>
+<p>sigaction结构定义如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">struct sigaction &#123;</span><br><span class="line">	union&#123;</span><br><span class="line">		__sighandler_t _sa_handler;</span><br><span class="line">		void (*_sa_sigaction)(int,struct siginfo *, void *)；</span><br><span class="line">	&#125;_u</span><br><span class="line">	sigset_t sa_mask；</span><br><span class="line">	unsigned long sa_flags；</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<ol>
+<li>联合数据结构中的两个元素_sa_handler以及*_sa_sigaction指定信号关联函数，即用户指定的信号处理函数。除了可以是用户自定义的处理函数外，还可以为SIG_DFL(采用缺省的处理方式)，也可以为SIG_IGN（忽略信号）。</li>
+<li>由_sa_sigaction是指定的信号处理函数带有三个参数，是为实时信号而设的（当然同样支持非实时信号），它指定一个3参数信号处理函数。第一个参数为信号值，第三个参数没有使用，第二个参数是指向siginfo_t结构的指针，结构中包含信号携带的数据值，参数所指向的结构如下：</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">siginfo_t &#123;</span><br><span class="line">    int si_signo;  /* 信号值，对所有信号有意义*/</span><br><span class="line">    int si_errno;  /* errno值，对所有信号有意义*/</span><br><span class="line">    int si_code;   /* 信号产生的原因，对所有信号有意义*/</span><br><span class="line">    union&#123;                               /* 联合数据结构，不同成员适应不同信号 */</span><br><span class="line">        //确保分配足够大的存储空间</span><br><span class="line">        int _pad[SI_PAD_SIZE];</span><br><span class="line">        //对SIGKILL有意义的结构</span><br><span class="line">        struct&#123;</span><br><span class="line">            ...</span><br><span class="line">        &#125;...</span><br><span class="line">        ... ...</span><br><span class="line">        ... ...                               </span><br><span class="line">        //对SIGILL, SIGFPE, SIGSEGV, SIGBUS有意义的结构</span><br><span class="line">        struct&#123;</span><br><span class="line">            ...</span><br><span class="line">        &#125;...</span><br><span class="line">        ... ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>前面在讨论系统调用sigqueue发送信号时，sigqueue的第三个参数就是sigval联合数据结构，当调用sigqueue时，该数据结构中的数据就将拷贝到信号处理函数的第二个参数中。这样，在发送信号同时，就可以让信号传递一些附加信息。信号可以传递信息对程序开发是非常有意义的。</p>
+<ol start="3">
+<li>sa_mask指定在信号处理程序执行过程中，哪些信号应当被阻塞。缺省情况下当前信号本身被阻塞，防止信号的嵌套发送，除非指定SA_NODEFER或者SA_NOMASK标志位。</li>
+</ol>
+<p>注：请注意sa_mask指定的信号阻塞的前提条件，是在由sigaction（）安装信号的处理函数执行过程中由sa_mask指定的信号才被阻塞。</p>
+<ol start="4">
+<li>sa_flags中包含了许多标志位，包括刚刚提到的SA_NODEFER及SA_NOMASK标志位。另一个比较重要的标志位是SA_SIGINFO，当设定了该标志位时，表示信号附带的参数可以被传递到信号处理函数中，因此，应该为sigaction结构中的sa_sigaction指定处理函数，而不应该为sa_handler指定信号处理函数，否则，设置该标志变得毫无意义。即使为sa_sigaction指定了信号处理函数，如果不设置SA_SIGINFO，信号处理函数同样不能得到信号传递过来的数据，在信号处理函数中对这些信息的访问都将导致段错误（Segmentation fault）。 </li>
+</ol>
+<h1 id="信号的发送"><a href="#信号的发送" class="headerlink" title="信号的发送"></a>信号的发送</h1><p>发送信号的主要函数有：kill()、raise()、 sigqueue()、alarm()、setitimer()以及abort()。</p>
+<h2 id="kill"><a href="#kill" class="headerlink" title="kill()"></a>kill()</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;sys/types.h&gt;</span><br><span class="line">#include &lt;signal.h&gt;</span><br><span class="line">int kill(pid_t pid,int signo)</span><br></pre></td></tr></table></figure>
+<p>该系统调用可以用来向任何进程或进程组发送任何信号。参数pid的值为信号的接收进程</p>
+<p>pid&gt;0 进程ID为pid的进程</p>
+<p>pid=0 同一个进程组的进程</p>
+<p>pid&lt;0 pid!=-1 进程组ID为 -pid的所有进程</p>
+<p>pid=-1 除发送进程自身外，所有进程ID大于1的进程</p>
+<p>Sinno是信号值，当为0时（即空信号），实际不发送任何信号，但照常进行错误检查，因此，可用于检查目标进程是否存在，以及当前进程是否具有向目标发送信号的权限（root权限的进程可以向任何进程发送信号，非root权限的进程只能向属于同一个session或者同一个用户的进程发送信号）。</p>
+<p>Kill()最常用于pid&gt;0时的信号发送。该调用执行成功时，返回值为0；错误时，返回-1，并设置相应的错误代码errno。下面是一些可能返回的错误代码：</p>
+<p>EINVAL：指定的信号sig无效。</p>
+<p>ESRCH：参数pid指定的进程或进程组不存在。注意，在进程表项中存在的进程，可能是一个还没有被wait收回，但已经终止执行的僵死进程。</p>
+<p>EPERM： 进程没有权力将这个信号发送到指定接收信号的进程。因为，一个进程被允许将信号发送到进程pid时，必须拥有root权力，或者是发出调用的进程的UID 或EUID与指定接收的进程的UID或保存用户ID（savedset-user-ID）相同。如果参数pid小于-1，即该信号发送给一个组，则该错误表示组中有成员进程不能接收该信号。</p>
+<h2 id="sigqueue"><a href="#sigqueue" class="headerlink" title="sigqueue()"></a>sigqueue()</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;sys/types.h&gt;</span><br><span class="line">#include &lt;signal.h&gt;</span><br><span class="line">int sigqueue(pid_t pid, int sig, const union sigval val)</span><br></pre></td></tr></table></figure>
+<p>调用成功返回 0；否则，返回 -1。</p>
+<p>sigqueue()是比较新的发送信号系统调用，主要是针对实时信号提出的（当然也支持前32种），支持信号带有参数，与函数sigaction()配合使用。</p>
+<p>sigqueue的第一个参数是指定接收信号的进程ID，第二个参数确定即将发送的信号，第三个参数是一个联合数据结构union sigval，指定了信号传递的参数，即通常所说的4字节值。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">typedef union sigval &#123;</span><br><span class="line">    int  sival_int;</span><br><span class="line">    void *sival_ptr;</span><br><span class="line">&#125;sigval_t;</span><br></pre></td></tr></table></figure></p>
+<p>sigqueue()比kill()传递了更多的附加信息，但sigqueue()只能向一个进程发送信号，而不能发送信号给一个进程组。如果signo=0，将会执行错误检查，但实际上不发送任何信号，0值信号可用于检查pid的有效性以及当前进程是否有权限向目标进程发送信号。</p>
+<p>在调用sigqueue时，sigval_t指定的信息会拷贝到对应sig 注册的3参数信号处理函数的siginfo_t结构中，这样信号处理函数就可以处理这些信息了。由于sigqueue系统调用支持发送带参数信号，所以比kill()系统调用的功能要灵活和强大得多。 </p>
+<h2 id="alarm（）"><a href="#alarm（）" class="headerlink" title="alarm（）"></a>alarm（）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">unsigned int alarm(unsigned int seconds)</span><br></pre></td></tr></table></figure>
+<p>系统调用alarm安排内核为调用进程在指定的seconds秒后发出一个SIGALRM的信号。如果指定的参数seconds为0，则不再发送 SIGALRM信号。后一次设定将取消前一次的设定。该调用返回值为上次定时调用到发送之间剩余的时间，或者因为没有前一次定时调用而返回0。</p>
+<p>注意，在使用时，alarm只设定为发送一次信号，如果要多次发送，就要多次使用alarm调用。</p>
+<h2 id="setitimer（）"><a href="#setitimer（）" class="headerlink" title="setitimer（）"></a>setitimer（）</h2><p>现在的系统中很多程序不再使用alarm调用，而是使用setitimer调用来设置定时器，用getitimer来得到定时器的状态，这两个调用的声明格式如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">int getitimer(int which, struct itimerval *value);</span><br><span class="line">int setitimer(int which, const struct itimerval *value, struct itimerval *ovalue);</span><br></pre></td></tr></table></figure></p>
+<p>在使用这两个调用的进程中加入以下头文件：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;sys/time.h&gt;</span><br></pre></td></tr></table></figure></p>
+<p>该系统调用给进程提供了三个定时器，它们各自有其独有的计时域，当其中任何一个到达，就发送一个相应的信号给进程，并使得计时器重新开始。三个计时器由参数which指定，如下所示：</p>
+<p>TIMER_REAL：按实际时间计时，计时到达将给进程发送SIGALRM信号。</p>
+<p>ITIMER_VIRTUAL：仅当进程执行时才进行计时。计时到达将发送SIGVTALRM信号给进程。</p>
+<p>ITIMER_PROF：当进程执行时和系统为该进程执行动作时都计时。与ITIMER_VIR-TUAL是一对，该定时器经常用来统计进程在用户态和内核态花费的时间。计时到达将发送SIGPROF信号给进程。 </p>
+<p>定时器中的参数value用来指明定时器的时间，其结构如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">struct itimerval &#123;</span><br><span class="line">        struct timeval it_interval; /* 下一次的取值 */</span><br><span class="line">        struct timeval it_value; /* 本次的设定值 */</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>该结构中timeval结构定义如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">struct timeval &#123;</span><br><span class="line">        long tv_sec; /* 秒 */</span><br><span class="line">        long tv_usec; /* 微秒，1秒 = 1000000 微秒*/</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>在setitimer 调用中，参数ovalue如果不为空，则其中保留的是上次调用设定的值。定时器将it_value递减到0时，产生一个信号，并将it_value的值设定为it_interval的值，然后重新开始计时，如此往复。当it_value设定为0时，计时器停止，或者当它计时到期，而it_interval 为0时停止。调用成功时，返回0；错误时，返回-1，并设置相应的错误代码errno：</p>
+<p>EFAULT：参数value或ovalue是无效的指针。</p>
+<p>EINVAL：参数which不是ITIMER_REAL、ITIMER_VIRT或ITIMER_PROF中的一个。</p>
+<p>下面是关于setitimer调用的一个简单示范，在该例子中，每隔一秒发出一个SIGALRM，每隔0.5秒发出一个SIGVTALRM信号：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;signal.h&gt;</span><br><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#include &lt;sys/time.h&gt;</span><br><span class="line">int sec;</span><br><span class="line">void sigroutine(int signo) &#123;</span><br><span class="line">        switch (signo) &#123;</span><br><span class="line">        case SIGALRM:</span><br><span class="line">        printf(&quot;Catch a signal -- SIGALRM &quot;);</span><br><span class="line">        break;</span><br><span class="line">        case SIGVTALRM:</span><br><span class="line">        printf(&quot;Catch a signal -- SIGVTALRM &quot;);</span><br><span class="line">        break;</span><br><span class="line">        &#125;</span><br><span class="line">        return;</span><br><span class="line">&#125;</span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">        struct itimerval value,ovalue,value2;</span><br><span class="line">        sec = 5;</span><br><span class="line">        printf(&quot;process id is %d &quot;,getpid());</span><br><span class="line">        signal(SIGALRM, sigroutine);</span><br><span class="line">        signal(SIGVTALRM, sigroutine);</span><br><span class="line">        value.it_value.tv_sec = 1;</span><br><span class="line">        value.it_value.tv_usec = 0;</span><br><span class="line">        value.it_interval.tv_sec = 1;</span><br><span class="line">        value.it_interval.tv_usec = 0;</span><br><span class="line">        setitimer(ITIMER_REAL, &amp;value, &amp;ovalue);</span><br><span class="line">        value2.it_value.tv_sec = 0;</span><br><span class="line">        value2.it_value.tv_usec = 500000;</span><br><span class="line">        value2.it_interval.tv_sec = 0;</span><br><span class="line">        value2.it_interval.tv_usec = 500000;</span><br><span class="line">        setitimer(ITIMER_VIRTUAL, &amp;value2, &amp;ovalue);</span><br><span class="line">        for (;;) ;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>该例子的屏幕拷贝如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">localhost:~$ ./timer_test</span><br><span class="line">process id is 579</span><br><span class="line">Catch a signal – SIGVTALRM</span><br><span class="line">Catch a signal – SIGALRM</span><br><span class="line">Catch a signal – SIGVTALRM</span><br><span class="line">Catch a signal – SIGVTALRM</span><br><span class="line">Catch a signal – SIGALRM</span><br><span class="line">Catch a signal –GVTALRM</span><br></pre></td></tr></table></figure></p>
+<h2 id="abort"><a href="#abort" class="headerlink" title="abort()"></a>abort()</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;stdlib.h&gt;</span><br><span class="line">void abort(void);</span><br></pre></td></tr></table></figure>
+<p>向进程发送SIGABORT信号，默认情况下进程会异常退出，当然可定义自己的信号处理函数。即使SIGABORT被进程设置为阻塞信号，调用abort()后，SIGABORT仍然能被进程接收。该函数无返回值。</p>
+<h2 id="raise"><a href="#raise" class="headerlink" title="raise()"></a>raise()</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;signal.h&gt;</span><br><span class="line">int raise(int signo)</span><br></pre></td></tr></table></figure>
+<p>向进程本身发送信号，参数为即将发送的信号值。调用成功返回 0；否则，返回 -1。</p>
+<h1 id="信号集及信号集操作函数："><a href="#信号集及信号集操作函数：" class="headerlink" title="信号集及信号集操作函数："></a>信号集及信号集操作函数：</h1><p>信号集被定义为一种数据类型：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">typedef struct &#123;</span><br><span class="line">    unsigned long sig[_NSIG_WORDS]；</span><br><span class="line">&#125; sigset_t</span><br></pre></td></tr></table></figure></p>
+<p>信号集用来描述信号的集合，每个信号占用一位。Linux所支持的所有信号可以全部或部分的出现在信号集中，主要与信号阻塞相关函数配合使用。下面是为信号集操作定义的相关函数：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;signal.h&gt;</span><br><span class="line">int sigemptyset(sigset_t *set)；</span><br><span class="line">int sigfillset(sigset_t *set)；</span><br><span class="line">int sigaddset(sigset_t *set, int signum)</span><br><span class="line">int sigdelset(sigset_t *set, int signum)；</span><br><span class="line">int sigismember(const sigset_t *set, int signum)；</span><br><span class="line">sigemptyset(sigset_t *set)初始化由set指定的信号集，信号集里面的所有信号被清空；</span><br><span class="line">sigfillset(sigset_t *set)调用该函数后，set指向的信号集中将包含linux支持的64种信号；</span><br><span class="line">sigaddset(sigset_t *set, int signum)在set指向的信号集中加入signum信号；</span><br><span class="line">sigdelset(sigset_t *set, int signum)在set指向的信号集中删除signum信号；</span><br><span class="line">sigismember(const sigset_t *set, int signum)判定信号signum是否在set指向的信号集中。</span><br></pre></td></tr></table></figure></p>
+<h1 id="信号阻塞与信号未决"><a href="#信号阻塞与信号未决" class="headerlink" title="信号阻塞与信号未决:"></a>信号阻塞与信号未决:</h1><p>每个进程都有一个用来描述哪些信号递送到进程时将被阻塞的信号集，该信号集中的所有信号在递送到进程后都将被阻塞。下面是与信号阻塞相关的几个函数：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;signal.h&gt;</span><br><span class="line">int  sigprocmask(int  how,  const  sigset_t *set, sigset_t *oldset))；</span><br><span class="line">int sigpending(sigset_t *set));</span><br><span class="line">int sigsuspend(const sigset_t *mask))；</span><br></pre></td></tr></table></figure></p>
+<p>sigprocmask()函数能够根据参数how来实现对信号集的操作，操作主要有三种：</p>
+<ul>
+<li>SIG_BLOCK 在进程当前阻塞信号集中添加set指向信号集中的信号</li>
+<li>SIG_UNBLOCK 如果进程阻塞信号集中包含set指向信号集中的信号，则解除对该信号的阻塞</li>
+<li>SIG_SETMASK 更新进程阻塞信号集为set指向的信号集</li>
+</ul>
+<p>sigpending(sigset_t *set))获得当前已递送到进程，却被阻塞的所有信号，在set指向的信号集中返回结果。</p>
+<p>sigsuspend(const sigset_t *mask))用于在接收到某个信号之前, 临时用mask替换进程的信号掩码, 并暂停进程执行，直到收到信号为止。sigsuspend 返回后将恢复调用之前的信号掩码。信号处理函数完成后，进程将继续执行。该系统调用始终返回-1，并将errno设置为EINTR。</p>
+<h1 id="信号应用实例"><a href="#信号应用实例" class="headerlink" title="信号应用实例"></a>信号应用实例</h1><p>linux下的信号应用并没有想象的那么恐怖，程序员所要做的最多只有三件事情：</p>
+<p>安装信号（推荐使用sigaction()）；</p>
+<p>实现三参数信号处理函数，handler(int signal,struct siginfo <em>info, void </em>)；</p>
+<p>发送信号，推荐使用sigqueue()。</p>
+<p>实际上，对有些信号来说，只要安装信号就足够了（信号处理方式采用缺省或忽略）。其他可能要做的无非是与信号集相关的几种操作。</p>
+<h2 id="实例一：信号发送及处理"><a href="#实例一：信号发送及处理" class="headerlink" title="实例一：信号发送及处理"></a>实例一：信号发送及处理</h2><p>实现一个信号接收程序sigreceive（其中信号安装由sigaction（））。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;signal.h&gt;</span><br><span class="line">#include &lt;sys/types.h&gt;</span><br><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">void new_op(int,siginfo_t*,void*);</span><br><span class="line">int main(int argc,char**argv)</span><br><span class="line">&#123;</span><br><span class="line">        struct sigaction act;  </span><br><span class="line">        int sig;</span><br><span class="line">        sig=atoi(argv[1]);</span><br><span class="line">       </span><br><span class="line">        sigemptyset(&amp;act.sa_mask);</span><br><span class="line">        act.sa_flags=SA_SIGINFO;</span><br><span class="line">        act.sa_sigaction=new_op;</span><br><span class="line">      </span><br><span class="line">        if(sigaction(sig,&amp;act,NULL) &lt; 0)</span><br><span class="line">        &#123;</span><br><span class="line">                printf(&quot;install sigal error\n&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">       </span><br><span class="line">        while(1)</span><br><span class="line">        &#123;</span><br><span class="line">                sleep(2);</span><br><span class="line">                printf(&quot;wait for the signal\n&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">void new_op(int signum,siginfo_t *info,void *myact)</span><br><span class="line">&#123;</span><br><span class="line">        printf(&quot;receive signal %d&quot;, signum);</span><br><span class="line">        sleep(5);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>说明，命令行参数为信号值，后台运行sigreceive signo &amp;，可获得该进程的ID，假设为pid，然后再另一终端上运行kill -s signo pid验证信号的发送接收及处理。同时，可验证信号的排队问题。</p>
+<h2 id="实例二：信号传递附加信息"><a href="#实例二：信号传递附加信息" class="headerlink" title="实例二：信号传递附加信息"></a>实例二：信号传递附加信息</h2><p>主要包括两个实例：</p>
+<p>向进程本身发送信号，并传递指针参数<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;signal.h&gt;</span><br><span class="line">#include &lt;sys/types.h&gt;</span><br><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">void new_op(int,siginfo_t*,void*);</span><br><span class="line">int main(int argc,char**argv)</span><br><span class="line">&#123;</span><br><span class="line">        struct sigaction act;  </span><br><span class="line">        union sigval mysigval;</span><br><span class="line">        int i;</span><br><span class="line">        int sig;</span><br><span class="line">        pid_t pid;         </span><br><span class="line">        char data[10];</span><br><span class="line">        memset(data,0,sizeof(data));</span><br><span class="line">        for(i=0;i &lt; 5;i++)</span><br><span class="line">                data[i]=&apos;2&apos;;</span><br><span class="line">        mysigval.sival_ptr=data;</span><br><span class="line"></span><br><span class="line">        sig=atoi(argv[1]);</span><br><span class="line">        pid=getpid();</span><br><span class="line">       </span><br><span class="line">        sigemptyset(&amp;act.sa_mask);</span><br><span class="line">        act.sa_sigaction=new_op;//三参数信号处理函数</span><br><span class="line">        act.sa_flags=SA_SIGINFO;//信息传递开关，允许传说参数信息给new_op</span><br><span class="line">        if(sigaction(sig,&amp;act,NULL) &lt; 0)</span><br><span class="line">        &#123;</span><br><span class="line">                printf(&quot;install sigal error\n&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">        while(1)</span><br><span class="line">        &#123;</span><br><span class="line">                sleep(2);</span><br><span class="line">                printf(&quot;wait for the signal\n&quot;);</span><br><span class="line">                sigqueue(pid,sig,mysigval);//向本进程发送信号，并传递附加信息</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void new_op(int signum,siginfo_t *info,void *myact)//三参数信号处理函数的实现</span><br><span class="line">&#123;</span><br><span class="line">        int i;</span><br><span class="line">        for(i=0;i&lt;10;i++)</span><br><span class="line">        &#123;</span><br><span class="line">                printf(&quot;%c\n &quot;,(*( (char*)((*info).si_ptr)+i)));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">       printf(&quot;handle signal %d over;&quot;,signum);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这个例子中，信号实现了附加信息的传递，信号究竟如何对这些信息进行处理则取决于具体的应用。</p>
+<p>不同进程间传递整型参数：</p>
+<p>把1中的信号发送和接收放在两个程序中，并且在发送过程中传递整型参数。</p>
+<p>信号接收程序：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;signal.h&gt;</span><br><span class="line">#include &lt;sys/types.h&gt;</span><br><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">void new_op(int,siginfo_t*,void*);</span><br><span class="line">int main(int argc,char**argv)</span><br><span class="line">&#123;</span><br><span class="line">        struct sigaction act;</span><br><span class="line">        int sig;</span><br><span class="line">        pid_t pid;         </span><br><span class="line">       </span><br><span class="line">        pid=getpid();</span><br><span class="line">        sig=atoi(argv[1]);     </span><br><span class="line">       </span><br><span class="line">        sigemptyset(&amp;act.sa_mask);</span><br><span class="line">        act.sa_sigaction=new_op;</span><br><span class="line">        act.sa_flags=SA_SIGINFO;</span><br><span class="line">        if(sigaction(sig,&amp;act,NULL)&lt;0)</span><br><span class="line"></span><br><span class="line">       &#123;</span><br><span class="line">                printf(&quot;install sigal error\n&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">        while(1)</span><br><span class="line">        &#123;</span><br><span class="line">                sleep(2);</span><br><span class="line">                printf(&quot;wait for the signal\n&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br><span class="line">void new_op(int signum,siginfo_t *info,void *myact)</span><br><span class="line">&#123;</span><br><span class="line">        printf(&quot;the int value is %d \n&quot;,info-&gt;si_int);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>信号发送程序：<br>命令行第二个参数为信号值，第三个参数为接收进程ID。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;signal.h&gt;</span><br><span class="line">#include &lt;sys/time.h&gt;</span><br><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">#include &lt;sys/types.h&gt;</span><br><span class="line">main(int argc,char**argv)</span><br><span class="line">&#123;</span><br><span class="line">        pid_t pid;</span><br><span class="line">        int signum;</span><br><span class="line">        union sigval mysigval;</span><br><span class="line">        signum=atoi(argv[1]);</span><br><span class="line">        pid=(pid_t)atoi(argv[2]);</span><br><span class="line">        mysigval.sival_int=8;//不代表具体含义，只用于说明问题</span><br><span class="line">        if(sigqueue(pid,signum,mysigval)==-1)</span><br><span class="line">                printf(&quot;send error\n&quot;);</span><br><span class="line">        sleep(2);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>注：实例2的两个例子侧重点在于用信号来传递信息，目前关于在linux下通过信号传递信息的实例非常少，倒是Unix下有一些，但传递的基本上都是关于传递一个整数</p>
+<h2 id="实例三：信号阻塞及信号集操作"><a href="#实例三：信号阻塞及信号集操作" class="headerlink" title="实例三：信号阻塞及信号集操作"></a>实例三：信号阻塞及信号集操作</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">#include &quot;signal.h&quot;</span><br><span class="line">#include &quot;unistd.h&quot;</span><br><span class="line">static void my_op(int);</span><br><span class="line">main()</span><br><span class="line">&#123;</span><br><span class="line">        sigset_t new_mask,old_mask,pending_mask;</span><br><span class="line">        struct sigaction act;</span><br><span class="line">        sigemptyset(&amp;act.sa_mask);</span><br><span class="line">        act.sa_flags=SA_SIGINFO;</span><br><span class="line"></span><br><span class="line">        act.sa_sigaction=(void*)my_op;</span><br><span class="line">        if(sigaction(SIGRTMIN+10,&amp;act,NULL))</span><br><span class="line">                printf(&quot;install signal SIGRTMIN+10 error\n&quot;);</span><br><span class="line">        sigemptyset(&amp;new_mask);</span><br><span class="line">        sigaddset(&amp;new_mask,SIGRTMIN+10);</span><br><span class="line">        if(sigprocmask(SIG_BLOCK, &amp;new_mask,&amp;old_mask))</span><br><span class="line">                printf(&quot;block signal SIGRTMIN+10 error\n&quot;);</span><br><span class="line">        sleep(10);</span><br><span class="line">        printf(&quot;now begin to get pending mask and unblock SIGRTMIN+10\n&quot;);</span><br><span class="line"></span><br><span class="line">        if(sigpending(&amp;pending_mask)&lt;0)</span><br><span class="line">                printf(&quot;get pending mask error\n&quot;);</span><br><span class="line">        if(sigismember(&amp;pending_mask,SIGRTMIN+10))</span><br><span class="line">                printf(&quot;signal SIGRTMIN+10 is pending\n&quot;);</span><br><span class="line">        if(sigprocmask(SIG_SETMASK,&amp;old_mask,NULL)&lt;0)</span><br><span class="line">                printf(&quot;unblock signal error\n&quot;);</span><br><span class="line">        printf(&quot;signal unblocked\n&quot;);</span><br><span class="line">        sleep(10);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">static void my_op(int signum)</span><br><span class="line">&#123;</span><br><span class="line">        printf(&quot;receive signal %d \n&quot;,signum);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>编译该程序，并以后台方式运行。在另一终端向该进程发送信号(运行kill -s 42 pid，SIGRTMIN+10为42)，查看结果可以看出几个关键函数的运行机制，信号集相关操作比较简单。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/12/qsub教程/" rel="next" title="qsub教程">
+                <i class="fa fa-chevron-left"></i> qsub教程
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/04/17/Linux内存描述符mm-struct实例详解/" rel="prev" title="Linux内存描述符mm_struct实例详解">
+                Linux内存描述符mm_struct实例详解 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">48</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="450" src="//music.163.com/outchain/player?type=0&id=101039122&auto=0&height=430">
+          </iframe>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#信号本质"><span class="nav-number">1.</span> <span class="nav-text">信号本质</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#信号的种类"><span class="nav-number">2.</span> <span class="nav-text">信号的种类</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#可靠信号与不可靠信号"><span class="nav-number">2.1.</span> <span class="nav-text">可靠信号与不可靠信号</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实时信号与非实时信号"><span class="nav-number">2.2.</span> <span class="nav-text">实时信号与非实时信号</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#信号处理流程"><span class="nav-number">3.</span> <span class="nav-text">信号处理流程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#信号诞生"><span class="nav-number">3.1.</span> <span class="nav-text">信号诞生</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#信号在目标进程中注册"><span class="nav-number">3.2.</span> <span class="nav-text">信号在目标进程中注册</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#信号的执行和注销"><span class="nav-number">3.3.</span> <span class="nav-text">信号的执行和注销</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#信号的安装"><span class="nav-number">4.</span> <span class="nav-text">信号的安装</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#signal"><span class="nav-number">4.1.</span> <span class="nav-text">signal()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#sigaction"><span class="nav-number">4.2.</span> <span class="nav-text">sigaction()</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#信号的发送"><span class="nav-number">5.</span> <span class="nav-text">信号的发送</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#kill"><span class="nav-number">5.1.</span> <span class="nav-text">kill()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#sigqueue"><span class="nav-number">5.2.</span> <span class="nav-text">sigqueue()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#alarm（）"><span class="nav-number">5.3.</span> <span class="nav-text">alarm（）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#setitimer（）"><span class="nav-number">5.4.</span> <span class="nav-text">setitimer（）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#abort"><span class="nav-number">5.5.</span> <span class="nav-text">abort()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#raise"><span class="nav-number">5.6.</span> <span class="nav-text">raise()</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#信号集及信号集操作函数："><span class="nav-number">6.</span> <span class="nav-text">信号集及信号集操作函数：</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#信号阻塞与信号未决"><span class="nav-number">7.</span> <span class="nav-text">信号阻塞与信号未决:</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#信号应用实例"><span class="nav-number">8.</span> <span class="nav-text">信号应用实例</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#实例一：信号发送及处理"><span class="nav-number">8.1.</span> <span class="nav-text">实例一：信号发送及处理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实例二：信号传递附加信息"><span class="nav-number">8.2.</span> <span class="nav-text">实例二：信号传递附加信息</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实例三：信号阻塞及信号集操作"><span class="nav-number">8.3.</span> <span class="nav-text">实例三：信号阻塞及信号集操作</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
