@@ -94,7 +94,7 @@
 <meta property="og:site_name" content="Hao Yu&#39;s blog">
 <meta property="og:description" content="原文链接：https://blog.csdn.net/hnzziafyz/article/details/52200265 一个进程在内存中主要占用了以下几个部分，分别是代码段、数据段、BSS，栈，堆，等参数。其中，代码、数据、BSS的内容是可执行文件中对应的内容，加载程序并不是把它们的内容从可执行程序中填充到内存中，而是将它们的信息（基地址、长度等）更新到进程控制块（task_struct）中，">
 <meta property="og:locale" content="zn-ch">
-<meta property="og:updated_time" content="2019-04-17T06:45:48.634Z">
+<meta property="og:updated_time" content="2019-04-17T06:53:59.765Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Linux程序加载过程">
 <meta name="twitter:description" content="原文链接：https://blog.csdn.net/hnzziafyz/article/details/52200265 一个进程在内存中主要占用了以下几个部分，分别是代码段、数据段、BSS，栈，堆，等参数。其中，代码、数据、BSS的内容是可执行文件中对应的内容，加载程序并不是把它们的内容从可执行程序中填充到内存中，而是将它们的信息（基地址、长度等）更新到进程控制块（task_struct）中，">
@@ -318,9 +318,9 @@
 
       
         <p>原文链接：<a href="https://blog.csdn.net/hnzziafyz/article/details/52200265" target="_blank" rel="noopener">https://blog.csdn.net/hnzziafyz/article/details/52200265</a></p>
-<pre><code>一个进程在内存中主要占用了以下几个部分，分别是代码段、数据段、BSS，栈，堆，等参数。其中，代码、数据、BSS的内容是可执行文件中对应的内容，加载程序并不是把它们的内容从可执行程序中填充到内存中，而是将它们的信息（基地址、长度等）更新到进程控制块（task_struct）中，当CPU第 一次实际寻址执行的时候，就会引起缺页中断，操作系统再将实际的内容从可执行文件中复制内容到物理内存中。
-堆的内容是程序执行中动态分配的，所以加载程序 只是将它的起始地址更新到进程控制块中，执行过程中遇到动态分配内存的操作的时候再在物理内存分配实际的页。参数区在新进程加载的时候要存入环境变量和命令行参数列表。栈在程序加载时候存入的内容就是环境参数列表和命令行参数列表的指针和命令行参数的个数。
-</code></pre><p>1）在shell界面输入./可执行文件名。经shell分析，该参数非shell内建命令，则认为是加载可执行文件。于是调用fork函数开始创建新进程，产生0x80中断，映射到函数sys_fork()中，调用find_empty_process()函数，为新进程申请一个可用的进程号。</p>
+<p>一个进程在内存中主要占用了以下几个部分，分别是代码段、数据段、BSS，栈，堆，等参数。其中，代码、数据、BSS的内容是可执行文件中对应的内容，加载程序并不是把它们的内容从可执行程序中填充到内存中，而是将它们的信息（基地址、长度等）更新到进程控制块（task_struct）中，当CPU第 一次实际寻址执行的时候，就会引起缺页中断，操作系统再将实际的内容从可执行文件中复制内容到物理内存中。</p>
+<p>堆的内容是程序执行中动态分配的，所以加载程序 只是将它的起始地址更新到进程控制块中，执行过程中遇到动态分配内存的操作的时候再在物理内存分配实际的页。参数区在新进程加载的时候要存入环境变量和命令行参数列表。栈在程序加载时候存入的内容就是环境参数列表和命令行参数列表的指针和命令行参数的个数。</p>
+<p>1）在shell界面输入./可执行文件名。经shell分析，该参数非shell内建命令，则认为是加载可执行文件。于是调用fork函数开始创建新进程，产生0x80中断，映射到函数sys_fork()中，调用find_empty_process()函数，为新进程申请一个可用的进程号。</p>
 <p>2）为可执行程序的管理结构找到存储空间。为了实现对进程的保护，系统为每个进程的管理专门设计了一个结构，即task_struct。内核通过调用get_free_page函数获得用于保存task_struct和内核栈的页面只能在内核的线性地址空间。</p>
 <p>3）shell进程为新进程复制task_struct结构。行程序复制了task_struct后，新进程便继承了shell的全部管理信息。但由于每个进程呢的task_struct结构中的信息是不一样的，所以还要对该结构进行个性化设置（为防止在设置的过程中被切换到该进程，应先设置为不可中断状态）。个性化设置主要包括进程号、父进程、时间片、TSS段（为进程间切换而设计的，进程的切换时建立在对进程的保护的基础上的，在进程切换时TSS用来保存或恢复该进程的现场所用到的寄存器的值）。这些都是通过函数copy_process来完成的。</p>
 <p>4）复制新进程页表并设置其对应的页目录项。现在调用函数copy_mem为进程分段（LDT），更新代码段和数据段的基地址，即确定线性地址空间（关键在于确定段基址和限长）。接着就是分页，分页是建立在分段的基础上的。</p>
@@ -438,7 +438,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">49</span>
+                  <span class="site-state-item-count">53</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
