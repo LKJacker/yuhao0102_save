@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-flash.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="来源：https://www.cnblogs.com/jiqingwu/p/elf_format_research_01.html ELF文件解析（一）：Segment和SectionELF 是Executable and Linking Format的缩写，即可执行和可链接的格式，是Unix/Linux系统ABI (Application Binary Interface)规范的一部分。 Uni">
+<meta name="keywords" content="Linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ELF文件格式">
+<meta property="og:url" content="http://yoursite.com/2019/04/23/elf文件格式/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="来源：https://www.cnblogs.com/jiqingwu/p/elf_format_research_01.html ELF文件解析（一）：Segment和SectionELF 是Executable and Linking Format的缩写，即可执行和可链接的格式，是Unix/Linux系统ABI (Application Binary Interface)规范的一部分。 Uni">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/417313-20181012154909093-954664315.png">
+<meta property="og:image" content="http://yoursite.com/img/417313-20181022201440705-1728299314.png">
+<meta property="og:image" content="http://yoursite.com/img/417313-20181022201527605-1024038352.png">
+<meta property="og:image" content="http://yoursite.com/img/417313-20181029104008898-1703340645.png">
+<meta property="og:updated_time" content="2019-04-23T14:33:21.722Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ELF文件格式">
+<meta name="twitter:description" content="来源：https://www.cnblogs.com/jiqingwu/p/elf_format_research_01.html ELF文件解析（一）：Segment和SectionELF 是Executable and Linking Format的缩写，即可执行和可链接的格式，是Unix/Linux系统ABI (Application Binary Interface)规范的一部分。 Uni">
+<meta name="twitter:image" content="http://yoursite.com/img/417313-20181012154909093-954664315.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/04/23/elf文件格式/">
+
+
+
+
+
+  <title>ELF文件格式 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/23/elf文件格式/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">ELF文件格式</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-04-23T21:41:39+08:00">
+                2019-04-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>来源：<a href="https://www.cnblogs.com/jiqingwu/p/elf_format_research_01.html" target="_blank" rel="noopener">https://www.cnblogs.com/jiqingwu/p/elf_format_research_01.html</a></p>
+<h1 id="ELF文件解析（一）：Segment和Section"><a href="#ELF文件解析（一）：Segment和Section" class="headerlink" title="ELF文件解析（一）：Segment和Section"></a>ELF文件解析（一）：Segment和Section</h1><p>ELF 是Executable and Linking Format的缩写，即可执行和可链接的格式，是Unix/Linux系统ABI (Application Binary Interface)规范的一部分。</p>
+<p>Unix/Linux下的可执行二进制文件、目标代码文件、共享库文件和core dump文件都属于ELF文件。下面的图来自于文档 Executable and Linkable Format (ELF)，描述了ELF文件的大致布局。<br><img src="/img/417313-20181012154909093-954664315.png" alt></p>
+<p>左边是ELF的链接视图，可以理解为是目标代码文件的内容布局。右边是ELF的执行视图，可以理解为可执行文件的内容布局。<br>注意目标代码文件的内容是由section组成的，而可执行文件的内容是由segment组成的。</p>
+<p>要注意区分段(segment)和节(section)的概念，这两个概念在后面会经常提到。<br>我们写汇编程序时，用.text，.bss，.data这些指示，都指的是section，比如.text，告诉汇编器后面的代码放入.text section中。<br>目标代码文件中的section和section header table中的条目是一一对应的。section的信息用于链接器对代码重定位。</p>
+<p>而文件载入内存执行时，是以segment组织的，每个segment对应ELF文件中program header table中的一个条目，用来建立可执行文件的进程映像。<br>比如我们通常说的，代码段、数据段是segment，目标代码中的section会被链接器组织到可执行文件的各个segment中。<br>.text section的内容会组装到代码段中，.data, .bss等节的内容会包含在数据段中。</p>
+<p>在目标文件中，program header不是必须的，我们用gcc生成的目标文件也不包含program header。<br>一个好用的解析ELF文件的工具是readelf。对我本机上的一个目标代码文件sleep.o执行<code>readelf -S sleep.o</code>，输出如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">There are 12 section headers, starting at offset 0x270:</span><br><span class="line"></span><br><span class="line">Section Headers:</span><br><span class="line">  [Nr] Name              Type             Address           Offset</span><br><span class="line">       Size              EntSize          Flags  Link  Info  Align</span><br><span class="line">  [ 0]                   NULL             0000000000000000  00000000</span><br><span class="line">       0000000000000000  0000000000000000           0     0     0</span><br><span class="line">  [ 1] .text             PROGBITS         0000000000000000  00000040</span><br><span class="line">       0000000000000015  0000000000000000  AX       0     0     1</span><br><span class="line">  [ 2] .rela.text        RELA             0000000000000000  000001e0</span><br><span class="line">       0000000000000018  0000000000000018   I       9     1     8</span><br><span class="line">  [ 3] .data             PROGBITS         0000000000000000  00000055</span><br><span class="line">       0000000000000000  0000000000000000  WA       0     0     1</span><br><span class="line">  [ 4] .bss              NOBITS           0000000000000000  00000055</span><br><span class="line">       0000000000000000  0000000000000000  WA       0     0     1</span><br><span class="line">  ... ... ... ...</span><br><span class="line">  [11] .shstrtab         STRTAB           0000000000000000  00000210</span><br><span class="line">       0000000000000059  0000000000000000           0     0     1</span><br><span class="line">Key to Flags:</span><br><span class="line">  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),</span><br><span class="line">  L (link order), O (extra OS processing required), G (group), T (TLS),</span><br><span class="line">  C (compressed), x (unknown), o (OS specific), E (exclude),</span><br><span class="line">  l (large), p (processor specific)</span><br></pre></td></tr></table></figure></p>
+<p><code>readelf -S</code>是显示文件中的Section信息，sleep.o中共有12个section, 我们省略了其中一些Section的信息。<br>可以看到，除了我们熟悉的.text, .data, .bss，还有其它Section，这等我们以后展开讲Section的时候还会专门讲到。<br>看每个Section的Flags我们也可以得到一些信息，比如.text section的Flags是AX，表示要分配内存，并且是可执行的，这一节是代码无疑了。<br>.data 和 .bss的Flags的Flags都是WA，表示可写，需分配内存，这都是数据段的特征。</p>
+<p>使用<code>readelf -l</code>可以显示文件的program header信息。我们对sleep.o执行<code>readelf -l sleep.o</code>，会输出<code>There are no program headers in this file.</code>。<br>program header和文件中的segment一一对应，因为目标代码文件中没有segment，program header也就没有必要了。</p>
+<p>可执行文件的内容组织成segment，因此program header table是必须的。<br>section header不是必须的，但没有strip过的二进制文件中都含有此信息。<br>对本地可执行文件sleep执行<code>readelf -l sleep</code>，输出如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">Elf file type is DYN (Shared object file)</span><br><span class="line">Entry point 0x1040</span><br><span class="line">There are 11 program headers, starting at offset 64</span><br><span class="line"></span><br><span class="line">Program Headers:</span><br><span class="line">  Type           Offset             VirtAddr           PhysAddr</span><br><span class="line">                 FileSiz            MemSiz              Flags  Align</span><br><span class="line">  PHDR           0x0000000000000040 0x0000000000000040 0x0000000000000040</span><br><span class="line">                 0x0000000000000268 0x0000000000000268  R      0x8</span><br><span class="line">  INTERP         0x00000000000002a8 0x00000000000002a8 0x00000000000002a8</span><br><span class="line">                 0x000000000000001c 0x000000000000001c  R      0x1</span><br><span class="line">      [Requesting program interpreter: /lib64/ld-linux-x86-64.so.2]</span><br><span class="line">  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000</span><br><span class="line">                 0x0000000000000560 0x0000000000000560  R      0x1000</span><br><span class="line">  LOAD           0x0000000000001000 0x0000000000001000 0x0000000000001000</span><br><span class="line">                 0x00000000000001d5 0x00000000000001d5  R E    0x1000</span><br><span class="line">  LOAD           0x0000000000002000 0x0000000000002000 0x0000000000002000</span><br><span class="line">                 0x0000000000000110 0x0000000000000110  R      0x1000</span><br><span class="line">  LOAD           0x0000000000002de8 0x0000000000003de8 0x0000000000003de8</span><br><span class="line">                 0x0000000000000248 0x0000000000000250  RW     0x1000</span><br><span class="line">  DYNAMIC        0x0000000000002df8 0x0000000000003df8 0x0000000000003df8</span><br><span class="line">                 0x00000000000001e0 0x00000000000001e0  RW     0x8</span><br><span class="line">  NOTE           0x00000000000002c4 0x00000000000002c4 0x00000000000002c4</span><br><span class="line">                 0x0000000000000044 0x0000000000000044  R      0x4</span><br><span class="line">  GNU_EH_FRAME   0x0000000000002004 0x0000000000002004 0x0000000000002004</span><br><span class="line">                 0x0000000000000034 0x0000000000000034  R      0x4</span><br><span class="line">  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000</span><br><span class="line">                 0x0000000000000000 0x0000000000000000  RW     0x10</span><br><span class="line">  GNU_RELRO      0x0000000000002de8 0x0000000000003de8 0x0000000000003de8</span><br><span class="line">                 0x0000000000000218 0x0000000000000218  R      0x1</span><br><span class="line"></span><br><span class="line"> Section to Segment mapping:</span><br><span class="line">  Segment Sections...</span><br><span class="line">   00</span><br><span class="line">   01     .interp</span><br><span class="line">   02     .interp .note.ABI-tag .note.gnu.build-id .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_r .rela.dyn .rela.plt</span><br><span class="line">   03     .init .plt .text .fini</span><br><span class="line">   04     .rodata .eh_frame_hdr .eh_frame</span><br><span class="line">   05     .init_array .fini_array .dynamic .got .got.plt .data .bss</span><br><span class="line">   06     .dynamic</span><br><span class="line">   07     .note.ABI-tag .note.gnu.build-id</span><br><span class="line">   08     .eh_frame_hdr</span><br><span class="line">   09</span><br><span class="line">   10     .init_array .fini_array .dynamic .got</span><br></pre></td></tr></table></figure></p>
+<p>如输出所示，文件中共有11个segment。只有类型为LOAD的段是运行时真正需要的。<br>除了段信息，还输出了每个段包含了哪些section。比如第二个LOAD段标志为R（只读）E（可执行）的，它的编号是03，表示它包含哪些section的那一行内容为：<br><code>03 .init .plt .text .fini</code>。<br>可以发现.text包含在其中，这一段就是代码段。<br>再比如第三个LOAD段，索引是04，标志为R（只读），但没有可执行的属性，它包含的section有<code>.rodata .eh_frame_hdr .eh_frame</code>，其中rodata表示只读的数据，也就是程序中用到的字符串常量等。<br>最后一个LOAD段，索引05，标志RW（可读写），它包含的节是<code>.init_array .fini_array .dynamic .got .got.plt .data .bss</code>，可以看到.data和.bss都包含其中，这段是数据段无疑。</p>
+<h1 id="ELF-header详解"><a href="#ELF-header详解" class="headerlink" title="ELF header详解"></a>ELF header详解</h1><p>ELF header的定义可以在<code>/usr/include/elf.h</code>中找到。Elf32_Ehdr是32位 ELF header的结构体。Elf64_Ehdr是64位ELF header的结构体。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">typedef struct</span><br><span class="line">&#123;</span><br><span class="line">  unsigned char e_ident[EI_NIDENT]; /* Magic number和其它信息 */</span><br><span class="line">  Elf32_Half    e_type;         /* Object file type */</span><br><span class="line">  Elf32_Half    e_machine;      /* Architecture */</span><br><span class="line">  Elf32_Word    e_version;      /* Object file version */</span><br><span class="line">  Elf32_Addr    e_entry;        /* Entry point virtual address */</span><br><span class="line">  Elf32_Off e_phoff;        /* Program header table file offset */</span><br><span class="line">  Elf32_Off e_shoff;        /* Section header table file offset */</span><br><span class="line">  Elf32_Word    e_flags;        /* Processor-specific flags */</span><br><span class="line">  Elf32_Half    e_ehsize;       /* ELF header size in bytes */</span><br><span class="line">  Elf32_Half    e_phentsize;        /* Program header table entry size */</span><br><span class="line">  Elf32_Half    e_phnum;        /* Program header table entry count */</span><br><span class="line">  Elf32_Half    e_shentsize;        /* Section header table entry size */</span><br><span class="line">  Elf32_Half    e_shnum;        /* Section header table entry count */</span><br><span class="line">  Elf32_Half    e_shstrndx;     /* Section header string table index */</span><br><span class="line">&#125; Elf32_Ehdr;</span><br><span class="line"></span><br><span class="line">typedef struct</span><br><span class="line">&#123;</span><br><span class="line">  unsigned char e_ident[EI_NIDENT]; /* Magic number and other info */</span><br><span class="line">  Elf64_Half    e_type;         /* Object file type */</span><br><span class="line">  Elf64_Half    e_machine;      /* Architecture */</span><br><span class="line">  Elf64_Word    e_version;      /* Object file version */</span><br><span class="line">  Elf64_Addr    e_entry;        /* Entry point virtual address */</span><br><span class="line">  Elf64_Off e_phoff;        /* Program header table file offset */</span><br><span class="line">  Elf64_Off e_shoff;        /* Section header table file offset */</span><br><span class="line">  Elf64_Word    e_flags;        /* Processor-specific flags */</span><br><span class="line">  Elf64_Half    e_ehsize;       /* ELF header size in bytes */</span><br><span class="line">  Elf64_Half    e_phentsize;        /* Program header table entry size */</span><br><span class="line">  Elf64_Half    e_phnum;        /* Program header table entry count */</span><br><span class="line">  Elf64_Half    e_shentsize;        /* Section header table entry size */</span><br><span class="line">  Elf64_Half    e_shnum;        /* Section header table entry count */</span><br><span class="line">  Elf64_Half    e_shstrndx;     /* Section header string table index */</span><br><span class="line">&#125; Elf64_Ehdr;</span><br></pre></td></tr></table></figure>
+<p>64位和32位只是个别字段长度不同，比如 Elf64_Addr 和 Elf64_Off 都是64位无符号整数。而Elf32_Addr 和 Elf32_Off是32位无符号整数。这导致ELF header的所占的字节数不同。32位的ELF header占52个字节，64位的ELF header占64个字节。</p>
+<h2 id="ELF-header详解-1"><a href="#ELF-header详解-1" class="headerlink" title="ELF header详解"></a>ELF header详解</h2><p><img src="/img/417313-20181022201440705-1728299314.png" alt></p>
+<ol>
+<li><p><code>e_ident</code>占16个字节。前四个字节被称作ELF的Magic Number。后面的字节描述了ELF文件内容如何解码等信息。等一下详细讲。</p>
+</li>
+<li><p><code>e_type</code>，2字节，描述了ELF文件的类型。以下取值有意义：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">ET_NONE, 0, No file type</span><br><span class="line">ET_REL, 1, Relocatable file（可重定位文件，通常是文件名以.o结尾，目标文件）</span><br><span class="line">ET_EXEC, 2, Executable file （可执行文件）</span><br><span class="line">ET_DYN, 3, Shared object file （动态库文件，你用gcc编译出的二进制往往也属于这种类型，惊讶吗？）</span><br><span class="line">ET_CORE, 4, Core file （core文件，是core dump生成的吧？）</span><br><span class="line">ET_NUM, 5，表示已经定义了5种文件类型</span><br><span class="line">ET_LOPROC, 0xff00, Processor-specific</span><br><span class="line">ET_HIPROC, 0xffff, Processor-specific</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>从<code>ET_LOPROC</code>到<code>ET_HIPROC</code>的值，包含特定于处理器的语义。</p>
+<ol start="3">
+<li><p><code>e_machine</code>，2字节。描述了文件面向的架构，可取值如下（因为文档较老，现在有更多取值，参见/usr/include/elf.h中的EM_开头的宏定义）：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">EM_NONE, 0, No machine</span><br><span class="line">EM_M32, 1, AT&amp;T WE 32100</span><br><span class="line">EM_SPARC, 2, SPARC</span><br><span class="line">EM_386, 3, Intel 80386</span><br><span class="line">EM_68K, 4, Motorola 68000</span><br><span class="line">EM_88K, 5, Motorola 88000</span><br><span class="line">EM_860, 7, Intel 80860</span><br><span class="line">EM_MIPS, 8, MIPS RS3000</span><br><span class="line">... ...</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><code>e_version</code>，2字节，描述了ELF文件的版本号，合法取值如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">EV_NONE, 0, Invalid version</span><br><span class="line">EV_CURRENT, 1, Current version，通常都是这个取值。</span><br><span class="line">EV_NUM, 2, 表示已经定义了2种版本号</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><code>e_entry</code>，（32位4字节，64位8字节），执行入口点，如果文件没有入口点，这个域保持0。</p>
+</li>
+<li><code>e_phoff</code>, （32位4字节，64位8字节），program header table的offset，如果文件没有PH，这个值是0。</li>
+<li><code>e_shoff</code>, （32位4字节，64位8字节）， section header table 的offset，如果文件没有SH，这个值是0。</li>
+<li><code>e_flags</code>, 4字节，特定于处理器的标志，32位和64位Intel架构都没有定义标志，因此eflags的值是0。</li>
+<li><code>e_ehsize</code>, 2字节，ELF header的大小，32位ELF是52字节，64位是64字节。</li>
+<li><code>e_phentsize</code>，2字节。program header table中每个入口的大小。</li>
+<li><code>e_phnum</code>, 2字节。如果文件没有program header table, e_phnum的值为0。e_phentsize乘以e_phnum就得到了整个program header table的大小。</li>
+<li><code>e_shentsize</code>, 2字节，section header table中entry的大小，即每个section header占多少字节。</li>
+<li><code>e_shnum</code>, 2字节，section header table中header的数目。如果文件没有section header table, e_shnum的值为0。e_shentsize乘以e_shnum，就得到了整个section header table的大小。</li>
+<li><code>e_shstrndx</code>, 2字节。section header string table index. 包含了section header table中section name string table。如果没有section name string table, e_shstrndx的值是SHN_UNDEF.</li>
+</ol>
+<p>e_ident<br>回过头来，我们仔细看看文件前16个字节，也是e_ident。<br><img src="/img/417313-20181022201527605-1024038352.png" alt></p>
+<p>如图，前4个字节是ELF的Magic Number，固定为<code>7f 45 4c 46</code>。<br>第5个字节指明ELF文件是32位还是64位的。<br>第6个字节指明了数据的编码方式，即我们通常说的little endian或是big endian。little endian我喜欢称作小头在前，低位字节在前，或者直接说低位字节在低位地址，比如<code>0x7f454c46</code>，存储顺序就是<code>46 4c 45 7f</code>。big endian就是大头在前，高位字节在前，直接说就是高位字节在低位地址，比如<code>0x7f454c46</code>，在文件中的存储顺序是<code>7f 45 4c 46</code>。<br>第7个字节指明了ELF header的版本号，目前值都是1。<br>第8-16个字节，都填充为0。</p>
+<p>readelf读取ELF header<br>我们使用readelf -h <elffile>可以读取文件的ELF header信息。<br>比如我本地有执行文件hello，我执行reaelf -h hello，结果如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">ELF Header:</span><br><span class="line">  Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00</span><br><span class="line">  Class:                             ELF64</span><br><span class="line">  Data:                              2&apos;s complement, little endian</span><br><span class="line">  Version:                           1 (current)</span><br><span class="line">  OS/ABI:                            UNIX - System V</span><br><span class="line">  ABI Version:                       0</span><br><span class="line">  Type:                              DYN (Shared object file)</span><br><span class="line">  Machine:                           Advanced Micro Devices X86-64</span><br><span class="line">  Version:                           0x1</span><br><span class="line">  Entry point address:               0x1050</span><br><span class="line">  Start of program headers:          64 (bytes into file)</span><br><span class="line">  Start of section headers:          14768 (bytes into file)</span><br><span class="line">  Flags:                             0x0</span><br><span class="line">  Size of this header:               64 (bytes)</span><br><span class="line">  Size of program headers:           56 (bytes)</span><br><span class="line">  Number of program headers:         11</span><br><span class="line">  Size of section headers:           64 (bytes)</span><br><span class="line">  Number of section headers:         29</span><br><span class="line">  Section header string table index: 28</span><br></pre></td></tr></table></figure></elffile></p>
+<p>这是我用gcc生成的执行文件，但注意它的Type是DYN (Shared object file)，这大概是因为，这个文件不能直接执行，是依赖于解释器和c库才能运行。真正的可执行文件是解释器，而hello相对于解释器来说也是个共享库文件。这是我的推断，需要后面深入学习后验证。</p>
+<h1 id="ELF格式探析之三：sections"><a href="#ELF格式探析之三：sections" class="headerlink" title="ELF格式探析之三：sections"></a>ELF格式探析之三：sections</h1><p>我们在讲ELF Header的时候，讲到了section header table。它是一个section header的集合，每个section header是一个描述section的结构体。在同一个ELF文件中，每个section header大小是相同的。（其实看了源码就知道，32位ELF文件中的section header都是一样的大小，64位ELF文件中的section header也是一样的大小）</p>
+<p>每个section都有一个section header描述它，但是一个section header可能在文件中没有对应的section，因为有的section是不占用文件空间的。每个section在文件中是连续的字节序列。section之间不会有重叠。</p>
+<p>一个目标文件中可能有未覆盖到的空间，比如各种header和section都没有覆盖到。这部分字节的内容是未指定的，也是没有意义的。</p>
+<p>section header定义<br>section header结构体的定义可以在 <code>/usr/include/elf.h</code>中找到。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">/* Section header.  */</span><br><span class="line"></span><br><span class="line">typedef struct</span><br><span class="line">&#123;</span><br><span class="line">  Elf32_Word    sh_name;        /* Section name (string tbl index) */</span><br><span class="line">  Elf32_Word    sh_type;        /* Section type */</span><br><span class="line">  Elf32_Word    sh_flags;       /* Section flags */</span><br><span class="line">  Elf32_Addr    sh_addr;        /* Section virtual addr at execution */</span><br><span class="line">  Elf32_Off sh_offset;      /* Section file offset */</span><br><span class="line">  Elf32_Word    sh_size;        /* Section size in bytes */</span><br><span class="line">  Elf32_Word    sh_link;        /* Link to another section */</span><br><span class="line">  Elf32_Word    sh_info;        /* Additional section information */</span><br><span class="line">  Elf32_Word    sh_addralign;       /* Section alignment */</span><br><span class="line">  Elf32_Word    sh_entsize;     /* Entry size if section holds table */</span><br><span class="line">&#125; Elf32_Shdr;</span><br><span class="line"></span><br><span class="line">typedef struct</span><br><span class="line">&#123;</span><br><span class="line">  Elf64_Word    sh_name;        /* Section name (string tbl index) */</span><br><span class="line">  Elf64_Word    sh_type;        /* Section type */</span><br><span class="line">  Elf64_Xword   sh_flags;       /* Section flags */</span><br><span class="line">  Elf64_Addr    sh_addr;        /* Section virtual addr at execution */</span><br><span class="line">  Elf64_Off sh_offset;      /* Section file offset */</span><br><span class="line">  Elf64_Xword   sh_size;        /* Section size in bytes */</span><br><span class="line">  Elf64_Word    sh_link;        /* Link to another section */</span><br><span class="line">  Elf64_Word    sh_info;        /* Additional section information */</span><br><span class="line">  Elf64_Xword   sh_addralign;       /* Section alignment */</span><br><span class="line">  Elf64_Xword   sh_entsize;     /* Entry size if section holds table */</span><br><span class="line">&#125; Elf64_Shdr;</span><br></pre></td></tr></table></figure></p>
+<p><img src="/img/417313-20181029104008898-1703340645.png" alt></p>
+<p>下面我们依次讲解结构体各个字段：</p>
+<ol>
+<li><p><code>sh_name</code>，4字节，是一个索引值，在shstrtable（section header string table，包含section name的字符串表，也是一个section）中的索引。第二讲介绍ELF文件头时，里面专门有一个字段e_shstrndx，其含义就是shstrtable对应的section header在section header table中的索引。</p>
+</li>
+<li><p><code>sh_type</code>，4字节，描述了section的类型，常见的取值如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">SHT_NULL 0，表明section header无效，没有关联的section。</span><br><span class="line">SHT_PROGBITS 1，section包含了程序需要的数据，格式和含义由程序解释。</span><br><span class="line">SHT_SYMTAB 2， 包含了一个符号表。当前，一个ELF文件中只有一个符号表。SHT_SYMTAB提供了用于(link editor)链接编辑的符号，当然这些符号也可能用于动态链接。这是一个完全的符号表，它包含许多符号。</span><br><span class="line">SHT_STRTAB 3，包含一个字符串表。一个对象文件包含多个字符串表，比如.strtab（包含符号的名字）和.shstrtab（包含section的名称）。</span><br><span class="line">SHT_RELA 4，重定位节，包含relocation入口，参见Elf32_Rela。一个文件可能有多个Relocation Section。比如.rela.text，.rela.dyn。</span><br><span class="line">SHT_HASH 5，这样的section包含一个符号hash表，参与动态连接的目标代码文件必须有一个hash表。目前一个ELF文件中只包含一个hash表。讲链接的时候再细讲。</span><br><span class="line">SHT_DYNAMIC 6，包含动态链接的信息。目前一个ELF文件只有一个DYNAMIC section。</span><br><span class="line">SHT_NOTE 7，note section, 以某种方式标记文件的信息，以后细讲。</span><br><span class="line">SHT_NOBITS 8，这种section不含字节，也不占用文件空间，section header中的sh_offset字段只是概念上的偏移。</span><br><span class="line">SHT_REL 9， 重定位节，包含重定位条目。和SHT_RELA基本相同，两者的区别在后面讲重定位的时候再细讲。</span><br><span class="line">SHT_SHLIB 10，保留，语义未指定，包含这种类型的section的elf文件不符合ABI。</span><br><span class="line">SHT_DYNSYM 11， 用于动态连接的符号表，推测是symbol table的子集。</span><br><span class="line">SHT_LOPROC 0x70000000 到 SHT_HIPROC 0x7fffffff，为特定于处理器的语义保留。</span><br><span class="line">SHT_LOUSER 0x80000000 and SHT_HIUSER 0xffffffff，指定了为应用程序保留的索引的下界和上界，这个范围内的索引可以被应用程序使用。</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><code>sh_flags</code>, 32位占4字节， 64位占8字节。包含位标志，用 readelf -S <elf> 可以看到很多标志。常用的有：</elf></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">SHF_WRITE 0x1，进程执行的时候，section内的数据可写。</span><br><span class="line">SHF_ALLOC 0x2，进程执行的时候，section需要占据内存。</span><br><span class="line">SHF_EXECINSTR 0x4，节内包含可以执行的机器指令。</span><br><span class="line">SHF_STRINGS 0x20，包含0结尾的字符串。</span><br><span class="line">SHF_MASKOS 0x0ff00000，这个mask为OS特定的语义保留8位。</span><br><span class="line">SHF_MASKPROC 0xf0000000，这个mask包含的所有位保留（也就是最高字节的高4位），为处理器相关的语义使用。</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><code>sh_addr</code>, 对32位来说是4字节，64位是8字节。如果section会出现在进程的内存映像中，给出了section第一字节的虚拟地址。</p>
+</li>
+<li><p><code>sh_offset</code>，对于32位来说是4字节，64位是8字节。section相对于文件头的字节偏移。对于不占文件空间的section（比如SHT_NOBITS），它的sh_offset只是给出了section逻辑上的位置。</p>
+</li>
+<li><p><code>sh_size</code>，section占多少字节，对于SHT_NOBITS类型的section，sh_size没用，其值可能不为0，但它也不占文件空间。</p>
+</li>
+<li><p><code>sh_link</code>，含有一个section header的index，该值的解释依赖于section type。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">如果是SHT_DYNAMIC，sh_link是string table的section header index，也就是说指向字符串表。</span><br><span class="line">如果是SHT_HASH，sh_link指向symbol table的section header index，hash table应用于symbol table。</span><br><span class="line">如果是重定位节SHT_REL或SHT_RELA，sh_link指向相应符号表的section header index。</span><br><span class="line">如果是SHT_SYMTAB或SHT_DYNSYM，sh_link指向相关联的符号表，暂时不解。</span><br><span class="line">对于其它的section type，sh_link的值是SHN_UNDEF</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><code>sh_info</code>，存放额外的信息，值的解释依赖于section type。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">如果是SHT_REL和SHT_RELA类型的重定位节，sh_info是应用relocation的节的节头索引。</span><br><span class="line">如果是SHT_SYMTAB和SHT_DYNSYM，sh_info是第一个non-local符号在符号表中的索引。推测local symbol在前面，non-local symbols紧跟在后面，所以文档中也说，sh_info是最后一个本地符号的在符号表中的索引加1。</span><br><span class="line">对于其它类型的section，sh_info是0。</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><code>sh_addralign</code>，地址对齐，如果一个section有一个doubleword字段，系统在载入section时的内存地址必须是doubleword对齐。也就是说sh_addr必须是sh_addralign的整数倍。只有2的正整数幂是有效的。0和1说明没有对齐约束。</p>
+</li>
+<li><code>sh_entsize</code>，有些section包含固定大小的记录，比如符号表。这个值给出了每个记录大小。对于不包含固定大小记录的section，这个值是0。</li>
+</ol>
+<p>系统预定义的section name</p>
+<p>系统预定义了一些节名（以.开头），这些节有其特定的类型和含义。</p>
+<ol>
+<li><code>.bss</code>：包含程序运行时未初始化的数据（全局变量和静态变量）。当程序运行时，这些数据初始化为0。 其类型为SHT_NOBITS，表示不占文件空间。SHF_ALLOC + SHF_WRITE，运行时要占用内存的。</li>
+<li><code>.comment</code>包含版本控制信息（是否包含程序的注释信息？不包含，注释在预处理时已经被删除了）。类型为SHT_PROGBITS。</li>
+<li><code>.data</code>和<code>.data1</code>，包含初始化的全局变量和静态变量。 类型为SHT_PROGBITS，标志为SHF_ALLOC + SHF_WRITE（占用内存，可写）。</li>
+<li><code>.debug</code>，包含了符号调试用的信息，我们要想用gdb等工具调试程序，需要该类型信息，类型为SHT_PROGBITS。</li>
+<li><code>.dynamic</code>，类型SHT_DYNAMIC，包含了动态链接的信息。标志SHF_ALLOC，是否包含SHF_WRITE和处理器有关。</li>
+<li><code>.dynstr</code>，SHT_STRTAB，包含了动态链接用的字符串，通常是和符号表中的符号关联的字符串。标志 SHF_ALLOC</li>
+<li><code>.dynsym</code>，类型SHT_DYNSYM，包含动态链接符号表， 标志SHF_ALLOC。</li>
+<li><code>.fini</code>，类型SHT_PROGBITS，程序正常结束时，要执行该section中的指令。标志SHF_ALLOC + SHF_EXECINSTR（占用内存可执行）。现在ELF还包含.fini_array section。</li>
+<li><code>.got</code>，类型SHT_PROGBITS，全局偏移表(global offset table)，以后会重点讲。</li>
+<li><code>.hash</code>，类型SHT_HASH，包含符号hash表，以后细讲。标志SHF_ALLOC。</li>
+<li><code>.init</code>，SHT_PROGBITS，程序运行时，先执行该节中的代码。SHF_ALLOC + SHF_EXECINSTR，和.fini对应。现在ELF还包含.init_array section。</li>
+<li><code>.interp</code>，SHT_PROGBITS，该节内容是一个字符串，指定了程序解释器的路径名。如果文件中有一个可加载的segment包含该节，属性就包含SHF_ALLOC，否则不包含。</li>
+<li><code>.line</code>，SHT_PROGBITS，包含符号调试的行号信息，描述了源程序和机器代码的对应关系。gdb等调试器需要此信息。</li>
+<li><code>.note</code> Note Section, 类型SHT_NOTE，以后单独讲。</li>
+<li><code>.plt</code> 过程链接表（Procedure Linkage Table），类型SHT_PROGBITS,以后重点讲。</li>
+<li><code>.relNAME</code>，类型SHT_REL, 包含重定位信息。如果文件有一个可加载的segment包含该section，section属性将包含SHF_ALLOC，否则不包含。NAME，是应用重定位的节的名字，比如.text的重定位信息存储在.rel.text中。</li>
+<li><code>.relaname</code>类型SHT_RELA，和.rel相同。SHT_RELA和SHT_REL的区别，会在讲重定位的时候说明。</li>
+<li><code>.rodata</code>和<code>.rodata1</code>。类型SHT_PROGBITS, 包含只读数据，组成不可写的段。标志SHF_ALLOC。</li>
+<li><code>.shstrtab</code>，类型SHT_STRTAB，包含section的名字。有读者可能会问：section header中不是已经包含名字了吗，为什么把名字集中存放在这里？ sh_name 包含的是.shstrtab 中的索引，真正的字符串存储在.shstrtab中。那么section names为什么要集中存储？我想是这样：如果有相同的字符串，就可以共用一块存储空间。如果字符串存在包含关系，也可以共用一块存储空间。</li>
+<li><code>.strtab</code> SHT_STRTAB，包含字符串，通常是符号表中符号对应的变量名字。如果文件有一个可加载的segment包含该section，属性将包含SHF_ALLOC。字符串以\0结束， section以\0开始，也以\0结束。一个.strtab可以是空的，它的sh_size将是0。针对空字符串表的非0索引是允许的。</li>
+<li><code>symtab</code>，类型SHT_SYMTAB，Symbol Table，符号表。包含了定位、重定位符号定义和引用时需要的信息。符号表是一个数组，Index 0 第一个入口，它的含义是undefined symbol index， STN_UNDEF。如果文件有一个可加载的segment包含该section，属性将包含SHF_ALLOC。</li>
+</ol>
+<p>练习：读取section names<br>从这一讲开始，都会有练习，方便我们把前面的理论知识综合运用。</p>
+<p>下面这个练习的目标是：从一个ELF文件中读取存储section name的字符串表。前面讲过，该字符串表也是一个section，section header table中有其对应的section header，并且ELF文件头中给出了节名字符串表对应的section header的索引，e_shstrndx。</p>
+<p>我们的思路是这样：</p>
+<ol>
+<li>从ELF header中读取section header table的起始位置，每个section header的大小，以及节名字符串表对应section header的索引。</li>
+<li>计算<code>section_header_table_offset + section_header_size * e_shstrndx</code>就是节名字符串表对应section header的偏移。</li>
+<li>读取section header，可以从中得到节名字符串表在文件中的偏移和大小。</li>
+<li>把节名字符串表读取到内存中，打印其内容。<br>代码如下：<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br></pre></td><td class="code"><pre><span class="line">/* 64位ELF文件读取section name string table */</span><br><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#include &lt;stdlib.h&gt;</span><br><span class="line">#include &lt;stdint.h&gt;</span><br><span class="line"></span><br><span class="line">int main(int argc, char *argv[])</span><br><span class="line">&#123;</span><br><span class="line">    /* 打开本地的ELF可执行文件hello */</span><br><span class="line">    FILE *fp = fopen(&quot;./hello&quot;, &quot;rb&quot;);</span><br><span class="line">    if(!fp) &#123;</span><br><span class="line">        perror(&quot;open ELF file&quot;);</span><br><span class="line">        exit(1);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /* 1. 通过读取ELF header得到section header table的偏移 */</span><br><span class="line">    /* for 64 bit ELF,</span><br><span class="line">       e_ident(16) + e_type(2) + e_machine(2) +</span><br><span class="line">       e_version(4) + e_entry(8) + e_phoff(8) = 40 */</span><br><span class="line">    fseek(fp, 40, SEEK_SET);</span><br><span class="line">    uint64_t sh_off;</span><br><span class="line">    int r = fread(&amp;sh_off, 1, 8, fp);</span><br><span class="line">    if (r != 8) &#123;</span><br><span class="line">        perror(&quot;read section header offset&quot;);</span><br><span class="line">        exit(2);</span><br><span class="line">    &#125;</span><br><span class="line">    /* 得到的这个偏移值，可以用`reaelf -h hello`来验证是否正确 */</span><br><span class="line">    printf(&quot;section header offset in file: %ld (0x%lx)\n&quot;, sh_off, sh_off);</span><br><span class="line"></span><br><span class="line">    /* 2. 读取每个section header的大小e_shentsize,</span><br><span class="line">       section header的数量e_shnum,</span><br><span class="line">       以及对应section name字符串表的section header的索引e_shstrndx</span><br><span class="line">       得到这些值后，都可以用`readelf -h hello`来验证是否正确 */</span><br><span class="line">    /* e_flags(4) + e_ehsize(2) + e_phentsize(2) + e_phnum(2) = 10 */</span><br><span class="line">    fseek(fp, 10, SEEK_CUR);</span><br><span class="line">    uint16_t sh_ent_size;            /* 每个section header的大小 */</span><br><span class="line">    r = fread(&amp;sh_ent_size, 1, 2, fp);</span><br><span class="line">    if (r != 2) &#123;</span><br><span class="line">        perror(&quot;read section header entry size&quot;);</span><br><span class="line">        exit(2);</span><br><span class="line">    &#125;</span><br><span class="line">    printf(&quot;section header entry size: %d\n&quot;, sh_ent_size);</span><br><span class="line"></span><br><span class="line">    uint16_t sh_num;            /* section header的数量 */</span><br><span class="line">    r = fread(&amp;sh_num, 1, 2, fp);</span><br><span class="line">    if (r != 2) &#123;</span><br><span class="line">        perror(&quot;read section header number&quot;);</span><br><span class="line">        exit(2);</span><br><span class="line">    &#125;</span><br><span class="line">    printf(&quot;section header number: %d\n&quot;, sh_num);</span><br><span class="line"></span><br><span class="line">    uint16_t sh_strtab_index;   /* 节名字符串表对应的节头的索引 */</span><br><span class="line">    r = fread(&amp;sh_strtab_index, 1, 2, fp);</span><br><span class="line">    if (r != 2) &#123;</span><br><span class="line">        perror(&quot;read section header string table index&quot;);</span><br><span class="line">        exit(2);</span><br><span class="line">    &#125;</span><br><span class="line">    printf(&quot;section header string table index: %d\n&quot;, sh_strtab_index);</span><br><span class="line"></span><br><span class="line">    /* 3. read section name string table offset, size */</span><br><span class="line">    /* 先找到节头字符串表对应的section header的偏移位置 */</span><br><span class="line">    fseek(fp, sh_off + sh_strtab_index * sh_ent_size, SEEK_SET);</span><br><span class="line">    /* 再从section header中找到节头字符串表的偏移 */</span><br><span class="line">    /* sh_name(4) + sh_type(4) + sh_flags(8) + sh_addr(8) = 24 */</span><br><span class="line">    fseek(fp, 24, SEEK_CUR);</span><br><span class="line">    uint64_t str_table_off;</span><br><span class="line">    r = fread(&amp;str_table_off, 1, 8, fp);</span><br><span class="line">    if (r != 8) &#123;</span><br><span class="line">        perror(&quot;read section name string table offset&quot;);</span><br><span class="line">        exit(2);</span><br><span class="line">    &#125;</span><br><span class="line">    printf(&quot;section name string table offset: %ld\n&quot;, str_table_off);</span><br><span class="line"></span><br><span class="line">    /* 从section header中找到节头字符串表的大小 */</span><br><span class="line">    uint64_t str_table_size;</span><br><span class="line">    r = fread(&amp;str_table_size, 1, 8, fp);</span><br><span class="line">    if (r != 8) &#123;</span><br><span class="line">        perror(&quot;read section name string table size&quot;);</span><br><span class="line">        exit(2);</span><br><span class="line">    &#125;</span><br><span class="line">    printf(&quot;section name string table size: %ld\n&quot;, str_table_size);</span><br><span class="line"></span><br><span class="line">    /* 动态分配内存，把节头字符串表读到内存中 */</span><br><span class="line">    char *buf = (char *)malloc(str_table_size);</span><br><span class="line">    if(!buf) &#123;</span><br><span class="line">        perror(&quot;allocate memory for section name string table&quot;);</span><br><span class="line">        exit(3);</span><br><span class="line">    &#125;</span><br><span class="line">    fseek(fp, str_table_off, SEEK_SET);</span><br><span class="line">    r = fread(buf, 1, str_table_size, fp);</span><br><span class="line">    if(r != str_table_size) &#123;</span><br><span class="line">        perror(&quot;read section name string table&quot;);</span><br><span class="line">        free(buf);</span><br><span class="line">        exit(2);</span><br><span class="line">    &#125;</span><br><span class="line">    uint16_t i;</span><br><span class="line">    for(i = 0; i &lt; str_table_size; ++i) &#123;</span><br><span class="line">        /* 如果节头字符串表中的字节是0，就打印`\0` */</span><br><span class="line">        if (buf[i] == 0)</span><br><span class="line">            printf(&quot;\\0&quot;);</span><br><span class="line">        else</span><br><span class="line">            printf(&quot;%c&quot;, buf[i]);</span><br><span class="line">    &#125;</span><br><span class="line">    printf(&quot;\n&quot;);</span><br><span class="line">    free(buf);</span><br><span class="line">    fclose(fp);</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>把以上代码存为chap3_read_section_names.c，执行gcc -Wall -o secnames chap3_read_section_names.c进行编译，输出的执行文件名叫secnames。执行secnames，输出如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">./secnames</span><br><span class="line">section header offset in file: 14768 (0x39b0)</span><br><span class="line">section header entry size: 64</span><br><span class="line">section header number: 29</span><br><span class="line">section header string table index: 28</span><br><span class="line">section name string table offset: 14502</span><br><span class="line">section name string table size: 259</span><br><span class="line">\0.symtab\0.strtab\0.shstrtab\0.interp\0.note.ABI-tag\0.note.gnu.build-id\0.gnu.hash\0.dynsym\0.dynstr\0.gnu.version\0.gnu.version_r\0.rela.dyn\0.rela.plt\0.init\0.text\0.fini\0.rodata\0.eh_frame_hdr\0.eh_frame\0.init_array\0.fini_array\0.dynamic\0.got\0.got.plt\0.data\0.bss\0.comment\0</span><br></pre></td></tr></table></figure></p>
+<p>可以发现，节头字符串表以\0开始，以\0结束。如果一个section的name字段指向0，则他指向的字节值是0，则它没有名称，或名称是空。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/21/cpp中的queue/" rel="next" title="C++ 中的Queue">
+                <i class="fa fa-chevron-left"></i> C++ 中的Queue
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">65</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="450" src="//music.163.com/outchain/player?type=0&id=101039122&auto=0&height=430">
+          </iframe>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#ELF文件解析（一）：Segment和Section"><span class="nav-number">1.</span> <span class="nav-text">ELF文件解析（一）：Segment和Section</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ELF-header详解"><span class="nav-number">2.</span> <span class="nav-text">ELF header详解</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#ELF-header详解-1"><span class="nav-number">2.1.</span> <span class="nav-text">ELF header详解</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ELF格式探析之三：sections"><span class="nav-number">3.</span> <span class="nav-text">ELF格式探析之三：sections</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
