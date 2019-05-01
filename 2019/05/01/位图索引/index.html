@@ -86,18 +86,18 @@
 
 
 
-<meta name="description" content="案例　　有张表名为table的表，由三列组成，分别是姓名、性别和婚姻状况，其中性别只有男和女两项，婚姻状况由已婚、未婚、离婚这三项，该表共有100w个记录。现在有这样的查询：     select * from table where Gender=‘男’ and Marital=“未婚”。姓名(Name)|性别(Gender)|婚姻状况(Marital)-|-|-张三|男|已婚李四|女|已婚王五">
+<meta name="description" content="案例　　有张表名为table的表，由三列组成，分别是姓名、性别和婚姻状况，其中性别只有男和女两项，婚姻状况由已婚、未婚、离婚这三项，该表共有100w个记录。现在有这样的查询：     select * from table where Gender=‘男’ and Marital=“未婚”。    姓名(Name) 性别(Gender) 婚姻状况(Marital)     张三 男 已婚   李四">
 <meta name="keywords" content="数据结构">
 <meta property="og:type" content="article">
 <meta property="og:title" content="位图（BitMap）索引">
 <meta property="og:url" content="http://yoursite.com/2019/05/01/位图索引/index.html">
 <meta property="og:site_name" content="Hao Yu&#39;s blog">
-<meta property="og:description" content="案例　　有张表名为table的表，由三列组成，分别是姓名、性别和婚姻状况，其中性别只有男和女两项，婚姻状况由已婚、未婚、离婚这三项，该表共有100w个记录。现在有这样的查询：     select * from table where Gender=‘男’ and Marital=“未婚”。姓名(Name)|性别(Gender)|婚姻状况(Marital)-|-|-张三|男|已婚李四|女|已婚王五">
+<meta property="og:description" content="案例　　有张表名为table的表，由三列组成，分别是姓名、性别和婚姻状况，其中性别只有男和女两项，婚姻状况由已婚、未婚、离婚这三项，该表共有100w个记录。现在有这样的查询：     select * from table where Gender=‘男’ and Marital=“未婚”。    姓名(Name) 性别(Gender) 婚姻状况(Marital)     张三 男 已婚   李四">
 <meta property="og:locale" content="zn-ch">
-<meta property="og:updated_time" content="2019-05-01T09:54:01.181Z">
+<meta property="og:updated_time" content="2019-05-01T10:31:11.519Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="位图（BitMap）索引">
-<meta name="twitter:description" content="案例　　有张表名为table的表，由三列组成，分别是姓名、性别和婚姻状况，其中性别只有男和女两项，婚姻状况由已婚、未婚、离婚这三项，该表共有100w个记录。现在有这样的查询：     select * from table where Gender=‘男’ and Marital=“未婚”。姓名(Name)|性别(Gender)|婚姻状况(Marital)-|-|-张三|男|已婚李四|女|已婚王五">
+<meta name="twitter:description" content="案例　　有张表名为table的表，由三列组成，分别是姓名、性别和婚姻状况，其中性别只有男和女两项，婚姻状况由已婚、未婚、离婚这三项，该表共有100w个记录。现在有这样的查询：     select * from table where Gender=‘男’ and Marital=“未婚”。    姓名(Name) 性别(Gender) 婚姻状况(Marital)     张三 男 已婚   李四">
 
 
 
@@ -317,7 +317,173 @@
       
 
       
-        <h1 id="案例"><a href="#案例" class="headerlink" title="案例"></a>案例</h1><p>　　有张表名为table的表，由三列组成，分别是姓名、性别和婚姻状况，其中性别只有男和女两项，婚姻状况由已婚、未婚、离婚这三项，该表共有100w个记录。现在有这样的查询：     select * from table where Gender=‘男’ and Marital=“未婚”。<br>姓名(Name)|性别(Gender)|婚姻状况(Marital)<br>-|-|-<br>张三|男|已婚<br>李四|女|已婚<br>王五|男|未婚<br>赵六|女|离婚<br>孙七|女|未婚</p>
+        <h1 id="案例"><a href="#案例" class="headerlink" title="案例"></a>案例</h1><p>　　有张表名为table的表，由三列组成，分别是姓名、性别和婚姻状况，其中性别只有男和女两项，婚姻状况由已婚、未婚、离婚这三项，该表共有100w个记录。现在有这样的查询：     select * from table where Gender=‘男’ and Marital=“未婚”。</p>
+<table>
+<thead>
+<tr>
+<th>姓名(Name)</th>
+<th style="text-align:center">性别(Gender)</th>
+<th style="text-align:right">婚姻状况(Marital)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>张三</td>
+<td style="text-align:center">男</td>
+<td style="text-align:right">已婚</td>
+</tr>
+<tr>
+<td>李四</td>
+<td style="text-align:center">女</td>
+<td style="text-align:right">已婚</td>
+</tr>
+<tr>
+<td>王五</td>
+<td style="text-align:center">男</td>
+<td style="text-align:right">未婚</td>
+</tr>
+<tr>
+<td>赵六</td>
+<td style="text-align:center">女</td>
+<td style="text-align:right">离婚</td>
+</tr>
+<tr>
+<td>孙七</td>
+<td style="text-align:center">女</td>
+<td style="text-align:right">未婚</td>
+</tr>
+</tbody>
+</table>
+<ol>
+<li>不使用索引</li>
+</ol>
+<p>不使用索引时，数据库只能一行行扫描所有记录，然后判断该记录是否满足查询条件。</p>
+<ol start="2">
+<li>B树索引</li>
+</ol>
+<p>对于性别，可取值的范围只有’男’,’女’，并且男和女可能各站该表的50%的数据，这时添加B树索引还是需要取出一半的数据， 因此完全没有必要。相反，如果某个字段的取值范围很广，几乎没有重复，比如身份证号，此时使用B树索引较为合适。事实上，当取出的行数据占用表中大部分的数据时，即使添加了B树索引，数据库如oracle、mysql也不会使用B树索引，很有可能还是一行行全部扫描。</p>
+<h1 id="位图索引出马"><a href="#位图索引出马" class="headerlink" title="位图索引出马"></a>位图索引出马</h1><p>如果用户查询的列的基数非常的小， 即只有的几个固定值，如性别、婚姻状况、行政区等等。要为这些基数值比较小的列建索引，就需要建立位图索引。</p>
+<p>对于性别这个列，位图索引形成两个向量，男向量为10100…，向量的每一位表示该行是否是男，如果是则位1，否为0，同理，女向量位01011。</p>
+<table>
+<thead>
+<tr>
+<th>RowId</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>…</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>男</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td>女</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>对于婚姻状况这一列，位图索引生成三个向量，已婚为11000…，未婚为00100…，离婚为00010…。</p>
+<table>
+<thead>
+<tr>
+<th>RowId</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>…</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>已婚</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td>未婚</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>离婚</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>当我们使用查询语句“select * from table where Gender=‘男’ and Marital=“未婚”;”的时候 首先取出男向量10100…，然后取出未婚向量00100…，将两个向量做and操作，这时生成新向量00100…，可以发现第三位为1，表示该表的第三行数据就是我们需要查询的结果。 </p>
+<table>
+<thead>
+<tr>
+<th>RowId</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>男</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>未婚</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr>
+<td>结果</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<h1 id="位图索引的适用条件"><a href="#位图索引的适用条件" class="headerlink" title="位图索引的适用条件"></a>位图索引的适用条件</h1><p>上面讲了，位图索引适合只有几个固定值的列，如性别、婚姻状况、行政区等等，而身份证号这种类型不适合用位图索引。</p>
+<p>此外，位图索引适合静态数据，而不适合索引频繁更新的列。举个例子，有这样一个字段busy，记录各个机器的繁忙与否，当机器忙碌时，busy为1，当机器不忙碌时，busy为0。</p>
+<p>这个时候有人会说使用位图索引，因为busy只有两个值。好，我们使用位图索引索引busy字段！假设用户A使用update更新某个机器的busy值，比如update table set table.busy=1 where rowid=100;，但还没有commit，而用户B也使用update更新另一个机器的busy值，update table set table.busy=1 where rowid=12; 这个时候用户B怎么也更新不了，需要等待用户A commit。</p>
+<p>原因：用户A更新了某个机器的busy值为1，会导致所有busy为1的机器的位图向量发生改变，因此数据库会将busy＝1的所有行锁定，只有commit之后才解锁。</p>
+<p>源地址：<a href="http://www.cnblogs.com/LBSer" target="_blank" rel="noopener">http://www.cnblogs.com/LBSer</a></p>
 
       
     </div>
@@ -357,6 +523,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/01/标准IO与文件IO的区别/" rel="prev" title="标准IO与文件IO的区别">
+                标准IO与文件IO的区别 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -434,7 +604,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">86</span>
+                  <span class="site-state-item-count">87</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -499,7 +669,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#案例"><span class="nav-number">1.</span> <span class="nav-text">案例</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#案例"><span class="nav-number">1.</span> <span class="nav-text">案例</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#位图索引出马"><span class="nav-number">2.</span> <span class="nav-text">位图索引出马</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#位图索引的适用条件"><span class="nav-number">3.</span> <span class="nav-text">位图索引的适用条件</span></a></li></ol></div>
             
 
           </div>
