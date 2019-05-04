@@ -1,0 +1,1757 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-flash.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="转载自：http://blog.csdn.net/sailor_8318/archive/2008/09/10/2906968.aspx 系统调用意义linux内核中设置了一组用于实现系统功能的子程序，称为系统调用。系统调用和普通库函数调用非常相似，只是系统调用由操作系统核心提供，运行于核心态，而普通的函数调用由函数库或用户自己提供，运行于用户态。 一般的，进程是不能访问内核的。它不能访问内核所占">
+<meta name="keywords" content="Linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux系统调用的实现机制分析">
+<meta property="og:url" content="http://yoursite.com/2019/05/04/Linux系统调用的实现机制分析/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="转载自：http://blog.csdn.net/sailor_8318/archive/2008/09/10/2906968.aspx 系统调用意义linux内核中设置了一组用于实现系统功能的子程序，称为系统调用。系统调用和普通库函数调用非常相似，只是系统调用由操作系统核心提供，运行于核心态，而普通的函数调用由函数库或用户自己提供，运行于用户态。 一般的，进程是不能访问内核的。它不能访问内核所占">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2019-05-04T15:59:00.050Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Linux系统调用的实现机制分析">
+<meta name="twitter:description" content="转载自：http://blog.csdn.net/sailor_8318/archive/2008/09/10/2906968.aspx 系统调用意义linux内核中设置了一组用于实现系统功能的子程序，称为系统调用。系统调用和普通库函数调用非常相似，只是系统调用由操作系统核心提供，运行于核心态，而普通的函数调用由函数库或用户自己提供，运行于用户态。 一般的，进程是不能访问内核的。它不能访问内核所占">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/05/04/Linux系统调用的实现机制分析/">
+
+
+
+
+
+  <title>Linux系统调用的实现机制分析 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/04/Linux系统调用的实现机制分析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Linux系统调用的实现机制分析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-05-04T23:41:39+08:00">
+                2019-05-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>转载自：<a href="http://blog.csdn.net/sailor_8318/archive/2008/09/10/2906968.aspx" target="_blank" rel="noopener">http://blog.csdn.net/sailor_8318/archive/2008/09/10/2906968.aspx</a></p>
+<h1 id="系统调用意义"><a href="#系统调用意义" class="headerlink" title="系统调用意义"></a>系统调用意义</h1><p>linux内核中设置了一组用于实现系统功能的子程序，称为系统调用。系统调用和普通库函数调用非常相似，只是系统调用由操作系统核心提供，运行于核心态，而普通的函数调用由函数库或用户自己提供，运行于用户态。</p>
+<p>一般的，进程是不能访问内核的。它不能访问内核所占内存空间也不能调用内核函数。CPU硬件决定了这些（这就是为什么它被称作”保护模式”）。为了和用户空间上运行的进程进行交互，内核提供了一组接口。透过该接口，应用程序可以访问硬件设备和其他操作系统资源。这组接口在应用程序和内核之间扮演了使者的角色，应用程序发送各种请求，而内核负责满足这些请求(或者让应用程序暂时搁置)。实际上提供这组接口主要是为了保证系统稳定可靠，避免应用程序肆意妄行，惹出大麻烦。</p>
+<p>系统调用在用户空间进程和硬件设备之间添加了一个中间层。该层主要作用有三个：</p>
+<ol>
+<li>它为用户空间提供了一种统一的硬件的抽象接口。比如当需要读些文件的时候，应用程序就可以不去管磁盘类型和介质，甚至不用去管文件所在的文件系统到底是哪种类型。</li>
+<li>系统调用保证了系统的稳定和安全。作为硬件设备和应用程序之间的中间人，内核可以基于权限和其他一些规则对需要进行的访问进行裁决。举例来说，这样可以避免应用程序不正确地使用硬件设备，窃取其他进程的资源，或做出其他什么危害系统的事情。</li>
+<li>每个进程都运行在虚拟系统中，而在用户空间和系统的其余部分提供这样一层公共接口，也是出于这种考虑。如果应用程序可以随意访问硬件而内核又对此一无所知的话，几乎就没法实现多任务和虚拟内存，当然也不可能实现良好的稳定性和安全性。在Linux中，系统调用是用户空间访问内核的惟一手段；除异常和中断外，它们是内核惟一的合法入口。</li>
+</ol>
+<h1 id="API-POSIX-C库的关系"><a href="#API-POSIX-C库的关系" class="headerlink" title="API/POSIX/C库的关系"></a>API/POSIX/C库的关系</h1><p>一般情况下，应用程序通过应用编程接口(API)而不是直接通过系统调用来编程。这点很重要，因为应用程序使用的这种编程接口实际上并不需要和内核提供的系统调用一一对应。一个API定义了一组应用程序使用的编程接口。它们可以实现成一个系统调用，也可以通过调用多个系统调用来实现，而完全不使用任何系统调用也不存在问题。实际上，API可以在各种不同的操作系统上实现，给应用程序提供完全相同的接口，而它们本身在这些系统上的实现却可能迥异。</p>
+<p>在Unix世界中，最流行的应用编程接口是基于POSIX标准的，其目标是提供一套大体上基于Unix的可移植操作系统标准。POSIX是说明API和系统调用之间关系的一个极好例子。在大多数Unix系统上，根据POSIX而定义的API函数和系统调用之间有着直接关系。</p>
+<p>Linux的系统调用像大多数Unix系统一样，作为C库的一部分提供如下图所示。C库实现了 Unix系统的主要API，包括标准C库函数和系统调用。所有的C程序都可以使用C库，而由于C语言本身的特点，其他语言也可以很方便地把它们封装起来使用。 </p>
+<p>从程序员的角度看，系统调用无关紧要，他们只需要跟API打交道就可以了。相反，内核只跟系统调用打交道；库函数及应用程序是怎么使用系统调用不是内核所关心的。</p>
+<p>关于Unix的界面设计有一句通用的格言“提供机制而不是策略”。换句话说，Unix的系统调用抽象出了用于完成某种确定目的的函数。至干这些函数怎么用完全不需要内核去关心。区别对待机制(mechanism)和策略(policy)是Unix设计中的一大亮点。大部分的编程问题都可以被切割成两个部分:“需要提供什么功能”(机制)和“怎样实现这些功能”(策略)。</p>
+<h1 id="系统调用的实现"><a href="#系统调用的实现" class="headerlink" title="系统调用的实现"></a>系统调用的实现</h1><h2 id="系统调用处理程序"><a href="#系统调用处理程序" class="headerlink" title="系统调用处理程序"></a>系统调用处理程序</h2><p>“当我输入 cat /proc/cpuinfo 时，cpuinfo() 函数是如何被调用的？”内核完成引导后，控制流就从相对直观的“接下来调用哪个函数？”改变为取决于系统调用、异常和中断。</p>
+<p>用户空间的程序无法直接执行内核代码。它们不能直接调用内核空间中的函数，因为内核驻留在受保护的地址空间上。如果进程可以直接在内核的地址空间上读写的话，系统安全就会失去控制。所以，应用程序应该以某种方式通知系统，告诉内核自己需要执行一个系统调用，希望系统切换到内核态，这样内核就可以代表应用程序来执行该系统调用了。</p>
+<p>通知内核的机制是靠软件中断实现的。首先，用户程序为系统调用设置参数。其中一个参数是系统调用编号。参数设置完成后，程序执行“系统调用”指令。x86系统上的软中断由int产生。这个指令会导致一个异常：产生一个事件，这个事件会致使处理器切换到内核态并跳转到一个新的地址，并开始执行那里的异常处理程序。此时的异常处理程序实际上就是系统调用处理程序。它与硬件体系结构紧密相关。</p>
+<p>新地址的指令会保存程序的状态，计算出应该调用哪个系统调用，调用内核中实现那个系统调用的函数，恢复用户程序状态，然后将控制权返还给用户程序。系统调用是设备驱动程序中定义的函数最终被调用的一种方式。</p>
+<h2 id="系统调用号"><a href="#系统调用号" class="headerlink" title="系统调用号"></a>系统调用号</h2><p>在Linux中，每个系统调用被赋予一个系统调用号。这样，通过这个独一无二的号就可以关联系统调用。当用户空间的进程执行一个系统调用的时候，这个系统调用号就被用来指明到底是要执行哪个系统调用。进程不会提及系统调用的名称。</p>
+<p>系统调用号相当关键，一旦分配就不能再有任何变更，否则编译好的应用程序就会崩溃。Linux有一个“未实现”系统调用sys_ni_syscall()，它除了返回一ENOSYS外不做任何其他工作，这个错误号就是专门针对无效的系统调用而设的。</p>
+<p>因为所有的系统调用陷入内核的方式都一样，所以仅仅是陷入内核空间是不够的。因此必须把系统调用号一并传给内核。在x86上，系统调用号是通过eax寄存器传递给内核的。在陷人内核之前，用户空间就把相应系统调用所对应的号放入eax中了。这样系统调用处理程序一旦运行，就可以从eax中得到数据。其他体系结构上的实现也都类似。</p>
+<p>内核记录了系统调用表中的所有已注册过的系统调用的列表，存储在sys_call_table中。它与体系结构有关，一般在entry.s中定义。这个表中为每一个有效的系统调用指定了惟一的系统调用号。sys_call_table是一张由指向实现各种系统调用的内核函数的函数指针组成的表：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">ENTRY(sys_call_table)</span><br><span class="line">.long SYMBOL_NAME(sys_ni_syscall) /* 0　-　old &quot;setup()&quot; system call*/</span><br><span class="line">.long SYMBOL_NAME(sys_exit)</span><br><span class="line">.long SYMBOL_NAME(sys_fork)</span><br><span class="line">.long SYMBOL_NAME(sys_read)</span><br><span class="line">.long SYMBOL_NAME(sys_write)</span><br><span class="line">.long SYMBOL_NAME(sys_open)        /* 5 */</span><br><span class="line">.long SYMBOL_NAME(sys_close)</span><br><span class="line">.long SYMBOL_NAME(sys_waitpid)</span><br><span class="line">.long SYMBOL_NAME(sys_capget)</span><br><span class="line">.long SYMBOL_NAME(sys_capset)      /* 185 */</span><br><span class="line">.long SYMBOL_NAME(sys_sigaltstack)</span><br><span class="line">.long SYMBOL_NAME(sys_sendfile)</span><br><span class="line">.long SYMBOL_NAME(sys_ni_syscall) /* streams1 */</span><br><span class="line">.long SYMBOL_NAME(sys_ni_syscall) /* streams2 */</span><br><span class="line">.long SYMBOL_NAME(sys_vfork)      /* 190 */</span><br></pre></td></tr></table></figure></p>
+<p>system_call()函数通过将给定的系统调用号与NR_syscalls做比较来检查其有效性。如果它大于或者等于NR syscalls,该函数就返回一ENOSYS。否则，就执行相应的系统调用。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">call *sys_ call-table(，%eax, 4)</span><br></pre></td></tr></table></figure></p>
+<p>由于系统调用表中的表项是以32位(4字节)类型存放的，所以内核需要将给定的系统调用号乘以4，然后用所得的结果在该表中查询其位置</p>
+<h2 id="参数传递"><a href="#参数传递" class="headerlink" title="参数传递"></a>参数传递</h2><p>除了系统调用号以外，大部分系统调用都还需要一些外部的参数输人。所以，在发生异常的时候，应该把这些参数从用户空间传给内核。最简单的办法就是像传递系统调用号一样把这些参数也存放在寄存器里。在x86系统上，ebx, ecx, edx, esi和edi按照顺序存放前五个参数。需要六个或六个以上参数的情况不多见，此时，应该用一个单独的寄存器存放指向所有这些参数在用户空间地址的指针。</p>
+<p>给用户空间的返回值也通过寄存器传递。在x86系统上，它存放在eax寄存器中。接下来许多关于系统调用处理程序的描述都是针对x86版本的。但不用担心，所有体系结构的实现都很类似。</p>
+<h2 id="参数验证"><a href="#参数验证" class="headerlink" title="参数验证"></a>参数验证</h2><p>系统调用必须仔细检查它们所有的参数是否合法有效。举例来说，与文件I/O相关的系统调用必须检查文件描述符是否有效。与进程相关的函数必须检查提供的PID是否有效。必须检查每个参数，保证它们不但合法有效，而且正确。</p>
+<p>最重要的一种检查就是检查用户提供的指针是否有效。试想，如果一个进程可以给内核传递指针而又无须被检查，那么它就可以给出一个它根本就没有访问权限的指针，哄骗内核去为它拷贝本不允许它访问的数据，如原本属于其他进程的数据。在接收一个用户空间的指针之前，内核必须保证：</p>
+<ol>
+<li>指针指向的内存区域属于用户空间。进程决不能哄骗内核去读内核空间的数据。</li>
+<li>指针指向的内存区域在进程的地址空间里。进程决不能哄骗内核去读其他进程的数据。</li>
+<li>如果是读，该内存应被标记为可读。如果是写，该内存应被标记为可写。进程决不能绕过内存访问限制。</li>
+</ol>
+<p>内核提供了两个方法来完成必须的检查和内核空间与用户空间之间数据的来回拷贝。注意，内核无论何时都不能轻率地接受来自用户空间的指针!这两个方法中必须有一个被调用。为了向用户空间写入数据，内核提供了copy_to_user()，它需要三个参数。第一个参数是进程空间中的目的内存地址。第二个是内核空间内的源地址。最后一个参数是需要拷贝的数据长度(字节数)。</p>
+<p>为了从用户空间读取数据，内核提供了copy_from_ user()，它和copy-to-User()相似。该函数把第二个参数指定的位置上的数据拷贝到第一个参数指定的位置上，拷贝的数据长度由第三个参数决定。 </p>
+<p>如果执行失败，这两个函数返回的都是没能完成拷贝的数据的字节数。如果成功，返回0。当出现上述错误时，系统调用返回标准-EFAULT。 </p>
+<p>注意copy_to_user()和copy_from_user()都有可能引起阻塞。当包含用户数据的页被换出到硬盘上而不是在物理内存上的时候，这种情况就会发生。此时，进程就会休眠，直到缺页处理程序将该页从硬盘重新换回物理内存。</p>
+<h2 id="系统调用的返回值"><a href="#系统调用的返回值" class="headerlink" title="系统调用的返回值"></a>系统调用的返回值</h2><p>系统调用(在Linux中常称作syscalls)通常通过函数进行调用。它们通常都需要定义一个或几个参数(输入)而且可能产生一些副作用，例如写某个文件或向给定的指针拷贝数据等等。为防止和正常的返回值混淆，系统调用并不直接返回错误码，而是将错误码放入一个名为errno的全局变量中。通常用一个负的返回值来表明错误。返回一个0值通常表明成功。如果一个系统调用失败，你可以读出errno的值来确定问题所在。通过调用perror()库函数，可以把该变量翻译成用户可以理解的错误字符串。</p>
+<p>errno不同数值所代表的错误消息定义在errno.h中，你也可以通过命令”man 3 errno”来察看它们。需要注意的是，errno的值只在函数发生错误时设置，如果函数不发生错误，errno的值就无定义，并不会被置为0。另外，在处理errno前最好先把它的值存入另一个变量，因为在错误处理过程中，即使像printf()这样的函数出错时也会改变errno的值。</p>
+<p>当然，系统调用最终具有一种明确的操作。举例来说，如getpid()系统调用，根据定义它会返回当前进程的PID。内核中它的实现非常简单:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">asmlinkage long sys_ getpid(void)</span><br><span class="line">&#123;</span><br><span class="line">    return current-&gt; tgid;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>上述的系统调用尽管非常简单，但我们还是可以从中发现两个特别之处。首先，注意函数声明中的asmlinkage限定词，这是一个小戏法，用于通知编译器仅从栈中提取该函数的参数。所有的系统调用都需要这个限定词。其次，注意系统调用get_pid()在内核中被定义成sys_ getpid。这是Linux中所有系统调用都应该遵守的命名规则</p>
+<h1 id="添加新系统调用"><a href="#添加新系统调用" class="headerlink" title="添加新系统调用"></a>添加新系统调用</h1><p>给Linux添加一个新的系统调用是件相对容易的工作。怎样设计和实现一个系统调用是难题所在，而把它加到内核里却无须太多周折。让我们关注一下实现一个新的Linux系统调用所需的步骤。</p>
+<p>实现一个新的系统调用的第一步是决定它的用途。它要做些什么？每个系统调用都应该有一个明确的用途。在Linux中不提倡采用多用途的系统调用(一个系统调用通过传递不同的参数值来选择完成不同的工作)。ioctl()就应该被视为一个反例。</p>
+<p>新系统调用的参数、返回值和错误码又该是什么呢？系统调用的接口应该力求简洁，参数尽可能少。设计接口的时候要尽量为将来多做考虑。你是不是对函数做了不必要的限制?系统调用设计得越通用越好。不要假设这个系统调用现在怎么用将来也一定就是这么用。系统调用的目的可能不变，但它的用法却可能改变。这个系统调用可移植吗?别对机器的字节长度和字节序做假设。当你写一个系统调用的时候，要时刻注意可移植性和健壮性，不但要考虑当前，还要为将来做打算。 </p>
+<p>当编写完一个系统调用后，把它注册成一个正式的系统调用是件琐碎的工作：</p>
+<p>在系统调用表的最后加入一个表项。每种支持该系统调用的硬件体系都必须做这样的工作。从0开始算起，系统调用在该表中的位置就是它的系统调用号。</p>
+<p>对于所支持的各种体系结构，系统调用号都必须定义于&lt;asm/unistd.h&gt;中。</p>
+<p>系统调用必须被编译进内核映象(不能被编译成模块)。这只要把它放进kernel/下的一个相关文件中就可以。 </p>
+<p>让我们通过一个虚构的系统调用f00()来仔细观察一下这些步骤。首先，我们要把sys_foo加入到系统调用表中去。对于大多数体系结构来说，该表位干entry.s文件中，形式如下:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">ENTRY(sys_ call_ table)</span><br><span class="line">      .long sys_ restart_ syscall/*0*/</span><br><span class="line">      .long sys_ exit</span><br><span class="line">      .long sys_ fork</span><br><span class="line">      .long sys_ read</span><br><span class="line">      .long sys_write</span><br></pre></td></tr></table></figure></p>
+<p>我们把新的系统调用加到这个表的末尾:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.long sys_foo</span><br></pre></td></tr></table></figure></p>
+<p>虽然没有明确地指定编号，但我们加入的这个系统调用被按照次序分配给了283这个系统调用号。对于每种需要支持的体系结构，我们都必须将自己的系统调用加人到其系统调用表中去。每种体系结构不需要对应相同的系统调用号。</p>
+<p>接下来，我们把系统调用号加入到<code>&lt;asm/unistd.h&gt;</code>中，它的格式如下:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">/*本文件包含系统调用号*/</span><br><span class="line">#define_ NR_ restart_ syscall</span><br><span class="line">#define NR exit</span><br><span class="line">#define NR fork</span><br><span class="line">#define NR read</span><br><span class="line">#define NR write</span><br><span class="line">#define NR- mq getsetattr 282</span><br></pre></td></tr></table></figure></p>
+<p>然后，我们在该列表中加入下面这行:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#define_ NR_ foo 283</span><br></pre></td></tr></table></figure></p>
+<p>最后，我们来实现f00()系统调用。无论何种配置，该系统调用都必须编译到核心的内核映象中去，所以我们把它放进kernel/sys.c文件中。你也可以将其放到与其功能联系最紧密的代码中去<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">asmlinkage long sys-foo(void)</span><br><span class="line">&#123;</span><br><span class="line">    return THREAD SIZE</span><br><span class="line">)</span><br></pre></td></tr></table></figure></p>
+<p>就是这样!严格说来，现在就可以在用户空间调用f00()系统调用了。</p>
+<p>建立一个新的系统调用非常容易，但却绝不提倡这么做。通常模块可以更好的代替新建一个系统调用。</p>
+<h1 id="访问系统调用"><a href="#访问系统调用" class="headerlink" title="访问系统调用"></a>访问系统调用</h1><h2 id="系统调用上下文"><a href="#系统调用上下文" class="headerlink" title="系统调用上下文"></a>系统调用上下文</h2><p>内核在执行系统调用的时候处于进程上下文。current指针指向当前任务，即引发系统调用的那个进程。 </p>
+<p>在进程上下文中，内核可以休眠并且可以被抢占。这两点都很重要。首先，能够休眠说明系统调用可以使用内核提供的绝大部分功能。休眠的能力会给内核编程带来极大便利。在进程上下文中能够被抢占，其实表明，像用户空间内的进程一样，当前的进程同样可以被其他进程抢占。因为新的进程可以使用相同的系统调用，所以必须小心，保证该系统调用是可重人的。当然，这也是在对称多处理中必须同样关心的问题。</p>
+<p>当系统调用返回的时候，控制权仍然在system_call()中，它最终会负责切换到用户空间并让用户进程继续执行下去。 </p>
+<h2 id="系统调用访问示例"><a href="#系统调用访问示例" class="headerlink" title="系统调用访问示例"></a>系统调用访问示例</h2><p>操作系统使用系统调用表将系统调用编号翻译为特定的系统调用。系统调用表包含有实现每个系统调用的函数的地址。例如，read() 系统调用函数名为 sys_read。read() 系统调用编号是 3，所以 sys_read()位于系统调用表的第四个条目中（因为系统调用起始编号为0）。从地址 sys_call_table + (3 * word_size) 读取数据，得到 sys_read()的地址。</p>
+<p>找到正确的系统调用地址后，它将控制权转交给那个系统调用。我们来看定义 sys_read() 的位置，即<code>fs/read_write.c</code> 文件。这个函数会找到关联到 fd 编号（传递给 read() 函数的）的文件结构体。那个结构体包含指向用来读取特定类型文件数据的函数的指针。进行一些检查后，它调用与文件相关的 read() 函数，来真正从文件中读取数据并返回。与文件相关的函数是在其他地方定义的 —— 比如套接字代码、文件系统代码，或者设备驱动程序代码。这是特定内核子系统最终与内核其他部分协作的一个方面。</p>
+<p>读取函数结束后，从<code>sys_read()</code>返回，它将控制权切换给<code>ret_from_sys</code>。它会去检查那些在切换回用户空间之前需要完成的任务。如果没有需要做的事情，那么就恢复用户进程的状态，并将控制权交还给用户程序。</p>
+<h2 id="从用户空间直接访问系统调用"><a href="#从用户空间直接访问系统调用" class="headerlink" title="从用户空间直接访问系统调用"></a>从用户空间直接访问系统调用</h2><p>通常，系统调用靠C库支持。用户程序通过包含标准头文件并和C库链接，就可以使用系统调用(或者调用库函数，再由库函数实际调用)。但如果你仅仅写出系统调用，glibc库恐怕并不提供支持。值得庆幸的是，Linux本身提供了一组宏，用于直接对系统调用进行访问。它会设置好寄存器并调用陷人指令。这些宏是_syscalln()，其中n的范围从0到6。代表需要传递给系统调用的参数个数，这是由于该宏必须了解到底有多少参数按照什么次序压入寄存器。举个例子，open()系统调用的定义是:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">long open(const char *filename, int flags, int mode)</span><br></pre></td></tr></table></figure></p>
+<p>而不靠库支持，直接调用此系统调用的宏的形式为:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#define NR_ open 5</span><br><span class="line">syscall3(long, open, const char*，filename, int, flags, int, mode)</span><br></pre></td></tr></table></figure></p>
+<p>这样，应用程序就可以直接使用open()</p>
+<p>对于每个宏来说，都有2+ n个参数。第一个参数对应着系统调用的返回值类型。第二个参数是系统调用的名称。再以后是按照系统调用参数的顺序排列的每个参数的类型和名称。_NR_ open在&lt;asm/unistd.h&gt;中定义，是系统调用号。该宏会被扩展成为内嵌汇编的C函数。由汇编语言执行前一节所讨论的步骤，将系统调用号和参数压入寄存器并触发软中断来陷入内核。调用open()系统调用直接把上面的宏放置在应用程序中就可以了。</p>
+<p>让我们写一个宏来使用前面编写的foo()系统调用，然后再写出测试代码炫耀一下我们所做的努力。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">#define NR foo 283</span><br><span class="line">_sysca110(long, foo)</span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">    long stack size;</span><br><span class="line">    stack_ size=foo();</span><br><span class="line">    printf(&quot;The kernel stack size is 81d/n&quot;，stack_ size);</span><br><span class="line">    return;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="系统调用表"><a href="#系统调用表" class="headerlink" title="系统调用表"></a>系统调用表</h1><p>以下是Linux系统调用的一个列表，包含了大部分常用系统调用和由系统调用派生出的的函数。其中有一些函数的作用完全相同，只是参数不同。可能很多熟悉C++朋友马上就能联想起函数重载，但是别忘了Linux核心是用C语言写的，所以只能取成不同的函数名。</p>
+<h2 id="进程控制："><a href="#进程控制：" class="headerlink" title="进程控制："></a>进程控制：</h2><table>
+<thead>
+<tr>
+<th>函数名</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>fork</td>
+<td>创建一个新进程</td>
+</tr>
+<tr>
+<td>clone</td>
+<td>按指定条件创建子进程</td>
+</tr>
+<tr>
+<td>execve</td>
+<td>运行可执行文件</td>
+</tr>
+<tr>
+<td>exit</td>
+<td>中止进程</td>
+</tr>
+<tr>
+<td>_exit</td>
+<td>立即中止当前进程</td>
+</tr>
+<tr>
+<td>getdtablesize</td>
+<td>进程所能打开的最大文件数</td>
+</tr>
+<tr>
+<td>getpgid</td>
+<td>获取指定进程组标识号</td>
+</tr>
+<tr>
+<td>setpgid</td>
+<td>设置指定进程组标志号</td>
+</tr>
+<tr>
+<td>getpgrp</td>
+<td>获取当前进程组标识号</td>
+</tr>
+<tr>
+<td>setpgrp</td>
+<td>设置当前进程组标志号</td>
+</tr>
+<tr>
+<td>getpid</td>
+<td>获取进程标识号</td>
+</tr>
+<tr>
+<td>getppid</td>
+<td>获取父进程标识号</td>
+</tr>
+<tr>
+<td>getpriority</td>
+<td>获取调度优先级</td>
+</tr>
+<tr>
+<td>setpriority</td>
+<td>设置调度优先级</td>
+</tr>
+<tr>
+<td>modify_ldt</td>
+<td>读写进程的本地描述表</td>
+</tr>
+<tr>
+<td>nanosleep</td>
+<td>使进程睡眠指定的时间</td>
+</tr>
+<tr>
+<td>nice</td>
+<td>改变分时进程的优先级</td>
+</tr>
+<tr>
+<td>pause</td>
+<td>挂起进程，等待信号</td>
+</tr>
+<tr>
+<td>personality</td>
+<td>设置进程运行域</td>
+</tr>
+<tr>
+<td>prctl</td>
+<td>对进程进行特定操作</td>
+</tr>
+<tr>
+<td>ptrace</td>
+<td>进程跟踪</td>
+</tr>
+<tr>
+<td>sched_get_priority_max</td>
+<td>取得静态优先级的上限</td>
+</tr>
+<tr>
+<td>sched_get_priority_min</td>
+<td>取得静态优先级的下限</td>
+</tr>
+<tr>
+<td>sched_getparam</td>
+<td>取得进程的调度参数</td>
+</tr>
+<tr>
+<td>sched_getscheduler</td>
+<td>取得指定进程的调度策略</td>
+</tr>
+<tr>
+<td>sched_rr_get_interval</td>
+<td>取得按RR算法调度的实时进程的时间片长度</td>
+</tr>
+<tr>
+<td>sched_setparam</td>
+<td>设置进程的调度参数</td>
+</tr>
+<tr>
+<td>sched_setscheduler</td>
+<td>设置指定进程的调度策略和参数</td>
+</tr>
+<tr>
+<td>sched_yield</td>
+<td>进程主动让出处理器,并将自己等候调度队列队尾</td>
+</tr>
+<tr>
+<td>vfork</td>
+<td>创建一个子进程，以供执行新程序，常与execve等同时使用</td>
+</tr>
+<tr>
+<td>wait</td>
+<td>等待子进程终止</td>
+</tr>
+<tr>
+<td>wait3</td>
+<td>参见wait</td>
+</tr>
+<tr>
+<td>waitpid</td>
+<td>等待指定子进程终止</td>
+</tr>
+<tr>
+<td>wait4</td>
+<td>参见waitpid</td>
+</tr>
+<tr>
+<td>capget</td>
+<td>获取进程权限</td>
+</tr>
+<tr>
+<td>capset</td>
+<td>设置进程权限</td>
+</tr>
+<tr>
+<td>getsid</td>
+<td>获取会晤标识号</td>
+</tr>
+<tr>
+<td>setsid</td>
+<td>设置会晤标识号</td>
+</tr>
+</tbody>
+</table>
+<h2 id="文件系统控制"><a href="#文件系统控制" class="headerlink" title="文件系统控制"></a>文件系统控制</h2><h3 id="文件读写操作"><a href="#文件读写操作" class="headerlink" title="文件读写操作"></a>文件读写操作</h3><table>
+<thead>
+<tr>
+<th>函数名</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>fcntl</td>
+<td>文件控制</td>
+</tr>
+<tr>
+<td>open</td>
+<td>打开文件</td>
+</tr>
+<tr>
+<td>creat</td>
+<td>创建新文件</td>
+</tr>
+<tr>
+<td>lose</td>
+<td>关闭文件描述字</td>
+</tr>
+<tr>
+<td>read</td>
+<td>读文件</td>
+</tr>
+<tr>
+<td>write</td>
+<td>写文件</td>
+</tr>
+<tr>
+<td>readv</td>
+<td>从文件读入数据到缓冲数组中</td>
+</tr>
+<tr>
+<td>writev</td>
+<td>将缓冲数组里的数据写入文件</td>
+</tr>
+<tr>
+<td>pread</td>
+<td>对文件随机读</td>
+</tr>
+<tr>
+<td>pwrite</td>
+<td>对文件随机写</td>
+</tr>
+<tr>
+<td>lseek</td>
+<td>移动文件指针</td>
+</tr>
+<tr>
+<td>_llseek</td>
+<td>在64位地址空间里移动文件指针</td>
+</tr>
+<tr>
+<td>dup</td>
+<td>复制已打开的文件描述字</td>
+</tr>
+<tr>
+<td>dup2</td>
+<td>按指定条件复制文件描述字</td>
+</tr>
+<tr>
+<td>flock</td>
+<td>文件加/解锁</td>
+</tr>
+<tr>
+<td>poll</td>
+<td>I/O多路转换</td>
+</tr>
+<tr>
+<td>truncate</td>
+<td>截断文件</td>
+</tr>
+<tr>
+<td>ftruncate</td>
+<td>参见truncate</td>
+</tr>
+<tr>
+<td>umask</td>
+<td>设置文件权限掩码</td>
+</tr>
+<tr>
+<td>fsync</td>
+<td>把文件在内存中的部分写回磁盘</td>
+</tr>
+</tbody>
+</table>
+<h3 id="文件系统操作"><a href="#文件系统操作" class="headerlink" title="文件系统操作"></a>文件系统操作</h3><table>
+<thead>
+<tr>
+<th>函数名</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>access</td>
+<td>确定文件的可存取性</td>
+</tr>
+<tr>
+<td>chdir</td>
+<td>改变当前工作目录</td>
+</tr>
+<tr>
+<td>fchdir</td>
+<td>参见chdir</td>
+</tr>
+<tr>
+<td>chmod</td>
+<td>改变文件方式</td>
+</tr>
+<tr>
+<td>fchmod</td>
+<td>参见chmod</td>
+</tr>
+<tr>
+<td>chown</td>
+<td>改变文件的属主或用户组</td>
+</tr>
+<tr>
+<td>fchown</td>
+<td>参见chown</td>
+</tr>
+<tr>
+<td>lchown</td>
+<td>参见chown</td>
+</tr>
+<tr>
+<td>chroot</td>
+<td>改变根目录</td>
+</tr>
+<tr>
+<td>stat</td>
+<td>取文件状态信息</td>
+</tr>
+<tr>
+<td>lstat</td>
+<td>参见stat</td>
+</tr>
+<tr>
+<td>fstat</td>
+<td>参见stat</td>
+</tr>
+<tr>
+<td>statfs</td>
+<td>取文件系统信息</td>
+</tr>
+<tr>
+<td>fstatfs</td>
+<td>参见statfs</td>
+</tr>
+<tr>
+<td>readdir</td>
+<td>读取目录项</td>
+</tr>
+<tr>
+<td>getdents</td>
+<td>读取目录项</td>
+</tr>
+<tr>
+<td>mkdir</td>
+<td>创建目录</td>
+</tr>
+<tr>
+<td>mknod</td>
+<td>创建索引节点</td>
+</tr>
+<tr>
+<td>rmdir</td>
+<td>删除目录</td>
+</tr>
+<tr>
+<td>rename</td>
+<td>文件改名</td>
+</tr>
+<tr>
+<td>link</td>
+<td>创建链接</td>
+</tr>
+<tr>
+<td>symlink</td>
+<td>创建符号链接</td>
+</tr>
+<tr>
+<td>unlink</td>
+<td>删除链接</td>
+</tr>
+<tr>
+<td>readlink</td>
+<td>读符号链接的值</td>
+</tr>
+<tr>
+<td>mount</td>
+<td>安装文件系统</td>
+</tr>
+<tr>
+<td>umount</td>
+<td>卸下文件系统</td>
+</tr>
+<tr>
+<td>ustat</td>
+<td>取文件系统信息</td>
+</tr>
+<tr>
+<td>utime</td>
+<td>改变文件的访问修改时间</td>
+</tr>
+<tr>
+<td>utimes</td>
+<td>参见utime</td>
+</tr>
+<tr>
+<td>quotactl</td>
+<td>控制磁盘配额</td>
+</tr>
+</tbody>
+</table>
+<h2 id="系统控制"><a href="#系统控制" class="headerlink" title="系统控制"></a>系统控制</h2><table>
+<thead>
+<tr>
+<th>函数名</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ioctl</td>
+<td>I/O总控制函数</td>
+</tr>
+<tr>
+<td>_sysctl</td>
+<td>读/写系统参数</td>
+</tr>
+<tr>
+<td>acct</td>
+<td>启用或禁止进程记账</td>
+</tr>
+<tr>
+<td>getrlimit</td>
+<td>获取系统资源上限</td>
+</tr>
+<tr>
+<td>setrlimit</td>
+<td>设置系统资源上限</td>
+</tr>
+<tr>
+<td>getrusage</td>
+<td>获取系统资源使用情况</td>
+</tr>
+<tr>
+<td>uselib</td>
+<td>选择要使用的二进制函数库</td>
+</tr>
+<tr>
+<td>ioperm</td>
+<td>设置端口I/O权限</td>
+</tr>
+<tr>
+<td>iopl</td>
+<td>改变进程I/O权限级别</td>
+</tr>
+<tr>
+<td>outb</td>
+<td>低级端口操作</td>
+</tr>
+<tr>
+<td>reboot</td>
+<td>重新启动</td>
+</tr>
+<tr>
+<td>swapon</td>
+<td>打开交换文件和设备</td>
+</tr>
+<tr>
+<td>swapoff</td>
+<td>关闭交换文件和设备</td>
+</tr>
+<tr>
+<td>bdflush</td>
+<td>控制bdflush守护进程</td>
+</tr>
+<tr>
+<td>sysfs</td>
+<td>取核心支持的文件系统类型</td>
+</tr>
+<tr>
+<td>sysinfo</td>
+<td>取得系统信息</td>
+</tr>
+<tr>
+<td>adjtimex</td>
+<td>调整系统时钟</td>
+</tr>
+<tr>
+<td>alarm</td>
+<td>设置进程的闹钟</td>
+</tr>
+<tr>
+<td>getitimer</td>
+<td>获取计时器值</td>
+</tr>
+<tr>
+<td>setitimer</td>
+<td>设置计时器值</td>
+</tr>
+<tr>
+<td>gettimeofday</td>
+<td>取时间和时区</td>
+</tr>
+<tr>
+<td>settimeofday</td>
+<td>设置时间和时区</td>
+</tr>
+<tr>
+<td>stime</td>
+<td>设置系统日期和时间</td>
+</tr>
+<tr>
+<td>time</td>
+<td>取得系统时间</td>
+</tr>
+<tr>
+<td>times</td>
+<td>取进程运行时间</td>
+</tr>
+<tr>
+<td>uname</td>
+<td>获取当前UNIX系统的名称、版本和主机等信息</td>
+</tr>
+<tr>
+<td>vhangup</td>
+<td>挂起当前终端</td>
+</tr>
+<tr>
+<td>nfsservctl</td>
+<td>对NFS守护进程进行控制</td>
+</tr>
+<tr>
+<td>vm86</td>
+<td>进入模拟8086模式</td>
+</tr>
+<tr>
+<td>create_module</td>
+<td>创建可装载的模块项</td>
+</tr>
+<tr>
+<td>delete_module</td>
+<td>删除可装载的模块项</td>
+</tr>
+<tr>
+<td>init_module</td>
+<td>初始化模块</td>
+</tr>
+<tr>
+<td>query_module</td>
+<td>查询模块信息</td>
+</tr>
+<tr>
+<td>*get_kernel_syms</td>
+<td>取得核心符号,已被query_module代替</td>
+</tr>
+</tbody>
+</table>
+<h2 id="内存管理"><a href="#内存管理" class="headerlink" title="内存管理"></a>内存管理</h2><table>
+<thead>
+<tr>
+<th>函数名</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>brk</td>
+<td>改变数据段空间的分配</td>
+</tr>
+<tr>
+<td>sbrk</td>
+<td>参见brk</td>
+</tr>
+<tr>
+<td>mlock</td>
+<td>内存页面加锁</td>
+</tr>
+<tr>
+<td>munlock</td>
+<td>内存页面解锁</td>
+</tr>
+<tr>
+<td>mlockall</td>
+<td>调用进程所有内存页面加锁</td>
+</tr>
+<tr>
+<td>munlockall</td>
+<td>调用进程所有内存页面解锁</td>
+</tr>
+<tr>
+<td>mmap</td>
+<td>映射虚拟内存页</td>
+</tr>
+<tr>
+<td>munmap</td>
+<td>去除内存页映射</td>
+</tr>
+<tr>
+<td>mremap</td>
+<td>重新映射虚拟内存地址</td>
+</tr>
+<tr>
+<td>msync</td>
+<td>将映射内存中的数据写回磁盘</td>
+</tr>
+<tr>
+<td>mprotect</td>
+<td>设置内存映像保护</td>
+</tr>
+<tr>
+<td>getpagesize</td>
+<td>获取页面大小</td>
+</tr>
+<tr>
+<td>sync</td>
+<td>将内存缓冲区数据写回硬盘</td>
+</tr>
+<tr>
+<td>cacheflush</td>
+<td>将指定缓冲区中的内容写回磁盘</td>
+</tr>
+</tbody>
+</table>
+<h2 id="网络管理"><a href="#网络管理" class="headerlink" title="网络管理"></a>网络管理</h2><table>
+<thead>
+<tr>
+<th>函数名</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>getdomainname</td>
+<td>取域名</td>
+</tr>
+<tr>
+<td>setdomainname</td>
+<td>设置域名</td>
+</tr>
+<tr>
+<td>gethostid</td>
+<td>获取主机标识号</td>
+</tr>
+<tr>
+<td>sethostid</td>
+<td>设置主机标识号</td>
+</tr>
+<tr>
+<td>gethostname</td>
+<td>获取本主机名称</td>
+</tr>
+<tr>
+<td>sethostname</td>
+<td>设置主机名称</td>
+</tr>
+</tbody>
+</table>
+<h2 id="socket控制"><a href="#socket控制" class="headerlink" title="socket控制"></a>socket控制</h2><table>
+<thead>
+<tr>
+<th>函数名</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>socketcall</td>
+<td>socket系统调用</td>
+</tr>
+<tr>
+<td>socket</td>
+<td>建立socket</td>
+</tr>
+<tr>
+<td>bind</td>
+<td>绑定socket到端口</td>
+</tr>
+<tr>
+<td>connect</td>
+<td>连接远程主机</td>
+</tr>
+<tr>
+<td>accept</td>
+<td>响应socket连接请求</td>
+</tr>
+<tr>
+<td>send</td>
+<td>通过socket发送信息</td>
+</tr>
+<tr>
+<td>sendto</td>
+<td>发送UDP信息</td>
+</tr>
+<tr>
+<td>sendmsg</td>
+<td>参见send</td>
+</tr>
+<tr>
+<td>recv</td>
+<td>通过socket接收信息</td>
+</tr>
+<tr>
+<td>recvfrom</td>
+<td>接收UDP信息</td>
+</tr>
+<tr>
+<td>recvmsg</td>
+<td>参见recv</td>
+</tr>
+<tr>
+<td>listen</td>
+<td>监听socket端口</td>
+</tr>
+<tr>
+<td>select</td>
+<td>对多路同步I/O进行轮询</td>
+</tr>
+<tr>
+<td>shutdown</td>
+<td>关闭socket上的连接</td>
+</tr>
+<tr>
+<td>getsockname</td>
+<td>取得本地socket名字</td>
+</tr>
+<tr>
+<td>getpeername</td>
+<td>获取通信对方的socket名字</td>
+</tr>
+<tr>
+<td>getsockopt</td>
+<td>取端口设置</td>
+</tr>
+<tr>
+<td>setsockopt</td>
+<td>设置端口参数</td>
+</tr>
+<tr>
+<td>sendfile</td>
+<td>在文件或端口间传输数据</td>
+</tr>
+<tr>
+<td>socketpair</td>
+<td>创建一对已联接的无名socket</td>
+</tr>
+</tbody>
+</table>
+<h2 id="用户管理"><a href="#用户管理" class="headerlink" title="用户管理"></a>用户管理</h2><table>
+<thead>
+<tr>
+<th>函数名</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>getuid</td>
+<td>获取用户标识号</td>
+</tr>
+<tr>
+<td>setuid</td>
+<td>设置用户标志号</td>
+</tr>
+<tr>
+<td>getgid</td>
+<td>获取组标识号</td>
+</tr>
+<tr>
+<td>setgid</td>
+<td>设置组标志号</td>
+</tr>
+<tr>
+<td>getegid</td>
+<td>获取有效组标识号</td>
+</tr>
+<tr>
+<td>setegid</td>
+<td>设置有效组标识号</td>
+</tr>
+<tr>
+<td>geteuid</td>
+<td>获取有效用户标识号</td>
+</tr>
+<tr>
+<td>seteuid</td>
+<td>设置有效用户标识号</td>
+</tr>
+<tr>
+<td>setregid</td>
+<td>分别设置真实和有效的的组标识号</td>
+</tr>
+<tr>
+<td>setreuid</td>
+<td>分别设置真实和有效的用户标识号</td>
+</tr>
+<tr>
+<td>getresgid</td>
+<td>分别获取真实的,有效的和保存过的组标识号</td>
+</tr>
+<tr>
+<td>setresgid</td>
+<td>分别设置真实的,有效的和保存过的组标识号</td>
+</tr>
+<tr>
+<td>getresuid</td>
+<td>分别获取真实的,有效的和保存过的用户标识号</td>
+</tr>
+<tr>
+<td>setresuid</td>
+<td>分别设置真实的,有效的和保存过的用户标识号</td>
+</tr>
+<tr>
+<td>setfsgid</td>
+<td>设置文件系统检查时使用的组标识号</td>
+</tr>
+<tr>
+<td>setfsuid</td>
+<td>设置文件系统检查时使用的用户标识号</td>
+</tr>
+<tr>
+<td>getgroups</td>
+<td>获取后补组标志清单</td>
+</tr>
+<tr>
+<td>setgroups</td>
+<td>设置后补组标志清单</td>
+</tr>
+</tbody>
+</table>
+<h2 id="进程间通信"><a href="#进程间通信" class="headerlink" title="进程间通信"></a>进程间通信</h2><table>
+<thead>
+<tr>
+<th>函数名</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ipc</td>
+<td>进程间通信总控制调用</td>
+</tr>
+</tbody>
+</table>
+<h3 id="信号"><a href="#信号" class="headerlink" title="信号"></a>信号</h3><table>
+<thead>
+<tr>
+<th>函数名</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>sigaction</td>
+<td>设置对指定信号的处理方法</td>
+</tr>
+<tr>
+<td>sigprocmask</td>
+<td>根据参数对信号集中的信号执行阻塞/解除阻塞等操作</td>
+</tr>
+<tr>
+<td>sigpending</td>
+<td>为指定的被阻塞信号设置队列</td>
+</tr>
+<tr>
+<td>sigsuspend</td>
+<td>挂起进程等待特定信号</td>
+</tr>
+<tr>
+<td>signal</td>
+<td>参见signal</td>
+</tr>
+<tr>
+<td>kill</td>
+<td>向进程或进程组发信号</td>
+</tr>
+<tr>
+<td>*sigblock</td>
+<td>向被阻塞信号掩码中添加信号,已被sigprocmask代替</td>
+</tr>
+<tr>
+<td>*siggetmask</td>
+<td>取得现有阻塞信号掩码,已被sigprocmask代替</td>
+</tr>
+<tr>
+<td>*sigsetmask</td>
+<td>用给定信号掩码替换现有阻塞信号掩码,已被sigprocmask代替</td>
+</tr>
+<tr>
+<td>*sigmask</td>
+<td>将给定的信号转化为掩码,已被sigprocmask代替</td>
+</tr>
+<tr>
+<td>*sigpause</td>
+<td>作用同sigsuspend,已被sigsuspend代替</td>
+</tr>
+<tr>
+<td>sigvec</td>
+<td>为兼容BSD而设的信号处理函数,作用类似sigaction</td>
+</tr>
+<tr>
+<td>ssetmask</td>
+<td>ANSI C的信号处理函数,作用类似sigaction</td>
+</tr>
+</tbody>
+</table>
+<h3 id="消息"><a href="#消息" class="headerlink" title="消息"></a>消息</h3><table>
+<thead>
+<tr>
+<th>函数名</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>msgctl</td>
+<td>消息控制操作</td>
+</tr>
+<tr>
+<td>msgget</td>
+<td>获取消息队列</td>
+</tr>
+<tr>
+<td>msgsnd</td>
+<td>发消息</td>
+</tr>
+<tr>
+<td>msgrcv</td>
+<td>取消息</td>
+</tr>
+</tbody>
+</table>
+<h3 id="管道"><a href="#管道" class="headerlink" title="管道"></a>管道</h3><table>
+<thead>
+<tr>
+<th>函数名</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pipe</td>
+<td>建管道</td>
+</tr>
+</tbody>
+</table>
+<h3 id="信号量"><a href="#信号量" class="headerlink" title="信号量"></a>信号量</h3><table>
+<thead>
+<tr>
+<th>函数名</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>semctl</td>
+<td>信号量控制</td>
+</tr>
+<tr>
+<td>semget</td>
+<td>获取一组信号量</td>
+</tr>
+<tr>
+<td>semop</td>
+<td>信号量操作</td>
+</tr>
+</tbody>
+</table>
+<h3 id="共享内存"><a href="#共享内存" class="headerlink" title="共享内存"></a>共享内存</h3><table>
+<thead>
+<tr>
+<th>函数名</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>shmctl</td>
+<td>控制共享内存</td>
+</tr>
+<tr>
+<td>shmget</td>
+<td>获取共享内存</td>
+</tr>
+<tr>
+<td>shmat</td>
+<td>连接共享内存</td>
+</tr>
+<tr>
+<td>shmdt</td>
+<td>拆卸共享内存</td>
+</tr>
+</tbody>
+</table>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/04/信号中断与慢系统调用/" rel="next" title="信号中断与慢系统调用">
+                <i class="fa fa-chevron-left"></i> 信号中断与慢系统调用
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/05/理解inode/" rel="prev" title="理解inode">
+                理解inode <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">95</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="450" src="//music.163.com/outchain/player?type=0&id=101039122&auto=0&height=430">
+          </iframe>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#系统调用意义"><span class="nav-number">1.</span> <span class="nav-text">系统调用意义</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#API-POSIX-C库的关系"><span class="nav-number">2.</span> <span class="nav-text">API/POSIX/C库的关系</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#系统调用的实现"><span class="nav-number">3.</span> <span class="nav-text">系统调用的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#系统调用处理程序"><span class="nav-number">3.1.</span> <span class="nav-text">系统调用处理程序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#系统调用号"><span class="nav-number">3.2.</span> <span class="nav-text">系统调用号</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参数传递"><span class="nav-number">3.3.</span> <span class="nav-text">参数传递</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参数验证"><span class="nav-number">3.4.</span> <span class="nav-text">参数验证</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#系统调用的返回值"><span class="nav-number">3.5.</span> <span class="nav-text">系统调用的返回值</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#添加新系统调用"><span class="nav-number">4.</span> <span class="nav-text">添加新系统调用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#访问系统调用"><span class="nav-number">5.</span> <span class="nav-text">访问系统调用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#系统调用上下文"><span class="nav-number">5.1.</span> <span class="nav-text">系统调用上下文</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#系统调用访问示例"><span class="nav-number">5.2.</span> <span class="nav-text">系统调用访问示例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#从用户空间直接访问系统调用"><span class="nav-number">5.3.</span> <span class="nav-text">从用户空间直接访问系统调用</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#系统调用表"><span class="nav-number">6.</span> <span class="nav-text">系统调用表</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#进程控制："><span class="nav-number">6.1.</span> <span class="nav-text">进程控制：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#文件系统控制"><span class="nav-number">6.2.</span> <span class="nav-text">文件系统控制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#文件读写操作"><span class="nav-number">6.2.1.</span> <span class="nav-text">文件读写操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#文件系统操作"><span class="nav-number">6.2.2.</span> <span class="nav-text">文件系统操作</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#系统控制"><span class="nav-number">6.3.</span> <span class="nav-text">系统控制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内存管理"><span class="nav-number">6.4.</span> <span class="nav-text">内存管理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#网络管理"><span class="nav-number">6.5.</span> <span class="nav-text">网络管理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#socket控制"><span class="nav-number">6.6.</span> <span class="nav-text">socket控制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#用户管理"><span class="nav-number">6.7.</span> <span class="nav-text">用户管理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#进程间通信"><span class="nav-number">6.8.</span> <span class="nav-text">进程间通信</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#信号"><span class="nav-number">6.8.1.</span> <span class="nav-text">信号</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#消息"><span class="nav-number">6.8.2.</span> <span class="nav-text">消息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#管道"><span class="nav-number">6.8.3.</span> <span class="nav-text">管道</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#信号量"><span class="nav-number">6.8.4.</span> <span class="nav-text">信号量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#共享内存"><span class="nav-number">6.8.5.</span> <span class="nav-text">共享内存</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
