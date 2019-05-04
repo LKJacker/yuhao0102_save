@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-flash.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="原文：https://blog.csdn.net/qq_34376868/article/details/80562288 进程传统上，Unix操作系统下运行的应用程序、 服务器以及其他程序都被称为进程，而Linux也继承了来自unix进程的概念。必须要理解下，程序是指的存储在存储设备上（如磁盘）包含了可执行机器指 令（二进制代码）和数据的静态实体；而进程可以认为是已经被OS从磁盘加载到内存上的、">
+<meta name="keywords" content="Linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux-进程、进程组、作业、会话、控制终端详解">
+<meta property="og:url" content="http://yoursite.com/2019/05/04/Linux会话控制终端详解/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="原文：https://blog.csdn.net/qq_34376868/article/details/80562288 进程传统上，Unix操作系统下运行的应用程序、 服务器以及其他程序都被称为进程，而Linux也继承了来自unix进程的概念。必须要理解下，程序是指的存储在存储设备上（如磁盘）包含了可执行机器指 令（二进制代码）和数据的静态实体；而进程可以认为是已经被OS从磁盘加载到内存上的、">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2019-05-04T14:06:14.385Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Linux-进程、进程组、作业、会话、控制终端详解">
+<meta name="twitter:description" content="原文：https://blog.csdn.net/qq_34376868/article/details/80562288 进程传统上，Unix操作系统下运行的应用程序、 服务器以及其他程序都被称为进程，而Linux也继承了来自unix进程的概念。必须要理解下，程序是指的存储在存储设备上（如磁盘）包含了可执行机器指 令（二进制代码）和数据的静态实体；而进程可以认为是已经被OS从磁盘加载到内存上的、">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/05/04/Linux会话控制终端详解/">
+
+
+
+
+
+  <title>Linux-进程、进程组、作业、会话、控制终端详解 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/04/Linux会话控制终端详解/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Linux-进程、进程组、作业、会话、控制终端详解</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-05-04T21:41:39+08:00">
+                2019-05-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>原文：<a href="https://blog.csdn.net/qq_34376868/article/details/80562288" target="_blank" rel="noopener">https://blog.csdn.net/qq_34376868/article/details/80562288</a></p>
+<h1 id="进程"><a href="#进程" class="headerlink" title="进程"></a>进程</h1><p>传统上，Unix操作系统下运行的应用程序、 服务器以及其他程序都被称为进程，而Linux也继承了来自unix进程的概念。必须要理解下，程序是指的存储在存储设备上（如磁盘）包含了可执行机器指 令（二进制代码）和数据的静态实体；而进程可以认为是已经被OS从磁盘加载到内存上的、动态的、可运行的指令与数据的集合，是在运行的动态实体。这里指的 指令和数据的集合可以理解为Linux上ELF文件格式中的.text .data数据段。</p>
+<h1 id="进程组"><a href="#进程组" class="headerlink" title="进程组"></a>进程组</h1><p>每个进程除了有一个进程ID之外，还属于一个进程组，那什么是进程组呢？</p>
+<p>顾名思义，进程组就是一个或多个进程的集合。这些进程并不是孤立的，他们彼此之间或者存在父子、兄弟关系，或者在功能上有相近的联系。每个进程都有父进程，而所有的进程以init进程为根，形成一个树状结构。</p>
+<p>那为啥Linux里要有进程组呢？其实，提供进程组就是为了方便对进程进行管理。假设要完成一个任务，需要同时并发100个进程。当用户处于某种原因要终止这个任务时，要是没有进程组，就需要手动的一个个去杀死这100个进程，并且必须要严格按照进程间父子兄弟关系顺序，否则会扰乱进程树。有了进程组，就可以将这100个进程设置为一个进程组，它们共有1个组号（pgrp），并且有选取一个进程作为组长（通常是“辈分”最高的那个，通常该进程的ID也就作为进程组的ID）。现在就可以通过杀死整个进程组，来关闭这100个进程，并且是严格有序的。组长进程可以创建一个进程组，创建该组中的进程，然后终止。只要在某个进程组中一个进程存在，则该进程组就存在，这与其组长进程是否终止无关。</p>
+<p>进程必定属于一个进程组，也只能属于一个进程组。 一个进程组中可以包含多个进程。 进程组的生命周期从被创建开始，到其内所有进程终止或离开该组。</p>
+<p>内核中，sys_getpgrp()系统调用用来获取当前进程所在进程组号；sys_setpgid(int pid, int pgid)调用用来设置置顶进程pid的进程组号为pgid。</p>
+<h1 id="作业"><a href="#作业" class="headerlink" title="作业"></a>作业</h1><p>Shell分前后台来控制的不是进程而是作业（Job）或者进程组（Process Group）。一个前台作业可以由多个进程组成，一个后台也可以由多个进程组成，Shell可以运行一个前台作业和任意多个后台作业，这称为作业控制。</p>
+<p>作业与进程组的区别：如果作业中的某个进程又创建了子进程，则子进程不属于作业。一旦作业运行结束，Shell就把自己提到前台，如果原来的前台进程还存在（如果这个子进程还没终止），它自动变为后台进程组。</p>
+<h1 id="会话"><a href="#会话" class="headerlink" title="会话"></a>会话</h1><p>再看下会话。由于Linux是多用户多任务的分时系统，所以必须要支持多个用户同时使用一个操作系统。当一个用户登录一次系统就形成一次会话 。一个会话可包含多个进程组，但只能有一个前台进程组。每个会话都有一个会话首领（leader），即创建会话的进程。 sys_setsid()调用能创建一个会话。必须注意的是，只有当前进程不是进程组的组长时，才能创建一个新的会话。调用setsid 之后，该进程成为新会话的leader。</p>
+<p>一个会话可以有一个控制终端。这通常是登陆到其上的终端设备（在终端登陆情况下）或伪终端设备（在网络登陆情况下）。建立与控制终端连接的会话首进程被称为控制进程。一个会话中的几个进程组可被分为一个前台进程组以及一个或多个后台进程组。所以一个会话中，应该包括控制进程（会话首进程），一个前台进程组和任意后台进程组。 </p>
+<p>一次登录形成一个会话</p>
+<p>一个会话可包含多个进程组，但只能有一个前台进程组</p>
+<h1 id="控制终端"><a href="#控制终端" class="headerlink" title="控制终端"></a>控制终端</h1><p>会话的领头进程打开一个终端之后, 该终端就成为该会话的控制终端 (SVR4/Linux)  </p>
+<p>与控制终端建立连接的会话领头进程称为控制进程 (session leader) </p>
+<p>一个会话只能有一个控制终端 </p>
+<p>产生在控制终端上的输入和信号将发送给会话的前台进程组中的所有进程 </p>
+<p>终端上的连接断开时 (比如网络断开或 Modem 断开), 挂起信号将发送到控制进程(session leader)</p>
+<p>进程属于一个进程组，进程组属于一个会话，会话可能有也可能没有控制终端。一般而言，当用户在某个终端上登录时，一个新的会话就开始了。进程组由组中的领头进程标识，领头进程的进程标识符就是进程组的组标识符。类似地，每个会话也对应有一个领头进程。</p>
+<p>同一会话中的进程通过该会话的领头进程和一个终端相连，该终端作为这个会话的控制终端。一个会话只能有一个控制终端，而一个控制终端只能控制一个会话。用户通过控制终端，可以向该控制终端所控制的会话中的进程发送键盘信号。</p>
+<p>同一会话中只能有一个前台进程组，属于前台进程组的进程可从控制终端获得输入，而其他进程均是后台进程，可能分属于不同的后台进程组。</p>
+<p>我们打开多个终端窗口时，实际上就创建了多个终端会话。每个会话都会有自己的前台工作和后台工作。</p>
+<h1 id="会话的维系"><a href="#会话的维系" class="headerlink" title="会话的维系"></a>会话的维系</h1><p>维系一个会话，最常见的有两种方式：</p>
+<ul>
+<li>一是基于某种凭证，比如web网站的登录会话，在登录验证之后，服务器就会返回一个session id作为凭证。用户之后的请求总是会带上这个id，而服务器通过这个id也就能知道用户是谁。直到用户注销登录、或者登录超时，服务器会清洗掉对应的session id，这个id就失效了，会话也就随之而结束。</li>
+<li>第二种方式是基于连接的，当用户和系统之间的连接启用时，系统会对用户进行验证，验证通过之后，来自这个连接的操作都是属于这个用户的。直到连接断开，则会话结束。</li>
+</ul>
+<p>linux系统的会话就是以第二种方式来维系的。会话基于连接，那么连接的安全性就决定了会话的安全性。以最常见的两种连接为例：</p>
+<ol>
+<li>本地连接，用户是直接通过键盘显示器来跟系统交互的，键盘显示器直接连接在主机上，连接被篡改基本上是不可能的；</li>
+<li>远程连接，以ssh为例，其协议会进行加密，从而避免连接被篡改；</li>
+</ol>
+<p>下面在讨论会话的时候就围绕两种连接来展开。</p>
+<h1 id="连接的启用"><a href="#连接的启用" class="headerlink" title="连接的启用"></a>连接的启用</h1><p>前面说到，会话是基于连接的。会话的源头，就是用户与系统之间连接的启用。</p>
+<p>对于本地连接，连接是在系统初始化时建立的。linux会初始化若干个tty（/dev/tty?），形成若干个虚拟终端。本地连接的键盘和显示器通过对应的驱动程序，跟其中某个tty绑定上。用户可以通过ALT+F[1-12]键，将键盘和显示器切换到不同的tty上（也就是说，一套键盘显示器可以对应多个本地连接）。</p>
+<p>在系统启动的时候，init程序会根据相应的配置（如：/etc/init/tty1.conf），启动相应的程序来监听这些tty（如：/sbin/getty -8 38400 tty1。下文说到这个监听程序时，就以getty为例）。当用户通过ALT+F?切换到对应的tty?、并有所输入时，在该tty上监听的getty就能读取到输入信息，然后通过exec启动login程序来进行登录验证。从getty得到输入的这一刻起，tty?上的这个连接就算是启用了。</p>
+<p>对于远程连接，本文都以ssh为例。系统安装ssh server之后，在/etc/init.d/下会有它对应的启动脚本，这会使得sshd程序（ssh服务器）在系统启动的时候被启动（当然，root用户也可以在系统启动之后，手动启动sshd）。sshd监听网络上的相应端口（如：tcp:22），等待远程用户的连接。用户的连接始于TCP连接，然后sshd和ssh-client会打通ssh隧道。从这时起，连接启用，sshd会要求用户进行登录验证。</p>
+<h1 id="登录验证"><a href="#登录验证" class="headerlink" title="登录验证"></a>登录验证</h1><p>不管是本地终端登录，还是远程登录，登录验证无非就是要让用户输入用户名和密码。用户输入的信息通过已经启用的连接到达对端程序（如：login、sshd），然后由其进行校验。</p>
+<p>系统中的用户信息存放在/etc/passwd文件中，里面保存的系统中所有用户的信息。这些信息主要有：用户名、密码、组、home路径、以及登录后执行的程序、等。这些信息可以分两个层面来看：</p>
+<ol>
+<li>用于验证的。包括用户名和密码两项。即用户在与系统建立连接后，需要提供用户名和密码来进行验证（注意，密码一般并不是明文保存在passwd文件中的）；</li>
+<li>登录后用于设置用户属性的。除密码外的所有项。下面会详细解释；</li>
+</ol>
+<p>用户登录后会得到一个进程，关于这个进程，它有如下一些特征：</p>
+<ol>
+<li>对于本地连接，它就是原本执行getty的那个进程；而对于ssh连接，它是由sshd fork出来的进程；</li>
+<li>进程的用户名、组、当前路径、等都被按/etc/passwd文件中的描述进行设置；</li>
+<li>进程的stdin、stdout、stderr连接到一个对应的终端。对于本地连接，这个终端就是getty监听的那个tty；对于ssh连接，它是由sshd打开的pty（伪终端，后面会详细解释）；</li>
+<li>这个进程会执行/etc/passwd中配置的”登录后执行的程序”，这个程序一般就是/bin/sh，即登录后为用户提供一个shell控制台。于是用户可以使用自己的终端跟这个shell程序交互，干各种事情。这个”登录后执行的程序”也常被配置为/bin/nologin，表示对应用户是不允许登录的，因为nologin程序不会与用户进行交互，打印错误信息后就会退出了，所以登录只是白费劲。当然，如果你愿意，并且有root权限，也可以将”登录后执行的程序”配置成其他程序；</li>
+</ol>
+<p>于是，用户在登录完成之后，系统中就存在这样一个用户名为该登录用户的进程。通常这个进程运行shell程序，并且其输入输出连接到用户的终端，所以用户可以用键盘来操作这个shell，并且用显示器接收shell的输出。</p>
+<h1 id="关于终端"><a href="#关于终端" class="headerlink" title="关于终端"></a>关于终端</h1><p>前面讲到，登录后的shell其输入输出是连接到用户使用的终端的，不管是本地登录的tty，还是远程登录的pty。但是，为什么要有终端呢？shell的输入直接接到键盘、输出直接接到显示器，这样不行么？尤其是远程的情况，shell的输入输出为什么不能直接接到网络，而非要弄一个pty出来呢？<br>最容易想到的一点，终端能够使得上层不必关心输入输出设备本身的细节，只管对其读写就行了。不过这一点似乎并不是终端所特有的，因为vfs已经能够胜任了。应用程序open设备文件，得到fd，然后同样只用管对其读写就行了，而不用关心这个fd代表的是键盘、还是普通文件，具体的细节已经被隐藏在设备驱动程序之中。</p>
+<p>不过，相比于普通的读写，终端还实现了很多可以通过ioctl系统调用进行配置的功能，能够完成一些针对输入输出的处理逻辑。如：</p>
+<ol>
+<li>回车换行的转换：定义输入输出如何映射回车换行符。比如：回车键是\r、还是\n、还是\r\n；再如：\n应该如何打印到屏幕上，是回车+换行、还是只换行不回车、等等；</li>
+<li>行编辑：允许让输入字符不是立马送到应用程序，而是在换行以后才能被读取到。未换行的输入字符可以通过退格键进行编辑（比如在你密码输错的时候，是可以用CTRL+退格来进行编辑的）；</li>
+<li>回显：可以让输入字符自动被回显到终端的输出上。于是，键盘每输入一个字符都能在显示器上看到它，而这些字符其实很可能是还没被应用程序读取到的（因为有行编辑）；</li>
+<li>功能键：允许定义功能键。比如最常用的Ctrl+C，杀死前台进程，就是由终端来触发的。终端检测到Ctrl+C输入，会向前台进程组发送SIGTERM信号。而谁是前台进程组呢？这是由shell通过ioctl系统调用对终端使用TIOCSPGRP命令来设置的，每当shell启动一个前台进程，它都需要这么设置一下；</li>
+<li>输入输出流向控制，只有前台进程组能够从终端中读数据、而不管前台后台程序都能向终端写数据。这点也是必须的，跟用户进程交互的是前台进程，用户的输入当然不能被其他后台进程抢走。但是一个进程是前台还是后台，是它自己是所不知道的，没法靠进程自己来判断什么时候可以读终端、什么时候不能读。所以需要终端来提供支持，如果后台进程读这个终端，终端的驱动程序将向其发送SIGTTIN信号，从而将其挂起。直到shell将其重新置为前台进程时（通过fg命令），该进程才会继续执行；</li>
+</ol>
+<p>终端提供的这些功能未必都会被打开它的程序使用到，但是如果要使用，则可以通过统一的ioctl接口来设置，而不需要关心终端具体接的是什么设备，是键盘显示器？还是网络。大多数应用程序则根本不关心终端，只当它是能够满足读写需求的文件。而像shell这样为人机交互而生的程序，则注定会跟终端打交道。<br>对于shell来说，像“行编辑”、“回显”这样的功能，其实是可以不需要依赖终端的，shell程序自己可以做这样的处理，因为要做处理的数据正是shell从终端里面读到的数据。但是像“功能键”、“输入输出流向控制”这样的功能，则又不得不依赖终端。比如“功能键”，因为这时在对终端进行读操作的是shell启动的前台程序，而不是shell自己，所以不可能由shell来读取功能键，然后触发信号。</p>
+<p>可以说，终端是人机交互时，应用程序与用户之间的一个中间层。如果应用程序是在跟人交互，使用终端是其不二的选择；否则则没有必要使用终端。这一点在sshd上面有很好的体现。当用户使用ssh登录到远程机器remotehost，并执行一些操作时（比如执行cat test.txt操作），可以有两种方式：</p>
+<ol>
+<li>ssh user:pass@remotehost，远程登录后，再在shell中执行cat test.txt命令；</li>
+<li>ssh user:pass@remotehost ‘cat test.txt’，直接由sshd启动一个shell、自动执行’cat test.txt’命令；<br>第一种方式，是登录之后，再通过人机交互输入命令，这时sshd会为登录后得到的shell程序准备一个pty，以支持人机交互；而第二种方式，在登录之后并不需要交互，所以sshd就并不会使用pty，而是直接通过socket将shell的输入输出跟自己连接起来（再由sshd将其转发给ssh-client）。</li>
+</ol>
+<p>下面再说一下pty。pty分master和slave两端，跟pipe的两端很像，写入到master端的数据可以原样从slave端读出，反之亦然。在上面所述的第一种方式下，各个进程的联系如下：<br>ssh-client <-> [socket] <-> sshd <-> [master] <-> [slave] <-> shell<br>pty的master和slave两端分别被sshd和shell打开，就像pipe一样，将它们的输入输出连接起来。而pty跟pipe的不同之处，则正是前面所说的终端的功能（pty的slave端对于shell来说就是一个终端）。<br>跟tty不同，tty是系统初始化时生成的，其数目是固定的（比如12个）。而pty是系统启动后动态创建的。其创建的方法是：fd = open(‘/dev/ptms’)，这样就得到了一个pty。open返回的fd代表master端，通过ptyname(fd)可以得到对应slave端的文件路径（比如’/dev/pts/2’），这个设备文件是master端被open之后动态生成的。</-></-></-></-></-></p>
+<h1 id="权限控制"><a href="#权限控制" class="headerlink" title="权限控制"></a>权限控制</h1><p>用户登录验证成功后，getty、sshd这样的程序就会为用户启动他所对应的”登录后执行的程序”，并且在此之前会通过setuid()、setgid()这样的系统调用，设置好进程的uid和gid（用户和组）。之后，这个进程对文件的读、写、执行，以及对系统调用的使用，等都会受到进程uid和gid的限制。</p>
+<p>用户对系统的各种操作都是通过进程来完成的。而用户的输入输出都被定向到他登录后所得到的那个进程上，于是用户能够控制这个进程，来干他想干的事情（如果这个进程接受控制的话，比如进程运行着一个shell程序）。<br>用户的操作都受限于进程的uid和gid，比如文件访问、向进程发送信号、使用系统调用、监听网络端口、等都需要对其做检查。</p>
+<p>除非是root用户，否则没有权限使用setuid()、setgid()这样的系统调用来修改进程的uid和gid。而login时，login、sshd这样的进程之所以能够设置登录后进程的uid和gid，正是因为它们都是root用户的进程。<br>如果想要改变登录用户，则必须利用属于root用户的进程。一种办法是退出登录，然后走老路，重新跟getty、sshd这样的进程打交道，而使用其他用户名登录。另一种办法是执行一个setuid/setgid程序（参见《记一个linux内核内存提权问题》中的说明），临时获得root权限，再实现用户的切换（例如su就是这样一个能实现用户切换的setuid命令）。</p>
+<p>为了实现进程权限控制中的各种功能，进程的uid和gid其实并不止一组，主要有如下三组：</p>
+<ol>
+<li>ruid/rgid，代表实际的用户和组id；</li>
+<li>euid/egid，代表当前生效的用户和组id；</li>
+<li>suid/sgid，代表保留的用户和组id；</li>
+</ol>
+<p>什么意思呢？一般情况下，在用户登录得到的进程中，这三组id都是相同的值，与登录用户相对应（假设为aaa）。而用户新创建的进程也会全部继承这三组id。<br>当用户执行一个setuid/setgid程序时，执行程序的进程将得到可执行程序owner（假设为bbb）的用户属性，euid/egid和suid/sgid会更新为bbb（而ruid/rgid不会被更新）。<br>这些id在进程操作别的对象时（比如写文件、发信号、等）或被别的进程操作时（比如其他进程向其发信号、等）会被用做校验。ruid/rgid和euid/egid在进程被操作的时候会使用到，euid/egid在进程发起操作的时候会用到。比如有一个进程，其ruid是aaa、euid是bbb，则euid为aaa或bbb的其他进程都可以向其发送信号。而该进程在进行读写文件、创建文件、等操作时，使用的则是用户bbb的权限：它创建的文件owner是bbb、它在访问owner是aaa的文件时以other权限进行校验。<br>那么第三组id，suid/sgid又是干什么用的呢？之前说普通用户没有权限使用setuid()这样的系统调用来改变进程的uid和gid，其实这个说法并不确切。进程其实是有权限将自己的ruid/rgid、euid/egid、suid/sgid的值修改成与这三者之一相等的值。比如ruid/rgid为aaa、suid/sgid为bbb，则用户可以任意将euid/egid设置为aaa或bbb。因为大多数情况下这三组id是等值的，所以一般说用户进程不能修改自己的uid和gid（只能从aaa修改为aaa，相当于不能修改）。但是执行setuid的程序后，进程的这三组id就有了两种不同的取值，ruid/rgid等于aaa、euid/egid和suid/sgid等于bbb，于是进程的uid就有了一定的选择余地。比如此时进程的euid/egid被更新成了bbb，那就不能再以owner身份去操作aaa的文件了（注意，这个进程原本是以aaa用户登录而得到的）。不过没关系，进程是有权限将euid/egid改回aaa的，因为ruid/rgid的值是aaa。但是改回来之后，ruid/rgid和euid/egid都是aaa了，要再想把euid/egid改为bbb怎么办呢？suid/sgid就是为此而生的，作为一个备份，它的值是bbb，这使得euid/egid还能够修改回bbb。当然，进程也有权限将euid/egid和suid/sgid都改回aaa，这将使得它们不再能修改成bbb了。</p>
+<h1 id="会话退出"><a href="#会话退出" class="headerlink" title="会话退出"></a>会话退出</h1><p>用户登录是一个会话的开始。登录之后，用户会得到一个跟用户使用的终端相连的进程，这个进程被称作是这个会话的leader，会话的id就等于该进程的pid。由该进程fork出来的子进程都是这个会话的成员（进程的sid等于该会话id）。<br>leader进程的退出，将导致它所连接的终端被hangup，这意味着会话结束。反过来，像ssh这样的远程连接也可以通过断开连接的方式来使终端hangup，这将使得leader进程收到SIGHUP信号而退出。<br>如果会话使用的是pty，其本身是随会话的建立而创建出来的，会话结束，则pty被销毁；而如果会话使用的是tty，其本身是在系统初始化时创建的，并不依赖于会话的建立，则会话结束时，tty依然存在。init进程检测到使用该tty的会话已经结束，便会重新启动一个getty来监听该tty。</p>
+<p>不过，会话结束，并不意味着在该会话中创建的所有进程都结束了。所谓的daemon进程，正是在某个会话中创建，但是却不依赖该会话，而常驻后台的进程。<br>具体来说，当终端hangup时，内核会有如下两个动作：</p>
+<ol>
+<li>向对应会话的leader进程发送SIGHUP信号。而一般来说，会话的leader进程很可能是一个shell，它在收到SIGHUP信号后，并不是马上退出，而是会向它所启动的子进程都各自发送一个SIGHUP信号，将它们都杀死，然后自己才退出。不过，如果是这个作为leader进程shell自己退出，而导致终端hangup的话，向其子进程发送SIGHUP信号的事情就不会发生了，因为shell退出在先，它再也不会收到SIGHUP信号；</li>
+<li>修改所有打开该终端的文件句柄，改成一个不可读不可写的实现；</li>
+</ol>
+<p>所以，在会话退出之后还常驻后台的进程肯定是没法跟终端交互的。而要想让进程常驻后台，一般有如下几种方法：</p>
+<ol>
+<li>避免shell发SIGHUP信号；<br>主要有两种办法：1)主动exit，而不是直接断开终端；2)两次fork。因为shell只认识它自己fork出来的子进程，并不知道”子又生孙”的事情，也就不会给孙子进程发送SIGHUP信号了；</li>
+<li>忽略SIGHUP信号；<br>终端hangup时进程可能收到shell发送的SIGHUP信号。信号的默认处理动作是退出进程，但是该信号是可以忽略的。忽略信号，就可以使得后台进程不会随会话退出而退出。<br>nohup命令就是做这件事情的，而且它做得更完整一些，不仅忽略SIGHUP，还会将进程的标准输入重定向为/dev/null、输出重定向到nohup.out文件；</li>
+<li>使用setsid()系统调用，为进程开启一个新的会话；<br>从一个会话中fork出来的进程，默认都是属于这个会话的。但是进程可以调用setsid()，使自己脱离原先的会话，而成为一个新会话的leader。于是，原先的会话退出，就不会影响到新建的会话了。<br>setsid命令包装了setsid()系统调用，可以为进程创建新的会话。不过它并不对新进程的输入输出进行重定向，这就意味着新进程的输入输出还是连接到原先的那个tty的，这可能跟原先的会话争抢输入。所以，对新会话的进程进行输入输出的重定向也是一件很重要的事情。</li>
+</ol>
+<p>一个进程成为daemon进程，可以不随会话的退出而退出，但是进程的uid/gid并不会因此而改变。对应的用户还可以在其他会话中，通过发信号等方式，操作那些原来由他所启动的daemon进程（因为权限控制是以用户为准的，而并不考虑会话）。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/01/硬中断和软中断/" rel="next" title="硬中断和软中断">
+                <i class="fa fa-chevron-left"></i> 硬中断和软中断
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/04/浅析CPU中断技术/" rel="prev" title="浅析CPU中断技术">
+                浅析CPU中断技术 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">91</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="450" src="//music.163.com/outchain/player?type=0&id=101039122&auto=0&height=430">
+          </iframe>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#进程"><span class="nav-number">1.</span> <span class="nav-text">进程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#进程组"><span class="nav-number">2.</span> <span class="nav-text">进程组</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#作业"><span class="nav-number">3.</span> <span class="nav-text">作业</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#会话"><span class="nav-number">4.</span> <span class="nav-text">会话</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#控制终端"><span class="nav-number">5.</span> <span class="nav-text">控制终端</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#会话的维系"><span class="nav-number">6.</span> <span class="nav-text">会话的维系</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#连接的启用"><span class="nav-number">7.</span> <span class="nav-text">连接的启用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#登录验证"><span class="nav-number">8.</span> <span class="nav-text">登录验证</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#关于终端"><span class="nav-number">9.</span> <span class="nav-text">关于终端</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#权限控制"><span class="nav-number">10.</span> <span class="nav-text">权限控制</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#会话退出"><span class="nav-number">11.</span> <span class="nav-text">会话退出</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-flash.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="术语慢系统调用（Slow system call）该术语适用于那些可能永远阻塞的系统调用。永远阻塞的系统调用是指调用永远无法返回，多数网络支持函数都属于这一类。如：若没有客户连接到服务器上，那么服务器的accept调用就会一直阻塞。 慢系统调用可以被永久阻塞，包括以下几个类别： （1）读写‘慢’设备（包括pipe，终端设备，网络连接等）。读时，数据不存在，需要等待；写时，缓冲区满或其他原因，需要等">
+<meta name="keywords" content="Linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="信号中断与慢系统调用">
+<meta property="og:url" content="http://yoursite.com/2019/05/04/信号中断与慢系统调用/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="术语慢系统调用（Slow system call）该术语适用于那些可能永远阻塞的系统调用。永远阻塞的系统调用是指调用永远无法返回，多数网络支持函数都属于这一类。如：若没有客户连接到服务器上，那么服务器的accept调用就会一直阻塞。 慢系统调用可以被永久阻塞，包括以下几个类别： （1）读写‘慢’设备（包括pipe，终端设备，网络连接等）。读时，数据不存在，需要等待；写时，缓冲区满或其他原因，需要等">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2019-05-04T14:07:44.369Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="信号中断与慢系统调用">
+<meta name="twitter:description" content="术语慢系统调用（Slow system call）该术语适用于那些可能永远阻塞的系统调用。永远阻塞的系统调用是指调用永远无法返回，多数网络支持函数都属于这一类。如：若没有客户连接到服务器上，那么服务器的accept调用就会一直阻塞。 慢系统调用可以被永久阻塞，包括以下几个类别： （1）读写‘慢’设备（包括pipe，终端设备，网络连接等）。读时，数据不存在，需要等待；写时，缓冲区满或其他原因，需要等">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/05/04/信号中断与慢系统调用/">
+
+
+
+
+
+  <title>信号中断与慢系统调用 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/04/信号中断与慢系统调用/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">信号中断与慢系统调用</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-05-04T21:49:39+08:00">
+                2019-05-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="术语"><a href="#术语" class="headerlink" title="术语"></a>术语</h2><h2 id="慢系统调用（Slow-system-call）"><a href="#慢系统调用（Slow-system-call）" class="headerlink" title="慢系统调用（Slow system call）"></a>慢系统调用（Slow system call）</h2><p>该术语适用于那些可能永远阻塞的系统调用。永远阻塞的系统调用是指调用永远无法返回，多数网络支持函数都属于这一类。如：若没有客户连接到服务器上，那么服务器的accept调用就会一直阻塞。</p>
+<p>慢系统调用可以被永久阻塞，包括以下几个类别：</p>
+<p>（1）读写‘慢’设备（包括pipe，终端设备，网络连接等）。读时，数据不存在，需要等待；写时，缓冲区满或其他原因，需要等待。读写磁盘文件一般不会阻塞。</p>
+<p>（2）当打开某些特殊文件时，需要等待某些条件，才能打开。例如：打开中断设备时，需要等到连接设备的modem响应才能完成。</p>
+<p>（3）pause和wait函数。pause函数使调用进程睡眠，直到捕获到一个信号。wait等待子进程终止。</p>
+<p>（4）某些ioctl操作。</p>
+<p>（5）某些IPC操作。</p>
+<h1 id="EINTR介绍"><a href="#EINTR介绍" class="headerlink" title="EINTR介绍"></a>EINTR介绍</h1><h2 id="EINTR错误产生的原因"><a href="#EINTR错误产生的原因" class="headerlink" title="EINTR错误产生的原因"></a>EINTR错误产生的原因</h2><p>早期的Unix系统，如果进程在一个慢系统调用(slow system call)中阻塞时，当捕获到某个信号且相应信号处理函数返回时，这个系统调用被中断，调用返回错误，设置errno为EINTR（相应的错误描述为“Interrupted system call”）。</p>
+<p>怎么看哪些系统条用会产生EINTR错误呢？用man啊！</p>
+<p>如下表所示的系统调用就会产生EINTR错误，当然不同的函数意义也不同。</p>
+<table>
+<thead>
+<tr>
+<th>系统调用函数</th>
+<th>errno为EINTR表征的意义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>write</td>
+<td>由于信号中断，没写成功任何数据。</td>
+</tr>
+<tr>
+<td>open</td>
+<td>由于信号中断，没读到任何数据。</td>
+</tr>
+<tr>
+<td>recv</td>
+<td>由于信号中断返回，没有任何数据可用。</td>
+</tr>
+<tr>
+<td>sem_wait</td>
+<td>函数调用被信号处理函数中断。</td>
+</tr>
+</tbody>
+</table>
+<h2 id="如何处理被中断的系统调用"><a href="#如何处理被中断的系统调用" class="headerlink" title="如何处理被中断的系统调用"></a>如何处理被中断的系统调用</h2><p>既然系统调用会被中断，那么别忘了要处理被中断的系统调用。有三种处理方式：</p>
+<ul>
+<li>人为重启被中断的系统调用</li>
+<li>安装信号时设置 SA_RESTART属性（该方法对有的系统调用无效）</li>
+<li>忽略信号（让系统不产生信号中断）</li>
+</ul>
+<h3 id="人为重启被中断的系统调用"><a href="#人为重启被中断的系统调用" class="headerlink" title="人为重启被中断的系统调用"></a>人为重启被中断的系统调用</h3><p>人为当碰到EINTR错误的时候，有一些可以重启的系统调用要进行重启，而对于有一些系统调用是不能够重启的。例如：accept、read、write、select、和open之类的函数来说，是可以进行重启的。不过对于套接字编程中的connect函数我们是不能重启的，若connect函数返回一个EINTR错误的时候，我们不能再次调用它，否则将立即返回一个错误。针对connect不能重启的处理方法是，必须调用select来等待连接完成。</p>
+<p>这里的“重启”怎么理解？</p>
+<p>一些IO系统调用执行时，如 read 等待输入期间，如果收到一个信号，系统将中断read， 转而执行信号处理函数. 当信号处理返回后， 系统遇到了一个问题： 是重新开始这个系统调用， 还是让系统调用失败？早期UNIX系统的做法是， 中断系统调用，并让系统调用失败， 比如read返回 -1， 同时设置 errno 为EINTR中断了的系统调用是没有完成的调用，它的失败是临时性的，如果再次调用则可能成功，这并不是真正的失败，所以要对这种情况进行处理， 典型的方式为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">again:</span><br><span class="line">          if ((n = read(fd， buf， BUFFSIZE)) &lt; 0) &#123;</span><br><span class="line">             if (errno == EINTR)</span><br><span class="line">                  goto again;     /* just an interrupted system call */</span><br><span class="line">            /* handle other errors */</span><br><span class="line">          &#125;</span><br></pre></td></tr></table></figure></p>
+<p>可以去github上看看别人怎么处理EINTR错误的。在github上搜索“==EINTR”关键字就有一大堆了。摘取几个看看：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">while ((r = read (fd， buf， len)) &lt; 0 &amp;&amp; errno == EINTR) /*do</span><br><span class="line">nothing*/ ;</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">ssize_t Read(int fd， void *ptr， size_t nbytes)</span><br><span class="line">&#123;</span><br><span class="line"> </span><br><span class="line">        ssize_t n;</span><br><span class="line"> </span><br><span class="line">again:</span><br><span class="line">        if((n = read(fd， ptr， nbytes)) == -1)&#123;</span><br><span class="line">                if(errno == EINTR)</span><br><span class="line">                        goto again;</span><br><span class="line">                else</span><br><span class="line">                        return -1;</span><br><span class="line">        &#125;</span><br><span class="line">        return n;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="安装信号时设置-SA-RESTART属性"><a href="#安装信号时设置-SA-RESTART属性" class="headerlink" title="安装信号时设置 SA_RESTART属性"></a>安装信号时设置 SA_RESTART属性</h3><p> 我们还可以从信号的角度来解决这个问题，  安装信号的时候， 设置 SA_RESTART属性，那么当信号处理函数返回后， 不会让系统调用返回失败，而是让被该信号中断的系统调用将自动恢复。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">struct sigaction action;</span><br><span class="line"> </span><br><span class="line">action.sa_handler = handler_func;</span><br><span class="line">sigemptyset(&amp;action.sa_mask);</span><br><span class="line">action.sa_flags = 0;</span><br><span class="line">/* 设置SA_RESTART属性 */</span><br><span class="line">action.sa_flags |= SA_RESTART;</span><br><span class="line"> </span><br><span class="line">sigaction(SIGALRM, &amp;action, NULL);</span><br></pre></td></tr></table></figure></p>
+<p>但注意，并不是所有的系统调用都可以自动恢复。如msgsnd喝msgrcv就是典型的例子，msgsnd/msgrcv以block方式发送/接收消息时，会因为进程收到了信号而中断。此时msgsnd/msgrcv将返回-1，errno被设置为EINTR。且即使在插入信号时设置了SA_RESTART，也无效。在man msgrcv中就有提到这点：</p>
+<blockquote>
+<p>msgsnd and msgrcv are never automatically restarted after being interrupted by a signal handler, regardless of the setting  of the SA_RESTART flag when establishing a signal  handler.</p>
+</blockquote>
+<h3 id="忽略信号"><a href="#忽略信号" class="headerlink" title="忽略信号"></a>忽略信号</h3><p>当然最简单的方法是忽略信号，在安装信号时，明确告诉系统不会产生该信号的中断。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">struct sigaction action;</span><br><span class="line"> </span><br><span class="line">action.sa_handler = SIG_IGN;</span><br><span class="line">sigemptyset(&amp;action.sa_mask);</span><br><span class="line"> </span><br><span class="line">sigaction(SIGALRM, &amp;action, NULL);</span><br></pre></td></tr></table></figure></p>
+<h1 id="测试代码"><a href="#测试代码" class="headerlink" title="测试代码"></a>测试代码</h1><p>为了方便大家测试，这里附上两段测试代码。</p>
+<h2 id="测试代码一"><a href="#测试代码一" class="headerlink" title="测试代码一"></a>测试代码一</h2><p>闹钟信号SIGALRM中断read系统调用。安装SIGALRM信号时如果不设置SA_RESTART属性，信号会中断read系统过调用。如果设置了SA_RESTART属性，read就能够自己恢复系统调用，不会产生EINTR错误。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;signal.h&gt;</span><br><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#include &lt;stdlib.h&gt;</span><br><span class="line">#include &lt;error.h&gt;</span><br><span class="line">#include &lt;string.h&gt;</span><br><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line"> </span><br><span class="line">void sig_handler(int signum)</span><br><span class="line">&#123;</span><br><span class="line">    printf(&quot;in handler\n&quot;);</span><br><span class="line">    sleep(1);</span><br><span class="line">    printf(&quot;handler return\n&quot;);</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">int main(int argc, char **argv)</span><br><span class="line">&#123;</span><br><span class="line">    char buf[100];</span><br><span class="line">    int ret;</span><br><span class="line">    struct sigaction action, old_action;</span><br><span class="line"> </span><br><span class="line">    action.sa_handler = sig_handler;</span><br><span class="line">    sigemptyset(&amp;action.sa_mask);</span><br><span class="line">    action.sa_flags = 0;</span><br><span class="line">    /* 版本1:不设置SA_RESTART属性</span><br><span class="line">     * 版本2:设置SA_RESTART属性 */</span><br><span class="line">    //action.sa_flags |= SA_RESTART;</span><br><span class="line"> </span><br><span class="line">    sigaction(SIGALRM, NULL, &amp;old_action);</span><br><span class="line">    if (old_action.sa_handler != SIG_IGN) &#123;</span><br><span class="line">        sigaction(SIGALRM, &amp;action, NULL);</span><br><span class="line">    &#125;</span><br><span class="line">    alarm(3);</span><br><span class="line">   </span><br><span class="line">    bzero(buf, 100);</span><br><span class="line"> </span><br><span class="line">    ret = read(0, buf, 100);</span><br><span class="line">    if (ret == -1) &#123;</span><br><span class="line">        perror(&quot;read&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    printf(&quot;read %d bytes:\n&quot;, ret);</span><br><span class="line">    printf(&quot;%s\n&quot;, buf);</span><br><span class="line"> </span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="测试代码二"><a href="#测试代码二" class="headerlink" title="测试代码二"></a>测试代码二</h2><p>闹钟信号SIGALRM中断msgrcv系统调用。即使在插入信号时设置了SA_RESTART，也无效。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#include &lt;stdlib.h&gt;</span><br><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">#include &lt;errno.h&gt;</span><br><span class="line">#include &lt;signal.h&gt;</span><br><span class="line">#include &lt;sys/types.h&gt;</span><br><span class="line">#include &lt;sys/ipc.h&gt;</span><br><span class="line">#include &lt;sys/msg.h&gt;</span><br><span class="line"> </span><br><span class="line">void ding(int sig)</span><br><span class="line">&#123;</span><br><span class="line">    printf(&quot;Ding!\n&quot;);</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">struct msgst</span><br><span class="line">&#123;</span><br><span class="line">    long int msg_type;</span><br><span class="line">    char buf[1];</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">    int nMsgID = -1;</span><br><span class="line"> </span><br><span class="line">    // 捕捉闹钟信息号</span><br><span class="line">    struct sigaction action;</span><br><span class="line">    action.sa_handler = ding;</span><br><span class="line">    sigemptyset(&amp;action.sa_mask);</span><br><span class="line">    action.sa_flags = 0;</span><br><span class="line">    // 版本1:不设置SA_RESTART属性</span><br><span class="line">    // 版本2:设置SA_RESTART属性</span><br><span class="line">    action.sa_flags |= SA_RESTART;</span><br><span class="line">    sigaction(SIGALRM, &amp;action, NULL);</span><br><span class="line">   </span><br><span class="line">    alarm(3);</span><br><span class="line">    printf(&quot;waiting for alarm to go off\n&quot;);</span><br><span class="line"> </span><br><span class="line">    // 新建消息队列</span><br><span class="line">    nMsgID = msgget(IPC_PRIVATE, 0666 | IPC_CREAT);</span><br><span class="line">    if( nMsgID &lt; 0 )</span><br><span class="line">    &#123;</span><br><span class="line">        perror(&quot;msgget fail&quot; );</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line">    printf(&quot;msgget success.\n&quot;);</span><br><span class="line"> </span><br><span class="line">    // 阻塞 等待消息队列</span><br><span class="line">    //</span><br><span class="line">    // msgrcv会因为进程收到了信号而中断。返回-1，errno被设置为EINTR。</span><br><span class="line">    // 即使在插入信号时设置了SA_RESTART，也无效。man msgrcv就有说明。</span><br><span class="line">    //</span><br><span class="line">    struct msgst msg_st;</span><br><span class="line">    if( -1 == msgrcv( nMsgID, (void*)&amp;msg_st, 1, 0, 0 ) )</span><br><span class="line">    &#123;</span><br><span class="line">        perror(&quot;msgrcv fail&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    printf(&quot;done\n&quot;);</span><br><span class="line"> </span><br><span class="line">    exit(0);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>慢系统调用(slow system call)会被信号中断，系统调用函数返回失败，并且errno被置为EINTR（错误描述为“Interrupted system call”）。</p>
+<p>处理方法有以下三种：</p>
+<ol>
+<li>人为重启被中断的系统调用；</li>
+<li>安装信号时设置 SA_RESTART属性；</li>
+<li>忽略信号（让系统不产生信号中断）。</li>
+</ol>
+<p>有时我们需要捕获信号，但又考虑到第2种方法的局限性（设置 SA_RESTART属性对有的系统无效，如msgrcv），所以在编写代码时，一定要“人为重启被中断的系统调用”。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/04/浅析CPU中断技术/" rel="next" title="浅析CPU中断技术">
+                <i class="fa fa-chevron-left"></i> 浅析CPU中断技术
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">91</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="450" src="//music.163.com/outchain/player?type=0&id=101039122&auto=0&height=430">
+          </iframe>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#术语"><span class="nav-number">1.</span> <span class="nav-text">术语</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#慢系统调用（Slow-system-call）"><span class="nav-number">2.</span> <span class="nav-text">慢系统调用（Slow system call）</span></a></li></ol><li class="nav-item nav-level-1"><a class="nav-link" href="#EINTR介绍"><span class="nav-number"></span> <span class="nav-text">EINTR介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#EINTR错误产生的原因"><span class="nav-number">1.</span> <span class="nav-text">EINTR错误产生的原因</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何处理被中断的系统调用"><span class="nav-number">2.</span> <span class="nav-text">如何处理被中断的系统调用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#人为重启被中断的系统调用"><span class="nav-number">2.1.</span> <span class="nav-text">人为重启被中断的系统调用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装信号时设置-SA-RESTART属性"><span class="nav-number">2.2.</span> <span class="nav-text">安装信号时设置 SA_RESTART属性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#忽略信号"><span class="nav-number">2.3.</span> <span class="nav-text">忽略信号</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#测试代码"><span class="nav-number"></span> <span class="nav-text">测试代码</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#测试代码一"><span class="nav-number">1.</span> <span class="nav-text">测试代码一</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#测试代码二"><span class="nav-number">2.</span> <span class="nav-text">测试代码二</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number"></span> <span class="nav-text">总结</span></a></li></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

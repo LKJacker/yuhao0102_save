@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-flash.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="原文：https://www.cnblogs.com/funeral/archive/2013/03/06/2945485.html 什么是CPU中断？使用计算机的过程中，经常会遇到这么一种情景：  你正在看电影 你的朋友发来一条QQ信息 你一边回复朋友的信息，一边继续看电影  这个过程中，一切是那么的顺其自然。但理论上来说，播放电影的时候，CPU正在一丝不苟的执行着一条又一条的指令，它是如何在维">
+<meta name="keywords" content="Linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="浅析CPU中断技术">
+<meta property="og:url" content="http://yoursite.com/2019/05/04/浅析CPU中断技术/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="原文：https://www.cnblogs.com/funeral/archive/2013/03/06/2945485.html 什么是CPU中断？使用计算机的过程中，经常会遇到这么一种情景：  你正在看电影 你的朋友发来一条QQ信息 你一边回复朋友的信息，一边继续看电影  这个过程中，一切是那么的顺其自然。但理论上来说，播放电影的时候，CPU正在一丝不苟的执行着一条又一条的指令，它是如何在维">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2019-05-04T14:05:51.566Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="浅析CPU中断技术">
+<meta name="twitter:description" content="原文：https://www.cnblogs.com/funeral/archive/2013/03/06/2945485.html 什么是CPU中断？使用计算机的过程中，经常会遇到这么一种情景：  你正在看电影 你的朋友发来一条QQ信息 你一边回复朋友的信息，一边继续看电影  这个过程中，一切是那么的顺其自然。但理论上来说，播放电影的时候，CPU正在一丝不苟的执行着一条又一条的指令，它是如何在维">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/05/04/浅析CPU中断技术/">
+
+
+
+
+
+  <title>浅析CPU中断技术 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/04/浅析CPU中断技术/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">浅析CPU中断技术</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-05-04T21:44:39+08:00">
+                2019-05-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>原文：<a href="https://www.cnblogs.com/funeral/archive/2013/03/06/2945485.html" target="_blank" rel="noopener">https://www.cnblogs.com/funeral/archive/2013/03/06/2945485.html</a></p>
+<h1 id="什么是CPU中断？"><a href="#什么是CPU中断？" class="headerlink" title="什么是CPU中断？"></a>什么是CPU中断？</h1><p>使用计算机的过程中，经常会遇到这么一种情景：</p>
+<ol>
+<li>你正在看电影</li>
+<li>你的朋友发来一条QQ信息</li>
+<li>你一边回复朋友的信息，一边继续看电影</li>
+</ol>
+<p>这个过程中，一切是那么的顺其自然。但理论上来说，播放电影的时候，CPU正在一丝不苟的执行着一条又一条的指令，它是如何在维持电影播放的情况下，及时接收并响应你的键盘输入信息呢？<br>这就是CPU中断技术在起作用。</p>
+<p>CPU中断技术的定义如下：</p>
+<p>计算机处于执行期间系统内发生了非寻常或非预期的急需处理事件CPU暂时中断当前正在执行的程序而转去执行相应的事件处理程序处理完毕后返回原来被中断处继续执行。 </p>
+<p>在这里，“非寻常或非预期的事件”指的就是你回复朋友的QQ时，用键盘键入信息。为了及时响应你键入的信息，CPU将正在执行的任务“播放电影”暂时中断，处理完你键入的信息后，继续执行“播放电影”的任务。由于这个“中断当前任务-&gt;响应键盘输入-&gt;继续当前任务”的执行周期非常短（一般都是微秒级），所以一般人感觉不出来。</p>
+<h1 id="CPU中断的作用"><a href="#CPU中断的作用" class="headerlink" title="CPU中断的作用"></a>CPU中断的作用</h1><p>早期的CPU处理外设的事件(比如接收键盘输入)，往往采用“轮询”的方式。即CPU像个查岗的一样轮番对外设顺序访问，比如它先看看键盘有没被按下，有的话就处理，没的话继续往下看鼠标有没有移动，再看看打印机……这种方式使CPU的执行效率很低，且CPU与外设不能同时工作（因为要等待CPU来“巡查”）。</p>
+<p>中断模式时就是说CPU不主动访问这些设备，只管处理自己的任务。如果有设备要与CPU联系，或要CPU处理一些事情，它会给CPU发一个中断请求信号。这时CPU就会放下正在进行的工作而去处理这个外设的请求。处理完中断后，CPU返回去继续执行中断以前的工作。</p>
+<p>中断模式的作用和优点在于：</p>
+<ol>
+<li>可以使CPU和外设同时工作，使系统可以及时地响应外部事件。</li>
+<li>可允许多个外设同时工作，大大提高了CPU的利用率，也提高了数据输入、输出的速度。</li>
+<li>可以使CPU及时处理各种软硬件故障（比如计算机在运行过程中，出现了难以预料的情况或一些故障，如电源掉电、存储出错、运算溢出等等。计算机可以利用中断系统自行处理，而不必停机或报告工作人员。）</li>
+</ol>
+<h1 id="CPU中断的类型"><a href="#CPU中断的类型" class="headerlink" title="CPU中断的类型"></a>CPU中断的类型</h1><p>在计算机系统中，根据中断源的不同，通常将中断分为两大类：</p>
+<ol>
+<li>硬件中断</li>
+<li>软件中断</li>
+</ol>
+<h2 id="硬件中断"><a href="#硬件中断" class="headerlink" title="硬件中断"></a>硬件中断</h2><p>硬件中断又称外部中断，主要分为两种：可屏蔽中断、非屏蔽中断。<br>可屏蔽中断：</p>
+<ol>
+<li>常由计算机的外设或一些接口功能产生，如键盘、打印机、串行口等</li>
+<li>这种类型的中断可以在CPU要处理其它紧急操作时，被软件屏蔽或忽略</li>
+</ol>
+<p>非屏蔽中断：</p>
+<ol>
+<li>由意外事件导致，如电源断电、内存校验错误等</li>
+<li>对于这种类型的中断事件，无法通过软件进行屏蔽，CPU必须无条件响应</li>
+</ol>
+<p>在x86架构的处理器中，CPU的中断控制器由两根引脚(INTR和NMI)接收外部中断请求信号。其中：</p>
+<ol>
+<li>INTR接收可屏蔽中断请求</li>
+<li>NMI接收非屏蔽中断请求</li>
+</ol>
+<p>典型事例：</p>
+<ol>
+<li>典型的可屏蔽中断的例子是打印机中断，CPU对打印机中断请求的响应可以快一些，也可以慢一些，因为让打印机稍等待一会也是完全合理的。</li>
+<li>典型的非屏蔽中断的例子是电源断电，一旦出现此中断请求，必须立即无条件地响应，否则进行其他任何工作都是没有意义的。</li>
+</ol>
+<h2 id="软件中断"><a href="#软件中断" class="headerlink" title="软件中断"></a>软件中断</h2><p>软件中断又称内部中断，是指在程序中调用INTR中断指令引起的中断。比如winAPI中，keybd_event和mouse_event两个函数，就是用来模拟键盘和鼠标的输入（这个仅为笔者本人的猜测）。</p>
+<h1 id="CPU中断的过程"><a href="#CPU中断的过程" class="headerlink" title="CPU中断的过程"></a>CPU中断的过程</h1><h2 id="中断请求"><a href="#中断请求" class="headerlink" title="中断请求"></a>中断请求</h2><p>中断请求是由中断源向CPU发出中断请求信号。外部设备发出中断请求信号要具备以下两个条件：</p>
+<ol>
+<li>外部设备的工作已经告一段落。例如输入设备只有在启动后，将要输入的数据送到接口电路的数据寄存器（即准备好要输入的数据）之后，才可以向CPU发出中断请求。</li>
+<li>系统允许该外设发出中断请求。如果系统不允许该外设发出中断请求，可以将这个外设的请求屏蔽。当这个外设中断请求被屏蔽，虽然这个外设准备工作已经完成，也不能发出中断请求。</li>
+</ol>
+<h2 id="中断响应、处理和返回"><a href="#中断响应、处理和返回" class="headerlink" title="中断响应、处理和返回"></a>中断响应、处理和返回</h2><p>当满足了中断的条件后，CPU就会响应中断，转入中断程序处理。具体的工作过程如下：</p>
+<ol>
+<li>关闭中断信号接收器</li>
+<li>保存现场(context)</li>
+<li>给出中断入口，转入相应的中断服务程序</li>
+<li>处理完成，返回并恢复现场(context)</li>
+<li>开启中断信号接收器</li>
+</ol>
+<h2 id="中断排队和中断判优"><a href="#中断排队和中断判优" class="headerlink" title="中断排队和中断判优"></a>中断排队和中断判优</h2><ol>
+<li>中断申请是随机的，有时会出现多个中断源同时提出中断申请。</li>
+<li>CPU每次只能响应一个中断源的请求。</li>
+<li>CPU不可能对所有中断请求一视同仁，它会根据各中断源工作性质的轻重缓急，预先安排一个优先级顺序。当多个中断源同时申请中断时，即按此优先级顺序进行排队，等候CPU处理。</li>
+</ol>
+<p>了解了CPU中断处理的过程，就不难理解下面一种常见的情景：</p>
+<p>正在拷贝文件时，往某个文本框输入信息，这个文本框会出现短暂的假死，键盘输入的数据不能及时显示在文本框中，需要等一会儿才能逐渐显示出来。这是因为该中断操作(往文本框输入信息)在中断队列的优先级比较低，或者CPU认为正在处理的操作(拷贝文件)进行挂起的代价太大，所以只有等到CPU到了一个挂起代价较低的点，才会挂起当前操作，处理本次中断信息。</p>
+<h1 id="多核CPU对中断的处理"><a href="#多核CPU对中断的处理" class="headerlink" title="多核CPU对中断的处理"></a>多核CPU对中断的处理</h1><p>多核CPU的中断处理和单核有很大不同。多核的各处理器核心之间需要通过中断方式进行通信，所以CPU芯片内部既有各处理器核心的本地中断控制器，又有负责仲裁各核之间中断分配的全局中断控制器。</p>
+<p>现今的多核处理器在中断处理和中断控制方面主要使用的是APIC（Advanced Programmable Interrupt Controllers），即高级编程中断控制器。它是基于中断控制器两个基础功能单元——本地单元以及I/O单元的分布式体系结构。在多核系统中，多个本地和I/O APIC单元能够作为一个整体通过APIC总线互相操作。</p>
+<p>APIC的功能有：</p>
+<ol>
+<li>接受来自处理器中断引脚的内部或外部I/O APIC的中断，然后将这些中断发送给处理器核心进行处理</li>
+<li>在多核处理器系统中，接收和发送核内中断消息</li>
+</ol>
+<p>对于外部设备发出的中断请求，由全局中断控制器接收请求并决定交给CPU的哪一个核心处理。也可针对APIC编程，让所有的中断都被一个固定的CPU处理。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/04/Linux会话控制终端详解/" rel="next" title="Linux-进程、进程组、作业、会话、控制终端详解">
+                <i class="fa fa-chevron-left"></i> Linux-进程、进程组、作业、会话、控制终端详解
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/04/信号中断与慢系统调用/" rel="prev" title="信号中断与慢系统调用">
+                信号中断与慢系统调用 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">91</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="450" src="//music.163.com/outchain/player?type=0&id=101039122&auto=0&height=430">
+          </iframe>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#什么是CPU中断？"><span class="nav-number">1.</span> <span class="nav-text">什么是CPU中断？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CPU中断的作用"><span class="nav-number">2.</span> <span class="nav-text">CPU中断的作用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CPU中断的类型"><span class="nav-number">3.</span> <span class="nav-text">CPU中断的类型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#硬件中断"><span class="nav-number">3.1.</span> <span class="nav-text">硬件中断</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#软件中断"><span class="nav-number">3.2.</span> <span class="nav-text">软件中断</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CPU中断的过程"><span class="nav-number">4.</span> <span class="nav-text">CPU中断的过程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#中断请求"><span class="nav-number">4.1.</span> <span class="nav-text">中断请求</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#中断响应、处理和返回"><span class="nav-number">4.2.</span> <span class="nav-text">中断响应、处理和返回</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#中断排队和中断判优"><span class="nav-number">4.3.</span> <span class="nav-text">中断排队和中断判优</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#多核CPU对中断的处理"><span class="nav-number">5.</span> <span class="nav-text">多核CPU对中断的处理</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
