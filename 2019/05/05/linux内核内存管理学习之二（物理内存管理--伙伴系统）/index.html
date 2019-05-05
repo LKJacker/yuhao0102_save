@@ -351,14 +351,14 @@
 <h3 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h3><p>内核定义了MIGRATE_TYPES中迁移类型，其定义如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">enum &#123;</span><br><span class="line">	MIGRATE_UNMOVABLE,</span><br><span class="line">	MIGRATE_RECLAIMABLE,</span><br><span class="line">	MIGRATE_MOVABLE,</span><br><span class="line">	MIGRATE_PCPTYPES,	/* the number of types on the pcp lists */</span><br><span class="line">	MIGRATE_RESERVE = MIGRATE_PCPTYPES,</span><br><span class="line">	MIGRATE_ISOLATE,	/* can&apos;t allocate from here */</span><br><span class="line">	MIGRATE_TYPES</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
 <p>其中前三种分别对应于三种可移动性，其它几种的含义：</p>
 <ul>
-<li>MIGRATE_PCPTYPES：是per_cpu_pageset，即用来表示每CPU页框高速缓存的数据结构中的链表的迁移类型数目</li>
-<li>MIGRATE_RESERVE：是在前三种的列表中都没用可满足分配的内存块时，就可以从MIGRATE_RESERVE分配</li>
-<li>MIGRATE_ISOLATE：用于跨越NUMA节点移动物理内存页，在大型系统上，它有益于将物理内存页移动到接近于是用该页最频繁地CPU</li>
+<li><code>MIGRATE_PCPTYPES</code>：是per_cpu_pageset，即用来表示每CPU页框高速缓存的数据结构中的链表的迁移类型数目</li>
+<li><code>MIGRATE_RESERVE</code>：是在前三种的列表中都没用可满足分配的内存块时，就可以从<code>MIGRATE_RESERVE</code>分配</li>
+<li><code>MIGRATE_ISOLATE</code>：用于跨越NUMA节点移动物理内存页，在大型系统上，它有益于将物理内存页移动到接近于是用该页最频繁地CPU</li>
 </ul>
 <p>每种类型都对应free_list中的一个数组项。<br>类似于从zone中的分配，如果无法从指定的迁移类型分配到页，则会按照fallbacks指定的次序从备用迁移类型中尝试分配，它定义在page_alloc.c中。<br>虽然该特性总是编译进去的，但是该特性只有在系统中有足够的内存可以分配到每种迁移类型对应的链表时才有意义，也就是说每个可以迁移性链表都要有“适量”的内存，内核需要对“适量”的判断是基于两个宏的：</p>
 <ul>
-<li>pageblock_order：内核认为够大的一个分配的阶。</li>
-<li>pageblock_nr_pages：内核认为启用该特性时每个迁移链表需要具有的最少的内存页数。它的定义是基于pageblock_order的。</li>
+<li><code>pageblock_order</code>：内核认为够大的一个分配的阶。</li>
+<li><code>pageblock_nr_pages</code>：内核认为启用该特性时每个迁移链表需要具有的最少的内存页数。它的定义是基于<code>pageblock_order</code>的。</li>
 </ul>
 <p>基于这个“适量”的概念内核会在build_all_zonelists中判断是否要启用该特性。page_group_by_mobility_disabled表示是否启用了该特性。<br>内核定义了两个标志：<code>__GFP_MOVABLE</code>和<code>__GFP_RECLAIMABLE</code>分别用来表示可移动迁移类型和可回收迁移类型，如果没有设置这两个标志，则表示是不可移动的。如果页面迁移特性被禁止了，则所有的页都是不可移动页。</p>
 <p>struct zone中包含了一个字段pageblock_flags，它用于跟踪包含pageblock_nr_pages个页的内存区的属性。在初始化期间，内核自动保证对每个迁移类型，在pageblock_flags中都分配了足够存储NR_PAGEBLOCK_BITS个比特的空间。</p>
@@ -549,6 +549,10 @@
 
           <div class="post-nav-prev post-nav-item">
             
+              <a href="/2019/05/05/linux内核内存管理学习之三（slab分配器）/" rel="prev" title="Linux内核内存管理学习之三（slab分配器）">
+                Linux内核内存管理学习之三（slab分配器） <i class="fa fa-chevron-right"></i>
+              </a>
+            
           </div>
         </div>
       
@@ -625,7 +629,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">105</span>
+                  <span class="site-state-item-count">106</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
