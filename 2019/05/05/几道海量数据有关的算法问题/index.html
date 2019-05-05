@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-flash.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="积累,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="原文：https://cxyxiaowu.com/articles/2019/04/11/1554963765366.html 海量数据查找中位数题目描述现在有 10 亿个 int 型的数字（ java 中 int 型占 4B），以及一台可用内存为 1GB 的机器，如何找出这 10 亿个数字的中位数？ 所谓中位数就是有序列表中间的数。如果列表长度是偶数，中位数则是中间两个数的平均值。 题目解析题目">
+<meta name="keywords" content="积累">
+<meta property="og:type" content="article">
+<meta property="og:title" content="几道和「黑洞照片」那种海量数据有关的算法问题">
+<meta property="og:url" content="http://yoursite.com/2019/05/05/几道海量数据有关的算法问题/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="原文：https://cxyxiaowu.com/articles/2019/04/11/1554963765366.html 海量数据查找中位数题目描述现在有 10 亿个 int 型的数字（ java 中 int 型占 4B），以及一台可用内存为 1GB 的机器，如何找出这 10 亿个数字的中位数？ 所谓中位数就是有序列表中间的数。如果列表长度是偶数，中位数则是中间两个数的平均值。 题目解析题目">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/16a0b0d79153eaab">
+<meta property="og:image" content="http://yoursite.com/img/16a0b0d7918644c6">
+<meta property="og:updated_time" content="2019-05-05T07:38:32.326Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="几道和「黑洞照片」那种海量数据有关的算法问题">
+<meta name="twitter:description" content="原文：https://cxyxiaowu.com/articles/2019/04/11/1554963765366.html 海量数据查找中位数题目描述现在有 10 亿个 int 型的数字（ java 中 int 型占 4B），以及一台可用内存为 1GB 的机器，如何找出这 10 亿个数字的中位数？ 所谓中位数就是有序列表中间的数。如果列表长度是偶数，中位数则是中间两个数的平均值。 题目解析题目">
+<meta name="twitter:image" content="http://yoursite.com/img/16a0b0d79153eaab">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/05/05/几道海量数据有关的算法问题/">
+
+
+
+
+
+  <title>几道和「黑洞照片」那种海量数据有关的算法问题 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/05/几道海量数据有关的算法问题/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">几道和「黑洞照片」那种海量数据有关的算法问题</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-05-05T15:32:39+08:00">
+                2019-05-05
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>原文：<a href="https://cxyxiaowu.com/articles/2019/04/11/1554963765366.html" target="_blank" rel="noopener">https://cxyxiaowu.com/articles/2019/04/11/1554963765366.html</a></p>
+<h1 id="海量数据查找中位数"><a href="#海量数据查找中位数" class="headerlink" title="海量数据查找中位数"></a>海量数据查找中位数</h1><h2 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h2><p>现在有 10 亿个 int 型的数字（ java 中 int 型占 4B），以及一台可用内存为 1GB 的机器，如何找出这 10 亿个数字的中位数？</p>
+<p>所谓中位数就是有序列表中间的数。如果列表长度是偶数，中位数则是中间两个数的平均值。</p>
+<h2 id="题目解析"><a href="#题目解析" class="headerlink" title="题目解析"></a>题目解析</h2><p>题目中有 10 亿个数字，每个数字在内存中占 4B，那么这 10 亿个数字完全加载到内存中需要：10 <em> 10^8 </em> 4，大概需要 4GB 的存储空间。根据题目的限制，显然不能把所有的数字都装入内存中。</p>
+<p>这里，可以采用基于 二进制位比较 和 快速排序算法中的 分割思想 来寻找中位数，实际上这也是 桶排序 的一种应用。</p>
+<p><img src="/img/16a0b0d79153eaab" alt></p>
+<p>假设将这 10 亿个数字保存在一个大文件中，依次读一部分文件到内存(不超过内存的限制： 1GB )，将每个数字用二进制表示，比较二进制的最高位(第 32 位)，如果数字的最高位为 0，则将这个数字写入 file_0 文件中；如果最高位为 1，则将该数字写入 file_1 文件中。</p>
+<p>注意：最高位为符号位，也就是说 file_1 中的数都是负数，而 file_0 中的数都是正数。</p>
+<p>通过这样的操作，这 10 亿个数字分成了两个文件，假设 file_0 文件中有 6 亿个数字，而 file_1 文件中有 4 亿个数字。</p>
+<p>这样划分后，思考一下：所求的中位数在哪个文件中？</p>
+<p>10 亿个数字的中位数是10 亿个数排序之后的第 5 亿个数，现在 file_0 有 6 亿个正数，file_1 有 4 亿个负数，file_0 中的数都比 file_1 中的数要大，排序之后的第 5 亿个数一定是正数，那么排序之后的第 5 亿个数一定位于file_0中。</p>
+<p>也就是说：中位数就在 file_0 文件中，并且是 file_0 文件中所有数字排序之后的第 1 亿个数字。</p>
+<p>现在，我们只需要处理 file_0 文件了（不需要再考虑 file_1 文件）。</p>
+<p>而对于 file_0 文件，可以同样的采取上面的措施处理：将 file_0 文件依次读一部分到内存(不超内存限制：1GB )，将每个数字用二进制表示，比较二进制的 次高位（第 31 位），如果数字的次高位为 0，写入 file_0_0 文件中；如果次高位为 1 ，写入 file_0_1 文件中。</p>
+<p>现假设 file_0_0 文件中有 3 亿个数字，file_0_1中也有 3 亿个数字，则中位数就是：file_0_0 文件中的数字从小到大排序之后的第 1 亿个数字。</p>
+<p>抛弃 file_0_1 文件，继续对 file_0_0 文件 根据次次高位(第 30 位) 划分，假设此次划分的两个文件为：file_0_0_0中有 0.5 亿个数字，file_0_0_1 中有 2.5 亿个数字，那么中位数就是 file_0_0_1 文件中的所有数字排序之后的第 0.5 亿个数。</p>
+<h1 id="海量数据中判断数字是否存在"><a href="#海量数据中判断数字是否存在" class="headerlink" title="海量数据中判断数字是否存在"></a>海量数据中判断数字是否存在</h1><h2 id="题目描述-1"><a href="#题目描述-1" class="headerlink" title="题目描述"></a>题目描述</h2><p>现在有 10 亿个 int 型的数字（ java 中 int 型占 4B），以及一台可用内存为 1GB 的机器，给出一个整数，问如果快速地判断这个整数是否在这 10 亿数字中？</p>
+<h2 id="题目分析"><a href="#题目分析" class="headerlink" title="题目分析"></a>题目分析</h2><p>这里可以使用 布隆过滤器 进行处理。</p>
+<p>布隆过滤器（英语：Bloom Filter）是 1970 年由 Burton Bloom 提出的。</p>
+<p>它实际上是一个很长的二进制矢量和一系列随机映射函数。<br>它可以用来判断一个元素是否在一个集合中。它的优势是只需要占用很小的内存空间以及有着高效的查询效率。</p>
+<p>对于布隆过滤器而言，它的本质是一个位数组：位数组就是数组的每个元素都只占用 1 bit ，并且每个元素只能是 0 或者 1。</p>
+<p>一开始，布隆过滤器的位数组所有位都初始化为 0。比如，数组长度为 m ，那么将长度为 m 个位数组的所有的位都初始化为 0。</p>
+<p>0    0    0    0    0    0    0    0    0    0<br>0    0    1    。    。    。    。    。    m-2    m-1<br>在数组中的每一位都是二进制位。</p>
+<p>布隆过滤器除了一个位数组，还有 K 个哈希函数。当一个元素加入布隆过滤器中的时候，会进行如下操作：</p>
+<p>使用 K 个哈希函数对元素值进行 K 次计算，得到 K 个哈希值。<br>根据得到的哈希值，在位数组中把对应下标的值置为 1。</p>
+<p><img src="/img/16a0b0d7918644c6" alt></p>
+<p>举个例子，假设布隆过滤器有 3 个哈希函数：f1, f2, f3 和一个位数组 arr。现在要把 2333 插入布隆过滤器中：</p>
+<ul>
+<li>对值进行三次哈希计算，得到三个值 n1, n2, n3。</li>
+<li>把位数组中三个元素 arr[n1], arr[n2], arr[3] 都置为 1。</li>
+</ul>
+<p>当要判断一个值是否在布隆过滤器中，对元素进行三次哈希计算，得到值之后判断位数组中的每个元素是否都为 1，如果值都为 1，那么说明这个值在布隆过滤器中，如果存在一个值不为 1，说明该元素不在布隆过滤器中。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/积累/" rel="tag"># 积累</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/05/Leetcode392-Is-Subsequence/" rel="next" title="Leetcode392. Is Subsequence">
+                <i class="fa fa-chevron-left"></i> Leetcode392. Is Subsequence
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">98</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="450" src="//music.163.com/outchain/player?type=0&id=101039122&auto=0&height=430">
+          </iframe>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#海量数据查找中位数"><span class="nav-number">1.</span> <span class="nav-text">海量数据查找中位数</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#题目描述"><span class="nav-number">1.1.</span> <span class="nav-text">题目描述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#题目解析"><span class="nav-number">1.2.</span> <span class="nav-text">题目解析</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#海量数据中判断数字是否存在"><span class="nav-number">2.</span> <span class="nav-text">海量数据中判断数字是否存在</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#题目描述-1"><span class="nav-number">2.1.</span> <span class="nav-text">题目描述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#题目分析"><span class="nav-number">2.2.</span> <span class="nav-text">题目分析</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -361,9 +361,21 @@
 </tbody>
 </table>
 <h2 id="fopen与open"><a href="#fopen与open" class="headerlink" title="fopen与open"></a>fopen与open</h2><p>标准I/O使用fopen函数打开一个文件：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">FILE* fp=fopen(const char* path,const char *mod)</span><br></pre></td></tr></table></figure></p>
-<p>其中path是文件名，mod用于指定文件打开的模式的字符串，比如”r”,”w”,”w+”,”a”等等，可以加上字母b用以指定以二进制模式打开（对于 *nix系统，只有一种文件类型，因此没有区别）,如果成功打开，返回一个FILE文件指针，如果失败返回NULL,这里的文件指针并不是指向实际的文 件，而是一个关于文件信息的数据包，其中包括文件使用的缓冲区信息。</p>
+<p>其中path是文件名，mod用于指定文件打开的模式的字符串，比如”r”,”w”,”w+”,”a”等等，可以加上字母b用以指定以二进制模式打开（对于 Unix系统，只有一种文件类型，因此没有区别）,如果成功打开，返回一个FILE文件指针，如果失败返回NULL,这里的文件指针并不是指向实际的文 件，而是一个关于文件信息的数据包，其中包括文件使用的缓冲区信息。</p>
 <p>文件IO使用open函数用于打开一个文件：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">int fd=open(char *name,int how);</span><br></pre></td></tr></table></figure></p>
 <p>与fopen类似，name表示文件名字符串，而how指定打开的模式：O_RDONLY(只读),O_WRONLY(只写）,O_RDWR （可读可写),还有其他模式请man 2 open。成功返回一个正整数称为文件描述符，这与标准I/O显著不同，失败的话返回-1，与标准I/O返回NULL也是不同的。</p>
+<p>open和fopen的区别(2)：</p>
+<p>1.缓冲文件系统<br>缓冲文件系统的特点是：在内存开辟一个“缓冲区”，为程序中的每一个文件使用，当执行读文件的操作时，从磁盘文件将数据先读入内存“缓冲区”，装满后再从内存“缓冲区”依此读入接收的变量。执行写文件的操作时，先将数据写入内存“缓冲区”，待内存“缓冲区”装满后再写入文件。由此可以看出，内存“缓冲区”的大小，影响着实际操作外存的次数，内存“缓冲区”越大，则操作外存的次数就少，执行速度就快、效率高。一般来说，文件“缓冲区”的大小随机器而定。fopen, fclose, fread, fwrite, fgetc, fgets, fputc, fputs, freopen, fseek, ftell, rewind等。</p>
+<p>2.非缓冲文件系统<br>缓冲文件系统是借助文件结构体指针来对文件进行管理，通过文件指针来对文件进行访问，既可以读写字符、字符串、格式化数据，也可以读写二进制数据。非缓冲文件系统依赖于操作系统，通过操作系统的功能对文件进行读写，是系统级的输入输出，它不设文件结构体指针，只能读写二进制文件，但效率高、速度 快，由于ANSI标准不再包括非缓冲文件系统，因此建议大家最好不要选择它。本书只作简单介绍。open, close, read, write, getc, getchar, putc, putchar 等。</p>
+<p>open 是系统调用 返回的是文件句柄，文件的句柄是文件在文件描述副表里的索引，fopen是C的库函数，返回的是一个指向文件结构的指针。</p>
+<p>fopen是ANSIC标准中的C语言库函数，在不同的系统中应该调用不同的内核api<br>linux中的系统函数是open，fopen是其封装函数，个人观点。仅供参考。</p>
+<p>文件描述符是linux下的一个概念,linux下的一切设备都是以文件的形式操作.如网络套接字、硬件设备等。当然包括操作文件。<br>fopen是标准c函数。返回文件流而不是linux下文件句柄。</p>
+<p>设备文件不可以当成流式文件来用，只能用open<br>fopen是用来操纵正规文件的，并且设有缓冲的，跟open还是有一些区别</p>
+<p>一般用fopen打开普通文件，用open打开设备文件</p>
+<p>fopen是标准c里的,而open是linux的系统调用.<br>他们的层次不同.<br>fopen可移植,open不能</p>
+<p>我认为fopen和open最主要的区别是fopen在用户态下就有了缓存，在进行read和write的时候减少了用户态和内核态的切换，而open则每次都需要进行内核态和用户态的切换；表现为，如果顺序访问文件，fopen系列的函数要比直接调用open系列快；如果随机访问文件open要比fopen快。</p>
+<p>来自论坛的经典回答：</p>
+<p>前者属于低级IO，后者是高级IO。<br>前者返回一个文件描述符(用户程序区的)，后者返回一个文件指针。<br>前者无缓冲，后者有缓冲。<br>前者与 read, write 等配合使用， 后者与 fread, fwrite等配合使用。<br>后者是在前者的基础上扩充而来的，在大多数情况下，用后者。</p>
 <h2 id="fclose与close"><a href="#fclose与close" class="headerlink" title="fclose与close"></a>fclose与close</h2><p>与打开文件相对的，标准I/O使用fclose关闭文件，将文件指针传入即可，如果成功关闭，返回0，否则返回EOF<br>比如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">if(fclose(fp)!=0)  </span><br><span class="line">    printf(&quot;Error in closing file&quot;);</span><br></pre></td></tr></table></figure></p>
 <p>而文件IO使用close用于关闭open打开的文件，与fclose类似，只不过当错误发生时返回的是-1，而不是EOF，成功关闭同样是返回0。C语言用error code来进行错误处理的传统做法。</p>
 <h2 id="读文件，getc-fscanf-fgets和read"><a href="#读文件，getc-fscanf-fgets和read" class="headerlink" title="读文件，getc,fscanf,fgets和read"></a>读文件，getc,fscanf,fgets和read</h2><p>标准I/O中进行文件读取可以使用getc，一个字符一个字符的读取，也可以使用gets（读取标准io读入的）、fgets以字符串单位进行读取（读到遇 到的第一个换行字符的后面），gets（接受一个参数，文件指针）不判断目标数组是否能够容纳读入的字符，可能导致存储溢出(不建议使用），而fgets使用三个参数：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">char * fgets(char *s, int size, FILE *stream);</span><br></pre></td></tr></table></figure></p>
@@ -522,7 +534,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">95</span>
+                  <span class="site-state-item-count">98</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
