@@ -100,7 +100,7 @@
 <meta property="og:image" content="http://yoursite.com/img/20130815203745000.png">
 <meta property="og:image" content="http://yoursite.com/img/20130816202238953.png">
 <meta property="og:image" content="http://yoursite.com/img/20130816202450203.png">
-<meta property="og:updated_time" content="2019-05-05T08:54:37.675Z">
+<meta property="og:updated_time" content="2019-05-05T08:58:42.085Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Linux内核内存管理学习之二（物理内存管理--伙伴系统）">
 <meta name="twitter:description" content="伙伴系统原理伙伴关系定义：由一个母实体分成的两个各方面属性一致的两个子实体，这两个子实体就处于伙伴关系。在操作系统分配内存的过程中，一个内存块常常被分成两个大小相等的内存块，这两个大小相等的内存块就处于伙伴关系。它满足 3 个条件 ：  两个块具有相同大小记为 2^K 它们的物理地址是连续的 从同一个大块中拆分出来  伙伴算法的实现原理为了便于页面的维护，将多个页面组成内存块，每个内存块都有 2">
@@ -360,7 +360,7 @@
 <li>pageblock_order：内核认为够大的一个分配的阶。</li>
 <li>pageblock_nr_pages：内核认为启用该特性时每个迁移链表需要具有的最少的内存页数。它的定义是基于pageblock_order的。</li>
 </ul>
-<p>基于这个“适量”的概念内核会在build_all_zonelists中判断是否要启用该特性。page_group_by_mobility_disabled表示是否启用了该特性。<br>内核定义了两个标志：<strong>GFP_MOVABLE和 </strong>GFP_RECLAIMABLE分别用来表示可移动迁移类型和可回收迁移类型，如果没有设置这两个标志，则表示是不可移动的。如果页面迁移特性被禁止了，则所有的页都是不可移动页。</p>
+<p>基于这个“适量”的概念内核会在build_all_zonelists中判断是否要启用该特性。page_group_by_mobility_disabled表示是否启用了该特性。<br>内核定义了两个标志：<code>__GFP_MOVABLE</code>和<code>__GFP_RECLAIMABLE</code>分别用来表示可移动迁移类型和可回收迁移类型，如果没有设置这两个标志，则表示是不可移动的。如果页面迁移特性被禁止了，则所有的页都是不可移动页。</p>
 <p>struct zone中包含了一个字段pageblock_flags，它用于跟踪包含pageblock_nr_pages个页的内存区的属性。在初始化期间，内核自动保证对每个迁移类型，在pageblock_flags中都分配了足够存储NR_PAGEBLOCK_BITS个比特的空间。</p>
 <p>set_pageblock_migratetype用于设置一个以指定的页为起始地址的内存区的迁移类型。<br>页的迁移类型是预先分配好的，对应的比特位总是可用，在页释放时，必须将其返还给正确的链表。get_pageblock_migratetype可用于从struct page中获取页的迁移类型。<br>通过/proc/pagetypeinfo可以获取系统当前的信息。</p>
 <p>在内存初始化期间memmap_init_zone会将所有的内存页都初始化为可移动的。该函数在paging_init中会最终被调到（会经过一些中间函数，其中就有free_area_init_node）。</p>
@@ -386,30 +386,30 @@
 <li>行为修饰符：告诉分配器应该如何进行分配</li>
 </ul>
 <p>其中zone修饰符定义为<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#define __GFP_DMA	((__force gfp_t)___GFP_DMA)</span><br><span class="line">#define __GFP_HIGHMEM	((__force gfp_t)___GFP_HIGHMEM)</span><br><span class="line">#define __GFP_DMA32	((__force gfp_t)___GFP_DMA32)</span><br><span class="line">#define __GFP_MOVABLE	((__force gfp_t)___GFP_MOVABLE)  /* Page is movable */</span><br><span class="line">#define GFP_ZONEMASK	(__GFP_DMA|__GFP_HIGHMEM|__GFP_DMA32|__GFP_MOVABLE)</span><br></pre></td></tr></table></figure></p>
-<p>这些定义都一目了然，需要指出的是如果同时指定了<strong>GFP_MOVABLE和</strong>GFP_HIGHMEM，则会从虚拟的ZONE_MOVABLE分配。<br>更详细的可以参考gfp.h，其中包含了所有的标志及其含义。</p>
+<p>这些定义都一目了然，需要指出的是如果同时指定了<code>__GFP_MOVABLE</code>和<code>__GFP_HIGHMEM</code>，则会从虚拟的ZONE_MOVABLE分配。<br>更详细的可以参考gfp.h，其中包含了所有的标志及其含义。</p>
 <h2 id="分配页"><a href="#分配页" class="headerlink" title="分配页"></a>分配页</h2><p>__alloc_pages会完成最终的内存分配，它是伙伴系统的核心代码（但是在内核代码中，这种命名方式的函数都是需要小心调用的，一般都是给实现该功能的代码自己调用，不作为API提供出去的，因而它的包装器才是对外提供的API，也就是alloc_pages_node）。</p>
-<h3 id="选择页"><a href="#选择页" class="headerlink" title="选择页"></a>选择页</h3><p>选择页中最重要的函数是get_page_from_freelist，它负责通过标志和分配阶来判断分配是否可以进行，如果可以就进行实际的分配。该函数还会调用zone_watermark_ok根据指定的标识判断是否可以从给定的zone中进行分配。该函数需要struct zonelist的指针指向备用zone，当当前zone不能满足分配需求时就依次遍历该列表尝试进行分配。整体的分配流程是：</p>
+<h3 id="选择页"><a href="#选择页" class="headerlink" title="选择页"></a>选择页</h3><p>选择页中最重要的函数是<code>get_page_from_freelist</code>，它负责通过标志和分配阶来判断分配是否可以进行，如果可以就进行实际的分配。该函数还会调用zone_watermark_ok根据指定的标识判断是否可以从给定的zone中进行分配。该函数需要struct zonelist的指针指向备用zone，当当前zone不能满足分配需求时就依次遍历该列表尝试进行分配。整体的分配流程是：</p>
 <ol>
 <li>调用get_page_from_freelist尝试进行分配，如果成功就返回分配到的页，否则</li>
 <li>唤醒kswapd，然后再次调用get_page_from_freelist尝试进行分配，如果成功就返回分配的页，否则</li>
 <li>如果分配的标志允许不检查阈值进行分配，则以ALLOC_NO_WATERMARKS为标志再次调用get_page_from_freelist尝试分配，如果成功则返回分配的页；如果不允许不检查阈值或者仍然失败，则</li>
 <li>如果不允许等待，就分配失败，否则</li>
-<li>如果支持压缩，则尝试先对内存进行一次压缩，然后再调用get_page_from_freelist，如果成功就返回，否则</li>
-<li>进行内存回收，然后再调用get_page_from_freelist，如果成功就返回，否则</li>
+<li>如果支持压缩，则尝试先对内存进行一次压缩，然后再调用<code>get_page_from_freelist</code>，如果成功就返回，否则</li>
+<li>进行内存回收，然后再调用<code>get_page_from_freelist</code>，如果成功就返回，否则</li>
 <li>根据回收内存并尝试分配的结果以及分配标志，可能会调用OOM杀死一个进程然后再尝试分配，也可能不执行OOM这一步的操作，如果执行了，则在失败后可能就彻底失败，也可能重新回到第2步，也可能继续下一步</li>
-<li>回到第2步中调用get_page_from_freelist的地方或者再尝试一次先压缩后分配，如果走了先压缩再分配这一步，这就是最后一次尝试了，要么成功要么失败，不会再继续尝试了</li>
+<li>回到第2步中调用<code>get_page_from_freelist</code>的地方或者再尝试一次先压缩后分配，如果走了先压缩再分配这一步，这就是最后一次尝试了，要么成功要么失败，不会再继续尝试了</li>
 </ol>
 <h3 id="移出所选择的页"><a href="#移出所选择的页" class="headerlink" title="移出所选择的页"></a>移出所选择的页</h3><p>在函数get_page_from_freelist中，会首先在zonelist中找到一个具有足够的空闲页的zone，然后会调用buffered_rmqueue进行处理，在分配成功时，该函数会把所分配的内存页从zone的free_list中移出，并且保证剩余的空闲内存页满足伙伴系统的要求，该函数还会把内存页的迁移类型存放在page的private域中。<br>该函数的步骤如图所示：<br><img src="/img/20130816202238953.png" alt></p>
-<p>可以看出buffered_rmqueue的工作过程为：</p>
+<p>可以看出<code>buffered_rmqueue</code>的工作过程为：</p>
 <ol>
 <li>如果申请的是单页，会做特殊处理，内核会利用每CPU的缓存加速这个过程。并且在必要的时候会首先填充每CPU的缓存。函数rmqueue_bulk用于从伙伴系统获取内存页，并添加到指定的链表，它会调用函数__rmqueue。</li>
 <li>如果是分配多个页，则会首先调用__rmqueue从内存域的伙伴系统中选择合适的内存块，这一步可能失败，因为虽然内存域中有足够数目的空闲页，但是页不一定是连续的，如果是这样这一步就会返回NULL。在这一步中如果需要还会将大的内存块分解成小的内存块来进行分配，即按照伙伴系统的要求进行分配。</li>
 <li>无论是分配单页还是多个页，如果分配成功，在返回分配的页之前都要调用prep_new_page，如果这一步的处理不成功就会重新进行分配（跳转到函数buffered_rmqueue的开始），否则返回分配的页。</li>
 </ol>
-<p>函数__rmqueue的执行过程：</p>
+<p>函数<code>__rmqueue</code>的执行过程：</p>
 <ol>
-<li>首先调用__rmqueue_smallest尝试根据指定的zone，分配的阶，迁移类型进行分配，该函数根据指定的信息进行查找，在找到一个可用的空闲内存页块后会将该内存页块从空闲内存页块链表中删除，并且会调用expand使得剩余的内存页块满足伙伴系统的要求。如果在这一步成功就返回，否则执行下一步</li>
-<li>调用<strong>rmqueue_fallback尝试从备用zone分配。该函数用于根据前一类型的备用列表尝试从其它备用列表分配，但是需要注意的是这里会首先尝试最大的分配阶，依次降低分配的阶，直到指定的分配的阶，采用这个策略是为了避免碎片—如果要用其它迁移类型的内存，就拿一块大的过来，而不是在其它迁移类型的小区域中到处引入碎片。同时如果从其它迁移类型的空闲内存页块分配到的是一个较大的阶，则整块内存页块的迁移类型可能会发生改变，从原来的类型改变为申请分配时所请求的类型（即迁移类型发生了改变）。分配成功时的动作和</strong>rmqueue_smallest类似，移出内存页，调用expand。</li>
+<li>首先调用<code>__rmqueue_smallest</code>尝试根据指定的zone，分配的阶，迁移类型进行分配，该函数根据指定的信息进行查找，在找到一个可用的空闲内存页块后会将该内存页块从空闲内存页块链表中删除，并且会调用expand使得剩余的内存页块满足伙伴系统的要求。如果在这一步成功就返回，否则执行下一步</li>
+<li>调用<code>__rmqueue_fallback</code>尝试从备用zone分配。该函数用于根据前一类型的备用列表尝试从其它备用列表分配，但是需要注意的是这里会首先尝试最大的分配阶，依次降低分配的阶，直到指定的分配的阶，采用这个策略是为了避免碎片—如果要用其它迁移类型的内存，就拿一块大的过来，而不是在其它迁移类型的小区域中到处引入碎片。同时如果从其它迁移类型的空闲内存页块分配到的是一个较大的阶，则整块内存页块的迁移类型可能会发生改变，从原来的类型改变为申请分配时所请求的类型（即迁移类型发生了改变）。分配成功时的动作和<code>__rmqueue_smallest</code>类似，移出内存页，调用expand。</li>
 </ol>
 <p>函数prep_new_page的操作</p>
 <ol>
