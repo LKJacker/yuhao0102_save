@@ -387,7 +387,7 @@
 </ul>
 <p>其中zone修饰符定义为<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#define __GFP_DMA	((__force gfp_t)___GFP_DMA)</span><br><span class="line">#define __GFP_HIGHMEM	((__force gfp_t)___GFP_HIGHMEM)</span><br><span class="line">#define __GFP_DMA32	((__force gfp_t)___GFP_DMA32)</span><br><span class="line">#define __GFP_MOVABLE	((__force gfp_t)___GFP_MOVABLE)  /* Page is movable */</span><br><span class="line">#define GFP_ZONEMASK	(__GFP_DMA|__GFP_HIGHMEM|__GFP_DMA32|__GFP_MOVABLE)</span><br></pre></td></tr></table></figure></p>
 <p>这些定义都一目了然，需要指出的是如果同时指定了<code>__GFP_MOVABLE</code>和<code>__GFP_HIGHMEM</code>，则会从虚拟的ZONE_MOVABLE分配。<br>更详细的可以参考gfp.h，其中包含了所有的标志及其含义。</p>
-<h2 id="分配页"><a href="#分配页" class="headerlink" title="分配页"></a>分配页</h2><p>__alloc_pages会完成最终的内存分配，它是伙伴系统的核心代码（但是在内核代码中，这种命名方式的函数都是需要小心调用的，一般都是给实现该功能的代码自己调用，不作为API提供出去的，因而它的包装器才是对外提供的API，也就是alloc_pages_node）。</p>
+<h2 id="分配页"><a href="#分配页" class="headerlink" title="分配页"></a>分配页</h2><p><code>__alloc_pages</code>会完成最终的内存分配，它是伙伴系统的核心代码（但是在内核代码中，这种命名方式的函数都是需要小心调用的，一般都是给实现该功能的代码自己调用，不作为API提供出去的，因而它的包装器才是对外提供的API，也就是alloc_pages_node）。</p>
 <h3 id="选择页"><a href="#选择页" class="headerlink" title="选择页"></a>选择页</h3><p>选择页中最重要的函数是<code>get_page_from_freelist</code>，它负责通过标志和分配阶来判断分配是否可以进行，如果可以就进行实际的分配。该函数还会调用zone_watermark_ok根据指定的标识判断是否可以从给定的zone中进行分配。该函数需要struct zonelist的指针指向备用zone，当当前zone不能满足分配需求时就依次遍历该列表尝试进行分配。整体的分配流程是：</p>
 <ol>
 <li>调用get_page_from_freelist尝试进行分配，如果成功就返回分配到的页，否则</li>
@@ -415,7 +415,7 @@
 <ol>
 <li>对页进行检查，以确保页确实是可用的，否则就返回一个非0值导致分配失败</li>
 <li>设置页的标记以及引用计数等等。</li>
-<li>如果设置而来__GFP_COMP标志，则调用prep_compound_page将页组织成复合页（hugetlb会用到这个）。</li>
+<li>如果设置而来<code>__GFP_COMP</code>标志，则调用<code>prep_compound_page</code>将页组织成复合页（hugetlb会用到这个）。</li>
 </ol>
 <p>复合页的结构如图所示：<br><img src="/img/20130816202450203.png" alt></p>
 <p>复合页具有如下特性：</p>
@@ -425,14 +425,14 @@
 <li>第一个尾页的lru的next域指向释放复合页的函数指针</li>
 <li>第一个尾页的lru的prev域用于指向复合页所对应的分配的阶，即多少个页</li>
 </ul>
-<h2 id="释放页"><a href="#释放页" class="headerlink" title="释放页"></a>释放页</h2><p>__free_pages是释放页的核心函数，伙伴系统提供出去的API都是它的包装器。其流程：</p>
+<h2 id="释放页"><a href="#释放页" class="headerlink" title="释放页"></a>释放页</h2><p><code>__free_pages</code>是释放页的核心函数，伙伴系统提供出去的API都是它的包装器。其流程：</p>
 <ul>
 <li>减小页的引用计数，如果计数不为0则直接返回，否则</li>
-<li>如果释放的是单页，则调用free_hot_cold_page，否则</li>
-<li>调用__free_pages_ok</li>
+<li>如果释放的是单页，则调用<code>free_hot_cold_page</code>，否则</li>
+<li>调用<code>__free_pages_ok</code></li>
 </ul>
-<p>free_hot_cold_page会把页返还给每-CPU缓存而不是直接返回给伙伴系统，因为如果每次都返还给伙伴系统，那么将会出现每次的分配和释放都需要伙伴系统进行分割和合并的情况，这将极大的降低分配的效率。因而这里采用的是一种“惰性合并”，单页会首先返还给每-CPU缓存，当每-CPU缓存的页面数大于一个阈值时（pcp-&gt;high），则一次将pcp-&gt;patch个页返还给伙伴系统。free_pcppages_bulk在free_hot_cold_page中用于将内存页返还给伙伴系统，它会调用函数<strong>free_one_page。<br>函数</strong>free_pages_ok最终页会调到<strong>free_one_page来释放页，</strong>free_one_page会将页面释放返还给伙伴系统，同时在必要时进行递归合并。<br>在<strong>free_one_page进行合并时，需要找到释放的page的伙伴的页帧号，这是通过</strong>find_buddy_index来完成的，其代码非常简单：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">__find_buddy_index(unsigned long page_idx,unsigned int order)</span><br><span class="line">&#123;</span><br><span class="line">       returnpage_idx ^ (1 &lt;&lt; order);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>根据异或的规则，这个结果刚好可以得到邻居的页帧号。因为根据linux的管理策略以及伙伴系统的定义，伙伴系统中每个内存页块的第一个页帧号用来标志该页，因此对于order阶的两个伙伴，它们只有<code>1&lt;&lt;order</code>这个比特位是不同的，这样，只需要将该比特与取反即可，而根据异或的定义，一个比特和0异或还是本身，一个比特和1异或刚好可以取反。因此就得到了这个算式。<br>如果可以合并还需要取得合并后的页帧号，这个更简单，只需要让两个伙伴的页帧号相与即可。<br>__free_one_page调用page_is_buddy来对伙伴进行判断，以决定是否可以合并。</p>
+<p>free_hot_cold_page会把页返还给每-CPU缓存而不是直接返回给伙伴系统，因为如果每次都返还给伙伴系统，那么将会出现每次的分配和释放都需要伙伴系统进行分割和合并的情况，这将极大的降低分配的效率。因而这里采用的是一种“惰性合并”，单页会首先返还给每-CPU缓存，当每-CPU缓存的页面数大于一个阈值时（<code>pcp-&gt;high</code>），则一次将<code>pcp-&gt;patch</code>个页返还给伙伴系统。<code>free_pcppages_bulk</code>在<code>free_hot_cold_page</code>中用于将内存页返还给伙伴系统，它会调用函数<code>__free_one_page</code>。<br>函数<code>__free_pages_ok</code>最终页会调到<code>__free_one_page</code>来释放页，<code>__free_one_page</code>会将页面释放返还给伙伴系统，同时在必要时进行递归合并。<br>在<code>__free_one_page</code>进行合并时，需要找到释放的page的伙伴的页帧号，这是通过<code>__find_buddy_index</code>来完成的，其代码非常简单：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">__find_buddy_index(unsigned long page_idx,unsigned int order)</span><br><span class="line">&#123;</span><br><span class="line">       returnpage_idx ^ (1 &lt;&lt; order);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>根据异或的规则，这个结果刚好可以得到邻居的页帧号。因为根据linux的管理策略以及伙伴系统的定义，伙伴系统中每个内存页块的第一个页帧号用来标志该页，因此对于order阶的两个伙伴，它们只有<code>1&lt;&lt;order</code>这个比特位是不同的，这样，只需要将该比特与取反即可，而根据异或的定义，一个比特和0异或还是本身，一个比特和1异或刚好可以取反。因此就得到了这个算式。<br>如果可以合并还需要取得合并后的页帧号，这个更简单，只需要让两个伙伴的页帧号相与即可。<br><code>__free_one_page</code>调用<code>page_is_buddy</code>来对伙伴进行判断，以决定是否可以合并。</p>
 <h1 id="不连续内存页的分配"><a href="#不连续内存页的分配" class="headerlink" title="不连续内存页的分配"></a>不连续内存页的分配</h1><p>内核总是尝试使用物理上连续的内存区域，但是在分配内存时，可能无法找到大片的物理上连续的内存区域，这时候就需要使用不连续的内存，内核分配了其虚拟地址空间的一部分（vmalloc区）用于管理不连续内存页的分配。<br>每个vmalloc分配的子区域都自包含的，在内核的虚拟地址空间中vmalloc子区域之间都通过一个内存页隔离开来，这个间隔用来防止不正确的访问。</p>
 <h2 id="用vmalloc分配内存"><a href="#用vmalloc分配内存" class="headerlink" title="用vmalloc分配内存"></a>用vmalloc分配内存</h2><p>vmalloc用来分配在虚拟地址空间连续，但是在物理地址空间不一定连续的内存区域。它只需要一个以字节为单位的长度参数。为了节省宝贵的较低端的内存区域，vmalloc会使用高端内存进行分配。<br>内核使用struct vm_struct来管理vmalloc分配的每个子区域，其定义如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">struct vm_struct &#123;</span><br><span class="line">	struct vm_struct	*next;</span><br><span class="line">	void			*addr;</span><br><span class="line">	unsigned long		size;</span><br><span class="line">	unsigned long		flags;</span><br><span class="line">	struct page		**pages;</span><br><span class="line">	unsigned int		nr_pages;</span><br><span class="line">	phys_addr_t		phys_addr;</span><br><span class="line">	const void		*caller;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
 <p>每个vmalloc子区域都对应一个该结构的实例。</p>
@@ -445,25 +445,24 @@
 <li>nr_pages：映射的物理页面数目</li>
 <li>phys_addr：仅当用ioremap映射了由物理地址描述的内存页时才需要改域，它保存物理地址<br>caller：申请者</li>
 </ul>
-<h2 id="创建vmalloc子区域"><a href="#创建vmalloc子区域" class="headerlink" title="创建vmalloc子区域"></a>创建vmalloc子区域</h2><p>所有的vmalloc子区域都被连接保存在vmlist中，该链表按照addr排序，顺序是从小到大。当创建一个新的子区域时需要，需要找到一个合适的位置。查找合适的位置采用的是首次适用算法，即从vmalloc区域找到第一个可以满足需求的区域，查找这样的区域是通过函数__get_vm_area_node完成的。其分配过程以下几步：</p>
+<h2 id="创建vmalloc子区域"><a href="#创建vmalloc子区域" class="headerlink" title="创建vmalloc子区域"></a>创建vmalloc子区域</h2><p>所有的vmalloc子区域都被连接保存在vmlist中，该链表按照addr排序，顺序是从小到大。当创建一个新的子区域时需要，需要找到一个合适的位置。查找合适的位置采用的是首次适用算法，即从vmalloc区域找到第一个可以满足需求的区域，查找这样的区域是通过函数<code>__get_vm_area_node</code>完成的。其分配过程以下几步：</p>
 <ol>
-<li>调用__get_vm_area_node找到合适的区域</li>
-<li>调用__vmalloc_area_node分配物理内存页</li>
-<li>调用map_vm_area将物理内存页映射到内核的读你地址空间</li>
+<li>调用<code>__get_vm_area_node</code>找到合适的区域</li>
+<li>调用<code>__vmalloc_area_node</code>分配物理内存页</li>
+<li>调用<code>map_vm_area</code>将物理内存页映射到内核的读你地址空间</li>
 <li>将新的子区域插入vmlist链表</li>
 </ol>
-<p>在从伙伴系统分配物理内存页时使用了标志：GFP_KERNEL | __GFP_HIGHMEM<br>还有其它的方式来建立虚拟地址空间的连续映射：</p>
+<p>在从伙伴系统分配物理内存页时使用了标志：<code>GFP_KERNEL | __GFP_HIGHMEM</code><br>还有其它的方式来建立虚拟地址空间的连续映射：</p>
 <ol>
 <li>vmalloc_32：与vmallo工作方式相同，但是确保所使用的物理地址总可以用32位指针寻址</li>
 <li>vmap：将一组物理页面映射到连续的虚拟地址空间</li>
 <li>ioremap：特定于处理器的分配函数，用于将取自物理地址空间而、由系统总线用于I/O操作的一个内存块，映射到内核的虚拟地址空间</li>
 </ol>
-<h2 id="释放内存"><a href="#释放内存" class="headerlink" title="释放内存"></a>释放内存</h2><p>vfree用于释放vmalloc和vmalloc_32分配的内存空间，vunmap用于释放由vmap和ioremap分配的空间（iounmap会调到vunmap）。最终都会归结到函数<strong>vunmap。
-</strong>vunmap的执行过程：</p>
+<h2 id="释放内存"><a href="#释放内存" class="headerlink" title="释放内存"></a>释放内存</h2><p>vfree用于释放vmalloc和vmalloc_32分配的内存空间，vunmap用于释放由vmap和ioremap分配的空间（iounmap会调到vunmap）。最终都会归结到函数<code>__vunmap</code>。<br><code>__vunmap</code>的执行过程：</p>
 <ol>
-<li>调用remove_vm_area从vmlist中找到一个子区域，然后将其从子区域删除，再解除物理页面的映射</li>
-<li>如果设置了deallocate_pages，则将物理页面归还给伙伴系统</li>
-<li>释放管理虚拟内存的数据结构struct vm_struct</li>
+<li>调用<code>remove_vm_area</code>从vmlist中找到一个子区域，然后将其从子区域删除，再解除物理页面的映射</li>
+<li>如果设置了<code>deallocate_pages</code>，则将物理页面归还给伙伴系统</li>
+<li>释放管理虚拟内存的数据结构<code>struct vm_struct</code></li>
 </ol>
 <h1 id="内核映射"><a href="#内核映射" class="headerlink" title="内核映射"></a>内核映射</h1><p>高端内存可通过vmalloc机制映射到内核的虚拟地址空间，但是高端内存往内核虚拟地址空间的映射并不依赖于vmalloc，而vmalloc是用于管理不连续内存的，它也并不依赖于高端内存。</p>
 <h2 id="持久内核映射"><a href="#持久内核映射" class="headerlink" title="持久内核映射"></a>持久内核映射</h2><p>如果想要将高端内存长期映射到内核中，则必须使用kmap函数。该函数需要一个page指针用于指向需要映射的页面。如果没有启用高端内存，则该函数直接返回页的地址，因为所有页面都可以直接映射。如果启用了高端内存，则：<br>如果不是高端内存的页面，则直接返回页面地址，否则<br>调用kmap_high进行处理</p>
@@ -480,7 +479,7 @@
 <li>virtual：该页在虚拟地址空间中分配的位置<br>所有的持久映射保存在一个散列表page_address_htable中，并用链表处理冲突，page_slot是散列函数。<br>函数page_address用于根据page实例获取器对应的虚拟地址。其处理过程：</li>
 </ul>
 <ol>
-<li>如果不是高端内存直接根据page获得虚拟地址（利用__va(paddr)），否则</li>
+<li>如果不是高端内存直接根据page获得虚拟地址（利用<code>__va(paddr)</code>），否则</li>
 <li>在散列表中查找该page对应的struct page_address_map实例，获取其虚拟地址</li>
 </ol>
 <h3 id="创建映射"><a href="#创建映射" class="headerlink" title="创建映射"></a>创建映射</h3><p>函数kmap_high完成映射的实际创建，其工作过程：</p>
