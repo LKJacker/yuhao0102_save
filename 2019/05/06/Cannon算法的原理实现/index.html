@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-flash.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="算法,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="简介 算法流程图 算法设计方法和模式任务划分：根据矩阵乘法公式中的累加计算的可分离性，将参与计算的两个矩阵分解成p个小矩阵块(共有p个计算节点)，每个节点只进行局部的小矩阵乘法，最终计算结束后将局部的小结果矩阵发送回Master节点。 通讯分析：由于算法在下发任务和收集结果的时候采用了主从模式，所以使用了Master-Worker的全局通讯，该部分通讯由于发送方只有一个0号线程，所以无法并行执行，">
+<meta name="keywords" content="算法">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Cannon算法的原理实现以及性能评测">
+<meta property="og:url" content="http://yoursite.com/2019/05/06/Cannon算法的原理实现/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="简介 算法流程图 算法设计方法和模式任务划分：根据矩阵乘法公式中的累加计算的可分离性，将参与计算的两个矩阵分解成p个小矩阵块(共有p个计算节点)，每个节点只进行局部的小矩阵乘法，最终计算结束后将局部的小结果矩阵发送回Master节点。 通讯分析：由于算法在下发任务和收集结果的时候采用了主从模式，所以使用了Master-Worker的全局通讯，该部分通讯由于发送方只有一个0号线程，所以无法并行执行，">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/20180618234922517.png">
+<meta property="og:image" content="http://yoursite.com/img/20180618234934866.png">
+<meta property="og:image" content="http://yoursite.com/img/20180618234956932.png">
+<meta property="og:updated_time" content="2019-05-06T07:36:19.073Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Cannon算法的原理实现以及性能评测">
+<meta name="twitter:description" content="简介 算法流程图 算法设计方法和模式任务划分：根据矩阵乘法公式中的累加计算的可分离性，将参与计算的两个矩阵分解成p个小矩阵块(共有p个计算节点)，每个节点只进行局部的小矩阵乘法，最终计算结束后将局部的小结果矩阵发送回Master节点。 通讯分析：由于算法在下发任务和收集结果的时候采用了主从模式，所以使用了Master-Worker的全局通讯，该部分通讯由于发送方只有一个0号线程，所以无法并行执行，">
+<meta name="twitter:image" content="http://yoursite.com/img/20180618234922517.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/05/06/Cannon算法的原理实现/">
+
+
+
+
+
+  <title>Cannon算法的原理实现以及性能评测 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/06/Cannon算法的原理实现/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Cannon算法的原理实现以及性能评测</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-05-06T15:29:39+08:00">
+                2019-05-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p><img src="/img/20180618234922517.png" alt></p>
+<h1 id="算法流程图"><a href="#算法流程图" class="headerlink" title="算法流程图"></a>算法流程图</h1><p><img src="/img/20180618234934866.png" alt></p>
+<h1 id="算法设计方法和模式"><a href="#算法设计方法和模式" class="headerlink" title="算法设计方法和模式"></a>算法设计方法和模式</h1><h2 id="任务划分："><a href="#任务划分：" class="headerlink" title="任务划分："></a>任务划分：</h2><p>根据矩阵乘法公式中的累加计算的可分离性，将参与计算的两个矩阵分解成p个小矩阵块(共有p个计算节点)，每个节点只进行局部的小矩阵乘法，最终计算结束后将局部的小结果矩阵发送回Master节点。<br><img src="/img/20180618234956932.png" alt></p>
+<h2 id="通讯分析："><a href="#通讯分析：" class="headerlink" title="通讯分析："></a>通讯分析：</h2><p>由于算法在下发任务和收集结果的时候采用了主从模式，所以使用了Master-Worker的全局通讯，该部分通讯由于发送方只有一个0号线程，所以无法并行执行，只能串行执行。同时，在迭代进行小矩阵运算时，各计算节点之间也需要交换矩阵，进行了结构化通讯。该部分通讯由于通讯的局部特性，可以并行执行，能够提高效率。</p>
+<h2 id="任务组合："><a href="#任务组合：" class="headerlink" title="任务组合："></a>任务组合：</h2><p>每个节点负责一个小矩阵的串行计算，同时负责小矩阵之间的通讯传递。</p>
+<h2 id="处理器映射："><a href="#处理器映射：" class="headerlink" title="处理器映射："></a>处理器映射：</h2><p>由于任务的划分个数等于处理器个数，所以在组合任务的同时完成了处理器映射。</p>
+<p>Cannon算法采用了主从模式的同时也采用了分而治之的模式。一方面，0号线程作为Master，负责矩阵A和矩阵B以及矩阵C的I/O，也负责小矩阵的分发和结果的聚集。而其他节点作为Worker进行本地的小矩阵串行乘法计算。另一方面，Cannon算法将两个大矩阵的乘法运算分解为若干各小矩阵的乘法运算，最终计算结束后，将计算结果聚集回来，也采用了分而治之的思想。cannon算法不仅实现了矩阵乘法运算的并行化，也减少了分块矩阵乘法的局部存储量，节省了节点的内存开销。 </p>
+<h2 id="算法复杂度"><a href="#算法复杂度" class="headerlink" title="算法复杂度"></a>算法复杂度</h2><p>设计算的是一个n<em>n的矩阵乘一个n</em>n的矩阵，共有p个节点，那么Cannon算法的时间复杂度计算如下：</p>
+<p>矩阵乘加的时间由于采用了并行化，所以所需时间为： <code>n^3 / p</code></p>
+<p>若不考虑节点延迟时间，设节点之间通讯的启动时间为ti，传输每个数字的时间为tw，则在两个节点间传输一个子矩阵的时间是：<code>ti + n^2*tw / p</code></p>
+<p>所以节点之间传输子矩阵所需的时间为：<code>2*sqrt(p)*(ti + n^2*tw / p)</code></p>
+<p>综上，cannon算法总的所需时间为：<code>2*sqrt(p)*(ti + n^2*tw / p) + n^3 / p</code></p>
+<p>时间复杂度：<code>O(n^3 / p)</code><br>空间复杂度：<code>O(n^2)</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br><span class="line">278</span><br><span class="line">279</span><br><span class="line">280</span><br><span class="line">281</span><br><span class="line">282</span><br><span class="line">283</span><br><span class="line">284</span><br><span class="line">285</span><br><span class="line">286</span><br><span class="line">287</span><br><span class="line">288</span><br><span class="line">289</span><br><span class="line">290</span><br><span class="line">291</span><br><span class="line">292</span><br><span class="line">293</span><br><span class="line">294</span><br><span class="line">295</span><br><span class="line">296</span><br><span class="line">297</span><br><span class="line">298</span><br><span class="line">299</span><br><span class="line">300</span><br><span class="line">301</span><br><span class="line">302</span><br><span class="line">303</span><br><span class="line">304</span><br><span class="line">305</span><br><span class="line">306</span><br><span class="line">307</span><br><span class="line">308</span><br><span class="line">309</span><br><span class="line">310</span><br><span class="line">311</span><br><span class="line">312</span><br><span class="line">313</span><br><span class="line">314</span><br><span class="line">315</span><br><span class="line">316</span><br><span class="line">317</span><br><span class="line">318</span><br><span class="line">319</span><br><span class="line">320</span><br><span class="line">321</span><br><span class="line">322</span><br><span class="line">323</span><br><span class="line">324</span><br><span class="line">325</span><br><span class="line">326</span><br><span class="line">327</span><br><span class="line">328</span><br><span class="line">329</span><br><span class="line">330</span><br><span class="line">331</span><br><span class="line">332</span><br><span class="line">333</span><br><span class="line">334</span><br><span class="line">335</span><br><span class="line">336</span><br><span class="line">337</span><br><span class="line">338</span><br><span class="line">339</span><br><span class="line">340</span><br><span class="line">341</span><br><span class="line">342</span><br><span class="line">343</span><br><span class="line">344</span><br><span class="line">345</span><br><span class="line">346</span><br><span class="line">347</span><br><span class="line">348</span><br><span class="line">349</span><br><span class="line">350</span><br><span class="line">351</span><br><span class="line">352</span><br><span class="line">353</span><br><span class="line">354</span><br><span class="line">355</span><br><span class="line">356</span><br><span class="line">357</span><br><span class="line">358</span><br><span class="line">359</span><br><span class="line">360</span><br><span class="line">361</span><br><span class="line">362</span><br><span class="line">363</span><br><span class="line">364</span><br><span class="line">365</span><br><span class="line">366</span><br><span class="line">367</span><br><span class="line">368</span><br><span class="line">369</span><br><span class="line">370</span><br><span class="line">371</span><br><span class="line">372</span><br><span class="line">373</span><br><span class="line">374</span><br><span class="line">375</span><br><span class="line">376</span><br><span class="line">377</span><br><span class="line">378</span><br><span class="line">379</span><br><span class="line">380</span><br><span class="line">381</span><br><span class="line">382</span><br><span class="line">383</span><br><span class="line">384</span><br><span class="line">385</span><br><span class="line">386</span><br><span class="line">387</span><br><span class="line">388</span><br><span class="line">389</span><br><span class="line">390</span><br><span class="line">391</span><br><span class="line">392</span><br><span class="line">393</span><br><span class="line">394</span><br><span class="line">395</span><br><span class="line">396</span><br><span class="line">397</span><br><span class="line">398</span><br><span class="line">399</span><br><span class="line">400</span><br><span class="line">401</span><br><span class="line">402</span><br><span class="line">403</span><br><span class="line">404</span><br><span class="line">405</span><br><span class="line">406</span><br><span class="line">407</span><br><span class="line">408</span><br><span class="line">409</span><br><span class="line">410</span><br><span class="line">411</span><br><span class="line">412</span><br><span class="line">413</span><br><span class="line">414</span><br><span class="line">415</span><br><span class="line">416</span><br><span class="line">417</span><br><span class="line">418</span><br><span class="line">419</span><br><span class="line">420</span><br><span class="line">421</span><br><span class="line">422</span><br><span class="line">423</span><br><span class="line">424</span><br><span class="line">425</span><br><span class="line">426</span><br><span class="line">427</span><br><span class="line">428</span><br><span class="line">429</span><br><span class="line">430</span><br><span class="line">431</span><br><span class="line">432</span><br><span class="line">433</span><br><span class="line">434</span><br><span class="line">435</span><br><span class="line">436</span><br><span class="line">437</span><br><span class="line">438</span><br><span class="line">439</span><br><span class="line">440</span><br><span class="line">441</span><br><span class="line">442</span><br><span class="line">443</span><br><span class="line">444</span><br><span class="line">445</span><br><span class="line">446</span><br><span class="line">447</span><br><span class="line">448</span><br><span class="line">449</span><br><span class="line">450</span><br><span class="line">451</span><br><span class="line">452</span><br><span class="line">453</span><br><span class="line">454</span><br><span class="line">455</span><br><span class="line">456</span><br><span class="line">457</span><br><span class="line">458</span><br><span class="line">459</span><br><span class="line">460</span><br><span class="line">461</span><br><span class="line">462</span><br><span class="line">463</span><br><span class="line">464</span><br><span class="line">465</span><br><span class="line">466</span><br><span class="line">467</span><br><span class="line">468</span><br></pre></td><td class="code"><pre><span class="line">#include&lt;stdio.h&gt;</span><br><span class="line">#include&lt;malloc.h&gt;</span><br><span class="line">#include&lt;stdlib.h&gt;</span><br><span class="line">#include&lt;mpi.h&gt;</span><br><span class="line">#include&lt;pthread.h&gt;</span><br><span class="line">#include&lt;math.h&gt;</span><br><span class="line">#include&lt;cstring&gt;</span><br><span class="line">int myrank, p;</span><br><span class="line"></span><br><span class="line">// Compute C = A*B. A is a n1*n2 matrix. B is a n2*n3 matrix.</span><br><span class="line">void matmul(double* A, double* B, double* C, int n1, int n2, int n3)//做矩阵乘法，结果累加到C矩阵中(需要保证C矩阵初始化过)</span><br><span class="line">&#123;</span><br><span class="line">  int i,j,k;</span><br><span class="line">  //简单的串行矩阵乘法</span><br><span class="line">  for (i = 0; i &lt; n1; i++) &#123;</span><br><span class="line">    for (j = 0; j &lt; n3; j++) &#123;</span><br><span class="line">      for (k = 0; k &lt; n2; k++) &#123;</span><br><span class="line">        C[i*n3+j]+=A[i*n2+k]*B[k*n3+j];</span><br><span class="line">      &#125; </span><br><span class="line">    &#125;</span><br><span class="line">  &#125; </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">int setup(int argc,char**argv,double** fstreama,double** fstreamb,int* dim)</span><br><span class="line">&#123;</span><br><span class="line">	FILE* fha;</span><br><span class="line">	FILE* fhb;</span><br><span class="line">	int n1,n2,n3;</span><br><span class="line">	int re=1;</span><br><span class="line">	if (!(fha = fopen(argv[1], &quot;r&quot;))) //打开存储A矩阵的文件</span><br><span class="line">	&#123;</span><br><span class="line">		printf(&quot;Can&apos;t open file %s, Errno=%d\n&quot;, argv[1], 1);//打开失败输出信息</span><br><span class="line">		return -1;</span><br><span class="line">	&#125;</span><br><span class="line">	if(fread(&amp;n1,sizeof(int),1,fha)==0)//读取矩阵的行数</span><br><span class="line">	&#123;</span><br><span class="line">		printf(&quot;fread error1!\n&quot;);</span><br><span class="line">		return -1;</span><br><span class="line">	&#125;</span><br><span class="line">	if(fread(&amp;n2,sizeof(int),1,fha)==0)//读取矩阵的列数</span><br><span class="line">	&#123;</span><br><span class="line">		printf(&quot;fread error2!\n&quot;);</span><br><span class="line">		return -1;</span><br><span class="line">	&#125;</span><br><span class="line">	*fstreama = (double *) malloc (n1*n2*sizeof(double));//为矩阵申请内存</span><br><span class="line">	if(fread(*fstreama,sizeof(double),n1*n2,fha)==0)//读取矩阵内容</span><br><span class="line">	&#123;</span><br><span class="line">		printf(&quot;fread error3!\n&quot;);</span><br><span class="line">		return -1;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	fclose(fha);//关闭矩阵文件</span><br><span class="line">	</span><br><span class="line">	if (!(fhb = fopen(argv[2], &quot;r&quot;))) //打开存储A矩阵的文件</span><br><span class="line">	&#123;</span><br><span class="line">		printf(&quot;Can&apos;t open file %s, Errno=%d\n&quot;, argv[2], 2);//打开失败输出信息</span><br><span class="line">		return -1;</span><br><span class="line">	&#125;</span><br><span class="line">	if(fread(&amp;n2,sizeof(int),1,fhb)==0)//读取矩阵的行数</span><br><span class="line">	&#123;</span><br><span class="line">		printf(&quot;fread error4!\n&quot;);</span><br><span class="line">		return -1;</span><br><span class="line">	&#125;</span><br><span class="line">	if(fread(&amp;n3,sizeof(int),1,fhb)==0)//读取矩阵的列数</span><br><span class="line">	&#123;</span><br><span class="line">		printf(&quot;fread error5!\n&quot;);</span><br><span class="line">		return -1;</span><br><span class="line">	&#125;</span><br><span class="line">	*fstreamb = (double *) malloc (n2*n3*sizeof(double));//为矩阵申请内存</span><br><span class="line">	if(fread(*fstreamb,sizeof(double),n2*n3,fhb)==0)//读取矩阵内容</span><br><span class="line">	&#123;</span><br><span class="line">		printf(&quot;fread error6!\n&quot;);</span><br><span class="line">		return -1;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	fclose(fhb);//关闭矩阵文件	</span><br><span class="line">	dim[0] = n1;//返回矩阵的大小参数</span><br><span class="line">	dim[1] = n2;//返回矩阵的大小参数</span><br><span class="line">	dim[2] = n3;//返回矩阵的大小参数</span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void scatter_matrix(double* matrixbuf, int rows, int cols, double* local_matrix, int rootp)//将矩阵划分为小矩阵块并分发到各个节点</span><br><span class="line">&#123;</span><br><span class="line">	int row, column, i, j, count;</span><br><span class="line">	int maxrows_block = (rows + rootp - 1)/rootp;//小A矩阵块行数的最大值</span><br><span class="line">	int maxcols_block = (cols + rootp - 1)/rootp;//小矩阵块列数的最大值</span><br><span class="line">	double * matrixbuf2 = NULL;//用来格式化原矩阵的缓冲区</span><br><span class="line">	MPI_Status status;//返回通信的状态</span><br><span class="line">	</span><br><span class="line">	if(myrank == 0)//0号线程</span><br><span class="line">	&#123;</span><br><span class="line">		if(!(matrixbuf2 = (double *)malloc(maxcols_block*maxrows_block*rootp*rootp*sizeof(double))))//为缓冲区申请内存</span><br><span class="line">		&#123;</span><br><span class="line">			printf(&quot;Memory allocation failed\n&quot;);</span><br><span class="line">		&#125;</span><br><span class="line">		//将矩阵转化为按块连续存放的形式，方便分发每块小矩阵，同时对于边界没有对齐的小矩阵，补零对齐，方便计算</span><br><span class="line">		count = 0;</span><br><span class="line">		for (i = 0; i &lt; rootp; i++)&#123;</span><br><span class="line">			for (j = 0; j &lt; rootp; j++)&#123;</span><br><span class="line">				if(i!=(rootp-1)&amp;&amp;j==(rootp-1))//特殊处理除了最后一行以外的最后一列</span><br><span class="line">				&#123;</span><br><span class="line">					for (row = 0; row &lt; maxrows_block; row++)&#123;</span><br><span class="line">						for (column = 0; column &lt; maxcols_block; column++)&#123;</span><br><span class="line">							if((j * maxcols_block + column)&gt;=cols)//补零对齐</span><br><span class="line">							&#123;</span><br><span class="line">								matrixbuf2[count] = 0;</span><br><span class="line">							&#125;else&#123;</span><br><span class="line">								matrixbuf2[count] = matrixbuf[(i * maxrows_block + row ) * cols +j * maxcols_block + column];</span><br><span class="line">							&#125;</span><br><span class="line">							count++;</span><br><span class="line">						&#125;</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;else if(i==(rootp-1)&amp;&amp;j!=(rootp-1))//特殊处理除了最后一列以外的最后一行</span><br><span class="line">				&#123;</span><br><span class="line">					for (row = 0; row &lt; maxrows_block; row++)&#123;</span><br><span class="line">						for (column = 0; column &lt; maxcols_block; column++)&#123;</span><br><span class="line">							if((i * maxrows_block + row)&gt;=rows)//补零对齐</span><br><span class="line">							&#123;</span><br><span class="line">								matrixbuf2[count] = 0;</span><br><span class="line">							&#125;else&#123;</span><br><span class="line">								matrixbuf2[count] = matrixbuf[(i * maxrows_block + row)*cols + j * maxcols_block + column];</span><br><span class="line">							&#125;</span><br><span class="line">							count++;</span><br><span class="line">						&#125;</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;else if(i==(rootp-1)&amp;&amp;j==(rootp-1))//特殊处理最后一列最后一行的那个块</span><br><span class="line">				&#123;</span><br><span class="line">					for (row = 0; row &lt; maxrows_block; row++)&#123;</span><br><span class="line">						for (column = 0; column &lt; maxcols_block; column++)&#123;</span><br><span class="line">							if(((j * maxcols_block + column)&gt;=cols) || ((i * maxrows_block + row)&gt;=rows))//补零对齐</span><br><span class="line">							&#123;</span><br><span class="line">								matrixbuf2[count] = 0;</span><br><span class="line">							&#125;else&#123;</span><br><span class="line">								matrixbuf2[count] = matrixbuf[(i * maxrows_block + row) * cols + j * maxcols_block + column];</span><br><span class="line">							&#125;</span><br><span class="line">							count++;</span><br><span class="line">						&#125;</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;else&#123;//普通的块</span><br><span class="line">					for (row = 0; row &lt; maxrows_block; row++)&#123;</span><br><span class="line">						for (column = 0; column &lt; maxcols_block; column++)&#123;</span><br><span class="line">							matrixbuf2[count] = matrixbuf[(i * maxrows_block + row)*cols + j * maxcols_block + column];</span><br><span class="line">							count++;</span><br><span class="line">						&#125;</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		if(count!=maxcols_block*maxrows_block*rootp*rootp)//检查是否出错</span><br><span class="line">		&#123;</span><br><span class="line">			printf(&quot;scatter_matrix error!\n&quot;);</span><br><span class="line">			return ;</span><br><span class="line">		&#125;</span><br><span class="line">		//将属于本地的那个块留下来</span><br><span class="line">		for(i = 0; i &lt; maxrows_block*maxcols_block; i++)</span><br><span class="line">		&#123;</span><br><span class="line">			local_matrix[i] = matrixbuf2[i];</span><br><span class="line">		&#125;</span><br><span class="line">		//分发其他块到对应的线程</span><br><span class="line">		for(i = 1; i &lt; rootp*rootp; i++)</span><br><span class="line">		&#123;</span><br><span class="line">			MPI_Send((matrixbuf2 + (i * maxcols_block * maxrows_block)), maxcols_block * maxrows_block, MPI_DOUBLE, i, 0, MPI_COMM_WORLD);</span><br><span class="line">		&#125;		</span><br><span class="line">	&#125; else &#123;//非0号线程</span><br><span class="line">		MPI_Recv(local_matrix, maxcols_block * maxrows_block , MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &amp;status);//非零线程接受0线程发送的小矩阵块</span><br><span class="line">	&#125;</span><br><span class="line">	if(matrixbuf2!=NULL)&#123;//释放缓冲区</span><br><span class="line">		free(matrixbuf2);</span><br><span class="line">	&#125;</span><br><span class="line">	return;</span><br><span class="line">&#125;</span><br><span class="line">//A and bufA : n1_block*n2_block;  B and bufB : n2_block*n3_block</span><br><span class="line">//进行cannon算法，各个节点在本地进行矩阵乘法，并交换矩阵块，进行循环，直到计算完毕</span><br><span class="line">void cannon(double* A, double* bufA, double* B, double* bufB, double* C, int n1_block, int n2_block, int n3_block, int rootp)</span><br><span class="line">&#123;</span><br><span class="line">	MPI_Request send_a_req, send_b_req;</span><br><span class="line">	MPI_Status send_a_status, send_b_status, recv_a_status, recv_b_status;</span><br><span class="line">	int cycle_count;</span><br><span class="line">	int rank_next_a,rank_next_b;</span><br><span class="line">	int rank_last_a,rank_last_b;</span><br><span class="line">	int curRowP,curColP,i,j;</span><br><span class="line">	int tag=0;//表示当前正确数据再A中还是bufA中，0表示在A中，1表示在bufA中</span><br><span class="line">	//先初始化各个块，即A_ij循环左移i步，B_ij循环上移j步，C_ij初始化为零</span><br><span class="line">	</span><br><span class="line">	//初始化矩阵C，值全部设为0</span><br><span class="line">	for(i=0;i&lt;n1_block;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		for(j=0;j&lt;n3_block;j++)</span><br><span class="line">		&#123;</span><br><span class="line">			C[i*n3_block+j] = 0;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	//循环传播小矩阵</span><br><span class="line">	curRowP = myrank/rootp;//当前节点所在行</span><br><span class="line">	curColP = myrank%rootp;//当前节点所在列</span><br><span class="line">	</span><br><span class="line">	//获得左移i步后的节点号</span><br><span class="line">	if((curColP-curRowP)&lt;0)</span><br><span class="line">	&#123;</span><br><span class="line">		rank_next_a = myrank+rootp-curRowP;</span><br><span class="line">	&#125;else&#123;</span><br><span class="line">		rank_next_a = myrank-curRowP;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	</span><br><span class="line">	//获得上移j步后的节点号</span><br><span class="line">	if((curRowP-curColP)&lt;0)</span><br><span class="line">	&#123;</span><br><span class="line">		rank_next_b = myrank -curColP*rootp + rootp*rootp;</span><br><span class="line">	&#125;else&#123;</span><br><span class="line">		rank_next_b = myrank -curColP*rootp;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	//获得接受左移i步的节点号</span><br><span class="line">	if((curColP+curRowP)&gt;=rootp)</span><br><span class="line">	&#123;</span><br><span class="line">		rank_last_a = myrank+curRowP-rootp;</span><br><span class="line">	&#125;else&#123;</span><br><span class="line">		rank_last_a = myrank+curRowP;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	</span><br><span class="line">	//获得接受上移j步的节点号</span><br><span class="line">	if((curRowP+curColP)&gt;=rootp)</span><br><span class="line">	&#123;</span><br><span class="line">		rank_last_b = myrank + curColP*rootp - rootp*rootp;</span><br><span class="line">	&#125;else&#123;</span><br><span class="line">		rank_last_b = myrank + curColP*rootp;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	//非阻塞发送矩阵，如果不需要移动，则直接本地memcpy</span><br><span class="line">	if(rank_next_a!=myrank)</span><br><span class="line">	&#123;</span><br><span class="line">		MPI_Isend(A, n1_block*n2_block, MPI_DOUBLE, rank_next_a, 0, MPI_COMM_WORLD, &amp;send_a_req);//非阻塞发送矩阵A，避免死锁</span><br><span class="line">	&#125;else</span><br><span class="line">	&#123;</span><br><span class="line">		memcpy(bufA, A, n1_block*n2_block*sizeof(double));//本地直接memcpy</span><br><span class="line">	&#125;</span><br><span class="line">	if(rank_next_b!=myrank)</span><br><span class="line">	&#123;</span><br><span class="line">		MPI_Isend(B, n2_block*n3_block, MPI_DOUBLE, rank_next_b, 0, MPI_COMM_WORLD, &amp;send_b_req);//非阻塞发送矩阵B，避免死锁</span><br><span class="line">	&#125;else</span><br><span class="line">	&#123;</span><br><span class="line">		memcpy(bufB, B, n2_block*n3_block*sizeof(double));//本地直接memcpy</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	//阻塞接受矩阵</span><br><span class="line">	if(rank_last_a!=myrank)</span><br><span class="line">	&#123;</span><br><span class="line">		MPI_Recv(bufA, n1_block*n2_block, MPI_DOUBLE, rank_last_a, 0, MPI_COMM_WORLD, &amp;recv_a_status);//阻塞接受矩阵A</span><br><span class="line">	&#125;</span><br><span class="line">	if(rank_last_b!=myrank)</span><br><span class="line">	&#123;</span><br><span class="line">		MPI_Recv(bufB, n2_block*n3_block, MPI_DOUBLE, rank_last_b, 0, MPI_COMM_WORLD, &amp;recv_b_status);//阻塞接受矩阵B</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	//阻塞等待发送矩阵结束</span><br><span class="line">	if(rank_next_a!=myrank)</span><br><span class="line">	&#123;</span><br><span class="line">		MPI_Wait(&amp;send_a_req, &amp;send_a_status);//阻塞发送矩阵A到结束</span><br><span class="line">	&#125;</span><br><span class="line">	if(rank_next_b!=myrank)</span><br><span class="line">	&#123;</span><br><span class="line">		MPI_Wait(&amp;send_b_req, &amp;send_b_status);//阻塞发送矩阵B到结束</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	MPI_Barrier(MPI_COMM_WORLD);//同步</span><br><span class="line">	tag=1;</span><br><span class="line">	if(myrank%rootp==0)//第一列的节点</span><br><span class="line">	&#123;</span><br><span class="line">		rank_next_a = myrank+rootp-1;</span><br><span class="line">	&#125;else&#123;</span><br><span class="line">		rank_next_a = myrank-1;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	if(myrank/rootp==0)//第一行的节点</span><br><span class="line">	&#123;</span><br><span class="line">		rank_next_b = myrank+rootp*(rootp-1);</span><br><span class="line">	&#125;else&#123;</span><br><span class="line">		rank_next_b = myrank - rootp;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	if(myrank%rootp==(rootp-1))//最后一列的节点</span><br><span class="line">	&#123;</span><br><span class="line">		rank_last_a = myrank-rootp+1;</span><br><span class="line">	&#125;else&#123;</span><br><span class="line">		rank_last_a = myrank+1;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	if(myrank/rootp==(rootp-1))//最后一行的节点</span><br><span class="line">	&#123;</span><br><span class="line">		rank_last_b = myrank-rootp*(rootp-1);</span><br><span class="line">	&#125;else&#123;</span><br><span class="line">		rank_last_b = myrank + rootp;</span><br><span class="line">	&#125;</span><br><span class="line">	//循环，每次做当前块的乘加运算，并使得A_ij循环左移1步，B_ij循环上移1步</span><br><span class="line">	for(cycle_count = 0; cycle_count &lt; rootp; cycle_count++)</span><br><span class="line">	&#123;</span><br><span class="line">		if(tag==1)//数据在bufA中</span><br><span class="line">		&#123;</span><br><span class="line">			matmul(bufA, bufB, C, n1_block, n2_block, n3_block);//做当前节点的矩阵乘法</span><br><span class="line">			//循环传播小矩阵</span><br><span class="line">			MPI_Isend(bufA, n1_block*n2_block, MPI_DOUBLE, rank_next_a, 0, MPI_COMM_WORLD, &amp;send_a_req);//非阻塞发送矩阵A，避免死锁</span><br><span class="line">            		MPI_Isend(bufB, n2_block*n3_block, MPI_DOUBLE, rank_next_b, 0, MPI_COMM_WORLD, &amp;send_b_req);//非阻塞发送矩阵B，避免死锁</span><br><span class="line"></span><br><span class="line">            		MPI_Recv(A, n1_block*n2_block, MPI_DOUBLE, rank_last_a, 0, MPI_COMM_WORLD, &amp;recv_a_status);//阻塞接受矩阵A</span><br><span class="line">            		MPI_Recv(B, n2_block*n3_block, MPI_DOUBLE, rank_last_b, 0, MPI_COMM_WORLD, &amp;recv_b_status);//阻塞接受矩阵B</span><br><span class="line"></span><br><span class="line">            		MPI_Wait(&amp;send_a_req, &amp;send_a_status);//阻塞发送矩阵A到结束</span><br><span class="line">            		MPI_Wait(&amp;send_b_req, &amp;send_b_status);//阻塞发送矩阵B到结束</span><br><span class="line">			tag = 0;</span><br><span class="line">		&#125;else&#123;//数据在A中</span><br><span class="line">			matmul(A, B, C, n1_block, n2_block, n3_block);//做当前节点的矩阵乘法</span><br><span class="line">			//循环传播小矩阵</span><br><span class="line">			MPI_Isend(A, n1_block*n2_block, MPI_DOUBLE, rank_next_a, 0, MPI_COMM_WORLD, &amp;send_a_req);//非阻塞发送矩阵A，避免死锁</span><br><span class="line">            		MPI_Isend(B, n2_block*n3_block, MPI_DOUBLE, rank_next_b, 0, MPI_COMM_WORLD, &amp;send_b_req);//非阻塞发送矩阵B，避免死锁</span><br><span class="line"></span><br><span class="line">            		MPI_Recv(bufA, n1_block*n2_block, MPI_DOUBLE, rank_last_a, 0, MPI_COMM_WORLD, &amp;recv_a_status);//阻塞接受矩阵A</span><br><span class="line">            		MPI_Recv(bufB, n2_block*n3_block, MPI_DOUBLE, rank_last_b, 0, MPI_COMM_WORLD, &amp;recv_b_status);//阻塞接受矩阵B</span><br><span class="line"></span><br><span class="line">            		MPI_Wait(&amp;send_a_req, &amp;send_a_status);//阻塞发送矩阵A到结束</span><br><span class="line">            		MPI_Wait(&amp;send_b_req, &amp;send_b_status);//阻塞发送矩阵B到结束</span><br><span class="line">			tag = 1;</span><br><span class="line">		&#125;</span><br><span class="line">		MPI_Barrier(MPI_COMM_WORLD);//同步</span><br><span class="line">	&#125;</span><br><span class="line">	return;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//gather_matrix((double*)(fstreamc + sizeof(int)*2), n1, n3, C, rootp);</span><br><span class="line">//将各个节点的小矩阵C收集到0号节点</span><br><span class="line">void gather_matrix(double* matrixCbuf, int rows, int cols, double* local_C, int rootp, int rows_block_pad, int cols_block_pad)</span><br><span class="line">&#123;</span><br><span class="line">	int curRow, curCol, i, j, curP;</span><br><span class="line">	MPI_Status status;</span><br><span class="line">	double * matrixC_pad = NULL;//有零填充的矩阵C</span><br><span class="line">	if(myrank == 0) &#123;//0号线程 </span><br><span class="line">		if(!(matrixC_pad = (double *)malloc(rows_block_pad*cols_block_pad*rootp*rootp*sizeof(double))))//为缓冲区申请内存</span><br><span class="line">		&#123;</span><br><span class="line">			printf(&quot;Memory allocation failed\n&quot;);</span><br><span class="line">		&#125;</span><br><span class="line">		//将本地计算结果直接复制过来</span><br><span class="line">		for(i = 0; i &lt; rows_block_pad * cols_block_pad; i++)&#123;</span><br><span class="line">			matrixC_pad[i] = local_C[i];</span><br><span class="line">		&#125;</span><br><span class="line">		//接受其他非0线程的计算结果</span><br><span class="line">		for(i = 1; i &lt; rootp*rootp; i++)&#123;</span><br><span class="line">			MPI_Recv(matrixC_pad + (i * rows_block_pad * cols_block_pad), rows_block_pad * cols_block_pad, MPI_DOUBLE, i, 0,MPI_COMM_WORLD, &amp;status);</span><br><span class="line">		&#125;</span><br><span class="line">		</span><br><span class="line">		//重新整理矩阵C，除去零填充，并且重新整理顺序</span><br><span class="line">		for(i=0;i&lt;rows;i++)</span><br><span class="line">		&#123;</span><br><span class="line">			for(j=0;j&lt;cols;j++)</span><br><span class="line">			&#123;</span><br><span class="line">				curP = (i/rows_block_pad)*rootp+(j/cols_block_pad);//属于第几个节点，从0开始</span><br><span class="line">				curRow = i%rows_block_pad;//属于小矩阵的第几行</span><br><span class="line">				curCol = j%cols_block_pad;//属于小矩真的第几列</span><br><span class="line">				matrixCbuf[i * cols + j] = matrixC_pad[curP * rows_block_pad * cols_block_pad +curRow*cols_block_pad+curCol];</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;		</span><br><span class="line">	&#125; else &#123;//非0号线程</span><br><span class="line">		MPI_Send(local_C,rows_block_pad * cols_block_pad, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);//给0号线程发送计算结果</span><br><span class="line">	&#125;</span><br><span class="line">	if(matrixC_pad!=NULL)</span><br><span class="line">	&#123;</span><br><span class="line">		free(matrixC_pad);//释放缓冲区</span><br><span class="line">	&#125;</span><br><span class="line">	return ;</span><br><span class="line">&#125;</span><br><span class="line">int main(int argc, char** argv)</span><br><span class="line">&#123;</span><br><span class="line">	double elapsed_time;</span><br><span class="line">	// Suppose A:n1xn2, B:n2xn3. n1~n3 are read from input files</span><br><span class="line">	int n1, n2, n3,rootp;</span><br><span class="line">	// Buffers for matrix A, B, C. Because A, B will be shifted, so they each have two buffers</span><br><span class="line">	double *A, *B, *C, *bufA, *bufB;</span><br><span class="line">	// On proc 0, buffers to cache matrix files of A, B and C</span><br><span class="line">	double *fstreama, *fstreamb;</span><br><span class="line">	char *fstreamc;</span><br><span class="line">	MPI_Init(&amp;argc, &amp;argv);</span><br><span class="line">	MPI_Comm_rank(MPI_COMM_WORLD, &amp;myrank);</span><br><span class="line">	MPI_Comm_size(MPI_COMM_WORLD, &amp;p);</span><br><span class="line">	rootp = sqrt(p);</span><br><span class="line">	if (p != rootp*rootp) &#123;</span><br><span class="line">		printf(&quot;Processor number must be a square!\n&quot;);</span><br><span class="line">	&#125;</span><br><span class="line">	// On proc 0, preprocess the command line, read in files for A, B and</span><br><span class="line">	// put their sizes in dim[].</span><br><span class="line">	int dim[3];</span><br><span class="line">	if (myrank == 0) &#123;//0号线程负责从文件中读取矩阵A和B以及他们的大小信息</span><br><span class="line">		if (setup(argc, argv, &amp;fstreama, &amp;fstreamb, dim)!=0) &#123;</span><br><span class="line">			MPI_Finalize(); // Something error during preprocessing</span><br><span class="line">			exit(-1);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	MPI_Bcast(dim, 3, MPI_INT, 0, MPI_COMM_WORLD);//0号线程将A和B矩阵的size广播给所有线程</span><br><span class="line">	n1 = dim[0];//A： n1*n2</span><br><span class="line">	n2 = dim[1];//B:  n2*n3</span><br><span class="line">	n3 = dim[2];</span><br><span class="line"></span><br><span class="line">	// Allocate memories for A, B, C, bufA and bufB.</span><br><span class="line">	// Suppose an m*n matrix is 2D block-distributed on a rootp*rootp processor grid.</span><br><span class="line">	// If rootp doesn&apos;t divide m or n, then submatrixes won&apos;t have the same size.</span><br><span class="line">	// Because we will shift A, B, so we allocate memories according to the max</span><br><span class="line">	// rows and cols of A and B.</span><br><span class="line">	//因为有可能rootp不能整除n1,n2,n3,所以在申请内存的时候考虑最大的块的大小</span><br><span class="line">	int maxrows_a = (n1 + rootp - 1)/rootp;//A矩阵块行数的最大值</span><br><span class="line">	int maxcols_a = (n2 + rootp - 1)/rootp;//A矩阵块列数的最大值</span><br><span class="line">	int maxrows_b = maxcols_a;//B矩阵块行数的最大值</span><br><span class="line">	int maxcols_b = (n3 + rootp - 1)/rootp;//B矩阵块列数的最大值</span><br><span class="line">	int bufA_size = sizeof(double)*maxrows_a*maxcols_a;//大小为一个A矩阵块的大小</span><br><span class="line">	int bufB_size = sizeof(double)*maxrows_b*maxcols_b;//大小为一个B矩阵块的大小</span><br><span class="line">	int bufC_size = sizeof(double)*maxrows_a*maxcols_b;//大小为一个C矩阵块的大小</span><br><span class="line">	char* buf;</span><br><span class="line">	int i;</span><br><span class="line">	if(!(buf = (char *)malloc(bufA_size*2 + bufB_size*2 + bufC_size)))//申请两个A矩阵块，两个B矩阵块，和一个C矩阵块</span><br><span class="line">	&#123;</span><br><span class="line">		printf(&quot;Memory allocation failed\n&quot;);</span><br><span class="line">	&#125;</span><br><span class="line">	//或者以下4个缓存区的指针位置</span><br><span class="line">	A = (double*)buf;</span><br><span class="line">	bufA = (double*) (buf + bufA_size);</span><br><span class="line">	B = (double*) (buf + bufA_size*2);</span><br><span class="line">	bufB = (double*) (buf + bufA_size*2 + bufB_size);</span><br><span class="line">	C = (double*) (buf + bufA_size*2 + bufB_size*2);</span><br><span class="line">	// Proc 0 scatters A, B to other procs in a 2D block distribution fashion</span><br><span class="line">	scatter_matrix((double*)fstreama, n1, n2, A, rootp);//0号线程分发A矩阵块到各个线程</span><br><span class="line">	MPI_Barrier(MPI_COMM_WORLD);//同步</span><br><span class="line">	scatter_matrix((double*)fstreamb, n2, n3, B, rootp);//0号线程分发B矩阵块到各个线程</span><br><span class="line">	MPI_Barrier(MPI_COMM_WORLD);//同步</span><br><span class="line">	elapsed_time = MPI_Wtime();//记录计算开始的时间戳</span><br><span class="line">	// Compute C=A*B by Cannon algorithm</span><br><span class="line">	cannon(A, bufA, B, bufB, C, maxrows_a,maxcols_a,maxcols_b, rootp);</span><br><span class="line">	MPI_Barrier(MPI_COMM_WORLD);//同步</span><br><span class="line">	elapsed_time = MPI_Wtime() - elapsed_time;//记录计算所用的时间</span><br><span class="line">	// Proc 0 gathers C from other procs and write it out</span><br><span class="line">	FILE* fhc;</span><br><span class="line">	int fsizec = sizeof(int)*2 + sizeof(double)*n1*n3;//存储C矩阵以及两个大小参数的空间大小</span><br><span class="line">	if(myrank == 0)</span><br><span class="line">	&#123;</span><br><span class="line">		if (!(fhc = fopen(argv[3], &quot;w&quot;))) //打开输出C矩阵的文件</span><br><span class="line">		&#123;</span><br><span class="line">			printf(&quot;Can&apos;t open file %s, Errno=%d\n&quot;, argv[3], 3);//打开失败输出信息</span><br><span class="line">			MPI_Finalize();</span><br><span class="line">		&#125;</span><br><span class="line">		fstreamc = (char *)malloc(fsizec);//申请存储矩阵C的内存空间</span><br><span class="line">		((int*)fstreamc)[0] = n1;//记录矩阵C的行数</span><br><span class="line">		((int*)fstreamc)[1] = n3;//记录矩阵C的列数</span><br><span class="line">	&#125;</span><br><span class="line">	gather_matrix((double*)(fstreamc + sizeof(int)*2), n1, n3, C, rootp, maxrows_a, maxcols_b);//聚集计算结果，其他线程将自己的C矩阵块发送给线程0</span><br><span class="line">	MPI_Barrier(MPI_COMM_WORLD); // Make sure proc 0 read all it needs</span><br><span class="line">	if(myrank == 0)</span><br><span class="line">	&#123;</span><br><span class="line">		printf(&quot;Cannon algrithm: multiply a %dx%d with a %dx%d, use %.2f(s)\n&quot;,n1, n2, n2, n3, elapsed_time);</span><br><span class="line">		fwrite(fstreamc, sizeof(char), fsizec, fhc);//线程0将矩阵C写入文件</span><br><span class="line">		fclose(fhc);//关闭文件</span><br><span class="line">		free(fstreama);//释放内存</span><br><span class="line">		free(fstreamb);//释放内存</span><br><span class="line">		free(fstreamc);//释放内存</span><br><span class="line">	&#125;</span><br><span class="line">	free(buf);//释放存储小矩阵块的内存空间</span><br><span class="line">	MPI_Finalize();</span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/算法/" rel="tag"># 算法</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/06/Leetcode933-Number-of-Recent-Calls/" rel="next" title="Leetcode933. Number of Recent Calls">
+                <i class="fa fa-chevron-left"></i> Leetcode933. Number of Recent Calls
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">119</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="450" src="//music.163.com/outchain/player?type=0&id=101039122&auto=0&height=430">
+          </iframe>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#简介"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#算法流程图"><span class="nav-number">2.</span> <span class="nav-text">算法流程图</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#算法设计方法和模式"><span class="nav-number">3.</span> <span class="nav-text">算法设计方法和模式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#任务划分："><span class="nav-number">3.1.</span> <span class="nav-text">任务划分：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#通讯分析："><span class="nav-number">3.2.</span> <span class="nav-text">通讯分析：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#任务组合："><span class="nav-number">3.3.</span> <span class="nav-text">任务组合：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#处理器映射："><span class="nav-number">3.4.</span> <span class="nav-text">处理器映射：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#算法复杂度"><span class="nav-number">3.5.</span> <span class="nav-text">算法复杂度</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
