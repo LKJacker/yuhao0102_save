@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-flash.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="C++,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="原文：https://www.cnblogs.com/god-of-death/p/7852394.html 概述why volatilevolatile 关键词，最早出现于20世纪70年代，被用于处理 MMIO(Memory-mapped I/O) 带来的问题。在引入 MMIO 之后，一块内存地址既有可能是真正的内存，也有可能是映射的一个I/O端口。因此，读/写一个内存地址，既有可能是真正地操作">
+<meta name="keywords" content="C++">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C++中的Volatile关键字">
+<meta property="og:url" content="http://yoursite.com/2019/05/08/cpp中volatile关键字/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="原文：https://www.cnblogs.com/god-of-death/p/7852394.html 概述why volatilevolatile 关键词，最早出现于20世纪70年代，被用于处理 MMIO(Memory-mapped I/O) 带来的问题。在引入 MMIO 之后，一块内存地址既有可能是真正的内存，也有可能是映射的一个I/O端口。因此，读/写一个内存地址，既有可能是真正地操作">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2019-05-08T08:09:51.384Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="C++中的Volatile关键字">
+<meta name="twitter:description" content="原文：https://www.cnblogs.com/god-of-death/p/7852394.html 概述why volatilevolatile 关键词，最早出现于20世纪70年代，被用于处理 MMIO(Memory-mapped I/O) 带来的问题。在引入 MMIO 之后，一块内存地址既有可能是真正的内存，也有可能是映射的一个I/O端口。因此，读/写一个内存地址，既有可能是真正地操作">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/05/08/cpp中volatile关键字/">
+
+
+
+
+
+  <title>C++中的Volatile关键字 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/08/cpp中volatile关键字/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">C++中的Volatile关键字</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-05-08T15:41:39+08:00">
+                2019-05-08
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>原文：<a href="https://www.cnblogs.com/god-of-death/p/7852394.html" target="_blank" rel="noopener">https://www.cnblogs.com/god-of-death/p/7852394.html</a></p>
+<h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><h2 id="why-volatile"><a href="#why-volatile" class="headerlink" title="why volatile"></a>why volatile</h2><p>volatile 关键词，最早出现于20世纪70年代，被用于处理 MMIO(Memory-mapped I/O) 带来的问题。在引入 MMIO 之后，一块内存地址既有可能是真正的内存，也有可能是映射的一个I/O端口。因此，读/写一个内存地址，既有可能是真正地操作内存，也有可能是读/写一个I/O设备。</p>
+<p>那么 MMIO 为什么需要引入 volatile 关键词呢？我们结合下面这段示例代码进行解释：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">unsigned int *p = FunB();</span><br><span class="line">unsigned int a;</span><br><span class="line">unsigned int b;</span><br><span class="line"> </span><br><span class="line">a = *p;     // 语句1</span><br><span class="line">b = *p;     // 语句2</span><br><span class="line"> </span><br><span class="line">*p = a;     // 语句3</span><br><span class="line">*p = b;     // 语句4</span><br></pre></td></tr></table></figure></p>
+<p>在上述代码片段中，指针p既有可能指向一个内存地址，也有可能指向一个I/O设备。如果指针p指向的是I/O设备，那么语句1和语句2中的变量a和变量b，就会接收到I/O设备的连续两个字节。但是，指针p也有可能指向内存地址，这种情况下，编译器就会进行语句优化，编译器的优化策略会判断变量a和变量b同时从同一个内存地址读取数据，因此在执行完语句1之后，直接将变量a赋值给变量b。对于指针p指向I/O设备的这种情况，就需要防止编译器进行此优化，即不能假设指针b指向的内容不变（对应 volatile 的易变性特性）。</p>
+<p>同样，语句3和语句4也有类似的问题，编译器发现将变量a和b同时赋值给指针p是无意义的，因此可能会优化语句3中的赋值操作，而仅仅保留语句4。对于指针p指向I/O设备的情况，也需要防止编译器将类似的写操作给优化消失了（对应 volatile 的不可优化特性）。</p>
+<p>对于I/O设备，编译器不能随意交互指令的顺序，因为指令顺序一变，写入I/O设备的内容也就发生变化了（对应 volatile 的顺序性）。</p>
+<p>为了满足 MMIO 的这三点需求，就有了 volatile 关键字。</p>
+<h2 id="IN-C-C"><a href="#IN-C-C" class="headerlink" title="IN C/C++"></a>IN C/C++</h2><p>在C/C++语言中，使用 volatile 关键字声明的变量（或对象）通常具有与优化、多线程相关的特殊属性。通常，volatile 关键字用来阻止（伪）编译器对其认为的、无法“被代码本身”改变的代码（变量或对象）进行优化。如在C/C++中，volatile 关键字可以用来提醒编译器使用 volatile 声明的变量随时有可能改变，因此编译器在代码编译时就不会对该变量进行某些激进的优化，故而编译生成的程序在每次存储或读取该变量时，都会直接从内存地址中读取数据。相反，如果该变量没有使用 volatile 关键字进行声明，则编译器可能会优化读取和存储操作，可能暂时使用寄存器中该变量的值，而如果这个变量由别的程序（线程）更新了的话，就会出现（内存中与寄存器中的）变量值不一致的现象。</p>
+<p>定义为volatile的变量是说这变量可能会被意想不到地改变，即在你程序运行过程中一直会变，你希望这个值被正确的处理，每次从内存中去读这个值，而不是因编译器优化从缓存的地方读取，比如读取缓存在寄存器中的数值，从而保证volatile变量被正确的读取。</p>
+<p>在单任务的环境中，一个函数体内部，如果在两次读取变量的值之间的语句没有对变量的值进行修改，那么编译器就会设法对可执行代码进行优化。由于访问寄存器的速度要快过RAM（从RAM中读取变量的值到寄存器），以后只要变量的值没有改变，就一直从寄存器中读取变量的值，而不对RAM进行访问。</p>
+<p>而在多任务环境中，虽然在一个函数体内部，在两次读取变量之间没有对变量的值进行修改，但是该变量仍然有可能被其他的程序（如中断程序、另外的线程等）所修改。如果这时还是从寄存器而不是从RAM中读取，就会出现被修改了的变量值不能得到及时反应的问题。</p>
+<p> 因为访问寄存器要比访问内存单元快的多,所以编译器一般都会作减少存取内存的优化，但有可能会读脏数据。当要求使用volatile声明变量值的时候，系统总是重新从它所在的内存读取数据，即使它前面的指令刚刚从该处读取过数据。精确地说就是，遇到这个关键字声明的变量，编译器对访问该变量的代码就不再进行优化，从而可以提供对特殊地址的稳定访问；如果不使用valatile，则编译器将对所声明的语句进行优化。（简洁的说就是：volatile关键词影响编译器编译的结果，用volatile声明的变量表示该变量随时可能发生变化，与该变量有关的运算，不要进行编译优化，以免出错。加了volatile修饰的变量，编译器将不对其相关代码执行优化，而是生成对应代码直接存取原始内存地址）。</p>
+<p> 一个定义为volatile的变量是说这变量可能会被意想不到地改变，这样，编译器就不会去假设这个变量的值了。精确地说就是，优化器在用到这个变量时必须每次都小心地重新读取这个变量的值，而不是使用保存在寄存器里的备份。一般说来，volatile用在如下的几个地方：</p>
+<pre><code>（1）并行设备的硬件寄存器（如：状态寄存器）
+（2）中断服务程序中修改的供其它程序检测的变量需要加volatile；
+（3）多任务环境下各任务间共享的标志应该加volatile；
+（4）存储器映射的硬件寄存器通常也要加volatile说明，因为每次对它的读写都可能有不同意义；
+</code></pre><p>在C/C++语言中，使用 volatile 关键字声明的变量具有三种特性：易变的、不可优化的、顺序执行的。下面分别对这三种特性进行介绍。</p>
+<h1 id="易变的"><a href="#易变的" class="headerlink" title="易变的"></a>易变的</h1><p>volatile 在词典中的主要释义就是“易变的”。</p>
+<p>在 C/C++ 语言中，volatile 的易变性体现在：假设有读、写两条语句，依次对同一个 volatile 变量进行操作，那么后一条的读操作不会直接使用前一条的写操作对应的 volatile 变量的寄存器内容，而是重新从内存中读取该 volatile 变量的值。</p>
+<p>上述描述的（部分）示例代码如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">volatile int nNum = 0;  // 将nNum声明为volatile</span><br><span class="line">int nSum = 0;</span><br><span class="line">nNum = FunA();      // nNum被写入的新内容，其值会缓存在寄存器中</span><br><span class="line">nSum = nNum + 1;    // 此处会从内存（而非寄存器）中读取nNum的值</span><br></pre></td></tr></table></figure></p>
+<h1 id="不可优化的"><a href="#不可优化的" class="headerlink" title="不可优化的"></a>不可优化的</h1><p>在 C/C++ 语言中，volatile 的第二个特性是“不可优化性”。volatile 会告诉编译器，不要对 volatile 声明的变量进行各种激进的优化（甚至将变量直接消除），从而保证程序员写在代码中的指令一定会被执行。</p>
+<p>上述描述的（部分）示例代码如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">volatile int nNum;  // 将nNum声明为volatile</span><br><span class="line">nNum = 1;</span><br><span class="line">printf(&quot;nNum is: %d&quot;, nNum);</span><br></pre></td></tr></table></figure></p>
+<p>在上述代码中，如果变量 nNum 没有声明为 volatile 类型，则编译器在编译过程中就会对其进行优化，直接使用常量“1”进行替换（这样优化之后，生成的汇编代码很简介，执行时效率很高）。而当我们使用 volatile 进行声明后，编译器则不会对其进行优化，nNum 变量仍旧存在，编译器会将该变量从内存中取出，放入寄存器之中，然后再调用 printf() 函数进行打印。</p>
+<h1 id="顺序执行的"><a href="#顺序执行的" class="headerlink" title="顺序执行的"></a>顺序执行的</h1><p>在 C/C++ 语言中，volatile 的第三个特性是“顺序执行特性”，即能够保证 volatile 变量间的顺序性，不会被编译器进行乱序优化。</p>
+<p>说明：C/C++ 编译器最基本优化原理：保证一段程序的输出，在优化前后无变化。</p>
+<p>为了对本特性进行深入了解，下面以两个变量（nNum1 和 nNum2）为例（既然存在“顺序执行”，那描述对象必然大于一个），结合如下示例代码，介绍 volatile 的顺序执行特性。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">int nNum1;</span><br><span class="line">int nNum2;</span><br><span class="line">nNum2 = nNum1 + 1;    // 语句1</span><br><span class="line">nNum1 = 10;           // 语句2</span><br></pre></td></tr></table></figure></p>
+<p>在上述代码中：</p>
+<p>当 nNum1 和 nNum2 都没有使用 volatile 关键字进行修饰时，编译器会对“语句1”和“语句2”的执行顺序进行优化：即先执行“语句2”、再执行“语句1”；<br>当 nNum2 使用 volatile 关键字进行修饰时，编译器也可能会对“语句1”和“语句2”的执行顺序进行优化：即先执行“语句2”、再执行“语句1”；<br>当 nNum1 和 nNum2 都使用 volatile 关键字进行修饰时，编译器不会对“语句1”和“语句2”的执行顺序进行优化：即先执行“语句1”、再执行“语句2”；<br>说明：上述论述可通过观察代码的生成的汇编代码进行验证。</p>
+<h1 id="volatile与多线程语义"><a href="#volatile与多线程语义" class="headerlink" title="volatile与多线程语义"></a>volatile与多线程语义</h1><p>对于多线程编程而言，在临界区内部，可以通过互斥锁（mutex）保证只有一个线程可以访问该临界区的内容，因此临界区内的变量不需要是 volatile 的；而在临界区外部，被多个线程访问的变量应声明为 volatile 的，这也符合了 volatile 的原意：防止编译器缓存（cache）了被多个线程并发用到的变量。</p>
+<p>不过，需要注意的是，由于 volatile 关键字的“顺序执行特性”并非会完全保证语句的顺序执行（如 volatile 变量与非volatile 变量之间的操作；又如一些 CPU 也会对语句的执行顺序进行优化），因此导致了对 volatile 变量的操作并不是原子的，也不能用来为线程建立严格的 happens-before 关系。</p>
+<p>对于上述描述，示例代码如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">int nNum1 = 0;</span><br><span class="line">volatile bool flag = false;</span><br><span class="line"> </span><br><span class="line">thread1()</span><br><span class="line">&#123;</span><br><span class="line">    // some code</span><br><span class="line"> </span><br><span class="line">    nNum1 = 666;  // 语句1</span><br><span class="line">    flag = true;  // 语句2</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">thread2()</span><br><span class="line">&#123;</span><br><span class="line">    // some code</span><br><span class="line"> </span><br><span class="line">    if (true == flag)</span><br><span class="line">    &#123;</span><br><span class="line">        // 语句3：按照程序设计的预想，此处的nNum1的值应为666，并据此进行逻辑设计</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在上述代码中，我们的设计思路是先执行 thread1() 中的“语句1”、“语句2”、再执行 thread2() 中的“语句3”，不过实际上程序的执行结果未必如此。根据 volatile 的“顺序性”，非 volatile 变量 nNum1 和 volatile 变量 flag 的执行顺序，可能会被编译器（或 CPU）进行乱序优化，最终导致thread1中的“语句2”先于“语句1”执行，当“语句2”执行完成但“语句1”尚未执行时，此时 thread2 中的判断语句“if (true == flag)”是成立的，但实际上 nNum1 尚未进行赋值为666（语句1尚未执行），所以在判断语句中针对 nNum1 为666的前提下进行的相关操作，就会有问题了。</p>
+<p>这是一个在多线程编程中，使用 volatile 不容易发现的问题。</p>
+<p>实际上，上述多线程代码想实现的就是一个 happens-before 语义，即保证 thread1 代码块中的所有代码，一定要在 thread2 代码块的第一条代码之前完成。使用互斥锁（mutex）可以保证 happens-before 语义。但是，在 C/C++ 中的 volatile 关键词不能保证这个语义，也就意味着在多线程环境下使用 C/C++ 的 volatile 关键词，如果不够细心，就可能会出现上述问题。</p>
+<p>说明：由于 Java 语言的 volatile 关键字支持 Acquire、Release 语义，因此 Java 语言的 volatile 能够用来构建 happens-before 语义。也就是说，前面提到的 C/C++ 中 volatile 在多线程下使用出现的问题，在 Java 语言中是不存在的。</p>
+<h1 id="不保证原子性"><a href="#不保证原子性" class="headerlink" title="不保证原子性"></a>不保证原子性</h1><p>volatile只保证其“可见性”，不保证其“原子性”。</p>
+<p>执行count++;这条语句由3条指令组成：</p>
+<ol>
+<li>将 count 的值从内存加载到 cpu 的某个 寄存器r；</li>
+<li>将 寄存器r 的值 +1，结果存放在 寄存器s；</li>
+<li>将 寄存器s 中的值写回内存。</li>
+</ol>
+<p>所以，如果有多个线程同时在执行 count++，在某个线程执行完第（3）步之前，其它线程是看不到它的执行结果的。（这里有疑惑：线程同时执行count++，为了保证其原子性，为何不加mutex lock？而是寻求volatile?）</p>
+<p>在没有volatile的时候，执行完count++，执行结果其实是写到CPU缓存中，没有马上写回到内存中，后续在某些情况下（比如CPU缓存不够用）再将CPU缓存中的值flush到内存。因为没有存到内存里，其他线程是不能及时看到执行结果的。</p>
+<p>在有volatile的时候，执行完count++，执行结果写入缓存中，并同时写入内存中，所以可以保证其它线程马上看到执行的结果。</p>
+<p>但是，volatile 并没有保证原子性，在某个线程执行（1）（2）（3）的时候，volatile 并没有锁定 count 的值，也就是并不能阻塞其他线程也执行（1）（2）（3）。可能有两个线程同时执行（1），所以（2）计算出来一样的结果，然后（3）存回的也是同一个值。<br>考虑下面一段代码：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">int some_int = 100;</span><br><span class="line">while(some_int == 100)</span><br><span class="line">&#123;</span><br><span class="line">   //your code</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>因为编译器认为some_int没被改变过，一直是100。但是在多线程时，如果执行完第一行，但是还没执行到第三行时，另一个线程修改了some_int，while就不能进入循环了。加了volatile后，阻止了编译器优化，每次读到some_int会从内存中读取，而不是本线程的寄存去（当然这会损失效率）。这就是volatile的作用。</p>
+<p>一句话总结：volatile保证线程能读到最新的数据，因为是从内存中读取，且存入内存中。而不是线程各自的寄存器中读写。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/C/" rel="tag"># C++</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/08/Linux中断子系统之一-中断系统基本原理/" rel="next" title="Linux中断子系统之一：中断系统基本原理">
+                <i class="fa fa-chevron-left"></i> Linux中断子系统之一：中断系统基本原理
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">125</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="450" src="//music.163.com/outchain/player?type=0&id=101039122&auto=0&height=430">
+          </iframe>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#why-volatile"><span class="nav-number">1.1.</span> <span class="nav-text">why volatile</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IN-C-C"><span class="nav-number">1.2.</span> <span class="nav-text">IN C/C++</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#易变的"><span class="nav-number">2.</span> <span class="nav-text">易变的</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#不可优化的"><span class="nav-number">3.</span> <span class="nav-text">不可优化的</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#顺序执行的"><span class="nav-number">4.</span> <span class="nav-text">顺序执行的</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#volatile与多线程语义"><span class="nav-number">5.</span> <span class="nav-text">volatile与多线程语义</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#不保证原子性"><span class="nav-number">6.</span> <span class="nav-text">不保证原子性</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
