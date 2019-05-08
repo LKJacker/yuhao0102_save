@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-flash.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="声明：本博内容均由http://blog.csdn.net/droidphone原创。 设备、中断控制器和CPU一个完整的设备中，与中断相关的硬件可以划分为3类，它们分别是：设备、中断控制器和CPU本身，下图展示了一个smp系统中的中断硬件的组成结构： 设备：设备是发起中断的源，当设备需要请求某种服务的时候，它会发起一个硬件中断信号，通常，该信号会连接至中断控制器，由中断控制器做进一步的处理。在现">
+<meta name="keywords" content="Linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux中断子系统之一：中断系统基本原理">
+<meta property="og:url" content="http://yoursite.com/2019/05/08/Linux中断子系统之一-中断系统基本原理/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="声明：本博内容均由http://blog.csdn.net/droidphone原创。 设备、中断控制器和CPU一个完整的设备中，与中断相关的硬件可以划分为3类，它们分别是：设备、中断控制器和CPU本身，下图展示了一个smp系统中的中断硬件的组成结构： 设备：设备是发起中断的源，当设备需要请求某种服务的时候，它会发起一个硬件中断信号，通常，该信号会连接至中断控制器，由中断控制器做进一步的处理。在现">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/1334045545_7171.PNG">
+<meta property="og:image" content="http://yoursite.com/img/1334117943_9918.PNG">
+<meta property="og:image" content="http://yoursite.com/img/1334301365_7722.png">
+<meta property="og:updated_time" content="2019-05-08T06:26:04.719Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Linux中断子系统之一：中断系统基本原理">
+<meta name="twitter:description" content="声明：本博内容均由http://blog.csdn.net/droidphone原创。 设备、中断控制器和CPU一个完整的设备中，与中断相关的硬件可以划分为3类，它们分别是：设备、中断控制器和CPU本身，下图展示了一个smp系统中的中断硬件的组成结构： 设备：设备是发起中断的源，当设备需要请求某种服务的时候，它会发起一个硬件中断信号，通常，该信号会连接至中断控制器，由中断控制器做进一步的处理。在现">
+<meta name="twitter:image" content="http://yoursite.com/img/1334045545_7171.PNG">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/05/08/Linux中断子系统之一-中断系统基本原理/">
+
+
+
+
+
+  <title>Linux中断子系统之一：中断系统基本原理 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/08/Linux中断子系统之一-中断系统基本原理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Linux中断子系统之一：中断系统基本原理</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-05-08T14:15:39+08:00">
+                2019-05-08
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>声明：本博内容均由<a href="http://blog.csdn.net/droidphone原创。" target="_blank" rel="noopener">http://blog.csdn.net/droidphone原创。</a></p>
+<h1 id="设备、中断控制器和CPU"><a href="#设备、中断控制器和CPU" class="headerlink" title="设备、中断控制器和CPU"></a>设备、中断控制器和CPU</h1><p>一个完整的设备中，与中断相关的硬件可以划分为3类，它们分别是：设备、中断控制器和CPU本身，下图展示了一个smp系统中的中断硬件的组成结构：<br><img src="/img/1334045545_7171.PNG" alt></p>
+<p>设备：设备是发起中断的源，当设备需要请求某种服务的时候，它会发起一个硬件中断信号，通常，该信号会连接至中断控制器，由中断控制器做进一步的处理。在现代的移动设备中，发起中断的设备可以位于soc（system-on-chip）芯片的外部，也可以位于soc的内部，因为目前大多数soc都集成了大量的硬件IP，例如I2C、SPI、Display Controller等等。</p>
+<p>中断控制器：中断控制器负责收集所有中断源发起的中断，现有的中断控制器几乎都是可编程的，通过对中断控制器的编程，我们可以控制每个中断源的优先级、中断的电器类型，还可以打开和关闭某一个中断源，在smp系统中，甚至可以控制某个中断源发往哪一个CPU进行处理。对于ARM架构的soc，使用较多的中断控制器是VIC（Vector Interrupt Controller），进入多核时代以后，GIC（General Interrupt Controller）的应用也开始逐渐变多。</p>
+<p>CPU：CPU是最终响应中断的部件，它通过对可编程中断控制器的编程操作，控制和管理者系统中的每个中断，当中断控制器最终判定一个中断可以被处理时，他会根据事先的设定，通知其中一个或者是某几个cpu对该中断进行处理，虽然中断控制器可以同时通知数个cpu对某一个中断进行处理，实际上，最后只会有一个cpu相应这个中断请求，但具体是哪个cpu进行响应是可能是随机的，中断控制器在硬件上对这一特性进行了保证，不过这也依赖于操作系统对中断系统的软件实现。在smp系统中，cpu之间也通过IPI（inter processor interrupt）中断进行通信。</p>
+<h1 id="IRQ编号"><a href="#IRQ编号" class="headerlink" title="IRQ编号"></a>IRQ编号</h1><p>系统中每一个注册的中断源，都会分配一个唯一的编号用于识别该中断，我们称之为IRQ编号。IRQ编号贯穿在整个Linux的通用中断子系统中。在移动设备中，每个中断源的IRQ编号都会在arch相关的一些头文件中，例如arch/xxx/mach-xxx/include/irqs.h。驱动程序在请求中断服务时，它会使用IRQ编号注册该中断，中断发生时，cpu通常会从中断控制器中获取相关信息，然后计算出相应的IRQ编号，然后把该IRQ编号传递到相应的驱动程序中。</p>
+<h1 id="在驱动程序中申请中断"><a href="#在驱动程序中申请中断" class="headerlink" title="在驱动程序中申请中断"></a>在驱动程序中申请中断</h1><p>Linux中断子系统向驱动程序提供了一系列的API，其中的一个用于向系统申请中断：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">int request_threaded_irq(unsigned int irq, irq_handler_t handler,</span><br><span class="line">			 irq_handler_t thread_fn, unsigned long irqflags,</span><br><span class="line">			 const char *devname, void *dev_id)</span><br></pre></td></tr></table></figure></p>
+<p>其中，</p>
+<ul>
+<li>irq是要申请的IRQ编号，</li>
+<li>handler是中断处理服务函数，该函数工作在中断上下文中，如果不需要，可以传入NULL，但是不可以和thread_fn同时为NULL；</li>
+<li>thread_fn是中断线程的回调函数，工作在内核进程上下文中，如果不需要，可以传入NULL，但是不可以和handler同时为NULL；</li>
+<li>irqflags是该中断的一些标志，可以指定该中断的电气类型，是否共享等信息；</li>
+<li>devname指定该中断的名称；</li>
+<li>dev_id用于共享中断时的cookie data，通常用于区分共享中断具体由哪个设备发起；</li>
+</ul>
+<p>关于该API的详细工作机理我们后面再讨论。</p>
+<h1 id="通用中断子系统（Generic-irq）的软件抽象"><a href="#通用中断子系统（Generic-irq）的软件抽象" class="headerlink" title="通用中断子系统（Generic irq）的软件抽象"></a>通用中断子系统（Generic irq）的软件抽象</h1><p>在通用中断子系统（generic irq）出现之前，内核使用<strong>do_IRQ处理所有的中断，这意味着</strong>do_IRQ中要处理各种类型的中断，这会导致软件的复杂性增加，层次不分明，而且代码的可重用性也不好。事实上，到了内核版本2.6.38，__do_IRQ这种方式已经彻底在内核的代码中消失了。通用中断子系统的原型最初出现于ARM体系中，一开始内核的开发者们把3种中断类型区分出来，他们是：</p>
+<ul>
+<li>电平触发中断（level type）</li>
+<li>边缘触发中断（edge type）</li>
+<li>简易的中断（simple type）</li>
+</ul>
+<p>后来又针对某些需要回应eoi（end of interrupt）的中断控制器，加入了fast eoi type，针对smp加入了per cpu type。把这些不同的中断类型抽象出来后，成为了中断子系统的流控层。要使所有的体系架构都可以重用这部分的代码，中断控制器也被进一步地封装起来，形成了中断子系统中的硬件封装层。我们可以用下面的图示表示通用中断子系统的层次结构：<br><img src="/img/1334117943_9918.PNG" alt></p>
+<p>硬件封装层  它包含了体系架构相关的所有代码，包括中断控制器的抽象封装，arch相关的中断初始化，以及各个IRQ的相关数据结构的初始化工作，cpu的中断入口也会在arch相关的代码中实现。中断通用逻辑层通过标准的封装接口（实际上就是struct irq_chip定义的接口）访问并控制中断控制器的行为，体系相关的中断入口函数在获取IRQ编号后，通过中断通用逻辑层提供的标准函数，把中断调用传递到中断流控层中。我们看看irq_chip的部分定义：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">struct irq_chip &#123;</span><br><span class="line">	const char	*name;</span><br><span class="line">	unsigned int	(*irq_startup)(struct irq_data *data);</span><br><span class="line">	void		(*irq_shutdown)(struct irq_data *data);</span><br><span class="line">	void		(*irq_enable)(struct irq_data *data);</span><br><span class="line">	void		(*irq_disable)(struct irq_data *data);</span><br><span class="line"> </span><br><span class="line">	void		(*irq_ack)(struct irq_data *data);</span><br><span class="line">	void		(*irq_mask)(struct irq_data *data);</span><br><span class="line">	void		(*irq_mask_ack)(struct irq_data *data);</span><br><span class="line">	void		(*irq_unmask)(struct irq_data *data);</span><br><span class="line">	void		(*irq_eoi)(struct irq_data *data);</span><br><span class="line"> </span><br><span class="line">	int		(*irq_set_affinity)(struct irq_data *data, const struct cpumask *dest, bool force);</span><br><span class="line">	int		(*irq_retrigger)(struct irq_data *data);</span><br><span class="line">	int		(*irq_set_type)(struct irq_data *data, unsigned int flow_type);</span><br><span class="line">	int		(*irq_set_wake)(struct irq_data *data, unsigned int on);</span><br><span class="line">        ......</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>看到上面的结构定义，很明显，它实际上就是对中断控制器的接口抽象，我们只要对每个中断控制器实现以上接口（不必全部），并把它和相应的irq关联起来，上层的实现即可通过这些接口访问中断控制器。而且，同一个中断控制器的代码可以方便地被不同的平台所重用。</p>
+<p>中断流控层：所谓中断流控是指合理并正确地处理连续发生的中断，比如一个中断在处理中，同一个中断再次到达时如何处理，何时应该屏蔽中断，何时打开中断，何时回应中断控制器等一系列的操作。该层实现了与体系和硬件无关的中断流控处理操作，它针对不同的中断电气类型（level，edge……），实现了对应的标准中断流控处理函数，在这些处理函数中，最终会把中断控制权传递到驱动程序注册中断时传入的处理函数或者是中断线程中。目前内核提供了以下几个主要的中断流控函数的实现（只列出部分）：</p>
+<ul>
+<li>handle_simple_irq();  </li>
+<li>handle_level_irq();  电平中断流控处理程序</li>
+<li>handle_edge_irq();  边沿触发中断流控处理程序</li>
+<li>handle_fasteoi_irq();  需要eoi的中断处理器使用的中断流控处理程序</li>
+<li>handle_percpu_irq();  该irq只有单个cpu响应时使用的流控处理程序</li>
+</ul>
+<p>中断通用逻辑层：该层实现了对中断系统几个重要数据的管理，并提供了一系列的辅助管理函数。同时，该层还实现了中断线程的实现和管理，共享中断和嵌套中断的实现和管理，另外它还提供了一些接口函数，它们将作为硬件封装层和中断流控层以及驱动程序API层之间的桥梁，例如以下API：</p>
+<ul>
+<li>generic_handle_irq();</li>
+<li>irq_to_desc();</li>
+<li>irq_set_chip();</li>
+<li>irq_set_chained_handler();</li>
+</ul>
+<p>驱动程序API：该部分向驱动程序提供了一系列的API，用于向系统申请/释放中断，打开/关闭中断，设置中断类型和中断唤醒系统的特性等操作。驱动程序的开发者通常只会使用到这一层提供的这些API即可完成驱动程序的开发工作，其他的细节都由另外几个软件层较好地“隐藏”起来了，驱动程序开发者无需再关注底层的实现，这看起来确实是一件美妙的事情，不过我认为，要想写出好的中断代码，还是花点时间了解一下其他几层的实现吧。其中的一些API如下：</p>
+<ul>
+<li>enable_irq();</li>
+<li>disable_irq();</li>
+<li>disable_irq_nosync();</li>
+<li>request_threaded_irq();</li>
+<li>irq_set_affinity();</li>
+</ul>
+<h1 id="irq描述结构：struct-irq-desc"><a href="#irq描述结构：struct-irq-desc" class="headerlink" title="irq描述结构：struct irq_desc"></a>irq描述结构：struct irq_desc</h1><p>整个通用中断子系统几乎都是围绕着irq_desc结构进行，系统中每一个irq都对应着一个irq_desc结构，所有的irq_desc结构的组织方式有两种：</p>
+<p>基于数组方式：平台相关板级代码事先根据系统中的IRQ数量，定义常量：NR_IRQS，在kernel/irq/irqdesc.c中使用该常量定义irq_desc结构数组：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">struct irq_desc irq_desc[NR_IRQS] __cacheline_aligned_in_smp = &#123;</span><br><span class="line">	[0 ... NR_IRQS-1] = &#123;</span><br><span class="line">		.handle_irq	= handle_bad_irq,</span><br><span class="line">		.depth		= 1,</span><br><span class="line">		.lock		= __RAW_SPIN_LOCK_UNLOCKED(irq_desc-&gt;lock),</span><br><span class="line">	&#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>基于基数树方式：当内核的配置项CONFIG_SPARSE_IRQ被选中时，内核使用基数树（radix tree）来管理irq_desc结构，这一方式可以动态地分配irq_desc结构，对于那些具备大量IRQ数量或者IRQ编号不连续的系统，使用该方式管理irq_desc对内存的节省有好处，而且对那些自带中断控制器管理设备自身多个中断源的外部设备，它们可以在驱动程序中动态地申请这些中断源所对应的irq_desc结构，而不必在系统的编译阶段保留irq_desc结构所需的内存。<br>下面我们看一看irq_desc的部分定义：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">struct irq_data &#123;</span><br><span class="line">	unsigned int		irq;</span><br><span class="line">	unsigned long		hwirq;</span><br><span class="line">	unsigned int		node;</span><br><span class="line">	unsigned int		state_use_accessors;</span><br><span class="line">	struct irq_chip		*chip;</span><br><span class="line">	struct irq_domain	*domain;</span><br><span class="line">	void			*handler_data;</span><br><span class="line">	void			*chip_data;</span><br><span class="line">	struct msi_desc		*msi_desc;</span><br><span class="line">#ifdef CONFIG_SMP</span><br><span class="line">	cpumask_var_t		affinity;</span><br><span class="line">#endif</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">struct irq_desc &#123;</span><br><span class="line">	struct irq_data		irq_data;</span><br><span class="line">	unsigned int __percpu	*kstat_irqs;</span><br><span class="line">	irq_flow_handler_t	handle_irq;</span><br><span class="line">#ifdef CONFIG_IRQ_PREFLOW_FASTEOI</span><br><span class="line">	irq_preflow_handler_t	preflow_handler;</span><br><span class="line">#endif</span><br><span class="line">	struct irqaction	*action;	/* IRQ action list */</span><br><span class="line">	unsigned int		status_use_accessors;</span><br><span class="line">	unsigned int		depth;		/* nested irq disables */</span><br><span class="line">	unsigned int		wake_depth;	/* nested wake enables */</span><br><span class="line">	unsigned int		irq_count;	/* For detecting broken IRQs */</span><br><span class="line"> </span><br><span class="line">	raw_spinlock_t		lock;</span><br><span class="line">	struct cpumask		*percpu_enabled;</span><br><span class="line">#ifdef CONFIG_SMP</span><br><span class="line">	const struct cpumask	*affinity_hint;</span><br><span class="line">	struct irq_affinity_notify *affinity_notify;</span><br><span class="line">#ifdef CONFIG_GENERIC_PENDING_IRQ</span><br><span class="line">	cpumask_var_t		pending_mask;</span><br><span class="line">#endif</span><br><span class="line">#endif</span><br><span class="line">	wait_queue_head_t       wait_for_threads;</span><br><span class="line"> </span><br><span class="line">	const char		*name;</span><br><span class="line">&#125; ____cacheline_internodealigned_in_smp;</span><br></pre></td></tr></table></figure>
+<p>对于irq_desc中的主要字段做一个解释：     </p>
+<ul>
+<li>irq_data  这个内嵌结构在2.6.37版本引入，之前的内核版本的做法是直接把这个结构中的字段直接放置在irq_desc结构体中，然后在调用硬件封装层的chip-&gt;xxx()回调中传入IRQ编号作为参数，但是底层的函数经常需要访问-&gt;handler_data，-&gt;chip_data，-&gt;msi_desc等字段，这需要利用irq_to_desc(irq)来获得irq_desc结构的指针，然后才能访问上述字段，者带来了性能的降低，尤其在配置为sparse irq的系统中更是如此，因为这意味着基数树的搜索操作。为了解决这一问题，内核开发者把几个低层函数需要使用的字段单独封装为一个结构，调用时的参数则改为传入该结构的指针。实现同样的目的，那为什么不直接传入irq_desc结构指针？因为这会破坏层次的封装性，我们不希望低层代码可以看到不应该看到的部分，仅此而已。</li>
+<li>kstat_irqs  用于irq的一些统计信息，这些统计信息可以从proc文件系统中查询。</li>
+<li>action  中断响应链表，当一个irq被触发时，内核会遍历该链表，调用action结构中的回调handler或者激活其中的中断线程，之所以实现为一个链表，是为了实现中断的共享，多个设备共享同一个irq，这在外围设备中是普遍存在的。</li>
+<li>status_use_accessors  记录该irq的状态信息，内核提供了一系列irq_settings_xxx的辅助函数访问该字段，详细请查看kernel/irq/settings.h</li>
+<li>depth  用于管理enable_irq()/disable_irq()这两个API的嵌套深度管理，每次enable_irq时该值减去1，每次disable_irq时该值加1，只有depth==0时才真正向硬件封装层发出关闭irq的调用，只有depth==1时才会向硬件封装层发出打开irq的调用。disable的嵌套次数可以比enable的次数多，此时depth的值大于1，随着enable的不断调用，当depth的值为1时，在向硬件封装层发出打开irq的调用后，depth减去1后，此时depth为0，此时处于一个平衡状态，我们只能调用disable_irq，如果此时enable_irq被调用，内核会报告一个irq失衡的警告，提醒驱动程序的开发人员检查自己的代码。</li>
+<li>lock  用于保护irq_desc结构本身的自旋锁。</li>
+<li>affinity_hit  用于提示用户空间，作为优化irq和cpu之间的亲缘关系的依据。</li>
+<li>pending_mask  用于调整irq在各个cpu之间的平衡。</li>
+<li>wait_for_threads  用于synchronize_irq()，等待该irq所有线程完成。</li>
+</ul>
+<p>irq_data结构中的各字段：</p>
+<ul>
+<li>irq  该结构所对应的IRQ编号。</li>
+<li>hwirq  硬件irq编号，它不同于上面的irq；</li>
+<li>node  通常用于hwirq和irq之间的映射操作；</li>
+<li>state_use_accessors  硬件封装层需要使用的状态信息，不要直接访问该字段，内核定义了一组函数用于访问该字段：irqd_xxxx()，参见include/linux/irq.h。</li>
+<li>chip  指向该irq所属的中断控制器的irq_chip结构指针</li>
+<li>handler_data  每个irq的私有数据指针，该字段由硬件封转层使用，例如用作底层硬件的多路复用中断。</li>
+<li>chip_data  中断控制器的私有数据，该字段由硬件封转层使用。</li>
+<li>msi_desc  用于PCIe总线的MSI或MSI-X中断机制。</li>
+<li>affinity  记录该irq与cpu之间的亲缘关系，它其实是一个bit-mask，每一个bit代表一个cpu，置位后代表该cpu可能处理该irq。</li>
+</ul>
+<p>这是通用中断子系统系列文章的第一篇，这里不会详细介绍各个软件层次的实现原理，但是有必要对整个架构做简要的介绍：</p>
+<ul>
+<li>系统启动阶段，取决于内核的配置，内核会通过数组或基数树分配好足够多的irq_desc结构；</li>
+<li>根据不同的体系结构，初始化中断相关的硬件，尤其是中断控制器；</li>
+<li>为每个必要irq的irq_desc结构填充默认的字段，例如irq编号，irq_chip指针，根据不同的中断类型配置流控handler；</li>
+<li>设备驱动程序在初始化阶段，利用request_threaded_irq() api申请中断服务，两个重要的参数是handler和thread_fn；</li>
+<li>当设备触发一个中断后，cpu会进入事先设定好的中断入口，它属于底层体系相关的代码，它通过中断控制器获得irq编号，在对irq_data结构中的某些字段进行处理后，会将控制权传递到中断流控层（通过irq_desc-&gt;handle_irq）；</li>
+<li>中断流控处理代码在作出必要的流控处理后，通过irq_desc-&gt;action链表，取出驱动程序申请中断时注册的handler和thread_fn，根据它们的赋值情况，或者只是调用handler回调，或者启动一个线程执行thread_fn，又或者两者都执行；</li>
+<li>至此，中断最终由驱动程序进行了响应和处理。</li>
+</ul>
+<h1 id="中断子系统的proc文件接口"><a href="#中断子系统的proc文件接口" class="headerlink" title="中断子系统的proc文件接口"></a>中断子系统的proc文件接口</h1><p>在/proc目录下面，有两个与中断子系统相关的文件和子目录，它们是：</p>
+<ul>
+<li>/proc/interrupts：文件</li>
+<li>/proc/irq：子目录</li>
+</ul>
+<p>读取interrupts会依次显示irq编号，每个cpu对该irq的处理次数，中断控制器的名字，irq的名字，以及驱动程序注册该irq时使用的名字，以下是一个例子：<br><img src="/img/1334301365_7722.png" alt></p>
+<p>/proc/irq目录下面会为每个注册的irq创建一个以irq编号为名字的子目录，每个子目录下分别有以下条目：</p>
+<ul>
+<li>smp_affinity            irq和cpu之间的亲缘绑定关系；</li>
+<li>smp_affinity_hint   只读条目，用于用户空间做irq平衡只用；</li>
+<li>spurious                  可以获得该irq被处理和未被处理的次数的统计信息；</li>
+<li>handler_name       驱动程序注册该irq时传入的处理程序的名字；</li>
+</ul>
+<p>根据irq的不同，以上条目不一定会全部都出现，以下是某个设备的例子：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"># cd /proc/irq</span><br><span class="line"># ls</span><br><span class="line">ls</span><br><span class="line">332</span><br><span class="line">248</span><br><span class="line">......</span><br><span class="line">......</span><br><span class="line">12</span><br><span class="line">11</span><br><span class="line">default_smp_affinity</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"># ls 332</span><br><span class="line">bcmsdh_sdmmc</span><br><span class="line">spurious</span><br><span class="line">node</span><br><span class="line">affinity_hint</span><br><span class="line">smp_affinity</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"># cat 332/smp_affinity</span><br><span class="line">3</span><br></pre></td></tr></table></figure></p>
+<p>可见，以上设备是一个使用双核cpu的设备，因为smp_affinity的值是3，系统默认每个中断可以由两个cpu进行处理。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/08/进程间通信的方式-信号-管道-消息队列-共享内存/" rel="next" title="进程间通信的方式——信号、管道、消息队列、共享内存">
+                <i class="fa fa-chevron-left"></i> 进程间通信的方式——信号、管道、消息队列、共享内存
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">124</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="450" src="//music.163.com/outchain/player?type=0&id=101039122&auto=0&height=430">
+          </iframe>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#设备、中断控制器和CPU"><span class="nav-number">1.</span> <span class="nav-text">设备、中断控制器和CPU</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#IRQ编号"><span class="nav-number">2.</span> <span class="nav-text">IRQ编号</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#在驱动程序中申请中断"><span class="nav-number">3.</span> <span class="nav-text">在驱动程序中申请中断</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#通用中断子系统（Generic-irq）的软件抽象"><span class="nav-number">4.</span> <span class="nav-text">通用中断子系统（Generic irq）的软件抽象</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#irq描述结构：struct-irq-desc"><span class="nav-number">5.</span> <span class="nav-text">irq描述结构：struct irq_desc</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#中断子系统的proc文件接口"><span class="nav-number">6.</span> <span class="nav-text">中断子系统的proc文件接口</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
