@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-mac-osx.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="数据结构,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="概要本章介绍斜堆。和以往一样，本文会先对斜堆的理论知识进行简单介绍，然后给出C语言的实现。后续再分别给出C++和Java版本的实现；实现的语言虽不同，但是原理如出一辙，选择其中之一进行了解即可。若文章有错误或不足的地方，请不吝指出！ 目录  斜堆的介绍 斜堆的基本操作 斜堆的C实现(完整源码) 斜堆的C测试程序  转载请注明出处：http://www.cnblogs.com/skywang1234">
+<meta name="keywords" content="数据结构">
+<meta property="og:type" content="article">
+<meta property="og:title" content="斜堆之图文解析和C语言的实现">
+<meta property="og:url" content="http://yoursite.com/2019/05/12/斜堆之图文解析和C语言的实现/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="概要本章介绍斜堆。和以往一样，本文会先对斜堆的理论知识进行简单介绍，然后给出C语言的实现。后续再分别给出C++和Java版本的实现；实现的语言虽不同，但是原理如出一辙，选择其中之一进行了解即可。若文章有错误或不足的地方，请不吝指出！ 目录  斜堆的介绍 斜堆的基本操作 斜堆的C实现(完整源码) 斜堆的C测试程序  转载请注明出处：http://www.cnblogs.com/skywang1234">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2019-05-12T13:48:13.273Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="斜堆之图文解析和C语言的实现">
+<meta name="twitter:description" content="概要本章介绍斜堆。和以往一样，本文会先对斜堆的理论知识进行简单介绍，然后给出C语言的实现。后续再分别给出C++和Java版本的实现；实现的语言虽不同，但是原理如出一辙，选择其中之一进行了解即可。若文章有错误或不足的地方，请不吝指出！ 目录  斜堆的介绍 斜堆的基本操作 斜堆的C实现(完整源码) 斜堆的C测试程序  转载请注明出处：http://www.cnblogs.com/skywang1234">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/05/12/斜堆之图文解析和C语言的实现/">
+
+
+
+
+
+  <title>斜堆之图文解析和C语言的实现 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/12/斜堆之图文解析和C语言的实现/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">斜堆之图文解析和C语言的实现</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-05-12T21:49:39+08:00">
+                2019-05-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="概要"><a href="#概要" class="headerlink" title="概要"></a>概要</h1><p>本章介绍斜堆。和以往一样，本文会先对斜堆的理论知识进行简单介绍，然后给出C语言的实现。后续再分别给出C++和Java版本的实现；实现的语言虽不同，但是原理如出一辙，选择其中之一进行了解即可。若文章有错误或不足的地方，请不吝指出！</p>
+<p>目录</p>
+<ol>
+<li>斜堆的介绍</li>
+<li>斜堆的基本操作</li>
+<li>斜堆的C实现(完整源码)</li>
+<li>斜堆的C测试程序</li>
+</ol>
+<p>转载请注明出处：<a href="http://www.cnblogs.com/skywang12345/p/3638493.html" target="_blank" rel="noopener">http://www.cnblogs.com/skywang12345/p/3638493.html</a></p>
+<h1 id="斜堆的介绍"><a href="#斜堆的介绍" class="headerlink" title="斜堆的介绍"></a>斜堆的介绍</h1><p>斜堆(Skew heap)也叫自适应堆(self-adjusting heap)，它是左倾堆的一个变种。和左倾堆一样，它通常也用于实现优先队列。它的合并操作的时间复杂度也是O(lg n)。</p>
+<p>相比于左倾堆，斜堆的节点没有”零距离”这个属性。除此之外，它们斜堆的合并操作也不同。斜堆的合并操作算法如下：<br>(01) 如果一个空斜堆与一个非空斜堆合并，返回非空斜堆。<br>(02) 如果两个斜堆都非空，那么比较两个根节点，取较小堆的根节点为新的根节点。将”较小堆的根节点的右孩子”和”较大堆”进行合并。<br>(03) 合并后，交换新堆根节点的左孩子和右孩子。</p>
+<p>第(03)步是斜堆和左倾堆的合并操作差别的关键所在，如果是左倾堆，则合并后要比较左右孩子的零距离大小，若右孩子的零距离 &gt; 左孩子的零距离，则交换左右孩子；最后，在设置根的零距离。</p>
+<h1 id="斜堆的基本操作"><a href="#斜堆的基本操作" class="headerlink" title="斜堆的基本操作"></a>斜堆的基本操作</h1><h2 id="头文件"><a href="#头文件" class="headerlink" title="头文件"></a>头文件</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">#ifndef _SKEW_HEAP_H_</span><br><span class="line">#define _SKEW_HEAP_H_</span><br><span class="line"></span><br><span class="line">typedef int Type;</span><br><span class="line"></span><br><span class="line">typedef struct _SkewNode&#123;</span><br><span class="line">    Type   key;                // 关键字(键值)</span><br><span class="line">    struct _SkewNode *left;    // 左孩子</span><br><span class="line">    struct _SkewNode *right;   // 右孩子</span><br><span class="line">&#125;SkewNode, *SkewHeap;</span><br><span class="line"></span><br><span class="line">// 前序遍历&quot;斜堆&quot;</span><br><span class="line">void preorder_skewheap(SkewHeap heap);</span><br><span class="line">// 中序遍历&quot;斜堆&quot;</span><br><span class="line">void inorder_skewheap(SkewHeap heap);</span><br><span class="line">// 后序遍历&quot;斜堆&quot;</span><br><span class="line">void postorder_skewheap(SkewHeap heap);</span><br><span class="line"></span><br><span class="line">// 获取最小值(保存到pval中)，成功返回0，失败返回-1。</span><br><span class="line">int skewheap_minimum(SkewHeap heap, int *pval);</span><br><span class="line">// 合并&quot;斜堆x&quot;和&quot;斜堆y&quot;，并返回合并后的新树</span><br><span class="line">SkewNode* merge_skewheap(SkewHeap x, SkewHeap y);</span><br><span class="line">// 将结点插入到斜堆中，并返回根节点</span><br><span class="line">SkewNode* insert_skewheap(SkewHeap heap, Type key);</span><br><span class="line">// 删除结点(key为节点的值)，并返回根节点</span><br><span class="line">SkewNode* delete_skewheap(SkewHeap heap);</span><br><span class="line"></span><br><span class="line">// 销毁斜堆</span><br><span class="line">void destroy_skewheap(SkewHeap heap);</span><br><span class="line"></span><br><span class="line">// 打印斜堆</span><br><span class="line">void print_skewheap(SkewHeap heap);</span><br><span class="line"></span><br><span class="line">#endif</span><br></pre></td></tr></table></figure>
+<p>SkewNode是斜堆对应的节点类。</p>
+<h2 id="合并"><a href="#合并" class="headerlink" title="合并"></a>合并</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">/* </span><br><span class="line"> * 合并&quot;斜堆x&quot;和&quot;斜堆y&quot;</span><br><span class="line"> *</span><br><span class="line"> * 返回值：</span><br><span class="line"> *     合并得到的树的根节点</span><br><span class="line"> */</span><br><span class="line">SkewNode* merge_skewheap(SkewHeap x, SkewHeap y)</span><br><span class="line">&#123;</span><br><span class="line">    if(x == NULL)</span><br><span class="line">        return y;</span><br><span class="line">    if(y == NULL)</span><br><span class="line">        return x;</span><br><span class="line"></span><br><span class="line">    // 合并x和y时，将x作为合并后的树的根；</span><br><span class="line">    // 这里的操作是保证: x的key &lt; y的key</span><br><span class="line">    if(x-&gt;key &gt; y-&gt;key)</span><br><span class="line">        swap_skewheap_node(x, y);</span><br><span class="line"></span><br><span class="line">    // 将x的右孩子和y合并，</span><br><span class="line">    // 合并后直接交换x的左右孩子，而不需要像左倾堆一样考虑它们的npl。</span><br><span class="line">    SkewNode *tmp = merge_skewheap(x-&gt;right, y);</span><br><span class="line">    x-&gt;right = x-&gt;left;</span><br><span class="line">    x-&gt;left  = tmp;</span><br><span class="line"></span><br><span class="line">    return x;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>merge_skewheap(x, y)的作用是合并x和y这两个斜堆，并返回得到的新堆。merge_skewheap(x, y)是递归实现的。</p>
+<h2 id="添加"><a href="#添加" class="headerlink" title="添加"></a>添加</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">/* </span><br><span class="line"> * 新建结点(key)，并将其插入到斜堆中</span><br><span class="line"> *</span><br><span class="line"> * 参数说明：</span><br><span class="line"> *     heap 斜堆的根结点</span><br><span class="line"> *     key 插入结点的键值</span><br><span class="line"> * 返回值：</span><br><span class="line"> *     根节点</span><br><span class="line"> */</span><br><span class="line">SkewNode* insert_skewheap(SkewHeap heap, Type key)</span><br><span class="line">&#123;</span><br><span class="line">    SkewNode *node;    // 新建结点</span><br><span class="line"></span><br><span class="line">    // 如果新建结点失败，则返回。</span><br><span class="line">    if ((node = (SkewNode *)malloc(sizeof(SkewNode))) == NULL)</span><br><span class="line">        return heap;</span><br><span class="line">    node-&gt;key = key;</span><br><span class="line">    node-&gt;left = node-&gt;right = NULL;</span><br><span class="line"></span><br><span class="line">    return merge_skewheap(heap, node);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>insert_skewheap(heap, key)的作用是新建键值为key的结点，并将其插入到斜堆中，并返回堆的根节点。</p>
+<h2 id="删除"><a href="#删除" class="headerlink" title="删除"></a>删除</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">/* </span><br><span class="line"> * 取出根节点</span><br><span class="line"> *</span><br><span class="line"> * 返回值：</span><br><span class="line"> *     取出根节点后的新树的根节点</span><br><span class="line"> */</span><br><span class="line">SkewNode* delete_skewheap(SkewHeap heap)</span><br><span class="line">&#123;</span><br><span class="line">    SkewNode *l = heap-&gt;left;</span><br><span class="line">    SkewNode *r = heap-&gt;right;</span><br><span class="line"></span><br><span class="line">    // 删除根节点</span><br><span class="line">    free(heap);</span><br><span class="line"></span><br><span class="line">    return merge_skewheap(l, r); // 返回左右子树合并后的新树</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>delete_skewheap(heap)的作用是删除斜堆的最小节点，并返回删除节点后的斜堆根节点。</p>
+<h1 id="斜堆的C实现-完整源码"><a href="#斜堆的C实现-完整源码" class="headerlink" title="斜堆的C实现(完整源码)"></a>斜堆的C实现(完整源码)</h1><p>斜堆的头文件(skewheap.h)<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">#ifndef _SKEW_HEAP_H_</span><br><span class="line">#define _SKEW_HEAP_H_</span><br><span class="line"></span><br><span class="line">typedef int Type;</span><br><span class="line"></span><br><span class="line">typedef struct _SkewNode&#123;</span><br><span class="line">    Type   key;                    // 关键字(键值)</span><br><span class="line">    struct _SkewNode *left;    // 左孩子</span><br><span class="line">    struct _SkewNode *right;    // 右孩子</span><br><span class="line">&#125;SkewNode, *SkewHeap;</span><br><span class="line"></span><br><span class="line">// 前序遍历&quot;斜堆&quot;</span><br><span class="line">void preorder_skewheap(SkewHeap heap);</span><br><span class="line">// 中序遍历&quot;斜堆&quot;</span><br><span class="line">void inorder_skewheap(SkewHeap heap);</span><br><span class="line">// 后序遍历&quot;斜堆&quot;</span><br><span class="line">void postorder_skewheap(SkewHeap heap);</span><br><span class="line"></span><br><span class="line">// 获取最小值(保存到pval中)，成功返回0，失败返回-1。</span><br><span class="line">int skewheap_minimum(SkewHeap heap, int *pval);</span><br><span class="line">// 合并&quot;斜堆x&quot;和&quot;斜堆y&quot;，并返回合并后的新树</span><br><span class="line">SkewNode* merge_skewheap(SkewHeap x, SkewHeap y);</span><br><span class="line">// 将结点插入到斜堆中，并返回根节点</span><br><span class="line">SkewNode* insert_skewheap(SkewHeap heap, Type key);</span><br><span class="line">// 删除结点(key为节点的值)，并返回根节点</span><br><span class="line">SkewNode* delete_skewheap(SkewHeap heap);</span><br><span class="line"></span><br><span class="line">// 销毁斜堆</span><br><span class="line">void destroy_skewheap(SkewHeap heap);</span><br><span class="line"></span><br><span class="line">// 打印斜堆</span><br><span class="line">void print_skewheap(SkewHeap heap);</span><br><span class="line"></span><br><span class="line">#endif</span><br></pre></td></tr></table></figure></p>
+<p>斜堆的实现文件(skewheap.c)<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line"> * C语言实现的斜堆</span><br><span class="line"> *</span><br><span class="line"> * @author skywang</span><br><span class="line"> * @date 2014/03/31</span><br><span class="line"> */</span><br><span class="line"></span><br><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#include &lt;stdlib.h&gt;</span><br><span class="line">#include &quot;skewheap.h&quot;</span><br><span class="line"></span><br><span class="line">/*</span><br><span class="line"> * 前序遍历&quot;斜堆&quot;</span><br><span class="line"> */</span><br><span class="line">void preorder_skewheap(SkewHeap heap)</span><br><span class="line">&#123;</span><br><span class="line">    if(heap != NULL)</span><br><span class="line">    &#123;</span><br><span class="line">        printf(&quot;%d &quot;, heap-&gt;key);</span><br><span class="line">        preorder_skewheap(heap-&gt;left);</span><br><span class="line">        preorder_skewheap(heap-&gt;right);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">/*</span><br><span class="line"> * 中序遍历&quot;斜堆&quot;</span><br><span class="line"> */</span><br><span class="line">void inorder_skewheap(SkewHeap heap)</span><br><span class="line">&#123;</span><br><span class="line">    if(heap != NULL)</span><br><span class="line">    &#123;</span><br><span class="line">        inorder_skewheap(heap-&gt;left);</span><br><span class="line">        printf(&quot;%d &quot;, heap-&gt;key);</span><br><span class="line">        inorder_skewheap(heap-&gt;right);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">/*</span><br><span class="line"> * 后序遍历&quot;斜堆&quot;</span><br><span class="line"> */</span><br><span class="line">void postorder_skewheap(SkewHeap heap)</span><br><span class="line">&#123;</span><br><span class="line">    if(heap != NULL)</span><br><span class="line">    &#123;</span><br><span class="line">        postorder_skewheap(heap-&gt;left);</span><br><span class="line">        postorder_skewheap(heap-&gt;right);</span><br><span class="line">        printf(&quot;%d &quot;, heap-&gt;key);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">/*</span><br><span class="line"> * 交换两个节点的内容</span><br><span class="line"> */</span><br><span class="line">static void swap_skewheap_node(SkewNode *x, SkewNode *y)</span><br><span class="line">&#123;</span><br><span class="line">    SkewNode tmp = *x;</span><br><span class="line">    *x = *y;</span><br><span class="line">    *y = tmp;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">/* </span><br><span class="line"> * 获取最小值</span><br><span class="line"> *</span><br><span class="line"> * 返回值：</span><br><span class="line"> *    成功返回0，失败返回-1</span><br><span class="line"> */</span><br><span class="line">int skewheap_minimum(SkewHeap heap, int *pval)</span><br><span class="line">&#123;</span><br><span class="line">    if (heap == NULL)</span><br><span class="line">        return -1;</span><br><span class="line"></span><br><span class="line">    *pval = heap-&gt;key;</span><br><span class="line"></span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">/* </span><br><span class="line"> * 合并&quot;斜堆x&quot;和&quot;斜堆y&quot;</span><br><span class="line"> *</span><br><span class="line"> * 返回值：</span><br><span class="line"> *     合并得到的树的根节点</span><br><span class="line"> */</span><br><span class="line">SkewNode* merge_skewheap(SkewHeap x, SkewHeap y)</span><br><span class="line">&#123;</span><br><span class="line">    if(x == NULL)</span><br><span class="line">        return y;</span><br><span class="line">    if(y == NULL)</span><br><span class="line">        return x;</span><br><span class="line"></span><br><span class="line">    // 合并x和y时，将x作为合并后的树的根；</span><br><span class="line">    // 这里的操作是保证: x的key &lt; y的key</span><br><span class="line">    if(x-&gt;key &gt; y-&gt;key)</span><br><span class="line">        swap_skewheap_node(x, y);</span><br><span class="line"></span><br><span class="line">    // 将x的右孩子和y合并，</span><br><span class="line">    // 合并后直接交换x的左右孩子，而不需要像左倾堆一样考虑它们的npl。</span><br><span class="line">    SkewNode *tmp = merge_skewheap(x-&gt;right, y);</span><br><span class="line">    x-&gt;right = x-&gt;left;</span><br><span class="line">    x-&gt;left  = tmp;</span><br><span class="line"></span><br><span class="line">    return x;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">/* </span><br><span class="line"> * 新建结点(key)，并将其插入到斜堆中</span><br><span class="line"> *</span><br><span class="line"> * 参数说明：</span><br><span class="line"> *     heap 斜堆的根结点</span><br><span class="line"> *     key 插入结点的键值</span><br><span class="line"> * 返回值：</span><br><span class="line"> *     根节点</span><br><span class="line"> */</span><br><span class="line">SkewNode* insert_skewheap(SkewHeap heap, Type key)</span><br><span class="line">&#123;</span><br><span class="line">    SkewNode *node;    // 新建结点</span><br><span class="line"></span><br><span class="line">    // 如果新建结点失败，则返回。</span><br><span class="line">    if ((node = (SkewNode *)malloc(sizeof(SkewNode))) == NULL)</span><br><span class="line">        return heap;</span><br><span class="line">    node-&gt;key = key;</span><br><span class="line">    node-&gt;left = node-&gt;right = NULL;</span><br><span class="line"></span><br><span class="line">    return merge_skewheap(heap, node);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">/* </span><br><span class="line"> * 取出根节点</span><br><span class="line"> *</span><br><span class="line"> * 返回值：</span><br><span class="line"> *     取出根节点后的新树的根节点</span><br><span class="line"> */</span><br><span class="line">SkewNode* delete_skewheap(SkewHeap heap)</span><br><span class="line">&#123;</span><br><span class="line">    SkewNode *l = heap-&gt;left;</span><br><span class="line">    SkewNode *r = heap-&gt;right;</span><br><span class="line"></span><br><span class="line">    // 删除根节点</span><br><span class="line">    free(heap);</span><br><span class="line"></span><br><span class="line">    return merge_skewheap(l, r); // 返回左右子树合并后的新树</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">/*</span><br><span class="line"> * 销毁斜堆</span><br><span class="line"> */</span><br><span class="line">void destroy_skewheap(SkewHeap heap)</span><br><span class="line">&#123;</span><br><span class="line">    if (heap==NULL)</span><br><span class="line">        return ;</span><br><span class="line"></span><br><span class="line">    if (heap-&gt;left != NULL)</span><br><span class="line">        destroy_skewheap(heap-&gt;left);</span><br><span class="line">    if (heap-&gt;right != NULL)</span><br><span class="line">        destroy_skewheap(heap-&gt;right);</span><br><span class="line"></span><br><span class="line">    free(heap);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">/*</span><br><span class="line"> * 打印&quot;斜堆&quot;</span><br><span class="line"> *</span><br><span class="line"> * heap       -- 斜堆的节点</span><br><span class="line"> * key        -- 节点的键值 </span><br><span class="line"> * direction  --  0，表示该节点是根节点;</span><br><span class="line"> *               -1，表示该节点是它的父结点的左孩子;</span><br><span class="line"> *                1，表示该节点是它的父结点的右孩子。</span><br><span class="line"> */</span><br><span class="line">static void skewheap_print(SkewHeap heap, Type key, int direction)</span><br><span class="line">&#123;</span><br><span class="line">    if(heap != NULL)</span><br><span class="line">    &#123;</span><br><span class="line">        if(direction==0)    // heap是根节点</span><br><span class="line">            printf(&quot;%2d is root\n&quot;, heap-&gt;key);</span><br><span class="line">        else                // heap是分支节点</span><br><span class="line">            printf(&quot;%2d is %2d&apos;s %6s child\n&quot;, heap-&gt;key, key, direction==1?&quot;right&quot; : &quot;left&quot;);</span><br><span class="line"></span><br><span class="line">        skewheap_print(heap-&gt;left, heap-&gt;key, -1);</span><br><span class="line">        skewheap_print(heap-&gt;right,heap-&gt;key,  1);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void print_skewheap(SkewHeap heap)</span><br><span class="line">&#123;</span><br><span class="line">    if (heap != NULL)</span><br><span class="line">        skewheap_print(heap, heap-&gt;key,  0);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>斜堆的测试程序(skewheap_test.c)<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line"> * C语言实现的斜堆</span><br><span class="line"> *</span><br><span class="line"> * @author skywang</span><br><span class="line"> * @date 2014/03/31</span><br><span class="line"> */</span><br><span class="line"></span><br><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#include &quot;skewheap.h&quot;</span><br><span class="line"></span><br><span class="line">#define LENGTH(a) ( (sizeof(a)) / (sizeof(a[0])) )</span><br><span class="line"></span><br><span class="line">void main()</span><br><span class="line">&#123;</span><br><span class="line">    int i;</span><br><span class="line">    int a[]= &#123;10,40,24,30,36,20,12,16&#125;;</span><br><span class="line">    int b[]= &#123;17,13,11,15,19,21,23&#125;;</span><br><span class="line">    int alen=LENGTH(a);</span><br><span class="line">    int blen=LENGTH(b);</span><br><span class="line">    SkewHeap ha,hb;</span><br><span class="line"></span><br><span class="line">    ha=hb=NULL;</span><br><span class="line"></span><br><span class="line">    printf(&quot;== 斜堆(ha)中依次添加: &quot;);</span><br><span class="line">    for(i=0; i&lt;alen; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        printf(&quot;%d &quot;, a[i]);</span><br><span class="line">        ha = insert_skewheap(ha, a[i]);</span><br><span class="line">    &#125;</span><br><span class="line">    printf(&quot;\n== 斜堆(ha)的详细信息: \n&quot;);</span><br><span class="line">    print_skewheap(ha);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    printf(&quot;\n== 斜堆(hb)中依次添加: &quot;);</span><br><span class="line">    for(i=0; i&lt;blen; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        printf(&quot;%d &quot;, b[i]);</span><br><span class="line">        hb = insert_skewheap(hb, b[i]);</span><br><span class="line">    &#125;</span><br><span class="line">    printf(&quot;\n== 斜堆(hb)的详细信息: \n&quot;);</span><br><span class="line">    print_skewheap(hb);</span><br><span class="line"></span><br><span class="line">    // 将&quot;斜堆hb&quot;合并到&quot;斜堆ha&quot;中。</span><br><span class="line">    ha = merge_skewheap(ha, hb);</span><br><span class="line">    printf(&quot;\n== 合并ha和hb后的详细信息: \n&quot;);</span><br><span class="line">    print_skewheap(ha);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    // 销毁斜堆</span><br><span class="line">    destroy_skewheap(ha);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/数据结构/" rel="tag"># 数据结构</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/12/左倾堆之图文解析和C语言的实现/" rel="next" title="左倾堆之图文解析和C语言的实现">
+                <i class="fa fa-chevron-left"></i> 左倾堆之图文解析和C语言的实现
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">130</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+	
+	<audio controls="controls" loop="loop" preload="auto" src="/resource/test.mp3">
+	</audio>
+          
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#概要"><span class="nav-number">1.</span> <span class="nav-text">概要</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#斜堆的介绍"><span class="nav-number">2.</span> <span class="nav-text">斜堆的介绍</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#斜堆的基本操作"><span class="nav-number">3.</span> <span class="nav-text">斜堆的基本操作</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#头文件"><span class="nav-number">3.1.</span> <span class="nav-text">头文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#合并"><span class="nav-number">3.2.</span> <span class="nav-text">合并</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#添加"><span class="nav-number">3.3.</span> <span class="nav-text">添加</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#删除"><span class="nav-number">3.4.</span> <span class="nav-text">删除</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#斜堆的C实现-完整源码"><span class="nav-number">4.</span> <span class="nav-text">斜堆的C实现(完整源码)</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
