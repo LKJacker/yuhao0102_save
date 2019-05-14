@@ -354,7 +354,28 @@
 <p>内核中的每个物理页用<code>struct  page</code>结构表示，结构定义于文件<code>&lt;include/linux/mm_types.h&gt;</code>：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">struct page &#123;</span><br><span class="line">    unsigned long flags;        /*页的状态*/</span><br><span class="line">    atomic_t _count;        /* 页引用计数 */</span><br><span class="line">    union &#123;</span><br><span class="line">        atomic_t _mapcount; /* 已经映射到mms的pte的个数*/</span><br><span class="line">        struct &#123;        /* */</span><br><span class="line">            u16 inuse;</span><br><span class="line">            u16 objects;</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;;</span><br><span class="line">    union &#123;</span><br><span class="line">        struct &#123;</span><br><span class="line">        unsigned long private;     </span><br><span class="line">        struct address_space *mapping;</span><br><span class="line">        &#125;;</span><br><span class="line">#if USE_SPLIT_PTLOCKS</span><br><span class="line">        spinlock_t ptl;</span><br><span class="line">#endif</span><br><span class="line">        struct kmem_cache *slab;    /* 指向slab层 */</span><br><span class="line">        struct page *first_page;    /* Compound tail pages */</span><br><span class="line">    &#125;;</span><br><span class="line">    union &#123;</span><br><span class="line">        pgoff_t index;      /* Our offset within mapping. */</span><br><span class="line">        void *freelist;     /* SLUB: freelist req. slab lock */</span><br><span class="line">    &#125;;</span><br><span class="line">    struct list_head lru;       /* 将页关联起来的链表项 */</span><br><span class="line"> </span><br><span class="line">#if defined(WANT_PAGE_VIRTUAL)</span><br><span class="line">    void *virtual;          /* Kernel virtual address (NULL if</span><br><span class="line">                       not kmapped, ie. highmem) */</span><br><span class="line">#endif /* WANT_PAGE_VIRTUAL */</span><br><span class="line">#ifdef CONFIG_WANT_PAGE_DEBUG_FLAGS</span><br><span class="line">    unsigned long debug_flags;  /* Use atomic bitops on this */</span><br><span class="line">#endif</span><br><span class="line"> </span><br><span class="line">#ifdef CONFIG_KMEMCHECK</span><br><span class="line">    void *shadow;</span><br><span class="line">#endif</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
 <p>内核使用这一结构来管理系统中所有的页，因为内核需要知道一个该页是否被分配，是被谁拥有的等信息。</p>
 <p>由于ISA总线的DMA处理器有严格的限制，只能对物理内存前16M寻址，内核线性地址空间只有1G,CPU不能直接访问所有的物理内存。这样就导致有一些内存不能永久地映射在内核空间上。所以在linux中，把页分为不同的区，使用区来对具有相似特性的页进行分组。分组如下（以x86-32为例）：</p>
-<p>—|—<br>ZONE_DMA|小于16M内存页框，这个区包含的页用来执行DMA操作。<br>ZONE_NORMAL|16M~896M内存页框，个区包含的都是能正常映射的页。<br>ZONE_HIGHMEM|大于896M内存页框，这个区包”高端内存”，其中的页能不永久地映射到内核地址空间。</p>
+<table>
+<thead>
+<tr>
+<th>区域</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ZONE_DMA</td>
+<td>小于16M内存页框，这个区包含的页用来执行DMA操作。</td>
+</tr>
+<tr>
+<td>ZONE_NORMAL</td>
+<td>16M~896M内存页框，个区包含的都是能正常映射的页。</td>
+</tr>
+<tr>
+<td>ZONE_HIGHMEM</td>
+<td>大于896M内存页框，这个区包”高端内存”，其中的页能不永久地映射到内核地址空间。</td>
+</tr>
+</tbody>
+</table>
 <p>linux 把系统的页划分区，形成不同的内存池，这样就可以根据用途进行分配了。</p>
 <p>每个区都用<code>struct zone</code>表示，定义于<code>&lt;include/linux/mmzone.h&gt;</code>中。该结构体较大，详细结构体信息可以查看源码文件。</p>
 <p>linux提供了几个以页为单位分配释放内存的接口，定义于<code>&lt;include/linux/gfp.h&gt;</code>中。分配内存主要有以下方法：</p>
