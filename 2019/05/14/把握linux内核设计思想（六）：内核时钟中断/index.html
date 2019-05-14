@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="【版权声明：尊重原创，转载请保留出处：blog.csdn.net/shallnet，文章仅供学习交流，请勿用于商业用途】 内核中很多函数是基于时间驱动的，其中有些函数需要周期或定期执行。比如有的每秒执行100次，有的在等待一个相对时间之后执行。除此之外，内核还必须管理系统运行的时间日期。  周期性产生的时间都是有系统定时器驱动的，系统定时器是一种可编程硬件芯片，它可以以固定频率产生中断，该中断就是">
+<meta name="keywords" content="Linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="把握linux内核设计思想（六）：内核时钟中断">
+<meta property="og:url" content="http://yoursite.com/2019/05/14/把握linux内核设计思想（六）：内核时钟中断/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="【版权声明：尊重原创，转载请保留出处：blog.csdn.net/shallnet，文章仅供学习交流，请勿用于商业用途】 内核中很多函数是基于时间驱动的，其中有些函数需要周期或定期执行。比如有的每秒执行100次，有的在等待一个相对时间之后执行。除此之外，内核还必须管理系统运行的时间日期。  周期性产生的时间都是有系统定时器驱动的，系统定时器是一种可编程硬件芯片，它可以以固定频率产生中断，该中断就是">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2019-05-14T02:52:10.210Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="把握linux内核设计思想（六）：内核时钟中断">
+<meta name="twitter:description" content="【版权声明：尊重原创，转载请保留出处：blog.csdn.net/shallnet，文章仅供学习交流，请勿用于商业用途】 内核中很多函数是基于时间驱动的，其中有些函数需要周期或定期执行。比如有的每秒执行100次，有的在等待一个相对时间之后执行。除此之外，内核还必须管理系统运行的时间日期。  周期性产生的时间都是有系统定时器驱动的，系统定时器是一种可编程硬件芯片，它可以以固定频率产生中断，该中断就是">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/05/14/把握linux内核设计思想（六）：内核时钟中断/">
+
+
+
+
+
+  <title>把握linux内核设计思想（六）：内核时钟中断 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/14/把握linux内核设计思想（六）：内核时钟中断/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">把握linux内核设计思想（六）：内核时钟中断</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-05-14T10:52:09+08:00">
+                2019-05-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>【版权声明：尊重原创，转载请保留出处：blog.csdn.net/shallnet，文章仅供学习交流，请勿用于商业用途】</p>
+<p>内核中很多函数是基于时间驱动的，其中有些函数需要周期或定期执行。比如有的每秒执行100次，有的在等待一个相对时间之后执行。除此之外，内核还必须管理系统运行的时间日期。 </p>
+<p>周期性产生的时间都是有系统定时器驱动的，系统定时器是一种可编程硬件芯片，它可以以固定频率产生中断，该中断就是所谓的定时器中断，其所对应的中断处理程序负责更新系统时间，也负责执行需要周期性运行的任务。</p>
+<p>系统定时器以某种频率自行触发时钟中断，该频率可以通过编程预定，称作节拍率。当时钟中断发生时，内核就通过一种特殊的中断处理器对其进行处理。内核知道连续两次时钟中断的间隔时间，该间隔时间就称为节拍。内核就是靠这种已知的时钟中断间隔来计算实际时间和系统运行时间的。内核通过控制时钟中断维护实际时间，另外内核也为用户提供一组系统调用获取实际日期和实际时间。时钟中断对才操作系统的管理来说十分重要，系统更新运行时间、更新实际时间、均衡调度程序中个处理器上运行队列、检查进程是否用尽时间片等工作都利用时钟中断来周期执行。</p>
+<p>系统定时器频率是通过静态预定义的，也就是HZ，体系结构不同，HZ的值也不同。内核在<code>&lt;asm/param.h&gt;</code>文件中定义，在x86上时钟中断频率为100HZ，也就是说在i386处理上每秒时钟中断100次。</p>
+<p>linux内核众多子系统都依赖时钟中断工作，所以是时钟中断频率的选择必须考虑频率所有子系统的影响。提高节拍就使得时钟中断产生的更频繁，中断处理程序就会更加频繁的执行，这样就提高了时间驱动时间的准确度，误差更小。如HZ=100，那么时钟每10ms中断一次，周期事件每10ms运行一次，如果HZ=1000，那么周期事件每1ms就会运行一次，这样依赖定时器的系统调用能够以更高的精度运行。既然提高时钟中断频率这么好，那为何要将HZ设置为100呢？因为提高时钟中断频率也会产生副作用，中断频率越高，系统的负担就增加了，处理器需要花时间来执行中断处理程序，中断处理器占用cpu时间越多。这样处理器执行其他工作的时间及越少，并且还会打乱处理器高速缓存。所以选择时钟中断频率时要考虑多方面，要取得各方面的折中的一个合适频率。</p>
+<p>内核有一个全局变量jiffies，该变量用来记录系统起来以后产生的节拍总数。系统启动是，该变量被设置为0，此后每产生一次时钟中断就增加该变量的值。jiffies每一秒增加的值就是HZ。jiffies定义于头文件<code>&lt;include/linux/jiffies.h&gt;</code>中：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">extern unsigned long volatile __jiffy_data jiffies;</span><br></pre></td></tr></table></figure></p>
+<p>对于32位unsigned long，可以存放最大值为4294967295，所以当节拍数达到最大值后还要继续增加的话，它的值就会回到0值。内核提供了四个宏（位于文件<code>&lt;include/linux/jiffies.h&gt;</code>中）来比较节拍数，这些宏可以正确处理节拍计数回绕情况。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">#define time_after(a,b)         \</span><br><span class="line">        (typecheck(unsigned long, a) &amp;&amp; \</span><br><span class="line">         typecheck(unsigned long, b) &amp;&amp; \</span><br><span class="line">         ((long)(b) - (long)(a) &lt; 0))</span><br><span class="line">#define time_before(a,b)        time_after(b,a)</span><br><span class="line">#define time_after_eq(a,b)      \</span><br><span class="line">        (typecheck(unsigned long, a) &amp;&amp; \</span><br><span class="line">         typecheck(unsigned long, b) &amp;&amp; \</span><br><span class="line">         ((long)(a) - (long)(b) &gt;= 0))</span><br><span class="line">#define time_before_eq(a,b)     time_after_eq(b,a)</span><br></pre></td></tr></table></figure></p>
+<p>下面示例来打印出当前系统启动后经过的jiffies以及秒数：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;linux/init.h&gt;</span><br><span class="line">#include &lt;linux/module.h&gt;</span><br><span class="line">#include &lt;linux/jiffies.h&gt; //jiffies</span><br><span class="line">#include &lt;asm/param.h&gt; //HZ</span><br><span class="line">static int __init jiffies_init(void)</span><br><span class="line">&#123;</span><br><span class="line">    printk(KERN_ALERT&quot;===%s===\n&quot;, __func__);</span><br><span class="line">    printk(KERN_ALERT&quot;Current ticks is: %lu, seconds: %lu\n&quot;, jiffies, jiffies/HZ);</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br><span class="line">static void __exit jiffies_exit(void)</span><br><span class="line">&#123;</span><br><span class="line">    printk(KERN_ALERT&quot;===%s===\n&quot;, __func__);</span><br><span class="line">&#125;</span><br><span class="line">module_init(jiffies_init);</span><br><span class="line">module_exit(jiffies_exit);</span><br><span class="line">MODULE_LICENSE(&quot;GPL&quot;);</span><br><span class="line">MODULE_AUTHOR(&quot;shallnet&quot;);</span><br><span class="line">MODULE_DESCRIPTION(&quot;blog.csdn.net/shallnet&quot;);</span><br></pre></td></tr></table></figure></p>
+<p>执行输出结果为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># insmod jfs.ko</span><br><span class="line">===jiffies_init===</span><br><span class="line">Current ticks is: 10106703, seconds: 10106</span><br></pre></td></tr></table></figure></p>
+<p>时钟中断发生时，会触发时钟中断处理程序，始终中断处理程序部分和体系结构相关，下面简单分析一下x86体系的处理：<br>时钟的初始化在<code>time_init()</code>中，在<code>start_kernel()</code>中调用<code>time_init()</code>，如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">asmlinkage void __init start_kernel(void)</span><br><span class="line">&#123;</span><br><span class="line">    ......</span><br><span class="line">    time_init();</span><br><span class="line">    ......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>下面分析一下time_init()的实现，该函数位于文件<code>&lt;arch/x86/kernel/time.c&gt;</code>中：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">void __init time_init(void)                                                                                              </span><br><span class="line">&#123;</span><br><span class="line">    late_time_init = x86_late_time_init;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">static __init void x86_late_time_init(void)</span><br><span class="line">&#123;</span><br><span class="line">    x86_init.timers.timer_init();        //</span><br><span class="line">    tsc_init();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>结构体x86_init位于<code>arch/x86/kernel/x86_init.c</code>中<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">struct x86_init_ops x86_init __initdata = &#123; </span><br><span class="line">......</span><br><span class="line">    .timers = &#123;</span><br><span class="line">        .setup_percpu_clockev&gt;--= setup_boot_APIC_clock,</span><br><span class="line">        .tsc_pre_init       = x86_init_noop,</span><br><span class="line">        .timer_init     = hpet_time_init,</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>默认timer初始化函数为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">void __init hpet_time_init(void)                                                                                        </span><br><span class="line">&#123;</span><br><span class="line">    if (!hpet_enable())</span><br><span class="line">        setup_pit_timer();</span><br><span class="line">    setup_default_timer_irq();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>函数<code>setup_default_timer_irq();</code>注册中断处理函数：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">void __init setup_default_timer_irq(void)                                                                                </span><br><span class="line">&#123;</span><br><span class="line">    setup_irq(0, &amp;irq0);</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">static struct irqaction irq0  = &#123;</span><br><span class="line">    .handler = timer_interrupt,</span><br><span class="line">    .flags = IRQF_DISABLED | IRQF_NOBALANCING | IRQF_IRQPOLL | IRQF_TIMER,</span><br><span class="line">    .name = &quot;timer&quot;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>对应的中断处理函数为:<code>timer_interrupt()</code>:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">static irqreturn_t timer_interrupt(int irq, void *dev_id)                                                                </span><br><span class="line">&#123;</span><br><span class="line">    /* Keep nmi watchdog up to date */</span><br><span class="line">    inc_irq_stat(irq0_irqs);</span><br><span class="line"> </span><br><span class="line">    /* Optimized out for !IO_APIC and x86_64 */</span><br><span class="line">    if (timer_ack) &#123;</span><br><span class="line">        /*</span><br><span class="line">         * Subtle, when I/O APICs are used we have to ack timer IRQ</span><br><span class="line">         * manually to deassert NMI lines for the watchdog if run</span><br><span class="line">         * on an 82489DX-based system.</span><br><span class="line">         */</span><br><span class="line">        spin_lock(&amp;i8259A_lock);</span><br><span class="line">        outb(0x0c, PIC_MASTER_OCW3);</span><br><span class="line">        /* Ack the IRQ; AEOI will end it automatically. */</span><br><span class="line">        inb(PIC_MASTER_POLL);</span><br><span class="line">        spin_unlock(&amp;i8259A_lock);</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    //在此处调用体系无关的时钟处理例程</span><br><span class="line">    global_clock_event-&gt;event_handler(global_clock_event);</span><br><span class="line"> </span><br><span class="line">    /* MCA bus quirk: Acknowledge irq0 by setting bit 7 in port 0x61 */</span><br><span class="line">    if (MCA_bus)</span><br><span class="line">        outb_p(inb_p(0x61)| 0x80, 0x61);</span><br><span class="line"> </span><br><span class="line">    return IRQ_HANDLED;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>时钟例程在系统启动时<code>start_kernel()</code>函数中调用<code>tick_init()</code>初始化：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">（位于文件kernel/time/tick-common.c）</span><br><span class="line">void __init tick_init(void)</span><br><span class="line">&#123;</span><br><span class="line">    clockevents_register_notifier(&amp;tick_notifier);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>tick_notifier定义如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br></pre></td><td class="code"><pre><span class="line">static struct notifier_block tick_notifier = &#123;</span><br><span class="line">    .notifier_call = tick_notify,</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line">static int tick_notify(struct notifier_block *nb, unsigned long reason,</span><br><span class="line">                   void *dev)</span><br><span class="line">&#123;</span><br><span class="line">    switch (reason) &#123;</span><br><span class="line"> </span><br><span class="line">    ......</span><br><span class="line"> </span><br><span class="line">    case CLOCK_EVT_NOTIFY_RESUME:</span><br><span class="line">        tick_resume();</span><br><span class="line">        break;</span><br><span class="line"> </span><br><span class="line">    default:</span><br><span class="line">        break;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    return NOTIFY_OK;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">static void tick_resume(void)</span><br><span class="line">&#123;</span><br><span class="line">    struct tick_device *td = &amp;__get_cpu_var(tick_cpu_device);</span><br><span class="line">    unsigned long flags;</span><br><span class="line">    int broadcast = tick_resume_broadcast();</span><br><span class="line"> </span><br><span class="line">    spin_lock_irqsave(&amp;tick_device_lock, flags);</span><br><span class="line">    clockevents_set_mode(td-&gt;evtdev, CLOCK_EVT_MODE_RESUME);</span><br><span class="line"> </span><br><span class="line">    if (!broadcast) &#123;</span><br><span class="line">        if (td-&gt;mode == TICKDEV_MODE_PERIODIC)</span><br><span class="line">            tick_setup_periodic(td-&gt;evtdev, 0);</span><br><span class="line">        else</span><br><span class="line">            tick_resume_oneshot();</span><br><span class="line">    &#125;</span><br><span class="line">    spin_unlock_irqrestore(&amp;tick_device_lock, flags);</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">/*</span><br><span class="line"> * Setup the device for a periodic tick</span><br><span class="line"> */</span><br><span class="line">void tick_setup_periodic(struct clock_event_device *dev, int broadcast)</span><br><span class="line">&#123;</span><br><span class="line">    tick_set_periodic_handler(dev, broadcast);</span><br><span class="line"> </span><br><span class="line">    ......</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">/*</span><br><span class="line"> * 根据broadcast设置周期性的处理函数（kernel/time/tick-broadcast.c）,这里就设置了始终中断函数timer_interrupt中调用的时钟处理例程</span><br><span class="line"> */</span><br><span class="line">void tick_set_periodic_handler(struct clock_event_device *dev, int broadcast)</span><br><span class="line">&#123;</span><br><span class="line">    if (!broadcast)</span><br><span class="line">        dev-&gt;event_handler = tick_handle_periodic;</span><br><span class="line">    else</span><br><span class="line">        dev-&gt;event_handler = tick_handle_periodic_broadcast;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">/*</span><br><span class="line"> * ，以tick_handle_periodic为例，每一个始终节拍都调用该处理函数，而该处理过程中，主要处理工作处于tick_periodic()函数中。</span><br><span class="line"> */</span><br><span class="line">void tick_handle_periodic(struct clock_event_device *dev)</span><br><span class="line">&#123;</span><br><span class="line">    int cpu = smp_processor_id();</span><br><span class="line">    ktime_t next;</span><br><span class="line"> </span><br><span class="line">    tick_periodic(cpu);</span><br><span class="line"> </span><br><span class="line">    if (dev-&gt;mode != CLOCK_EVT_MODE_ONESHOT)</span><br><span class="line">        return;</span><br><span class="line"> </span><br><span class="line">    next = ktime_add(dev-&gt;next_event, tick_period);</span><br><span class="line">    for (;;) &#123;</span><br><span class="line">        if (!clockevents_program_event(dev, next, ktime_get()))</span><br><span class="line">            return;</span><br><span class="line"> </span><br><span class="line">        if (timekeeping_valid_for_hres())</span><br><span class="line">            tick_periodic(cpu);</span><br><span class="line">        next = ktime_add(next, tick_period);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>tick_periodic()函数主要有以下工作：<br>下面来看分析一下该函数：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line"> * Periodic tick</span><br><span class="line"> */</span><br><span class="line">static void tick_periodic(int cpu)</span><br><span class="line">&#123;</span><br><span class="line">    if (tick_do_timer_cpu == cpu) &#123;</span><br><span class="line">        write_seqlock(&amp;xtime_lock);</span><br><span class="line"> </span><br><span class="line">        /* 记录下一个节拍事件 */</span><br><span class="line">        tick_next_period = ktime_add(tick_next_period, tick_period);</span><br><span class="line"> </span><br><span class="line">        do_timer(1);</span><br><span class="line">        write_sequnlock(&amp;xtime_lock);</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    update_process_times(user_mode(get_irq_regs()));//更新所耗费的各种节拍数</span><br><span class="line">    profile_tick(CPU_PROFILING);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>其中函数do_timer()(位于kernel/timer.c中)对jiffies_64做增加操作：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">void do_timer(unsigned long ticks)</span><br><span class="line">&#123;</span><br><span class="line">    jiffies_64 += ticks;</span><br><span class="line">    update_wall_time();    //更新墙上时钟</span><br><span class="line">    calc_global_load();    //更新系统平均负载统计值</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>update_process_times更新所耗费的各种节拍数。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">void update_process_times(int user_tick)</span><br><span class="line">&#123;</span><br><span class="line">    struct task_struct *p = current;</span><br><span class="line">    int cpu = smp_processor_id();</span><br><span class="line"> </span><br><span class="line">    /* Note: this timer irq context must be accounted for as well. */</span><br><span class="line">    account_process_tick(p, user_tick);</span><br><span class="line">    run_local_timers();</span><br><span class="line">    rcu_check_callbacks(cpu, user_tick);</span><br><span class="line">    printk_tick();</span><br><span class="line">    scheduler_tick();</span><br><span class="line">    run_posix_cpu_timers(p);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>函数run_local_timers()会标记一个软中断去处理所有到期的定时器。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">void run_local_timers(void)</span><br><span class="line">&#123;</span><br><span class="line">    hrtimer_run_queues();</span><br><span class="line">    raise_softirq(TIMER_SOFTIRQ);</span><br><span class="line">    softlockup_tick();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在时钟中断处理函数time_interrupt()函数调用体系结构无关的时钟处理例程完成之后，返回到与体系结构的相关的中断处理函数中。以上所有的工作每一次时钟中断都会运行，也就是说如果HZ=100，那么时钟中断处理程序每一秒就会运行100次。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/14/把握linux内核设计思想（五）：下半部机制之工作队列及几种机制的选择/" rel="next" title="把握linux内核设计思想（五）：下半部机制之工作队列及几种机制的选择">
+                <i class="fa fa-chevron-left"></i> 把握linux内核设计思想（五）：下半部机制之工作队列及几种机制的选择
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/14/把握linux内核设计思想（七）：内核定时器和定时执行/" rel="prev" title="把握linux内核设计思想（七）：内核定时器和定时执行">
+                把握linux内核设计思想（七）：内核定时器和定时执行 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">148</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+	
+	<audio controls="controls" loop="loop" preload="auto" src="/resource/test.mp3">
+	</audio>
+          
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>

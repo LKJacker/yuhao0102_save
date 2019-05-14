@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="【版权声明：尊重原创，转载请保留出处：blog.csdn.net/shallnet，文章仅供学习交流，请勿用于商业用途】 工作队列是下半部的另外一种将工作推后执行形式。和软中断、tasklet不同，工作队列将工作推后交由一个内核线程去执行，并且该下半部总会在进程上下文中执行。这样，工作队列允许重新调度甚至是睡眠。 所以，如果推后执行的任务需要睡眠，就选择工作队列。如果不需要睡眠，那就选择软中断或t">
+<meta name="keywords" content="Linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="把握linux内核设计思想（五）：下半部机制之工作队列及几种机制的选择">
+<meta property="og:url" content="http://yoursite.com/2019/05/14/把握linux内核设计思想（五）：下半部机制之工作队列及几种机制的选择/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="【版权声明：尊重原创，转载请保留出处：blog.csdn.net/shallnet，文章仅供学习交流，请勿用于商业用途】 工作队列是下半部的另外一种将工作推后执行形式。和软中断、tasklet不同，工作队列将工作推后交由一个内核线程去执行，并且该下半部总会在进程上下文中执行。这样，工作队列允许重新调度甚至是睡眠。 所以，如果推后执行的任务需要睡眠，就选择工作队列。如果不需要睡眠，那就选择软中断或t">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2019-05-14T02:52:03.409Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="把握linux内核设计思想（五）：下半部机制之工作队列及几种机制的选择">
+<meta name="twitter:description" content="【版权声明：尊重原创，转载请保留出处：blog.csdn.net/shallnet，文章仅供学习交流，请勿用于商业用途】 工作队列是下半部的另外一种将工作推后执行形式。和软中断、tasklet不同，工作队列将工作推后交由一个内核线程去执行，并且该下半部总会在进程上下文中执行。这样，工作队列允许重新调度甚至是睡眠。 所以，如果推后执行的任务需要睡眠，就选择工作队列。如果不需要睡眠，那就选择软中断或t">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/05/14/把握linux内核设计思想（五）：下半部机制之工作队列及几种机制的选择/">
+
+
+
+
+
+  <title>把握linux内核设计思想（五）：下半部机制之工作队列及几种机制的选择 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/14/把握linux内核设计思想（五）：下半部机制之工作队列及几种机制的选择/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">把握linux内核设计思想（五）：下半部机制之工作队列及几种机制的选择</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-05-14T10:52:02+08:00">
+                2019-05-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>【版权声明：尊重原创，转载请保留出处：blog.csdn.net/shallnet，文章仅供学习交流，请勿用于商业用途】</p>
+<p>工作队列是下半部的另外一种将工作推后执行形式。和软中断、tasklet不同，工作队列将工作推后交由一个内核线程去执行，并且该下半部总会在进程上下文中执行。这样，工作队列允许重新调度甚至是睡眠。</p>
+<p>所以，如果推后执行的任务需要睡眠，就选择工作队列。如果不需要睡眠，那就选择软中断或tasklet。工作队列是唯一能在进程上下文中运行的下半部实现机制，也只有它才可以睡眠。</p>
+<p>工作队列子系统是一个用于创建内核线程的接口，通过它创建的进程负责执行由内核其他部分排到队列里的任务。它创建的这些内核线程称作工作者线程。工作队列可以让你的驱动程序创建一个专门的工作者线程来处理需要推后的工作。不过，工作队列子系统提供了一个缺省的工作者线程来处理这些工作。因此，工作队列最基本的表现形式就转变成一个把需要推后执行的任务交给特定的通用线程这样一种接口。缺省的工作线程叫做event/n.每个处理器对应一个线程，这里的n代表了处理器编号。除非一个驱动程序或者子系统必须建立一个属于自己的内核线程，否则最好还是使用缺省线程。<br>使用下面命令可以看到默认event工作者线程，每个处理器对应一个线程：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># ps x | grep event | grep -v grep</span><br><span class="line">    9 ?        S      0:00 [events/0]</span><br><span class="line">   10 ?        S      0:00 [events/1]</span><br></pre></td></tr></table></figure></p>
+<p>工作者线程使用workqueue_struct结构表示（位于<code>&lt;kernel/workqueue.c&gt;</code>中）：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">struct workqueue_struct &#123;</span><br><span class="line">    struct cpu_workqueue_struct *cpu_wq;    //该数组每一项对应系统中的一个处理器</span><br><span class="line">    struct list_head list;</span><br><span class="line">    const char *name;</span><br><span class="line">    int singlethread;</span><br><span class="line">    int freezeable;     /* Freeze threads during suspend */</span><br><span class="line">    int rt;</span><br><span class="line">#ifdef CONFIG_LOCKDEP</span><br><span class="line">    struct lockdep_map lockdep_map;</span><br><span class="line">#endif</span><br><span class="line">&#125;</span><br><span class="line">每个处理器，每个工作者线程对应对应一个cpu_workqueue_struct结构体（位于&lt;kernel/workqueue.c&gt;中）：</span><br><span class="line">struct cpu_workqueue_struct &#123;</span><br><span class="line"> </span><br><span class="line">    spinlock_t lock;    //保护该结构</span><br><span class="line"> </span><br><span class="line">    struct list_head worklist;    //工作列表</span><br><span class="line">    wait_queue_head_t more_work;    //等待队列，其中的工作者线程因等待而处于睡眠状态</span><br><span class="line">    struct work_struct *current_work;</span><br><span class="line"> </span><br><span class="line">    struct workqueue_struct *wq;    //关联工作队列结构</span><br><span class="line">    struct task_struct *thread;    // 关联线程,指向结构中工作者线程的进程描述符指针</span><br><span class="line">&#125; ____cacheline_aligned;</span><br></pre></td></tr></table></figure></p>
+<p>每个工作者线程类型关联一个自己的workqueue_struct，在该结构体里面，给每个线程分配一个<code>cpu_workqueue_struct</code> ，因而也就是给每个处理器分配一个，因为每个处理器都有一个该类型的工作者线程。</p>
+<p>所有的工作者线程都是使用普通的内核线程实现的，他们都要执行worker_thread()函数。在它初始化完以后，这个函数执行一个死循环执行一个循环并开始休眠，当有操作被插入到队列的时候，线程就会被唤醒，以便执行这些操作。当没有剩余的时候，它又会继续休眠。工作由work_struct（位于<code>&lt;kernel/workqueue.c&gt;</code>中）结构表示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">struct work_struct &#123;                                                                                                                                    </span><br><span class="line">    atomic_long_t data;</span><br><span class="line">......</span><br><span class="line">    struct list_head entry;//连接所有链表</span><br><span class="line">    work_func_t func;</span><br><span class="line">.....</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>当一个工作线程被唤醒时，它会执行它的链表上的所有工作。工作一旦执行完毕，它就将相应的work_struct对象从链表上移去，当链表不再有对象时，它就继续休眠。woker_thread()函数如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">static int worker_thread(void *__cwq)</span><br><span class="line">&#123;</span><br><span class="line">    struct cpu_workqueue_struct *cwq = __cwq;</span><br><span class="line">    DEFINE_WAIT(wait);</span><br><span class="line"> </span><br><span class="line">    if (cwq-&gt;wq-&gt;freezeable)</span><br><span class="line">        set_freezable();</span><br><span class="line"> </span><br><span class="line">    for (;;) &#123;</span><br><span class="line">    //线程将自己设置为休眠状态并把自己加入等待队列</span><br><span class="line">        prepare_to_wait(&amp;cwq-&gt;more_work, &amp;wait, TASK_INTERRUPTIBLE);</span><br><span class="line">        if (!freezing(current) &amp;&amp;</span><br><span class="line">            !kthread_should_stop() &amp;&amp;</span><br><span class="line">            list_empty(&amp;cwq-&gt;worklist))</span><br><span class="line">            schedule();//如果工作对列是空的，线程调用schedule()函数进入睡眠状态</span><br><span class="line">        finish_wait(&amp;cwq-&gt;more_work, &amp;wait);</span><br><span class="line"> </span><br><span class="line">        try_to_freeze();</span><br><span class="line"> </span><br><span class="line">//如果链表有对象，线程就将自己设为运行态，脱离等待队列</span><br><span class="line">        if (kthread_should_stop())</span><br><span class="line">            break;</span><br><span class="line"> </span><br><span class="line">//再次调用run_workqueue()执行推后的工作</span><br><span class="line">        run_workqueue(cwq);</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>之后由run_workqueue()函数来完成实际推后到此的工作：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">static void run_workqueue(struct cpu_workqueue_struct *cwq) </span><br><span class="line">&#123;</span><br><span class="line">    spin_lock_irq(&amp;cwq-&gt;lock);</span><br><span class="line">    while (!list_empty(&amp;cwq-&gt;worklist)) &#123;</span><br><span class="line">        //链表不为空时，选取下一个节点对象</span><br><span class="line">        struct work_struct *work = list_entry(cwq-&gt;worklist.next,</span><br><span class="line">                        struct work_struct, entry);</span><br><span class="line">        //获取希望执行的函数func及其参数data</span><br><span class="line">        work_func_t f = work-&gt;func;</span><br><span class="line">......</span><br><span class="line">        trace_workqueue_execution(cwq-&gt;thread, work);</span><br><span class="line">        cwq-&gt;current_work = work;</span><br><span class="line">        //把该结点从链表上解下来</span><br><span class="line">        list_del_init(cwq-&gt;worklist.next);</span><br><span class="line">        spin_unlock_irq(&amp;cwq-&gt;lock);</span><br><span class="line"> </span><br><span class="line">        BUG_ON(get_wq_data(work) != cwq);</span><br><span class="line">        //将待处理标志位pending清0</span><br><span class="line">        work_clear_pending(work);</span><br><span class="line">        lock_map_acquire(&amp;cwq-&gt;wq-&gt;lockdep_map);</span><br><span class="line">        lock_map_acquire(&amp;lockdep_map);</span><br><span class="line">        //执行函数</span><br><span class="line">        f(work);</span><br><span class="line">        lock_map_release(&amp;lockdep_map);</span><br><span class="line">        lock_map_release(&amp;cwq-&gt;wq-&gt;lockdep_map);</span><br><span class="line"> </span><br><span class="line">......</span><br><span class="line">        spin_lock_irq(&amp;cwq-&gt;lock);</span><br><span class="line">        cwq-&gt;current_work = NULL;</span><br><span class="line">    &#125;</span><br><span class="line">    spin_unlock_irq(&amp;cwq-&gt;lock);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>系统允许有多种类型工作者线程存在，默认情况下内核只有event这一种类型的工作者线程，每个工作者线程都由一个cpu_workqueue_struct 结构体表示，大部分情况下，驱动程序都使用现存的默认工作者线程。</p>
+<p>工作队列的使用很简单。可以使用缺省的events任务队列，也可以创建新的工作者线程。<br>第一步、创建需要推后完成的工作。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">DECLARE_WORK(name,void (*func)(void *),void *data);        //编译时静态创建</span><br><span class="line">INIT_WORK(struct work_struct *work, void (*func)(void *));    //运行时动态创建</span><br></pre></td></tr></table></figure></p>
+<p>第二步、编写队列处理函数，处理函数会由工作者线程执行，因此，函数会运行在进程上下文中，默认情况下，允许相应中断，并且不持有锁。如果需要，函数可以睡眠。需要注意的是，尽管处理函数运行在进程上下文中，但它不能访问用户空间，因为内核线程在用户空间没有相应的内存映射。函数原型如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">void work_hander(void *data);</span><br></pre></td></tr></table></figure></p>
+<p>第三步、调度工作队列。<br>调用<code>schedule_work(&amp;work)</code>；work马上就会被调度，一旦其所在的处理器上的工作者线程被唤醒，它就会被执行。当然如果不想快速执行，而是想延迟一段时间执行，调用<br><code>schedule_delay_work(&amp;work,delay)</code>;delay是要延迟的时间节拍。<br>默认工作者线程的调度函数其实就是做了一层封装，减少了 默认工作者线程的参数输入，如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">int schedule_work(struct work_struct *work)</span><br><span class="line">&#123;</span><br><span class="line">    return queue_work(keventd_wq, work);</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">int schedule_delayed_work(struct delayed_work *dwork, unsigned long delay)                                             </span><br><span class="line">&#123;</span><br><span class="line">    return queue_delayed_work(keventd_wq, dwork, delay);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>第四步、刷新操作，插入队列的工作会在工作者线程下一次被唤醒的时候执行。有时，在继续下一步工作之前，你必须保证一些操作已经执行完毕等等。由于这些原因，内核提供了一个用于刷新指定工作队列的函数：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">void flush_scheduled_work(void);</span><br></pre></td></tr></table></figure></p>
+<p>这个函数会一直等待，直到队列中所有的对象都被执行后才返回。在等待所有待处理的工作执行的时候，该函数会进入休眠状态，所以只能在进程上下文中使用它。需要说明的是，该函数并不取消任何延迟执行的工作。取消延迟执行的工作应该调用：<code>int cancel_delayed_work(struct work_struct *work)</code>;这个函数可以取消任何与work_struct 相关挂起的工作。<br>下面为一个示例：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;linux/init.h&gt;</span><br><span class="line">#include &lt;linux/module.h&gt;</span><br><span class="line"> </span><br><span class="line">#include &lt;linux/workqueue.h&gt; //work_strcut</span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line">//struct work_struct      ws;</span><br><span class="line">struct delayed_work     dw;</span><br><span class="line"> </span><br><span class="line">void workqueue_func(struct work_struct *ws)    //处理函数</span><br><span class="line">&#123;</span><br><span class="line">    printk(KERN_ALERT&quot;Hello, this is shallnet!\n&quot;);</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">static int __init kwq_init(void)</span><br><span class="line">&#123;</span><br><span class="line">    printk(KERN_ALERT&quot;===%s===\n&quot;, __func__);</span><br><span class="line"> </span><br><span class="line">    //INIT_WORK(&amp;ws, workqueue_func);    //建需要推后完成的工作</span><br><span class="line">    //schedule_work(&amp;ws);    //调度工作</span><br><span class="line"> </span><br><span class="line">    INIT_DELAYED_WORK(&amp;dw, workqueue_func);</span><br><span class="line">    schedule_delayed_work(&amp;dw, 10000);</span><br><span class="line"> </span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">static void __exit kwq_exit(void)</span><br><span class="line">&#123;</span><br><span class="line">    printk(KERN_ALERT&quot;===%s===\n&quot;, __func__);</span><br><span class="line"> </span><br><span class="line">    flush_scheduled_work();</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">module_init(kwq_init);</span><br><span class="line">module_exit(kwq_exit);</span><br><span class="line"> </span><br><span class="line">MODULE_LICENSE(&quot;GPL&quot;);</span><br><span class="line">MODULE_AUTHOR(&quot;shallnet&quot;);</span><br><span class="line">MODULE_DESCRIPTION(&quot;blog.csdn.net/shallnet&quot;);</span><br></pre></td></tr></table></figure></p>
+<p>上面的操作是使用缺省的工作队列，下面来看一下创建一个新的工作队列是如何操作的？</p>
+<p>创建一个新的工作队列和与之相应的工作者线程，方法很简单，使用如下函数：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">struct workqueue_struct *create_workqueue(const char *name);</span><br></pre></td></tr></table></figure></p>
+<p>name是新内核线程的名字。比如缺省events队列的创建是这样使用的：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">struct workqueue_struct    *keventd_wq；</span><br><span class="line">kevent_wq = create_workqueue(&quot;event&quot;);</span><br></pre></td></tr></table></figure></p>
+<p>这样就创建了所有的工作者线程，每个处理器都有一个。然后调用如下函数进行调度：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">int queue_work(struct workqueue_struct *wq, struct work_struct *work);</span><br><span class="line">int queue_delayed_work(struct workqueue_struct *wq,struct delayed_work *work,unsigned long delay);</span><br></pre></td></tr></table></figure></p>
+<p>最后可以调用flush_workqueue(struct workqueue_struct *wq);刷新指定工作队列。<br>下面为自定义新的工作队列的示例：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;linux/init.h&gt;</span><br><span class="line">#include &lt;linux/module.h&gt;</span><br><span class="line">#include &lt;linux/workqueue.h&gt; //work_strcut</span><br><span class="line"> </span><br><span class="line">struct workqueue_struct *sln_wq = NULL;</span><br><span class="line">//struct work_struct      ws;</span><br><span class="line">struct delayed_work     dw;</span><br><span class="line"> </span><br><span class="line">void workqueue_func(struct work_struct *ws)</span><br><span class="line">&#123;</span><br><span class="line">    printk(KERN_ALERT&quot;Hello, this is shallnet!\n&quot;);</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">static int __init kwq_init(void)</span><br><span class="line">&#123;</span><br><span class="line">    printk(KERN_ALERT&quot;===%s===\n&quot;, __func__);</span><br><span class="line"> </span><br><span class="line">    sln_wq = create_workqueue(&quot;sln_wq&quot;);    //创建名为sln_wq的工作队列</span><br><span class="line"> </span><br><span class="line">    //INIT_WORK(&amp;ws, workqueue_func);</span><br><span class="line">    //queue_work(sln_wq, &amp;ws);</span><br><span class="line"> </span><br><span class="line">    INIT_DELAYED_WORK(&amp;dw, workqueue_func);    //</span><br><span class="line">    queue_delayed_work(sln_wq, &amp;dw, 10000);    //</span><br><span class="line"> </span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">static void __exit kwq_exit(void)</span><br><span class="line">&#123;</span><br><span class="line">    printk(KERN_ALERT&quot;===%s===\n&quot;, __func__);</span><br><span class="line"> </span><br><span class="line">    flush_workqueue(sln_wq);</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">module_init(kwq_init);</span><br><span class="line">module_exit(kwq_exit);</span><br><span class="line"> </span><br><span class="line">MODULE_LICENSE(&quot;GPL&quot;);</span><br><span class="line">MODULE_AUTHOR(&quot;shallnet&quot;);</span><br><span class="line">MODULE_DESCRIPTION(&quot;blog.csdn.net/shallnet&quot;);</span><br></pre></td></tr></table></figure></p>
+<p>使用ps可以查看到名为sln_wq的工作者线程。</p>
+<p>在当前2.6.32版本中，我们讲了三种下半部机制：软中断、tasklet、工作队列。其中tasklet基于软中断，而工作队列靠内核线程实现。</p>
+<p>使用软中断必须要确保共享数据的安全，因为相同类别的软中断可能在不同处理器上同时执行。在对于时间要求是否严格和执行频率很高的应用，或准备利用每一处理器上的变量或类型情形，可以考虑使用软中断，如网络子系统。</p>
+<p>tasklet接口简单，可以动态创建，且两个通知类型的tasklet不能同时执行，所以实现起来较简单。驱动程序应该尽量选择tasklet而不是软中断。</p>
+<p>工作队列工作于进程上下文，易于使用。由于牵扯到内核线程或上下文的切换，可能开销较大。如果你需要把任务推后到进程上下文中，或你需要休眠，那就只有使用工作队列了。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/14/把握linux内核设计思想（四）：下半部机制之tasklet/" rel="next" title="把握linux内核设计思想（四）：下半部机制之tasklet">
+                <i class="fa fa-chevron-left"></i> 把握linux内核设计思想（四）：下半部机制之tasklet
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/14/把握linux内核设计思想（六）：内核时钟中断/" rel="prev" title="把握linux内核设计思想（六）：内核时钟中断">
+                把握linux内核设计思想（六）：内核时钟中断 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">148</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+	
+	<audio controls="controls" loop="loop" preload="auto" src="/resource/test.mp3">
+	</audio>
+          
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>

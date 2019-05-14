@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="【版权声明：尊重原创，转载请保留出处：blog.csdn.net/shallnet，文章仅供学习交流，请勿用于商业用途】 操作系统负责管理硬件设备，为了使系统和硬件设备的协同工作不降低机器性能，系统和硬件的通信使用中断的机制，也就是让硬件在需要的时候向内核发出信号，这样使得内核不用去轮询设备而导致做很多无用功。 中断使得硬件可以发出通知给处理器，硬件设备生成中断的时候并不考虑与处理器的时钟同步，中">
+<meta name="keywords" content="Linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="把握linux内核设计思想（二）：硬中断及中断处理">
+<meta property="og:url" content="http://yoursite.com/2019/05/14/把握linux内核设计思想（二）：硬中断及中断处理/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="【版权声明：尊重原创，转载请保留出处：blog.csdn.net/shallnet，文章仅供学习交流，请勿用于商业用途】 操作系统负责管理硬件设备，为了使系统和硬件设备的协同工作不降低机器性能，系统和硬件的通信使用中断的机制，也就是让硬件在需要的时候向内核发出信号，这样使得内核不用去轮询设备而导致做很多无用功。 中断使得硬件可以发出通知给处理器，硬件设备生成中断的时候并不考虑与处理器的时钟同步，中">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2019-05-14T02:51:35.029Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="把握linux内核设计思想（二）：硬中断及中断处理">
+<meta name="twitter:description" content="【版权声明：尊重原创，转载请保留出处：blog.csdn.net/shallnet，文章仅供学习交流，请勿用于商业用途】 操作系统负责管理硬件设备，为了使系统和硬件设备的协同工作不降低机器性能，系统和硬件的通信使用中断的机制，也就是让硬件在需要的时候向内核发出信号，这样使得内核不用去轮询设备而导致做很多无用功。 中断使得硬件可以发出通知给处理器，硬件设备生成中断的时候并不考虑与处理器的时钟同步，中">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/05/14/把握linux内核设计思想（二）：硬中断及中断处理/">
+
+
+
+
+
+  <title>把握linux内核设计思想（二）：硬中断及中断处理 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/14/把握linux内核设计思想（二）：硬中断及中断处理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">把握linux内核设计思想（二）：硬中断及中断处理</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-05-14T10:51:34+08:00">
+                2019-05-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>【版权声明：尊重原创，转载请保留出处：blog.csdn.net/shallnet，文章仅供学习交流，请勿用于商业用途】</p>
+<p>操作系统负责管理硬件设备，为了使系统和硬件设备的协同工作不降低机器性能，系统和硬件的通信使用中断的机制，也就是让硬件在需要的时候向内核发出信号，这样使得内核不用去轮询设备而导致做很多无用功。</p>
+<p>中断使得硬件可以发出通知给处理器，硬件设备生成中断的时候并不考虑与处理器的时钟同步，中断可以随时产生。也就是说，内核随时可能因为新到来的中断而被打断。当接收到一个中断后，中断控制器会给处理器发送一个电信号，处理器检测到该信号便中断自己当前工作而处理中断。</p>
+<p>在响应一个中断时，内核会执行一个函数，该函数叫做中断处理程序或中断服务例程（ISR）。中断处理程序运行与中断上下文，中断上下文中执行的代码不可阻塞，应该快速执行，这样才能保证尽快恢复被中断的代码的执行。中断处理程序是管理硬件驱动的驱动程序的组成部分，如果设备使用中断，那么相应的驱动程序就注册一个中断处理程序。</p>
+<p>在驱动程序中,通常使用request_irq()来注册中断处理程序。该函数在文件<code>&lt;include/linux/interrupt.h&gt;</code>中声明：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">extern int __must_check</span><br><span class="line">request_irq(unsigned int irq, irq_handler_t handler, unsigned long flags,</span><br><span class="line">        const char *name, void *dev);</span><br></pre></td></tr></table></figure></p>
+<p>第一个参数为要分配的中断号；第二个参数为指向中断处理程序的指针；第三个参数为中断处理标志。该函数实现如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br></pre></td><td class="code"><pre><span class="line">static inline int __must_check</span><br><span class="line">request_irq(unsigned int irq, irq_handler_t handler, unsigned long flags,</span><br><span class="line">        const char *name, void *dev)</span><br><span class="line">&#123;</span><br><span class="line">    return request_threaded_irq(irq, handler, NULL, flags, name, dev);</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">int request_threaded_irq(unsigned int irq, irq_handler_t handler,</span><br><span class="line">                         irq_handler_t thread_fn, unsigned long irqflags,</span><br><span class="line">                         const char *devname, void *dev_id)</span><br><span class="line">&#123;</span><br><span class="line">        struct irqaction *action;</span><br><span class="line">        struct irq_desc *desc;</span><br><span class="line">        int retval;</span><br><span class="line">        /*</span><br><span class="line">         * handle_IRQ_event() always ignores IRQF_DISABLED except for</span><br><span class="line">         * the _first_ irqaction (sigh).  That can cause oopsing, but</span><br><span class="line">         * the behavior is classified as &quot;will not fix&quot; so we need to</span><br><span class="line">         * start nudging drivers away from using that idiom.</span><br><span class="line">         */</span><br><span class="line">        if ((irqflags &amp; (IRQF_SHARED|IRQF_DISABLED)) ==</span><br><span class="line">                                        (IRQF_SHARED|IRQF_DISABLED)) &#123;</span><br><span class="line">                pr_warning(</span><br><span class="line">                  &quot;IRQ %d/%s: IRQF_DISABLED is not guaranteed on shared IRQs\n&quot;,</span><br><span class="line">                        irq, devname);</span><br><span class="line">        &#125;</span><br><span class="line">#ifdef CONFIG_LOCKDEP</span><br><span class="line">        /*</span><br><span class="line">         * Lockdep wants atomic interrupt handlers:</span><br><span class="line">         */</span><br><span class="line">        irqflags |= IRQF_DISABLED;</span><br><span class="line">#endif</span><br><span class="line">        /*</span><br><span class="line">         * Sanity-check: shared interrupts must pass in a real dev-ID,</span><br><span class="line">         * otherwise we&apos;ll have trouble later trying to figure out</span><br><span class="line">         * which interrupt is which (messes up the interrupt freeing</span><br><span class="line">         * logic etc).</span><br><span class="line">         */</span><br><span class="line">        if ((irqflags &amp; IRQF_SHARED) &amp;&amp; !dev_id)</span><br><span class="line">                return -EINVAL;</span><br><span class="line">        desc = irq_to_desc(irq);</span><br><span class="line">        if (!desc)</span><br><span class="line">                return -EINVAL;</span><br><span class="line">        if (desc-&gt;status &amp; IRQ_NOREQUEST)</span><br><span class="line">                return -EINVAL;</span><br><span class="line">        if (!handler) &#123;</span><br><span class="line">                if (!thread_fn)</span><br><span class="line">                        return -EINVAL;</span><br><span class="line">                handler = irq_default_primary_handler;</span><br><span class="line">        &#125;</span><br><span class="line">        //分配一个irqaction</span><br><span class="line">        action = kzalloc(sizeof(struct irqaction), GFP_KERNEL);</span><br><span class="line">        if (!action)</span><br><span class="line">                return -ENOMEM;</span><br><span class="line">        action-&gt;handler = handler;</span><br><span class="line">        action-&gt;thread_fn = thread_fn;</span><br><span class="line">        action-&gt;flags = irqflags;</span><br><span class="line">        action-&gt;name = devname;</span><br><span class="line">        action-&gt;dev_id = dev_id;</span><br><span class="line">        chip_bus_lock(irq, desc);</span><br><span class="line"> </span><br><span class="line">        //将创建并初始化完在的action加入desc</span><br><span class="line">        retval = __setup_irq(irq, desc, action);</span><br><span class="line">        chip_bus_sync_unlock(irq, desc);</span><br><span class="line">        if (retval)</span><br><span class="line">                kfree(action);</span><br><span class="line">#ifdef CONFIG_DEBUG_SHIRQ</span><br><span class="line">        if (irqflags &amp; IRQF_SHARED) &#123;</span><br><span class="line">                /*</span><br><span class="line">                 * It&apos;s a shared IRQ -- the driver ought to be prepared for it</span><br><span class="line">                 * to happen immediately, so let&apos;s make sure....</span><br><span class="line">                 * We disable the irq to make sure that a &apos;real&apos; IRQ doesn&apos;t</span><br><span class="line">                 * run in parallel with our fake.</span><br><span class="line">                 */</span><br><span class="line">                unsigned long flags;</span><br><span class="line">                disable_irq(irq);</span><br><span class="line">                local_irq_save(flags);</span><br><span class="line">                handler(irq, dev_id);</span><br><span class="line">                local_irq_restore(flags);</span><br><span class="line">                enable_irq(irq);</span><br><span class="line">        &#125;</span><br><span class="line">#endif</span><br><span class="line">        return retval;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>下面看一下中断处理程序的实例，以rtc驱动程序为例，代码位于<code>&lt;drivers/char/rtc.c&gt;</code>中。当RTC驱动装载时，rtc_init()函数会被调用来初始化驱动程序，包括注册中断处理函数：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line"> * XXX Interrupt pin #7 in Espresso is shared between RTC and</span><br><span class="line"> * PCI Slot 2 INTA# (and some INTx# in Slot 1).</span><br><span class="line"> */</span><br><span class="line">if (request_irq(rtc_irq, rtc_interrupt, IRQF_SHARED, &quot;rtc&quot;,</span><br><span class="line">        (void *)&amp;rtc_port)) &#123;</span><br><span class="line">    rtc_has_irq = 0;</span><br><span class="line">    printk(KERN_ERR &quot;rtc: cannot register IRQ %d\n&quot;, rtc_irq);</span><br><span class="line">    return -EIO;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>处理程序函数rtc_interrupt()：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line"> *  A very tiny interrupt handler. It runs with IRQF_DISABLED set,</span><br><span class="line"> *  but there is possibility of conflicting with the set_rtc_mmss()</span><br><span class="line"> *  call (the rtc irq and the timer irq can easily run at the same</span><br><span class="line"> *  time in two different CPUs). So we need to serialize</span><br><span class="line"> *  accesses to the chip with the rtc_lock spinlock that each</span><br><span class="line"> *  architecture should implement in the timer code.</span><br><span class="line"> *  (See ./arch/XXXX/kernel/time.c for the set_rtc_mmss() function.)</span><br><span class="line"> */</span><br><span class="line">static irqreturn_t rtc_interrupt(int irq, void *dev_id)</span><br><span class="line">&#123;</span><br><span class="line">    /*</span><br><span class="line">     *  Can be an alarm interrupt, update complete interrupt,</span><br><span class="line">     *  or a periodic interrupt. We store the status in the</span><br><span class="line">     *  low byte and the number of interrupts received since</span><br><span class="line">     *  the last read in the remainder of rtc_irq_data.</span><br><span class="line">     */</span><br><span class="line">    spin_lock(&amp;rtc_lock);    //保证rtc_irq_data不被SMP机器上其他处理器同时访问</span><br><span class="line">    rtc_irq_data += 0x100;</span><br><span class="line">    rtc_irq_data &amp;= ~0xff;</span><br><span class="line">    if (is_hpet_enabled()) &#123;</span><br><span class="line">        /*</span><br><span class="line">         * In this case it is HPET RTC interrupt handler</span><br><span class="line">         * calling us, with the interrupt information</span><br><span class="line">         * passed as arg1, instead of irq.</span><br><span class="line">         */</span><br><span class="line">        rtc_irq_data |= (unsigned long)irq &amp; 0xF0;</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        rtc_irq_data |= (CMOS_READ(RTC_INTR_FLAGS) &amp; 0xF0);</span><br><span class="line">    &#125;</span><br><span class="line">    if (rtc_status &amp; RTC_TIMER_ON)</span><br><span class="line">        mod_timer(&amp;rtc_irq_timer, jiffies + HZ/rtc_freq + 2*HZ/100);</span><br><span class="line">    spin_unlock(&amp;rtc_lock);</span><br><span class="line">    /* Now do the rest of the actions */</span><br><span class="line">    spin_lock(&amp;rtc_task_lock);    //避免rtc_callback出现系统情况，RTC驱动允许注册一个回调函数在每个RTC中断到来时执行。</span><br><span class="line">    if (rtc_callback)</span><br><span class="line">        rtc_callback-&gt;func(rtc_callback-&gt;private_data);</span><br><span class="line">    spin_unlock(&amp;rtc_task_lock);</span><br><span class="line">    wake_up_interruptible(&amp;rtc_wait);</span><br><span class="line">    kill_fasync(&amp;rtc_async_queue, SIGIO, POLL_IN);</span><br><span class="line">    return IRQ_HANDLED;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在内核中，中断的旅程开始于预定义入口点，这类似于系统调用。对于每条中断线，处理器都会跳到对应的一个唯一的位置。这样，内核就可以知道所接收中断的IRQ号了。初始入口点只是在栈中保存这个号，并存放当前寄存器的值(这些值属于被中断的任务)；然后，内核调用函数do_IRQ().从这里开始，大多数中断处理代码是用C写的。do_IRQ()的声明如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">unsigned int do_IRQ(struct pt_regs regs)</span><br></pre></td></tr></table></figure></p>
+<p>因为C的调用惯例是要把函数参数放在栈的顶部，因此pt_regs结构包含原始寄存器的值，这些值是以前在汇编入口例程中保存在栈上的。中断的值也会得以保存，所以，do_IRQ()可以将它提取出来，X86的代码为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">int irq = regs.orig_eax &amp; 0xff</span><br></pre></td></tr></table></figure></p>
+<p>计算出中断号后，do_IRQ()对所接收的中断进行应答，禁止这条线上的中断传递。在普通的PC机器上，这些操作是由mask_and_ack_8259A()来完成的，该函数由do_IRQ()调用。接下来，do_IRQ()需要确保在这条中断线上有一个有效的处理程序，而且这个程序已经启动但是当前没有执行。如果这样的话， do_IRQ()就调用handle_IRQ_event()来运行为这条中断线所安装的中断处理程序，函数位于<code>&lt;kernel/irq/handle.c&gt;</code>:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br></pre></td><td class="code"><pre><span class="line">/**  </span><br><span class="line"> * handle_IRQ_event - irq action chain handler</span><br><span class="line"> * @irq:    the interrupt number</span><br><span class="line"> * @action: the interrupt action chain for this irq</span><br><span class="line"> *    </span><br><span class="line"> * Handles the action chain of an irq event</span><br><span class="line"> */  </span><br><span class="line">irqreturn_t handle_IRQ_event(unsigned int irq, struct irqaction *action)</span><br><span class="line">&#123;</span><br><span class="line">    irqreturn_t ret, retval = IRQ_NONE;</span><br><span class="line">    unsigned int status = 0;</span><br><span class="line"> </span><br><span class="line">    //如果没有设置IRQF_DISABLED，将CPU中断打开，应该尽量避免中断关闭情况，本地中断关闭情况下会导致中断丢失。</span><br><span class="line">    if (!(action-&gt;flags &amp; IRQF_DISABLED))</span><br><span class="line">        local_irq_enable_in_hardirq();</span><br><span class="line"> </span><br><span class="line">    do &#123;    //遍历运行中断处理程序</span><br><span class="line">        trace_irq_handler_entry(irq, action);</span><br><span class="line">        ret = action-&gt;handler(irq, action-&gt;dev_id);</span><br><span class="line">        trace_irq_handler_exit(irq, action, ret);</span><br><span class="line"> </span><br><span class="line">        switch (ret) &#123;</span><br><span class="line">        case IRQ_WAKE_THREAD:</span><br><span class="line">            /*</span><br><span class="line">             * Set result to handled so the spurious check</span><br><span class="line">             * does not trigger.</span><br><span class="line">             */</span><br><span class="line">            ret = IRQ_HANDLED;</span><br><span class="line"> </span><br><span class="line">            /*</span><br><span class="line">             * Catch drivers which return WAKE_THREAD but</span><br><span class="line">             * did not set up a thread function</span><br><span class="line">             */</span><br><span class="line">            if (unlikely(!action-&gt;thread_fn)) &#123;</span><br><span class="line">                warn_no_thread(irq, action);</span><br><span class="line">                break;</span><br><span class="line">            &#125;</span><br><span class="line"> </span><br><span class="line">            /*</span><br><span class="line">             * Wake up the handler thread for this</span><br><span class="line">             * action. In case the thread crashed and was</span><br><span class="line">             * killed we just pretend that we handled the</span><br><span class="line">             * interrupt. The hardirq handler above has</span><br><span class="line">             * disabled the device interrupt, so no irq</span><br><span class="line">             * storm is lurking.</span><br><span class="line">             */</span><br><span class="line">            if (likely(!test_bit(IRQTF_DIED,</span><br><span class="line">                         &amp;action-&gt;thread_flags))) &#123;</span><br><span class="line">                set_bit(IRQTF_RUNTHREAD, &amp;action-&gt;thread_flags);</span><br><span class="line">                wake_up_process(action-&gt;thread);</span><br><span class="line">            &#125;</span><br><span class="line">            /* Fall through to add to randomness */</span><br><span class="line">        case IRQ_HANDLED:</span><br><span class="line">            status |= action-&gt;flags;</span><br><span class="line">            break;</span><br><span class="line"> </span><br><span class="line">        default:</span><br><span class="line">            break;</span><br><span class="line">        &#125;</span><br><span class="line"> </span><br><span class="line">        retval |= ret;</span><br><span class="line">        action = action-&gt;next;</span><br><span class="line">    &#125; while (action);</span><br><span class="line"> </span><br><span class="line">    if (status &amp; IRQF_SAMPLE_RANDOM)</span><br><span class="line">        add_interrupt_randomness(irq);</span><br><span class="line">    local_irq_disable();//关中断</span><br><span class="line"> </span><br><span class="line">    return retval;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>前面说到中断应该尽快执行完，以保证被中断代码可以尽快的恢复执行。但事实上中断通常有很多工作要做，包括应答、重设硬件、数据拷贝、处理请求、发送请求等。为了求得平衡，内核把中断处理工作分成两半，中断处理程序是上半部——接收到中断就开始执行。能够稍后完成的工作推迟到下半部操作，下半部在合适的时机被开中段执行。例如网卡收到数据包时立即发出中断，内核执行网卡已注册的中断处理程序，此处工作就是通知硬件拷贝最新的网络数据包到内存，然后将控制权交换给系统之前被中断的任务，其他的如处理和操作数据包等任务被放到随后的下半部中去执行。下一节我们将了解中断处理的下半部。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/14/把握linux内核设计思想（一）：系统调用/" rel="next" title="把握linux内核设计思想（一）：系统调用">
+                <i class="fa fa-chevron-left"></i> 把握linux内核设计思想（一）：系统调用
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/14/把握linux内核设计思想（三）：下半部机制之软中断/" rel="prev" title="把握linux内核设计思想（三）：下半部机制之软中断">
+                把握linux内核设计思想（三）：下半部机制之软中断 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">148</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+	
+	<audio controls="controls" loop="loop" preload="auto" src="/resource/test.mp3">
+	</audio>
+          
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
