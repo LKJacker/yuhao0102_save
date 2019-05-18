@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="消息队列可以认为是一个链表。进程（线程）可以往里写消息，也可以从里面取出消息。一个进程可以往某个消息队列里写消息，然后终止，另一个进程随时可以从消息队列里取走这些消息。这里也说明了，消息队列具有随内核的持续性，也就是系统不重启，消息队列永久存在。 创建（并打开）、关闭、删除一个消息队列123456789101112131415161718192021222324252627282930313233">
+<meta name="keywords" content="Linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="IPC通信:Posix消息队列">
+<meta property="og:url" content="http://yoursite.com/2019/05/18/Linux_IPC通信_Posix消息队列/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="消息队列可以认为是一个链表。进程（线程）可以往里写消息，也可以从里面取出消息。一个进程可以往某个消息队列里写消息，然后终止，另一个进程随时可以从消息队列里取走这些消息。这里也说明了，消息队列具有随内核的持续性，也就是系统不重启，消息队列永久存在。 创建（并打开）、关闭、删除一个消息队列123456789101112131415161718192021222324252627282930313233">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2019-05-18T09:32:28.569Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="IPC通信:Posix消息队列">
+<meta name="twitter:description" content="消息队列可以认为是一个链表。进程（线程）可以往里写消息，也可以从里面取出消息。一个进程可以往某个消息队列里写消息，然后终止，另一个进程随时可以从消息队列里取走这些消息。这里也说明了，消息队列具有随内核的持续性，也就是系统不重启，消息队列永久存在。 创建（并打开）、关闭、删除一个消息队列123456789101112131415161718192021222324252627282930313233">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/05/18/Linux_IPC通信_Posix消息队列/">
+
+
+
+
+
+  <title>IPC通信:Posix消息队列 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/18/Linux_IPC通信_Posix消息队列/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">IPC通信:Posix消息队列</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-05-18T17:31:39+08:00">
+                2019-05-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>消息队列可以认为是一个链表。进程（线程）可以往里写消息，也可以从里面取出消息。一个进程可以往某个消息队列里写消息，然后终止，另一个进程随时可以从消息队列里取走这些消息。这里也说明了，消息队列具有随内核的持续性，也就是系统不重启，消息队列永久存在。</p>
+<p>创建（并打开）、关闭、删除一个消息队列<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;stdio.h&gt;  </span><br><span class="line">#include &lt;stdlib.h&gt; </span><br><span class="line">#include &lt;mqueue.h&gt;   //头文件</span><br><span class="line">#include &lt;sys/types.h&gt;  </span><br><span class="line">#include &lt;sys/stat.h&gt;  </span><br><span class="line">#include &lt;unistd.h&gt;  </span><br><span class="line">#include &lt;fcntl.h&gt;  </span><br><span class="line">#include &lt;errno.h&gt;   </span><br><span class="line"></span><br><span class="line">#define MQ_NAME (&quot;/tmp&quot;)  </span><br><span class="line">#define MQ_FLAG (O_RDWR | O_CREAT | O_EXCL) // 创建MQ的flag  </span><br><span class="line">#define FILE_MODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) // 设定创建MQ的权限  </span><br><span class="line"></span><br><span class="line">int main()  </span><br><span class="line"></span><br><span class="line">&#123;  </span><br><span class="line">    mqd_t posixmq;  </span><br><span class="line">    int rc = 0;  </span><br><span class="line"></span><br><span class="line">    /*  </span><br><span class="line">    函数说明：函数创建或打开一个消息队列  </span><br><span class="line">    返回值：成功返回消息队列描述符，失败返回-1，错误原因存于errno中  </span><br><span class="line">    */ </span><br><span class="line">    posixmq = mq_open(MQ_NAME, MQ_FLAG, FILE_MODE, NULL);  </span><br><span class="line"></span><br><span class="line">    if(-1 == posixmq)  </span><br><span class="line">    &#123;  </span><br><span class="line">        perror(&quot;创建MQ失败&quot;);  </span><br><span class="line">        exit(1);  </span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    /*  </span><br><span class="line">    函数说明：关闭一个打开的消息队列，表示本进程不再对该消息队列读写  </span><br><span class="line">    返回值：成功返回0，失败返回-1，错误原因存于errno中  </span><br><span class="line">    */ </span><br><span class="line">    rc = mq_close(posixmq);  </span><br><span class="line">    if(0 != rc)  </span><br><span class="line">    &#123;  </span><br><span class="line">        perror(&quot;关闭失败&quot;);  </span><br><span class="line">        exit(1);  </span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    /*  </span><br><span class="line">    函数说明：删除一个消息队列，好比删除一个文件，其他进程再也无法访问  </span><br><span class="line">    返回值：成功返回0，失败返回-1，错误原因存于errno中  </span><br><span class="line">    */</span><br><span class="line">    rc = mq_unlink(MQ_NAME);  </span><br><span class="line">    if(0 != rc)  </span><br><span class="line">    &#123;  </span><br><span class="line">        perror(&quot;删除失败&quot;);  </span><br><span class="line">        exit(1);  </span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    return 0;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>编译并执行：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">root@linux:/mnt/hgfs/C_libary# gcc -o crtmq crtmq.c</span><br><span class="line">/tmp/ccZ9cTxo.o: In function `main&apos;:</span><br><span class="line">crtmq.c:(.text+0x31): undefined reference to `mq_open&apos;</span><br><span class="line">crtmq.c:(.text+0x60): undefined reference to `mq_close&apos;</span><br><span class="line">crtmq.c:(.text+0x8f): undefined reference to `mq_unlink&apos;</span><br><span class="line">collect2: ld returned 1 exit status</span><br></pre></td></tr></table></figure></p>
+<p>因为mq_XXX()函数不是标准库函数，链接时需要指定；库-lrt；<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">root@linux:/mnt/hgfs/C_libary# gcc -o crtmq crtmq.c -lrt</span><br><span class="line">root@linux:/mnt/hgfs/C_libary# ./crtmq</span><br></pre></td></tr></table></figure></p>
+<p>最后程序并没有删除消息队列（消息队列有随内核持续性），如再次执行该程序则会给出错误信息：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">root@linux:/mnt/hgfs/C_libary# ./crtmq </span><br><span class="line">创建MQ失败: File  exit(0)</span><br></pre></td></tr></table></figure></p>
+<p>编译这个程序需要注意几点：</p>
+<ol>
+<li>消息队列的名字最好使用“/”打头，并且只有一个“/”的名字。否则可能出现移植性问题；（还需保证在根目录有写权限,为了方便我在root权限下测试）</li>
+<li>创建成功的消息队列不一定能看到，使用一些方法也可以看到，本文不做介绍；</li>
+</ol>
+<p>消息队列的名字有如此规定，引用《UNIX网络编程 卷2》的相关描述： <code>mq_open</code>,<code>sem_open</code>,<code>shm_open</code>这三个函数的第一个参数是<br>一个IPC名字，它可能是某个文件系统中的一个真正存在的路径名，也可能不是。Posix.1是这样描述Posix IPC名字的。<br>1)它必须符合已有的路径名规则（最多由PATH_MAX个字节构成，包括结尾的空字节）<br>2)如果它以斜杠开头，那么对这些函数的不同调用将访问同一个队列，否则效果取决于实现（也就是效果没有标准化）<br>3)名字中的额外的斜杠符的解释由实现定义（同样是没有标准化） 因此，为便于移植起见，Posix IPC名字必须以一个斜杠打头，并且不能再包含任何其他斜杠符。</p>
+<p>IPC通信:Posix消息队列读,写<br>创建消息队列的程序:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;stdio.h&gt;  </span><br><span class="line">#include &lt;stdlib.h&gt; </span><br><span class="line">#include &lt;mqueue.h&gt;   //头文件</span><br><span class="line">#include &lt;sys/types.h&gt;  </span><br><span class="line">#include &lt;sys/stat.h&gt;  </span><br><span class="line">#include &lt;unistd.h&gt;  </span><br><span class="line">#include &lt;fcntl.h&gt;  </span><br><span class="line">#include &lt;errno.h&gt;   </span><br><span class="line"></span><br><span class="line">#define MQ_NAME (&quot;/tmp&quot;)  </span><br><span class="line">#define MQ_FLAG (O_RDWR | O_CREAT | O_EXCL) // 创建MQ的flag  </span><br><span class="line">#define FILE_MODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) // 设定创建MQ的权限  </span><br><span class="line"></span><br><span class="line">int main()  </span><br><span class="line"></span><br><span class="line">&#123;  </span><br><span class="line">    mqd_t posixmq;  </span><br><span class="line">    int rc = 0;  </span><br><span class="line"></span><br><span class="line">    /*  </span><br><span class="line">    函数说明：函数创建或打开一个消息队列  </span><br><span class="line">    返回值：成功返回消息队列描述符，失败返回-1，错误原因存于errno中  </span><br><span class="line">    */ </span><br><span class="line">    posixmq = mq_open(MQ_NAME, MQ_FLAG, FILE_MODE, NULL);  </span><br><span class="line"></span><br><span class="line">    if(-1 == posixmq)  </span><br><span class="line">    &#123;  </span><br><span class="line">        perror(&quot;创建MQ失败&quot;);  </span><br><span class="line">        exit(1);  </span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    /*  </span><br><span class="line">    函数说明：关闭一个打开的消息队列，表示本进程不再对该消息队列读写  </span><br><span class="line">    返回值：成功返回0，失败返回-1，错误原因存于errno中  </span><br><span class="line">    */ </span><br><span class="line">    rc = mq_close(posixmq);  </span><br><span class="line">    if(0 != rc)  </span><br><span class="line">    &#123;  </span><br><span class="line">        perror(&quot;关闭失败&quot;);  </span><br><span class="line">        exit(1);  </span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">#if 0</span><br><span class="line">    /*  </span><br><span class="line">    函数说明：删除一个消息队列，好比删除一个文件，其他进程再也无法访问  </span><br><span class="line">    返回值：成功返回0，失败返回-1，错误原因存于errno中  </span><br><span class="line">    */</span><br><span class="line">    rc = mq_unlink(MQ_NAME);  </span><br><span class="line">    if(0 != rc)  </span><br><span class="line">    &#123;  </span><br><span class="line">        perror(&quot;删除失败&quot;);  </span><br><span class="line">        exit(1);  </span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    return 0;</span><br><span class="line">#endif  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>编译并执行：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">root@linux:/mnt/hgfs/C_libary# gcc -o crtmq crtmq.c -lrt</span><br><span class="line">root@linux:/mnt/hgfs/C_libary# ./crtmq</span><br></pre></td></tr></table></figure></p>
+<p>程序并没有删除消息队列（消息队列有随内核持续性），如再次执行该程序则会给出错误信息：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">root@linux:/mnt/hgfs/C_libary# ./crtmq </span><br><span class="line">创建MQ失败: File  exit(0)</span><br></pre></td></tr></table></figure></p>
+<p>向消息队列写消息的程序：</p>
+<p>消息队列的读写主要使用下面两个函数：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">/*头文件*/</span><br><span class="line">#include &lt;mqueue.h&gt;  </span><br><span class="line"></span><br><span class="line">/*返回：若成功则为消息中字节数，若出错则为-1 */ </span><br><span class="line">int mq_send(mqd_t mqdes, const char *msg_ptr, size_t msg_len, unsigned msg_prio); </span><br><span class="line"></span><br><span class="line">/*返回：若成功则为0， 若出错则为-1*/ </span><br><span class="line">ssize_t mq_receive(mqd_t mqdes, char *msg_ptr, size_t msg_len, unsigned *msg_prio);  </span><br><span class="line"></span><br><span class="line">/*消息队列属性结构体*/</span><br><span class="line">struct mq_attr &#123; </span><br><span class="line">   long mq_flags;       /* Flags: 0 or O_NONBLOCK */ </span><br><span class="line">   long mq_maxmsg;      /* Max. # of messages on queue */ </span><br><span class="line">   long mq_msgsize;     /* Max. message size (bytes) */ </span><br><span class="line">   long mq_curmsgs;     /* # of messages currently in queue */ </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;stdio.h&gt;  </span><br><span class="line">#include &lt;stdlib.h&gt;  </span><br><span class="line">#include &lt;mqueue.h&gt;  </span><br><span class="line">#include &lt;sys/types.h&gt;  </span><br><span class="line">#include &lt;sys/stat.h&gt;  </span><br><span class="line">#include &lt;unistd.h&gt;  </span><br><span class="line">#include &lt;fcntl.h&gt;  </span><br><span class="line">#include &lt;errno.h&gt;  </span><br><span class="line">   </span><br><span class="line">/*向消息队列发送消息，消息队列名及发送的信息通过参数传递*/ </span><br><span class="line">int main(int argc, char *argv[])  </span><br><span class="line">&#123;  </span><br><span class="line">    mqd_t mqd;  </span><br><span class="line">    char *ptr;  </span><br><span class="line">    size_t len;  </span><br><span class="line">    unsigned int prio;  </span><br><span class="line">    int rc;  </span><br><span class="line"></span><br><span class="line">    if(argc != 4)  </span><br><span class="line">    &#123;  </span><br><span class="line">        printf(&quot;Usage: sendmq &lt;name&gt; &lt;bytes&gt; &lt;priority&gt;\n&quot;);  </span><br><span class="line">        exit(1);  </span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    len = atoi(argv[2]);  </span><br><span class="line">    prio = atoi(argv[3]);    </span><br><span class="line"></span><br><span class="line">    //只写模式找开消息队列  </span><br><span class="line">    mqd = mq_open(argv[1], O_WRONLY);  </span><br><span class="line">    if(-1 == mqd)  </span><br><span class="line">    &#123;  </span><br><span class="line">        perror(&quot;打开消息队列失败&quot;);  </span><br><span class="line">        exit(1);  </span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    // 动态申请一块内存  </span><br><span class="line">    ptr = (char *) calloc(len, sizeof(char));  </span><br><span class="line">    if(NULL == ptr)  </span><br><span class="line">    &#123;  </span><br><span class="line">        perror(&quot;申请内存失败&quot;);  </span><br><span class="line">        mq_close(mqd);  </span><br><span class="line">        exit(1);  </span><br><span class="line">    &#125;  </span><br><span class="line">   </span><br><span class="line">    /*向消息队列写入消息，如消息队列满则阻塞，直到消息队列有空闲时再写入*/ </span><br><span class="line">    rc = mq_send(mqd, ptr, len, prio);  </span><br><span class="line">    if(rc &lt; 0)  </span><br><span class="line">    &#123;  </span><br><span class="line">        perror(&quot;写入消息队列失败&quot;);  </span><br><span class="line">        mq_close(mqd);  </span><br><span class="line">        exit(1);  </span><br><span class="line">    &#125;     </span><br><span class="line"></span><br><span class="line">    // 释放内存  </span><br><span class="line">    free(ptr);  </span><br><span class="line">    return 0;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>编译并执行：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">root@linux:/mnt/hgfs/C_libary# gcc -o sendmq sendmq.c -lrt</span><br><span class="line">root@linux:/mnt/hgfs/C_libary# ./sendmq /tmp 30 15</span><br><span class="line">root@linux:/mnt/hgfs/C_libary# ./sendmq /tmp 30 16</span><br><span class="line">root@linux:/mnt/hgfs/C_libary# ./sendmq /tmp 30 17</span><br><span class="line">root@linux:/mnt/hgfs/C_libary# ./sendmq /tmp 30 18</span><br></pre></td></tr></table></figure></p>
+<p>上面先后向消息队列“/tmp”写入了四条消息，因为先前创建的消息队列只允许存放3条消息，本次第四次写入时程序会阻塞。直到有另外进程从消息队列取走消息后本次写入才成功返回。</p>
+<p>读消息队列：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;stdio.h&gt;  </span><br><span class="line">#include &lt;stdlib.h&gt;  </span><br><span class="line">#include &lt;mqueue.h&gt;  </span><br><span class="line">#include &lt;sys/types.h&gt;  </span><br><span class="line">#include &lt;sys/stat.h&gt;  </span><br><span class="line">#include &lt;unistd.h&gt;  </span><br><span class="line">#include &lt;fcntl.h&gt;  </span><br><span class="line">#include &lt;errno.h&gt;  </span><br><span class="line"></span><br><span class="line">/*读取某消息队列,消息队列名通过参数传递*/ </span><br><span class="line">int main(int argc, char *argv[])  </span><br><span class="line">&#123;  </span><br><span class="line">    mqd_t mqd;  </span><br><span class="line">    struct mq_attr attr;  </span><br><span class="line">    char *ptr;  </span><br><span class="line">    unsigned int prio;  </span><br><span class="line">    size_t n;  </span><br><span class="line">    int rc;  </span><br><span class="line"></span><br><span class="line">    if(argc != 2)  </span><br><span class="line">    &#123;  </span><br><span class="line">        printf(&quot;Usage: readmq &lt;name&gt;\n&quot;);  </span><br><span class="line">        exit(1);  </span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    /*只读模式打开消息队列*/ </span><br><span class="line">    mqd = mq_open(argv[1], O_RDONLY);  </span><br><span class="line">    if(mqd &lt; 0)  </span><br><span class="line">    &#123;  </span><br><span class="line">        perror(&quot;打开消息队列失败&quot;);  </span><br><span class="line">        exit(1);  </span><br><span class="line">    &#125;     </span><br><span class="line"></span><br><span class="line">    // 取得消息队列属性，根据mq_msgsize动态申请内存  </span><br><span class="line">    rc = mq_getattr(mqd, &amp;attr);  </span><br><span class="line">    if(rc &lt; 0)  </span><br><span class="line">    &#123;  </span><br><span class="line">        perror(&quot;取得消息队列属性失败&quot;);  </span><br><span class="line">        exit(1);  </span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    /*动态申请保证能存放单条消息的内存*/ </span><br><span class="line">    ptr = calloc(attr.mq_msgsize, sizeof(char));  </span><br><span class="line">    if(NULL == ptr)  </span><br><span class="line">    &#123;  </span><br><span class="line">        printf(&quot;动态申请内存失败\n&quot;);  </span><br><span class="line">        mq_close(mqd);  </span><br><span class="line">        exit(1);  </span><br><span class="line">    &#125;     </span><br><span class="line"></span><br><span class="line">    /*接收一条消息*/ </span><br><span class="line">    n = mq_receive(mqd, ptr, attr.mq_msgsize, &amp;prio);  </span><br><span class="line">    if(n &lt; 0)  </span><br><span class="line">    &#123;  </span><br><span class="line">        perror(&quot;读取失败&quot;);  </span><br><span class="line">        mq_close(mqd);  </span><br><span class="line">        free(ptr);  </span><br><span class="line">        exit(1);  </span><br><span class="line">    &#125;  </span><br><span class="line">    </span><br><span class="line">    printf(&quot;读取 %ld 字节\n  优先级为 %u\n&quot;, (long)n, prio);     </span><br><span class="line">    return 0;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>编译并执行：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">root@linux:/mnt/hgfs/C_libary# vi readmq.c</span><br><span class="line">root@linux:/mnt/hgfs/C_libary# vi readmq.c</span><br><span class="line">root@linux:/mnt/hgfs/C_libary# gcc -o readmq readmq.c -lrt</span><br><span class="line">root@linux:/mnt/hgfs/C_libary# ./readmq /tmp</span><br><span class="line">读取 30 字节</span><br><span class="line">  优先级为 18</span><br><span class="line">root@linux:/mnt/hgfs/C_libary# ./readmq /tmp</span><br><span class="line">读取 30 字节</span><br><span class="line">  优先级为 17</span><br><span class="line">root@linux:/mnt/hgfs/C_libary# ./readmq /tmp</span><br><span class="line">读取 30 字节</span><br><span class="line">  优先级为 16</span><br><span class="line">root@linux:/mnt/hgfs/C_libary# ./readmq /tmp</span><br><span class="line">读取 30 字节</span><br><span class="line">    优先级为 15</span><br><span class="line">root@linux:/mnt/hgfs/C_libary# ./readmq /tmp</span><br></pre></td></tr></table></figure></p>
+<p>程序执行五次，第一次执行完，先前阻塞在写处的程序成功返回。第五次执行，因为消息队列已经为空，程序阻塞。直到另外的进程向消息队列写入一条消息。另外，还可以看出Posix消息队列每次读出的都是消息队列中优先级最高的消息。</p>
+<p>IPC通信:Posix消息队列的属性设置</p>
+<p>Posix消息队列的属性使用如下结构存放：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">struct mq_attr  </span><br><span class="line">&#123;  </span><br><span class="line">    long mq_flags; /*阻塞标志位，0为非阻塞(O_NONBLOCK)*/ </span><br><span class="line">    long mq_maxmsg; /*队列所允许的最大消息条数*/ </span><br><span class="line">    long mq_msgsize; /*每条消息的最大字节数*/ </span><br><span class="line">    long mq_curmsgs; /*队列当前的消息条数*/ </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>队列可以在创建时由mq_open()函数的第四个参数指定mq_maxmsg，mq_msgsize。 如创建时没有指定则使用默认值，一旦创建，则不可再改变。<br>队列可以在创建后由mq_setattr()函数设置mq_flags<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;mqueue.h&gt;  </span><br><span class="line"></span><br><span class="line">/*取得消息队列属性，放到mqstat地fh*/ </span><br><span class="line">int mq_getattr(mqd_t mqdes, struct mq_attr *mqstat);  </span><br><span class="line"></span><br><span class="line">/*设置消息队列属性，设置值由mqstat提供，原先值写入omqstat*/ </span><br><span class="line">int mq_setattr(mqd_t mqdes, const struct mq_attr *mqstat, struct mq_attr *omqstat);  </span><br><span class="line"></span><br><span class="line">均返回：若成功则为0，若出错为-1</span><br></pre></td></tr></table></figure></p>
+<p>程序获取和设置消息队列的默认属性：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;stdio.h&gt;  </span><br><span class="line">#include &lt;stdlib.h&gt;  </span><br><span class="line">#include &lt;mqueue.h&gt;  </span><br><span class="line">#include &lt;sys/types.h&gt;  </span><br><span class="line">#include &lt;sys/stat.h&gt;  </span><br><span class="line">#include &lt;unistd.h&gt;  </span><br><span class="line">#include &lt;fcntl.h&gt;  </span><br><span class="line">#include &lt;errno.h&gt;  </span><br><span class="line">   </span><br><span class="line">#define MQ_NAME (&quot;/tmp&quot;)  </span><br><span class="line">#define MQ_FLAG (O_RDWR | O_CREAT | O_EXCL) // 创建MQ的flag  </span><br><span class="line">#define FILE_MODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) // 设定创建MQ的权限  </span><br><span class="line">   </span><br><span class="line">int main()  </span><br><span class="line">&#123;  </span><br><span class="line">    mqd_t posixmq;  </span><br><span class="line">    int rc = 0;  </span><br><span class="line">   </span><br><span class="line">    struct mq_attr mqattr;  </span><br><span class="line">   </span><br><span class="line">    // 创建默认属性的消息队列  </span><br><span class="line">    posixmq = mq_open(MQ_NAME, MQ_FLAG, FILE_MODE, NULL);  </span><br><span class="line">    if(-1 == posixmq)  </span><br><span class="line">    &#123;  </span><br><span class="line">        perror(&quot;创建MQ失败&quot;);  </span><br><span class="line">        exit(1);  </span><br><span class="line">    &#125;  </span><br><span class="line">       </span><br><span class="line">    // 获取消息队列的默认属性  </span><br><span class="line">    rc = mq_getattr(posixmq, &amp;mqattr);  </span><br><span class="line">    if(-1 == rc)  </span><br><span class="line">    &#123;  </span><br><span class="line">        perror(&quot;获取消息队列属性失败&quot;);  </span><br><span class="line">        exit(1);  </span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    printf(&quot;队列阻塞标志位：%ld\n&quot;, mqattr.mq_flags);  </span><br><span class="line">    printf(&quot;队列允许最大消息数：%ld\n&quot;, mqattr.mq_maxmsg);  </span><br><span class="line">    printf(&quot;队列消息最大字节数：%ld\n&quot;, mqattr.mq_msgsize);  </span><br><span class="line">    printf(&quot;队列当前消息条数：%ld\n&quot;, mqattr.mq_curmsgs);  </span><br><span class="line">   </span><br><span class="line">    rc = mq_close(posixmq);  </span><br><span class="line">    if(0 != rc)  </span><br><span class="line">    &#123;  </span><br><span class="line">        perror(&quot;关闭失败&quot;);  </span><br><span class="line">        exit(1);  </span><br><span class="line">    &#125;  </span><br><span class="line">   </span><br><span class="line">    rc = mq_unlink(MQ_NAME);  </span><br><span class="line">    if(0 != rc)  </span><br><span class="line">    &#123;  </span><br><span class="line">        perror(&quot;删除失败&quot;);  </span><br><span class="line">        exit(1);  </span><br><span class="line">    &#125;     </span><br><span class="line">    return 0;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>编译并执行：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">root@linux:/mnt/hgfs/C_libary# gcc -o attrmq attrmq.c -lrt</span><br><span class="line">root@linux:/mnt/hgfs/C_libary# ./attrmq</span><br><span class="line">队列阻塞标志位：0</span><br><span class="line">队列允许最大消息数：10</span><br><span class="line">队列消息最大字节数：8192</span><br><span class="line">队列当前消息条数：0</span><br><span class="line">root@linux:/mnt/hgfs/C_libary#</span><br></pre></td></tr></table></figure></p>
+<p>设置消息队列的属性：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;stdio.h&gt;  </span><br><span class="line">#include &lt;stdlib.h&gt;  </span><br><span class="line">#include &lt;mqueue.h&gt;  </span><br><span class="line">#include &lt;sys/types.h&gt;  </span><br><span class="line">#include &lt;sys/stat.h&gt;  </span><br><span class="line">#include &lt;unistd.h&gt;  </span><br><span class="line">#include &lt;fcntl.h&gt;  </span><br><span class="line">#include &lt;errno.h&gt;  </span><br><span class="line">   </span><br><span class="line">#define MQ_NAME (&quot;/tmp&quot;)  </span><br><span class="line">#define MQ_FLAG (O_RDWR | O_CREAT | O_EXCL) // 创建MQ的flag  </span><br><span class="line">#define FILE_MODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) // 设定创建MQ的权限  </span><br><span class="line">   </span><br><span class="line">int main()  </span><br><span class="line">&#123;  </span><br><span class="line">    mqd_t posixmq;  </span><br><span class="line">    int rc = 0;  </span><br><span class="line">   </span><br><span class="line">    struct mq_attr mqattr;  </span><br><span class="line">  </span><br><span class="line">    // 创建默认属性的消息队列  </span><br><span class="line">    mqattr.mq_maxmsg = 5; // 注意不能超过系统最大限制  </span><br><span class="line">    mqattr.mq_msgsize = 8192;  </span><br><span class="line">    //posixmq = mq_open(MQ_NAME, MQ_FLAG, FILE_MODE, NULL);  </span><br><span class="line">    posixmq = mq_open(MQ_NAME, MQ_FLAG, FILE_MODE, &amp;mqattr);  </span><br><span class="line"></span><br><span class="line">    if(-1 == posixmq)  </span><br><span class="line">    &#123;  </span><br><span class="line">        perror(&quot;创建MQ失败&quot;);  </span><br><span class="line">        exit(1);  </span><br><span class="line">    &#125;  </span><br><span class="line">    </span><br><span class="line">    mqattr.mq_flags = 0;  </span><br><span class="line">    mq_setattr(posixmq, &amp;mqattr, NULL);// mq_setattr()只关注mq_flags，adw  </span><br><span class="line">       </span><br><span class="line">    // 获取消息队列的属性  </span><br><span class="line">    rc = mq_getattr(posixmq, &amp;mqattr);  </span><br><span class="line">    if(-1 == rc)  </span><br><span class="line">    &#123;  </span><br><span class="line">        perror(&quot;获取消息队列属性失败&quot;);  </span><br><span class="line">        exit(1);  </span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    printf(&quot;队列阻塞标志位：%ld\n&quot;, mqattr.mq_flags);  </span><br><span class="line">    printf(&quot;队列允许最大消息数：%ld\n&quot;, mqattr.mq_maxmsg);  </span><br><span class="line">    printf(&quot;队列消息最大字节数：%ld\n&quot;, mqattr.mq_msgsize);  </span><br><span class="line">    printf(&quot;队列当前消息条数：%ld\n&quot;, mqattr.mq_curmsgs);  </span><br><span class="line">   </span><br><span class="line">    rc = mq_close(posixmq);  </span><br><span class="line">    if(0 != rc)  </span><br><span class="line">    &#123;  </span><br><span class="line">        perror(&quot;关闭失败&quot;);  </span><br><span class="line">        exit(1);  </span><br><span class="line">    &#125;    </span><br><span class="line"></span><br><span class="line">    rc = mq_unlink(MQ_NAME);  </span><br><span class="line">    if(0 != rc)  </span><br><span class="line">    &#123;  </span><br><span class="line">        perror(&quot;删除失败&quot;);  </span><br><span class="line">        exit(1);  </span><br><span class="line">    &#125;</span><br><span class="line">         </span><br><span class="line">    return 0;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>编译运行：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">root@linux:/mnt/hgfs/C_libary# gcc -o setattrmq setattrmq.c -lrt</span><br><span class="line">root@linux:/mnt/hgfs/C_libary# ./setattrmq</span><br><span class="line">队列阻塞标志位：0</span><br><span class="line">队列允许最大消息数：5</span><br><span class="line">队列消息最大字节数：8192</span><br><span class="line">队列当前消息条数：0</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/18/Linux进程间通-使用共享内存/" rel="next" title="Linux进程间通信—使用共享内存">
+                <i class="fa fa-chevron-left"></i> Linux进程间通信—使用共享内存
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/18/Linux进程同步之POSIX信号量/" rel="prev" title="Linux进程同步之POSIX信号量">
+                Linux进程同步之POSIX信号量 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">155</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/test.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
