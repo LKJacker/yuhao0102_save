@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="原文：https://blog.csdn.net/anonymalias/article/details/9938865  Linux下个各种进程间的通信方式：管道，FIFO，消息队列，他们的共同特点就是通过内核来进行通信（假设POSIX消息队列也是在内核中实现的，因为POSIX标准并没有限定它的实现方式）。向管道，FIFO，消息队列写入数据需要把数据从进程复制到内核，从这些IPC读取数据的时候又">
+<meta name="keywords" content="Linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux进程通信之POSIX共享内存">
+<meta property="og:url" content="http://yoursite.com/2019/05/18/Linux进程通信之POSIX共享内存/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="原文：https://blog.csdn.net/anonymalias/article/details/9938865  Linux下个各种进程间的通信方式：管道，FIFO，消息队列，他们的共同特点就是通过内核来进行通信（假设POSIX消息队列也是在内核中实现的，因为POSIX标准并没有限定它的实现方式）。向管道，FIFO，消息队列写入数据需要把数据从进程复制到内核，从这些IPC读取数据的时候又">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/20130813005206312.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20130813005255578.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20130813005515687.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20130813010008828.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20130813010145515.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20130813010544187.jpg">
+<meta property="og:updated_time" content="2019-05-18T09:15:16.821Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Linux进程通信之POSIX共享内存">
+<meta name="twitter:description" content="原文：https://blog.csdn.net/anonymalias/article/details/9938865  Linux下个各种进程间的通信方式：管道，FIFO，消息队列，他们的共同特点就是通过内核来进行通信（假设POSIX消息队列也是在内核中实现的，因为POSIX标准并没有限定它的实现方式）。向管道，FIFO，消息队列写入数据需要把数据从进程复制到内核，从这些IPC读取数据的时候又">
+<meta name="twitter:image" content="http://yoursite.com/img/20130813005206312.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/05/18/Linux进程通信之POSIX共享内存/">
+
+
+
+
+
+  <title>Linux进程通信之POSIX共享内存 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/18/Linux进程通信之POSIX共享内存/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Linux进程通信之POSIX共享内存</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-05-18T17:08:39+08:00">
+                2019-05-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>原文：<a href="https://blog.csdn.net/anonymalias/article/details/9938865" target="_blank" rel="noopener">https://blog.csdn.net/anonymalias/article/details/9938865</a> </p>
+<p>Linux下个各种进程间的通信方式：管道，FIFO，消息队列，他们的共同特点就是通过内核来进行通信（假设POSIX消息队列也是在内核中实现的，因为POSIX标准并没有限定它的实现方式）。向管道，FIFO，消息队列写入数据需要把数据从进程复制到内核，从这些IPC读取数据的时候又需要把数据从内核复制到进程。所以这种IPC方式往往需要2次在进程和内核之间进行数据的复制，即进程间的通信必须借助内核来传递。如下图所示：<br><img src="/img/20130813005206312.jpg" alt></p>
+<p>共享内存也是一种IPC，它是目前可用IPC中最快的，它是使用方式是将同一个内存区映射到共享它的不同进程的地址空间中，这样这些进程间的通信就不再需要通过内核，只需对该共享的内存区域进程操作就可以了，和其他IPC不同的是，共享内存的使用需要用户自己进行同步操作。下图是共享内存区IPC的通信，<br><img src="/img/20130813005255578.jpg" alt></p>
+<h1 id="mmap系列函数简介"><a href="#mmap系列函数简介" class="headerlink" title="mmap系列函数简介"></a>mmap系列函数简介</h1><p>mmap函数主要的功能就是将文件或设备映射到调用进程的地址空间中，当使用mmap映射文件到进程后,就可以直接操作这段虚拟地址进行文件的读写等操作,不必再调用read，write等系统调用。在很大程度上提高了系统的效率和代码的简洁性。</p>
+<p>使用mmap函数的主要目的是：</p>
+<ul>
+<li>对普通文件提供内存映射I/O，可以提供无亲缘进程间的通信；</li>
+<li>提供匿名内存映射，以供亲缘进程间进行通信。</li>
+<li>对shm_open创建的POSIX共享内存区对象进程内存映射，以供无亲缘进程间进行通信。</li>
+</ul>
+<p>下面是mmap函数的接口以及说明：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;sys/mman.h&gt;</span><br><span class="line">void *mmap(void *start, size_t len, int prot, int flags, int fd, off_t offset);</span><br><span class="line">               //成功返回映射到进程地址空间的起始地址，失败返回MAP_FAILED</span><br></pre></td></tr></table></figure></p>
+<p>start：指定描述符fd应被映射到的进程地址空间内的起始地址，它通常被设置为空指针NULL，这告诉内核自动选择起始地址，该函数的返回值即为fd映射到内存区的起始地址。</p>
+<p>len：映射到进程地址空间的字节数，它从被映射文件开头的第offset个字节处开始，offset通常被设置为0。如下图是内存映射文件的一个例子：<br><img src="/img/20130813005515687.jpg" alt></p>
+<p>prot：内存映射区的保护由该参数来设定，通常由以下几个值组合而成：</p>
+<ul>
+<li>PROT_READ：数据可读；</li>
+<li>ROT_WRITE：数据可写；</li>
+<li>ROT_EXEC：数据可执行；</li>
+<li>PROT_NONE：数据不可访问；</li>
+</ul>
+<p>flags：设置内存映射区的类型标志，POSIX标志定义了以下三个标志：</p>
+<ul>
+<li>MAP_SHARED：该标志表示，调用进程对被映射内存区的数据所做的修改对于共享该内存区的所有进程都可见，而且确实改变其底层的支撑对象（一个文件对象或是一个共享内存区对象）。</li>
+<li>AP_PRIVATE：调用进程对被映射内存区的数据所做的修改只对该进程可见，而不改变其底层支撑对象。</li>
+<li>AP_FIXED：该标志表示准确的解释start参数，一般不建议使用该标志，对于可移植的代码，应该把start参数置为NULL，且不指定MAP_FIXED标志。</li>
+</ul>
+<p>上面三个标志是在POSIX.1-2001标准中定义的，其中MAP_SHARED和MAP_PRIVATE必须选择一个。在Linux中也定义了一些非标准的标志，例如MAP_ANONYMOUS（MAP_ANON），MAP_LOCKED等，具体参考Linux手册。</p>
+<p>fd：有效的文件描述符。如果设定了MAP_ANONYMOUS（MAP_ANON）标志，在Linux下面会忽略fd参数，而有的系统实现如BSD需要置fd为-1；</p>
+<p>offset：相对文件的起始偏移。</p>
+<p>mmap成功后，可以关闭fd，一般也是这么做的，这对该内存映射没有任何影响。<br>从进程的地址空间中删除一个映射关系，需要用到下面的函数：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;sys/mman.h&gt;</span><br><span class="line">int munmap(void *start, size_t len);</span><br><span class="line">                           //成功返回0，出错返回-1</span><br></pre></td></tr></table></figure></p>
+<p>start：被映射到的进程地址空间的内存区的起始地址，即mmap返回的地址。<br>len：映射区的大小。</p>
+<p>对于一个MAP_SHARED的内存映射区，内核的虚拟内存算法会保持内存映射文件和内存映射区的同步，也就是说，对于内存映射文件所对应内存映射区的修改，内核会在稍后的某个时刻更新该内存映射文件。如果我们希望硬盘上的文件内容和内存映射区中的内容实时一致，那么我们就可以调用msync开执行这种同步：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;sys/mman.h&gt;</span><br><span class="line">int msync(void *start, size_t len, int flags);</span><br><span class="line">                          //成功返回0，出错返回-1</span><br></pre></td></tr></table></figure></p>
+<p>start：被映射到的进程地址空间的内存区的起始地址，即mmap返回的地址。<br>len：映射区的大小。<br>flags：同步标志，有一下三个标志：</p>
+<ul>
+<li>MS_ASYNC：异步写，一旦写操作由内核排入队列，就立刻返回；</li>
+<li>MS_SYNC：同步写，要等到写操作完成后才返回。</li>
+<li>MS_INVALIDATE：使该文件的其他内存映射的副本全部失效。</li>
+</ul>
+<h1 id="mmap内存映射区的大小"><a href="#mmap内存映射区的大小" class="headerlink" title="mmap内存映射区的大小"></a>mmap内存映射区的大小</h1><p>Linux下的内存是采用页式管理机制。通过mmap进行内存映射，内核生成的映射区的大小都是以页面大小PAGESIZE为单位，即为PAGESIZE的整数倍。如果mmap映射的长度不是页面大小的整数倍，那么多余空间也会被闲置浪费。</p>
+<p>下面可以查看Linux的页面大小<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;iostream&gt;</span><br><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line"> </span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">    std::cout&lt;&lt;&quot;page size:&quot;&lt;&lt;sysconf(_SC_PAGE_SIZE)&lt;&lt;std::endl;</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>输出结果是：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">page size:4096</span><br></pre></td></tr></table></figure></p>
+<p>那么下面对映射文件的大小和映射长度的不同情况进行讨论。</p>
+<p>(1)映射文件的大小和映射长度相同<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;iostream&gt;</span><br><span class="line">#include &lt;cstring&gt;</span><br><span class="line">#include &lt;cerrno&gt;</span><br><span class="line"> </span><br><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">#include &lt;fcntl.h&gt;</span><br><span class="line">#include &lt;sys/mman.h&gt;</span><br><span class="line"> </span><br><span class="line">using namespace std;</span><br><span class="line"> </span><br><span class="line">#define  PATH_NAME &quot;/tmp/memmap&quot;</span><br><span class="line"> </span><br><span class="line">int main(int argc, char **argv)</span><br><span class="line">&#123;</span><br><span class="line">    int fd;</span><br><span class="line"> </span><br><span class="line">    fd = open(PATH_NAME, O_RDWR | O_CREAT, 0666);</span><br><span class="line">    if (fd &lt; 0)</span><br><span class="line">    &#123;</span><br><span class="line">        cout&lt;&lt;&quot;open file &quot;&lt;&lt;PATH_NAME&lt;&lt;&quot; failed...&quot;;</span><br><span class="line">        cout&lt;&lt;strerror(errno)&lt;&lt;endl;</span><br><span class="line">        return -1;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    if (ftruncate(fd, 5000) &lt; 0)</span><br><span class="line">    &#123;</span><br><span class="line">        cout&lt;&lt;&quot;change file size  failed...&quot;;</span><br><span class="line">        cout&lt;&lt;strerror(errno)&lt;&lt;endl;</span><br><span class="line">        </span><br><span class="line">        close(fd);</span><br><span class="line">        return -1;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    char *memPtr;</span><br><span class="line"> </span><br><span class="line">    memPtr = (char *)mmap(NULL, 5000, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);</span><br><span class="line">    close(fd);</span><br><span class="line"> </span><br><span class="line">    if (memPtr == MAP_FAILED)</span><br><span class="line">    &#123;</span><br><span class="line">        cout&lt;&lt;&quot;mmap failed...&quot;&lt;&lt;strerror(errno)&lt;&lt;endl;</span><br><span class="line">        return -1;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    cout&lt;&lt;&quot;[0]:&quot;&lt;&lt;(int)memPtr[0]&lt;&lt;endl;</span><br><span class="line">    cout&lt;&lt;&quot;[4999]:&quot;&lt;&lt;(int)memPtr[4999]&lt;&lt;endl;</span><br><span class="line">    cout&lt;&lt;&quot;[5000]:&quot;&lt;&lt;(int)memPtr[5000]&lt;&lt;endl;</span><br><span class="line">    cout&lt;&lt;&quot;[8191]:&quot;&lt;&lt;(int)memPtr[8191]&lt;&lt;endl;</span><br><span class="line">    cout&lt;&lt;&quot;[8192]:&quot;&lt;&lt;(int)memPtr[8192]&lt;&lt;endl;</span><br><span class="line">    cout&lt;&lt;&quot;[4096 * 3 - 1]:&quot;&lt;&lt;(int)memPtr[4096 * 3 - 1]&lt;&lt;endl;</span><br><span class="line">    cout&lt;&lt;&quot;[4096 * 3]:&quot;&lt;&lt;(int)memPtr[4096 * 3]&lt;&lt;endl;</span><br><span class="line">    </span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>执行结果如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[0]:0</span><br><span class="line">[4999]:0</span><br><span class="line">[5000]:0</span><br><span class="line">[8191]:0</span><br><span class="line">[8192]:91</span><br><span class="line">[4096 * 3 - 1]:0</span><br><span class="line">Segmentation fault</span><br></pre></td></tr></table></figure></p>
+<p>用下图来分析执行结果：<br><img src="/img/20130813010008828.jpg" alt></p>
+<p>由执行结果可以看到，能够完整的访问到前三页，在访问第四页的时候会产生SIGSEGV信号，发生Segmentation fault段越界访问错误。按照《UNIX 网络编程 卷2：进程间通信》中P257的讲解，内核会为该内存映射两个页面，访问前两个页面不会有问题，但访问第三个页面会产生SIGSEGV错误信号。这个差异具体应该是底层实现有关，留待以后研究。</p>
+<p>(2)映射文件的大小小于映射长度</p>
+<p>在上面代码的基础上，修改mmap内存映射还是部分的第二个参数，如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">memPtr = (char *)mmap(NULL, 4096 * 3, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);</span><br></pre></td></tr></table></figure></p>
+<p>执行结果如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[0]:0</span><br><span class="line">[4999]:0</span><br><span class="line">[5000]:0</span><br><span class="line">[8191]:0</span><br><span class="line">Bus error</span><br></pre></td></tr></table></figure></p>
+<p>再修改访问代码，访问偏移4096*3以后的内存映射去，结果的情况是<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[4096 * 3]:91</span><br><span class="line">[4096 * 4 - 1]:0</span><br><span class="line">Segmentation fault // memPtr[4096*4]</span><br></pre></td></tr></table></figure></p>
+<p>用下图来分析执行结果：<br><img src="/img/20130813010145515.jpg" alt></p>
+<p>该执行结果和之前的映射文件大小和映射长度相同的情况有比较大的区别，在访问内存映射区内部但超出底层支撑对象的大小的区域部分会产生SIGBUS错误信息，产生生BUS error错误，但访问第四页不会出问题，访问第四页以后的内存区就会产生 SIGSEGV错误信息。按照《UNIX 网络编程 卷2：进程间通信》中P258的讲解，访问第三个页面以后的内存会产生SIGSEGV错误信号。这个差异具体应该是底层实现有关，留待以后研究。</p>
+<h1 id="mmap实现进程间通信"><a href="#mmap实现进程间通信" class="headerlink" title="mmap实现进程间通信"></a>mmap实现进程间通信</h1><p>下面将介绍mmap本身提供的进程间通信的两种方式，分别用于无亲缘和亲缘进程间的通信。</p>
+<p>（1）通过匿名内存映射提供亲缘进程间的通信</p>
+<p>我们可以通过在父进程fork之前指定MAP_SHARED调用mmap，通过映射一个文件来实现父子进程间的通信，POSIX保证了父进程的内存映射关系保留到子进程中，父子进程对内存映射区的修改双方都可以看到。</p>
+<p>在Linux 2.4以后，mmap提供匿名内存映射机制，即将mmap的flags参数指定为：MAP_SHARED | MAP_ANON。这样就彻底避免了内存映射文件的创建和打开，简化了对文件的操作。匿名内存映射机制的目的就是为了提供一个穿越父子进程间的内存映射区，很方便的提供了亲缘进程间的通信，下面是测试代码：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;iostream&gt;</span><br><span class="line">#include &lt;cstring&gt;</span><br><span class="line">#include &lt;cerrno&gt;</span><br><span class="line"> </span><br><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">#include &lt;fcntl.h&gt;</span><br><span class="line">#include &lt;sys/mman.h&gt;</span><br><span class="line"> </span><br><span class="line">using namespace std;</span><br><span class="line"> </span><br><span class="line">int main(int argc, char **argv)</span><br><span class="line">&#123;</span><br><span class="line">    int *memPtr;</span><br><span class="line"> </span><br><span class="line">    memPtr = (int *) mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANON, 0, 0);</span><br><span class="line">    if (memPtr == MAP_FAILED)</span><br><span class="line">    &#123;</span><br><span class="line">        cout&lt;&lt;&quot;mmap failed...&quot;&lt;&lt;strerror(errno)&lt;&lt;endl;</span><br><span class="line">        return -1;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    *memPtr = 0;</span><br><span class="line"> </span><br><span class="line">    if (fork() == 0)</span><br><span class="line">    &#123;</span><br><span class="line">        *memPtr = 1;</span><br><span class="line">        cout&lt;&lt;&quot;child:set memory &quot;&lt;&lt;*memPtr&lt;&lt;endl;</span><br><span class="line"> </span><br><span class="line">        exit(0);</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    sleep(1);</span><br><span class="line">    cout&lt;&lt;&quot;parent:memory value &quot;&lt;&lt;*memPtr&lt;&lt;endl;</span><br><span class="line"> </span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>执行结果如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">child:set memory 1</span><br><span class="line">parent:memory value 1</span><br></pre></td></tr></table></figure></p>
+<p>（2）通过内存映射文件提供无亲缘进程间的通信</p>
+<p>通过在不同进程间对同一内存映射文件进行映射，来进行无亲缘进程间的通信，如下测试代码：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br></pre></td><td class="code"><pre><span class="line">//process 1</span><br><span class="line">#include &lt;iostream&gt;</span><br><span class="line">#include &lt;cstring&gt;</span><br><span class="line">#include &lt;errno.h&gt;</span><br><span class="line"> </span><br><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">#include &lt;fcntl.h&gt;</span><br><span class="line">#include &lt;sys/mman.h&gt;</span><br><span class="line"> </span><br><span class="line">using namespace std;</span><br><span class="line"> </span><br><span class="line">#define  PATH_NAME &quot;/tmp/memmap&quot;</span><br><span class="line"> </span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">    int *memPtr;</span><br><span class="line">    int fd;</span><br><span class="line"> </span><br><span class="line">    fd = open(PATH_NAME, O_RDWR | O_CREAT, 0666);</span><br><span class="line">    if (fd &lt; 0)</span><br><span class="line">    &#123;</span><br><span class="line">        cout&lt;&lt;&quot;open file &quot;&lt;&lt;PATH_NAME&lt;&lt;&quot; failed...&quot;;</span><br><span class="line">        cout&lt;&lt;strerror(errno)&lt;&lt;endl;</span><br><span class="line">        return -1;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    ftruncate(fd, sizeof(int));</span><br><span class="line"> </span><br><span class="line">    memPtr = (int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);</span><br><span class="line">    close(fd);</span><br><span class="line"> </span><br><span class="line">    if (memPtr == MAP_FAILED)</span><br><span class="line">    &#123;</span><br><span class="line">        cout&lt;&lt;&quot;mmap failed...&quot;&lt;&lt;strerror(errno)&lt;&lt;endl;</span><br><span class="line">        return -1;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    *memPtr = 111;</span><br><span class="line">	cout&lt;&lt;&quot;process:&quot;&lt;&lt;getpid()&lt;&lt;&quot; send:&quot;&lt;&lt;*memPtr&lt;&lt;endl;</span><br><span class="line"> </span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">//process 2</span><br><span class="line">#include &lt;iostream&gt;</span><br><span class="line">#include &lt;cstring&gt;</span><br><span class="line">#include &lt;errno.h&gt;</span><br><span class="line"> </span><br><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">#include &lt;fcntl.h&gt;</span><br><span class="line">#include &lt;sys/mman.h&gt;</span><br><span class="line"> </span><br><span class="line">using namespace std;</span><br><span class="line"> </span><br><span class="line">#define  PATH_NAME &quot;/tmp/memmap&quot;</span><br><span class="line"> </span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">    int *memPtr;</span><br><span class="line">    int fd;</span><br><span class="line"> </span><br><span class="line">    fd = open(PATH_NAME, O_RDWR | O_CREAT, 0666);</span><br><span class="line">    if (fd &lt; 0)</span><br><span class="line">    &#123;</span><br><span class="line">        cout&lt;&lt;&quot;open file &quot;&lt;&lt;PATH_NAME&lt;&lt;&quot; failed...&quot;;</span><br><span class="line">        cout&lt;&lt;strerror(errno)&lt;&lt;endl;</span><br><span class="line">        return -1;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    memPtr = (int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);</span><br><span class="line">    close(fd);</span><br><span class="line"> </span><br><span class="line">    if (memPtr == MAP_FAILED)</span><br><span class="line">    &#123;</span><br><span class="line">        cout&lt;&lt;&quot;mmap failed...&quot;&lt;&lt;strerror(errno)&lt;&lt;endl;</span><br><span class="line">        return -1;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    cout&lt;&lt;&quot;process:&quot;&lt;&lt;getpid()&lt;&lt;&quot; receive:&quot;&lt;&lt;*memPtr&lt;&lt;endl;</span><br><span class="line"> </span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>执行结果如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># ./send </span><br><span class="line">process:12711 send:111</span><br><span class="line"># ./recv </span><br><span class="line">process:12712 receive:111</span><br></pre></td></tr></table></figure></p>
+<p>上面的代码都没进行同步操作，在实际的使用过程要考虑到进程间的同步，通常会用信号量来进行共享内存的同步。</p>
+<h1 id="基于mmap的POSIX共享内存"><a href="#基于mmap的POSIX共享内存" class="headerlink" title="基于mmap的POSIX共享内存"></a>基于mmap的POSIX共享内存</h1><p>上面介绍了通过内存映射文件进行进程间的通信的方式，现在要介绍的是通过POSIX共享内存区对象进行进程间的通信。POSIX共享内存使用方法有以下两个步骤：</p>
+<p>通过shm_open创建或打开一个POSIX共享内存对象；<br>然后调用mmap将它映射到当前进程的地址空间；<br>和通过内存映射文件进行通信的使用上差别在于mmap描述符参数获取方式不一样：通过open或shm_open。如下图所示：<br><img src="/img/20130813010544187.jpg" alt></p>
+<p>POSIX共享内存区对象的特殊操作函数就只有创建（打开）和删除两个函数，其他对共享内存区对象的操作都是通过已有的函数进行的。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;sys/mman.h&gt;</span><br><span class="line">int shm_open(const char *name, int oflag, mode_t mode);</span><br><span class="line">                              //成功返回非负的描述符，失败返回-1</span><br><span class="line">int shm_unlink(const char *name);</span><br><span class="line">                              //成功返回0，失败返回-1</span><br></pre></td></tr></table></figure></p>
+<p>shm_open用于创建一个新的共享内存区对象或打开一个已经存在的共享内存区对象。</p>
+<p>name：POSIX IPC的名字，前面关于POSIX进程间通信都已讲过关于POSIX IPC的规则，这里不再赘述。</p>
+<p>oflag：操作标志，包含：O_RDONLY，O_RDWR，O_CREAT，O_EXCL，O_TRUNC。其中O_RDONLY和O_RDWR标志必须且仅能存在一项。</p>
+<p>mode：用于设置创建的共享内存区对象的权限属性。和open以及其他POSIX IPC的xxx_open函数不同的是，该参数必须一直存在，如果oflag参数中没有O_CREAT标志，该位可以置0；</p>
+<p>shm_unlink用于删除一个共享内存区对象，跟其他文件的unlink以及其他POSIX IPC的删除操作一样，对象的析构会到对该对象的所有引用全部关闭才会发生。</p>
+<p>POSIX共享内存和POSIX消息队列，有名信号量一样都是具有随内核持续性的特点。</p>
+<p>下面是通过POSIX共享内存进行通信的测试代码，代码中通过POSIX信号量来进行进程间的同步操作。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br></pre></td><td class="code"><pre><span class="line">//process 1</span><br><span class="line">#include &lt;iostream&gt;</span><br><span class="line">#include &lt;cstring&gt;</span><br><span class="line">#include &lt;errno.h&gt;</span><br><span class="line"> </span><br><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">#include &lt;fcntl.h&gt;</span><br><span class="line">#include &lt;semaphore.h&gt;</span><br><span class="line">#include &lt;sys/mman.h&gt;</span><br><span class="line"> </span><br><span class="line">using namespace std;</span><br><span class="line"> </span><br><span class="line">#define SHM_NAME &quot;/memmap&quot;</span><br><span class="line">#define SHM_NAME_SEM &quot;/memmap_sem&quot; </span><br><span class="line"> </span><br><span class="line">char sharedMem[10];</span><br><span class="line"> </span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">    int fd;</span><br><span class="line">    sem_t *sem;</span><br><span class="line"> </span><br><span class="line">    fd = shm_open(SHM_NAME, O_RDWR | O_CREAT, 0666);</span><br><span class="line">    sem = sem_open(SHM_NAME_SEM, O_CREAT, 0666, 0);</span><br><span class="line"> </span><br><span class="line">    if (fd &lt; 0 || sem == SEM_FAILED)</span><br><span class="line">    &#123;</span><br><span class="line">        cout&lt;&lt;&quot;shm_open or sem_open failed...&quot;;</span><br><span class="line">        cout&lt;&lt;strerror(errno)&lt;&lt;endl;</span><br><span class="line">        return -1;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    ftruncate(fd, sizeof(sharedMem));</span><br><span class="line"> </span><br><span class="line">    char *memPtr;</span><br><span class="line">    memPtr = (char *)mmap(NULL, sizeof(sharedMem), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);</span><br><span class="line">    close(fd);</span><br><span class="line"> </span><br><span class="line">    char msg[] = &quot;yuki...&quot;;</span><br><span class="line"> </span><br><span class="line">    memmove(memPtr, msg, sizeof(msg));</span><br><span class="line">    cout&lt;&lt;&quot;process:&quot;&lt;&lt;getpid()&lt;&lt;&quot; send:&quot;&lt;&lt;memPtr&lt;&lt;endl;</span><br><span class="line"> </span><br><span class="line">    sem_post(sem);</span><br><span class="line">    sem_close(sem);</span><br><span class="line"> </span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">//process 2</span><br><span class="line">#include &lt;iostream&gt;</span><br><span class="line">#include &lt;cstring&gt;</span><br><span class="line">#include &lt;errno.h&gt;</span><br><span class="line"> </span><br><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">#include &lt;fcntl.h&gt;</span><br><span class="line">#include &lt;semaphore.h&gt;</span><br><span class="line">#include &lt;sys/mman.h&gt;</span><br><span class="line"> </span><br><span class="line">using namespace std;</span><br><span class="line"> </span><br><span class="line">#define SHM_NAME &quot;/memmap&quot;</span><br><span class="line">#define SHM_NAME_SEM &quot;/memmap_sem&quot; </span><br><span class="line"> </span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">    int fd;</span><br><span class="line">    sem_t *sem;</span><br><span class="line"> </span><br><span class="line">    fd = shm_open(SHM_NAME, O_RDWR, 0);</span><br><span class="line">    sem = sem_open(SHM_NAME_SEM, 0);</span><br><span class="line"> </span><br><span class="line">    if (fd &lt; 0 || sem == SEM_FAILED)</span><br><span class="line">    &#123;</span><br><span class="line">        cout&lt;&lt;&quot;shm_open or sem_open failed...&quot;;</span><br><span class="line">        cout&lt;&lt;strerror(errno)&lt;&lt;endl;</span><br><span class="line">        return -1;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    struct stat fileStat;</span><br><span class="line">    fstat(fd, &amp;fileStat);</span><br><span class="line"> </span><br><span class="line">    char *memPtr;</span><br><span class="line">    memPtr = (char *)mmap(NULL, fileStat.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);</span><br><span class="line">    close(fd);</span><br><span class="line"> </span><br><span class="line">    sem_wait(sem);</span><br><span class="line"> </span><br><span class="line">    cout&lt;&lt;&quot;process:&quot;&lt;&lt;getpid()&lt;&lt;&quot; recv:&quot;&lt;&lt;memPtr&lt;&lt;endl;</span><br><span class="line"> </span><br><span class="line">    sem_close(sem);</span><br><span class="line"> </span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>程序的执行结果如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># ./send </span><br><span class="line">process:13719 send:yuki...</span><br><span class="line"># ./recv </span><br><span class="line">process:13720 recv:yuki...</span><br></pre></td></tr></table></figure></p>
+<p>在Linux 2.6.18中，对于POSIX信号量和共享内存的名字会在/dev/shm下建立对应的路径名，例如上面的测试代码，会生成如下的路径名：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># ll /dev/shm/</span><br><span class="line">total 8</span><br><span class="line">-rw-r--r-- 1 root root 10 Aug 13 00:28 memmap</span><br><span class="line">-rw-r--r-- 1 root root 32 Aug 13 00:28 sem.memmap_sem</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/18/Linux线程的信号量同步/" rel="next" title="Linux线程的信号量同步">
+                <i class="fa fa-chevron-left"></i> Linux线程的信号量同步
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">152</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/test.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#mmap系列函数简介"><span class="nav-number">1.</span> <span class="nav-text">mmap系列函数简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#mmap内存映射区的大小"><span class="nav-number">2.</span> <span class="nav-text">mmap内存映射区的大小</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#mmap实现进程间通信"><span class="nav-number">3.</span> <span class="nav-text">mmap实现进程间通信</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#基于mmap的POSIX共享内存"><span class="nav-number">4.</span> <span class="nav-text">基于mmap的POSIX共享内存</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
