@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Linux进程调度的目标 高效性：高效意味着在相同的时间下要完成更多的任务。调度程序会被频繁的执行，所以调度程序要尽可能的高效； 加强交互性能:在系统相当的负载下，也要保证系统的响应时间； 保证公平和避免饥渴； SMP调度：调度程序必须支持多处理系统； 软实时调度：系统必须有效的调用实时进程，但不保证一定满足其要求；  Linux进程优先级进程提供了两种优先级，一种是普通的进程优先级，第二个是实时">
+<meta name="keywords" content="Linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux的任务调度机制">
+<meta property="og:url" content="http://yoursite.com/2019/05/19/Linux的任务调度机制/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="Linux进程调度的目标 高效性：高效意味着在相同的时间下要完成更多的任务。调度程序会被频繁的执行，所以调度程序要尽可能的高效； 加强交互性能:在系统相当的负载下，也要保证系统的响应时间； 保证公平和避免饥渴； SMP调度：调度程序必须支持多处理系统； 软实时调度：系统必须有效的调用实时进程，但不保证一定满足其要求；  Linux进程优先级进程提供了两种优先级，一种是普通的进程优先级，第二个是实时">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/161210240576893.jpg">
+<meta property="og:image" content="http://yoursite.com/img/201153238078305.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20130603145524078">
+<meta property="og:image" content="http://yoursite.com/img/20130603145556421">
+<meta property="og:image" content="http://yoursite.com/img/20130603145624453">
+<meta property="og:image" content="http://yoursite.com/img/20130603145647296">
+<meta property="og:updated_time" content="2019-05-19T16:08:15.757Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Linux的任务调度机制">
+<meta name="twitter:description" content="Linux进程调度的目标 高效性：高效意味着在相同的时间下要完成更多的任务。调度程序会被频繁的执行，所以调度程序要尽可能的高效； 加强交互性能:在系统相当的负载下，也要保证系统的响应时间； 保证公平和避免饥渴； SMP调度：调度程序必须支持多处理系统； 软实时调度：系统必须有效的调用实时进程，但不保证一定满足其要求；  Linux进程优先级进程提供了两种优先级，一种是普通的进程优先级，第二个是实时">
+<meta name="twitter:image" content="http://yoursite.com/img/161210240576893.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/05/19/Linux的任务调度机制/">
+
+
+
+
+
+  <title>Linux的任务调度机制 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/19/Linux的任务调度机制/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Linux的任务调度机制</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-05-19T23:44:39+08:00">
+                2019-05-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Linux进程调度的目标"><a href="#Linux进程调度的目标" class="headerlink" title="Linux进程调度的目标"></a>Linux进程调度的目标</h1><ol>
+<li>高效性：高效意味着在相同的时间下要完成更多的任务。调度程序会被频繁的执行，所以调度程序要尽可能的高效；</li>
+<li>加强交互性能:在系统相当的负载下，也要保证系统的响应时间；</li>
+<li>保证公平和避免饥渴；</li>
+<li>SMP调度：调度程序必须支持多处理系统；</li>
+<li>软实时调度：系统必须有效的调用实时进程，但不保证一定满足其要求；</li>
+</ol>
+<h1 id="Linux进程优先级"><a href="#Linux进程优先级" class="headerlink" title="Linux进程优先级"></a>Linux进程优先级</h1><p>进程提供了两种优先级，一种是普通的进程优先级，第二个是实时优先级。前者适用SCHED_NORMAL调度策略，后者可选SCHED_FIFO或SCHED_RR调度策略。任何时候，实时进程的优先级都高于普通进程，实时进程只会被更高级的实时进程抢占，同级实时进程之间是按照FIFO（一次机会做完）或者RR（多次轮转）规则调度的。</p>
+<p>首先，说下实时进程的调度</p>
+<p>实时进程，只有静态优先级，因为内核不会再根据休眠等因素对其静态优先级做调整，其范围在0~MAX_RT_PRIO-1间。默认MAX_RT_PRIO配置为100，也即，默认的实时优先级范围是0~99。而nice值，影响的是优先级在MAX_RT_PRIO~MAX_RT_PRIO+40范围内的进程。</p>
+<p>不同与普通进程，系统调度时，实时优先级高的进程总是先于优先级低的进程执行。知道实时优先级高的实时进程无法执行。实时进程总是被认为处于活动状态。如果有数个 优先级相同的实时进程，那么系统就会按照进程出现在队列上的顺序选择进程。假设当前CPU运行的实时进程A的优先级为a，而此时有个优先级为b的实时进程B进入可运行状态，那么只要b &lt; a，系统将中断A的执行，而优先执行B，直到B无法执行（无论A，B为何种实时进程）。</p>
+<p>不同调度策略的实时进程只有在相同优先级时才有可比性：</p>
+<ol>
+<li>对于FIFO的进程，意味着只有当前进程执行完毕才会轮到其他进程执行。由此可见相当霸道。</li>
+<li>对于RR的进程。一旦时间片消耗完毕，则会将该进程置于队列的末尾，然后运行其他相同优先级的进程，如果没有其他相同优先级的进程，则该进程会继续执行。</li>
+</ol>
+<p>总而言之，对于实时进程，高优先级的进程就是大爷。它执行到没法执行了，才轮到低优先级的进程执行。等级制度相当森严啊。</p>
+<h1 id="非实时进程调度"><a href="#非实时进程调度" class="headerlink" title="非实时进程调度"></a>非实时进程调度</h1><p>Linux对普通的进程，根据动态优先级进行调度。而动态优先级是由静态优先级（static_prio）调整而来。Linux下，静态优先级是用户不可见的，隐藏在内核中。而内核提供给用户一个可以影响静态优先级的接口，那就是nice值，两者关系如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">static_prio=MAX_RT_PRIO +nice+ 20</span><br></pre></td></tr></table></figure></p>
+<p>nice值的范围是-20~19，因而静态优先级范围在100~139之间。nice数值越大就使得static_prio越大，最终进程优先级就越低。</p>
+<p>ps -el 命令执行结果：NI列显示的每个进程的nice值，PRI是进程的优先级（如果是实时进程就是静态优先级，如果是非实时进程，就是动态优先级）　　</p>
+<p>而进程的时间片就是完全依赖 static_prio 定制的，见下图，摘自《深入理解linux内核》，<br><img src="/img/161210240576893.jpg" alt></p>
+<p>我们前面也说了，系统调度时，还会考虑其他因素，因而会计算出一个叫进程动态优先级的东西，根据此来实施调度。因为，不仅要考虑静态优先级，也要考虑进程的属性。例如如果进程属于交互式进程，那么可以适当的调高它的优先级，使得界面反应地更加迅速，从而使用户得到更好的体验。Linux2.6 在这方面有了较大的提高。Linux2.6认为，交互式进程可以从平均睡眠时间这样一个measurement进行判断。进程过去的睡眠时间越多，则越有可能属于交互式进程。则系统调度时，会给该进程更多的奖励（bonus），以便该进程有更多的机会能够执行。奖励（bonus）从0到10不等。</p>
+<p>系统会严格按照动态优先级高低的顺序安排进程执行。动态优先级高的进程进入非运行状态，或者时间片消耗完毕才会轮到动态优先级较低的进程执行。动态优先级的计算主要考虑两个因素：静态优先级，进程的平均睡眠时间也即bonus。计算公式如下，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dynamic_prio = max (100, min (static_prio - bonus + 5, 139))</span><br></pre></td></tr></table></figure></p>
+<p>在调度时，Linux2.6 使用了一个小小的trick，就是算法中经典的空间换时间的思想[还没对照源码确认]，使得计算最优进程能够在O(1)的时间内完成。</p>
+<p>为什么根据睡眠和运行时间确定奖惩分数是合理的</p>
+<p>睡眠和CPU耗时反应了进程IO密集和CPU密集两大瞬时特点，不同时期，一个进程可能即是CPU密集型也是IO密集型进程。对于表现为IO密集的进程，应该经常运行，但每次时间片不要太长。对于表现为CPU密集的进程，CPU不应该让其经常运行，但每次运行时间片要长。交互进程为例，假如之前其其大部分时间在于等待CPU，这时为了调高相应速度，就需要增加奖励分。另一方面，如果此进程总是耗尽每次分配给它的时间片，为了对其他进程公平，就要增加这个进程的惩罚分数。可以参考CFS的virtutime机制.</p>
+<h1 id="现代方法CFS"><a href="#现代方法CFS" class="headerlink" title="现代方法CFS"></a>现代方法CFS</h1><p>不再单纯依靠进程优先级绝对值，而是参考其绝对值，综合考虑所有进程的时间，给出当前调度时间单位内其应有的权重，也就是，每个进程的权重X单位时间=应获cpu时间，但是这个应得的cpu时间不应太小（假设阈值为1ms），否则会因为切换得不偿失。但是，当进程足够多时候，肯定有很多不同权重的进程获得相同的时间——最低阈值1ms，所以，CFS只是近似完全公平。</p>
+<h1 id="Linux进程状态机"><a href="#Linux进程状态机" class="headerlink" title="Linux进程状态机"></a>Linux进程状态机</h1><p><img src="/img/201153238078305.jpg" alt></p>
+<p>进程是通过fork系列的系统调用（fork、clone、vfork）来创建的，内核（或内核模块）也可以通过kernel_thread函数创建内核进程。这些创建子进程的函数本质上都完成了相同的功能——将调用进程复制一份，得到子进程。（可以通过选项参数来决定各种资源是共享、还是私有。）<br>那么既然调用进程处于TASK_RUNNING状态（否则，它若不是正在运行，又怎么进行调用？），则子进程默认也处于TASK_RUNNING状态。<br>另外，在系统调用clone和内核函数kernel_thread也接受CLONE_STOPPED选项，从而将子进程的初始状态置为 TASK_STOPPED。</p>
+<p>进程创建后，状态可能发生一系列的变化，直到进程退出。而尽管进程状态有好几种，但是进程状态的变迁却只有两个方向——从TASK_RUNNING状态变为非TASK_RUNNING状态、或者从非TASK_RUNNING状态变为TASK_RUNNING状态。总之，TASK_RUNNING是必经之路，不可能两个非RUN状态直接转换。</p>
+<p>也就是说，如果给一个TASK_INTERRUPTIBLE状态的进程发送SIGKILL信号，这个进程将先被唤醒（进入TASK_RUNNING状态），然后再响应SIGKILL信号而退出（变为TASK_DEAD状态）。并不会从TASK_INTERRUPTIBLE状态直接退出。</p>
+<p>进程从非TASK_RUNNING状态变为TASK_RUNNING状态，是由别的进程（也可能是中断处理程序）执行唤醒操作来实现的。执行唤醒的进程设置被唤醒进程的状态为TASK_RUNNING，然后将其task_struct结构加入到某个CPU的可执行队列中。于是被唤醒的进程将有机会被调度执行。</p>
+<p>而进程从TASK_RUNNING状态变为非TASK_RUNNING状态，则有两种途径：</p>
+<ol>
+<li>响应信号而进入TASK_STOPED状态、或TASK_DEAD状态；</li>
+<li>执行系统调用主动进入TASK_INTERRUPTIBLE状态（如nanosleep系统调用）、或TASK_DEAD状态（如exit系统调用）；或由于执行系统调用需要的资源得不到满　　　　 足，而进入TASK_INTERRUPTIBLE状态或TASK_UNINTERRUPTIBLE状态（如select系统调用）。</li>
+</ol>
+<p>显然，这两种情况都只能发生在进程正在CPU上执行的情况下。</p>
+<p>通过ps命令我们能够查看到系统中存在的进程，以及它们的状态：</p>
+<p>R(TASK_RUNNING)，可执行状态。</p>
+<p>只有在该状态的进程才可能在CPU上运行。而同一时刻可能有多个进程处于可执行状态，这些进程的task_struct结构（进程控制块）被放入对应CPU的可执行队列中（一个进程最多只能出现在一个CPU的可执行队列中）。进程调度器的任务就是从各个CPU的可执行队列中分别选择一个进程在该CPU上运行。<br>只要可执行队列不为空，其对应的CPU就不能偷懒，就要执行其中某个进程。一般称此时的CPU“忙碌”。对应的，CPU“空闲”就是指其对应的可执行队列为空，以致于CPU无事可做。<br>有人问，为什么死循环程序会导致CPU占用高呢？因为死循环程序基本上总是处于TASK_RUNNING状态（进程处于可执行队列中）。除非一些非常极端情况（比如系统内存严重紧缺，导致进程的某些需要使用的页面被换出，并且在页面需要换入时又无法分配到内存……），否则这个进程不会睡眠。所以CPU的可执行队列总是不为空（至少有这么个进程存在），CPU也就不会“空闲”。</p>
+<p>很多操作系统教科书将正在CPU上执行的进程定义为RUNNING状态、而将可执行但是尚未被调度执行的进程定义为READY状态，这两种状态在linux下统一为 TASK_RUNNING状态。</p>
+<p>S(TASK_INTERRUPTIBLE)，可中断的睡眠状态。</p>
+<p>处于这个状态的进程因为等待某某事件的发生（比如等待socket连接、等待信号量），而被挂起。这些进程的task_struct结构被放入对应事件的等待队列中。当这些事件发生时（由外部中断触发、或由其他进程触发），对应的等待队列中的一个或多个进程将被唤醒。</p>
+<p>通过ps命令我们会看到，一般情况下，进程列表中的绝大多数进程都处于TASK_INTERRUPTIBLE状态（除非机器的负载很高）。毕竟CPU就这么一两个，进程动辄几十上百个，如果不是绝大多数进程都在睡眠，CPU又怎么响应得过来。</p>
+<p>D(TASK_UNINTERRUPTIBLE)，不可中断的睡眠状态。</p>
+<p>与TASK_INTERRUPTIBLE状态类似，进程处于睡眠状态，但是此刻进程是不可中断的。不可中断，指的并不是CPU不响应外部硬件的中断，而是指进程不响应异步信号。<br>绝大多数情况下，进程处在睡眠状态时，总是应该能够响应异步信号的。否则你将惊奇的发现，kill -9竟然杀不死一个正在睡眠的进程了！于是我们也很好理解，为什么ps命令看到的进程几乎不会出现TASK_UNINTERRUPTIBLE状态，而总是TASK_INTERRUPTIBLE状态。</p>
+<p>而TASK_UNINTERRUPTIBLE状态存在的意义就在于，内核的某些处理流程是不能被打断的。如果响应异步信号，程序的执行流程中就会被插入一段用于处理异步信号的流程（这个插入的流程可能只存在于内核态，也可能延伸到用户态），于是原有的流程就被中断了（参见《linux异步信号handle浅析》）。<br>在进程对某些硬件进行操作时（比如进程调用read系统调用对某个设备文件进行读操作，而read系统调用最终执行到对应设备驱动的代码，并与对应的物理设备进行交互），可能需要使用TASK_UNINTERRUPTIBLE状态对进程进行保护，以避免进程与设备交互的过程被打断，造成设备陷入不可控的状态。（比如read系统调用触发了一次磁盘到用户空间的内存的DMA，如果DMA进行过程中，进程由于响应信号而退出了，那么DMA正在访问的内存可能就要被释放了。）这种情况下的TASK_UNINTERRUPTIBLE状态总是非常短暂的，通过ps命令基本上不可能捕捉到。</p>
+<p>linux系统中也存在容易捕捉的TASK_UNINTERRUPTIBLE状态。执行vfork系统调用后，父进程将进入TASK_UNINTERRUPTIBLE状态，直到子进程调用exit或exec。<br>通过下面的代码就能得到处于TASK_UNINTERRUPTIBLE状态的进程：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">void main() &#123;</span><br><span class="line">if (!vfork()) sleep(100);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>编译运行，然后ps一下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">kouu@kouu-one:~/test$ ps -ax | grep a\.out</span><br><span class="line">4371 pts/0 D+ 0:00 ./a.out</span><br><span class="line">4372 pts/0 S+ 0:00 ./a.out</span><br><span class="line">4374 pts/1 S+ 0:00 grep a.out</span><br></pre></td></tr></table></figure></p>
+<p>然后我们可以试验一下TASK_UNINTERRUPTIBLE状态的威力。不管kill还是kill -9，这个TASK_UNINTERRUPTIBLE状态的父进程依然屹立不倒。</p>
+<p>T(TASK_STOPPED or TASK_TRACED)，暂停状态或跟踪状态。</p>
+<p>向进程发送一个SIGSTOP信号，它就会因响应该信号而进入TASK_STOPPED状态（除非该进程本身处于TASK_UNINTERRUPTIBLE状态而不响应信号）。（SIGSTOP与SIGKILL信号一样，是非常强制的。不允许用户进程通过signal系列的系统调用重新设置对应的信号处理函数。）<br>向进程发送一个SIGCONT信号，可以让其从TASK_STOPPED状态恢复到TASK_RUNNING状态。</p>
+<p>当进程正在被跟踪时，它处于TASK_TRACED这个特殊的状态。“正在被跟踪”指的是进程暂停下来，等待跟踪它的进程对它进行操作。比如在gdb中对被跟踪的进程下一个断点，进程在断点处停下来的时候就处于TASK_TRACED状态。而在其他时候，被跟踪的进程还是处于前面提到的那些状态。<br>对于进程本身来说，TASK_STOPPED和TASK_TRACED状态很类似，都是表示进程暂停下来。<br>而TASK_TRACED状态相当于在TASK_STOPPED之上多了一层保护，处于TASK_TRACED状态的进程不能响应SIGCONT信号而被唤醒。只能等到调试进程通过ptrace系统调用执行PTRACE_CONT、PTRACE_DETACH等操作（通过ptrace系统调用的参数指定操作），或调试进程退出，被调试的进程才能恢复TASK_RUNNING状态。</p>
+<p>Z(TASK_DEAD - EXIT_ZOMBIE)，退出状态，进程成为僵尸进程。</p>
+<p>进程在退出的过程中，处于TASK_DEAD状态。</p>
+<p>在这个退出过程中，进程占有的所有资源将被回收，除了task_struct结构（以及少数资源）以外。于是进程就只剩下task_struct这么个空壳，故称为僵尸。<br>之所以保留task_struct，是因为task_struct里面保存了进程的退出码、以及一些统计信息。而其父进程很可能会关心这些信息。比如在shell中，$?变量就保存了最后一个退出的前台进程的退出码，而这个退出码往往被作为if语句的判断条件。<br>当然，内核也可以将这些信息保存在别的地方，而将task_struct结构释放掉，以节省一些空间。但是使用task_struct结构更为方便，因为在内核中已经建立了从pid到task_struct查找关系，还有进程间的父子关系。释放掉task_struct，则需要建立一些新的数据结构，以便让父进程找到它的子进程的退出信息。</p>
+<p>父进程可以通过wait系列的系统调用（如wait4、waitid）来等待某个或某些子进程的退出，并获取它的退出信息。然后wait系列的系统调用会顺便将子进程的尸体（task_struct）也释放掉。<br>子进程在退出的过程中，内核会给其父进程发送一个信号，通知父进程来“收尸”。这个信号默认是SIGCHLD，但是在通过clone系统调用创建子进程时，可以设置这个信号。</p>
+<p>通过下面的代码能够制造一个EXIT_ZOMBIE状态的进程：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">void main() &#123;</span><br><span class="line">if (fork())</span><br><span class="line">while(1) sleep(100);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>编译运行，然后ps一下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">kouu@kouu-one:~/test$ ps -ax | grep a\.out</span><br><span class="line">10410 pts/0 S+ 0:00 ./a.out</span><br><span class="line">10411 pts/0 Z+ 0:00 [a.out] &lt;defunct&gt;</span><br><span class="line">10413 pts/1 S+ 0:00 grep a.out</span><br></pre></td></tr></table></figure></p>
+<p>只要父进程不退出，这个僵尸状态的子进程就一直存在。那么如果父进程退出了呢，谁又来给子进程“收尸”？<br>当进程退出的时候，会将它的所有子进程都托管给别的进程（使之成为别的进程的子进程）。托管给谁呢？可能是退出进程所在进程组的下一个进程（如果存在的话），或者是1号进程。所以每个进程、每时每刻都有父进程存在。除非它是1号进程。</p>
+<p>1号进程，pid为1的进程，又称init进程。<br>linux系统启动后，第一个被创建的用户态进程就是init进程。它有两项使命：</p>
+<ol>
+<li>执行系统初始化脚本，创建一系列的进程（它们都是init进程的子孙）；</li>
+<li>在一个死循环中等待其子进程的退出事件，并调用waitid系统调用来完成“收尸”工作；</li>
+</ol>
+<p>init进程不会被暂停、也不会被杀死（这是由内核来保证的）。它在等待子进程退出的过程中处于TASK_INTERRUPTIBLE状态，“收尸”过程中则处于TASK_RUNNING状态。</p>
+<p>X(TASK_DEAD - EXIT_DEAD)，退出状态，进程即将被销毁。</p>
+<p>而进程在退出过程中也可能不会保留它的task_struct。比如这个进程是多线程程序中被detach过的进程（进程？线程？参见《linux线程浅析》）。或者父进程通过设置SIGCHLD信号的handler为SIG_IGN，显式的忽略了SIGCHLD信号。（这是posix的规定，尽管子进程的退出信号可以被设置为SIGCHLD以外的其他信号。）<br>此时，进程将被置于EXIT_DEAD退出状态，这意味着接下来的代码立即就会将该进程彻底释放。所以EXIT_DEAD状态是非常短暂的，几乎不可能通过ps命令捕捉到。</p>
+<h1 id="一些重要的杂项"><a href="#一些重要的杂项" class="headerlink" title="一些重要的杂项"></a>一些重要的杂项</h1><h2 id="调度程序的效率"><a href="#调度程序的效率" class="headerlink" title="调度程序的效率"></a>调度程序的效率</h2><p>“优先级”明确了哪个进程应该被调度执行，而调度程序还必须要关心效率问题。调度程序跟内核中的很多过程一样会频繁被执行，如果效率不济就会浪费很多CPU时间，导致系统性能下降。<br>在linux 2.4时，可执行状态的进程被挂在一个链表中。每次调度，调度程序需要扫描整个链表，以找出最优的那个进程来运行。复杂度为O(n)；<br>在linux 2.6早期，可执行状态的进程被挂在N(N=140)个链表中，每一个链表代表一个优先级，系统中支持多少个优先级就有多少个链表。每次调度，调度程序只需要从第一个不为空的链表中取出位于链表头的进程即可。这样就大大提高了调度程序的效率，复杂度为O(1)；<br>在linux 2.6近期的版本中，可执行状态的进程按照优先级顺序被挂在一个红黑树（可以想象成平衡二叉树）中。每次调度，调度程序需要从树中找出优先级最高的进程。复杂度为O(logN)。</p>
+<p>那么，为什么从linux 2.6早期到近期linux 2.6版本，调度程序选择进程时的复杂度反而增加了呢？<br>这是因为，与此同时，调度程序对公平性的实现从上面提到的第一种思路改变为第二种思路（通过动态调整优先级实现）。而O(1)的算法是基于一组数目不大的链表来实现的，按我的理解，这使得优先级的取值范围很小（区分度很低），不能满足公平性的需求。而使用红黑树则对优先级的取值没有限制（可以用32位、64位、或更多位来表示优先级的值），并且O(logN)的复杂度也还是很高效的。</p>
+<h2 id="调度触发的时机"><a href="#调度触发的时机" class="headerlink" title="调度触发的时机"></a>调度触发的时机</h2><p>调度的触发主要有如下几种情况：<br>1、当前进程（正在CPU上运行的进程）状态变为非可执行状态。<br>进程执行系统调用主动变为非可执行状态。比如执行nanosleep进入睡眠、执行exit退出、等等；<br>进程请求的资源得不到满足而被迫进入睡眠状态。比如执行read系统调用时，磁盘高速缓存里没有所需要的数据，从而睡眠等待磁盘IO；<br>进程响应信号而变为非可执行状态。比如响应SIGSTOP进入暂停状态、响应SIGKILL退出、等等；</p>
+<p>2、抢占。进程运行时，非预期地被剥夺CPU的使用权。这又分两种情况：进程用完了时间片、或出现了优先级更高的进程。<br>优先级更高的进程受正在CPU上运行的进程的影响而被唤醒。如发送信号主动唤醒，或因为释放互斥对象（如释放锁）而被唤醒；<br>内核在响应时钟中断的过程中，发现当前进程的时间片用完；<br>内核在响应中断的过程中，发现优先级更高的进程所等待的外部资源的变为可用，从而将其唤醒。比如CPU收到网卡中断，内核处理该中断，发现某个socket可读，于是唤醒正在等待读这个socket的进程；再比如内核在处理时钟中断的过程中，触发了定时器，从而唤醒对应的正在nanosleep系统调用中睡眠的进程；</p>
+<h2 id="内核抢占"><a href="#内核抢占" class="headerlink" title="内核抢占"></a>内核抢占</h2><p>理想情况下，只要满足“出现了优先级更高的进程”这个条件，当前进程就应该被立刻抢占。但是，就像多线程程序需要用锁来保护临界区资源一样，内核中也存在很多这样的临界区，不大可能随时随地都能接收抢占。<br>linux 2.4时的设计就非常简单，内核不支持抢占。进程运行在内核态时（比如正在执行系统调用、正处于异常处理函数中），是不允许抢占的。必须等到返回用户态时才会触发调度（确切的说，是在返回用户态之前，内核会专门检查一下是否需要调度）；<br>linux 2.6则实现了内核抢占，但是在很多地方还是为了保护临界区资源而需要临时性的禁用内核抢占。</p>
+<p>也有一些地方是出于效率考虑而禁用抢占，比较典型的是spin_lock。spin_lock是这样一种锁，如果请求加锁得不到满足（锁已被别的进程占有），则当前进程在一个死循环中不断检测锁的状态，直到锁被释放。<br>为什么要这样忙等待呢？因为临界区很小，比如只保护“i+=j++;”这么一句。如果因为加锁失败而形成“睡眠-唤醒”这么个过程，就有些得不偿失了。<br>那么既然当前进程忙等待（不睡眠），谁又来释放锁呢？其实已得到锁的进程是运行在另一个CPU上的，并且是禁用了内核抢占的。这个进程不会被其他进程抢占，所以等待锁的进程只有可能运行在别的CPU上。（如果只有一个CPU呢？那么就不可能存在等待锁的进程了。）<br>而如果不禁用内核抢占呢？那么得到锁的进程将可能被抢占，于是可能很久都不会释放锁。于是，等待锁的进程可能就不知何年何月得偿所望了。</p>
+<p>对于一些实时性要求更高的系统，则不能容忍spin_lock这样的东西。宁可改用更费劲的“睡眠-唤醒”过程，也不能因为禁用抢占而让更高优先级的进程等待。比如，嵌入式实时linux montavista就是这么干的。<br>由此可见，实时并不代表高效。很多时候为了实现“实时”，还是需要对性能做一定让步的。</p>
+<h2 id="多处理器下的负载均衡"><a href="#多处理器下的负载均衡" class="headerlink" title="多处理器下的负载均衡"></a>多处理器下的负载均衡</h2><p>前面我们并没有专门讨论多处理器对调度程序的影响，其实也没有什么特别的，就是在同一时刻能有多个进程并行地运行而已。那么，为什么会有“多处理器负载均衡”这个事情呢？<br>如果系统中只有一个可执行队列，哪个CPU空闲了就去队列中找一个最合适的进程来执行。这样不是很好很均衡吗？<br>的确如此，但是多处理器共用一个可执行队列会有一些问题。显然，每个CPU在执行调度程序时都需要把队列锁起来，这会使得调度程序难以并行，可能导致系统性能下降。而如果每个CPU对应一个可执行队列则不存在这样的问题。<br>另外，多个可执行队列还有一个好处。这使得一个进程在一段时间内总是在同一个CPU上执行，那么很可能这个CPU的各级cache中都缓存着这个进程的数据，很有利于系统性能的提升。<br>所以，在linux下，每个CPU都有着对应的可执行队列，而一个可执行状态的进程在同一时刻只能处于一个可执行队列中。</p>
+<p>于是，“多处理器负载均衡”这个麻烦事情就来了。内核需要关注各个CPU可执行队列中的进程数目，在数目不均衡时做出适当调整。什么时候需要调整，以多大力度进程调整，这些都是内核需要关心的。当然，尽量不要调整最好，毕竟调整起来又要耗CPU、又要锁可执行队列，代价还是不小的。<br>另外，内核还得关心各个CPU的关系。两个CPU之间，可能是相互独立的、可能是共享cache的、甚至可能是由同一个物理CPU通过超线程技术虚拟出来的……CPU之间的关系也是实现负载均衡的重要依据。关系越紧密，进程在它们之间迁移的代价就越小。参见《linux内核SMP负载均衡浅析》。</p>
+<h2 id="优先级继承"><a href="#优先级继承" class="headerlink" title="优先级继承"></a>优先级继承</h2><p>由于互斥，一个进程（设为A）可能因为等待进入临界区而睡眠。直到正在占有相应资源的进程（设为B）退出临界区，进程A才被唤醒。<br>可能存在这样的情况：A的优先级非常高，B的优先级非常低。B进入了临界区，但是却被其他优先级较高的进程（设为C）抢占了，而得不到运行，也就无法退出临界区。于是A也就无法被唤醒。<br>A有着很高的优先级，但是现在却沦落到跟B一起，被优先级并不太高的C抢占，导致执行被推迟。这种现象就叫做优先级反转。</p>
+<p>出现这种现象是很不合理的。较好的应对措施是：当A开始等待B退出临界区时，B临时得到A的优先级（还是假设A的优先级高于B），以便顺利完成处理过程，退出临界区。之后B的优先级恢复。这就是优先级继承的方法。</p>
+<h2 id="中断处理线程化"><a href="#中断处理线程化" class="headerlink" title="中断处理线程化"></a>中断处理线程化</h2><p>在linux下，中断处理程序运行于一个不可调度的上下文中。从CPU响应硬件中断自动跳转到内核设定的中断处理程序去执行，到中断处理程序退出，整个过程是不能被抢占的。<br>一个进程如果被抢占了，可以通过保存在它的进程控制块（task_struct）中的信息，在之后的某个时间恢复它的运行。而中断上下文则没有task_struct，被抢占了就没法恢复了。<br>中断处理程序不能被抢占，也就意味着中断处理程序的“优先级”比任何进程都高（必须等中断处理程序完成了，进程才能被执行）。但是在实际的应用场景中，可能某些实时进程应该得到比中断处理程序更高的优先级。<br>于是，一些实时性要求更高的系统就给中断处理程序赋予了task_struct以及优先级，使得它们在必要的时候能够被高优先级的进程抢占。但是显然，做这些工作是会给系统造成一定开销的，这也是为了实现“实时”而对性能做出的一种让步。</p>
+<h1 id="通用Linux系统"><a href="#通用Linux系统" class="headerlink" title="通用Linux系统"></a>通用Linux系统</h1><p>通用Linux系统支持实时和非实时两种进程，实时进程相对于普通进程具有绝对的优先级。对应地，实时进程采用SCHED_FIFO或者SCHED_RR调度策略，普通的进程采用SCHED_OTHER调度策略。</p>
+<p>在调度算法的实现上，Linux中的每个任务有四个与调度相关的参数，它们是rt_priority、policy、priority（nice）、counter。调度程序根据这四个参数进行进程调度。</p>
+<p>在SCHED_OTHER调度策略中，调度器总是选择那个priority+counter值最大的进程来调度执行。从逻辑上分析SCHED_OTHER调度策略存在着调度周期（epoch），在每一个调度周期中，一个进程的priority和counter值的大小影响了当前时刻应该调度哪一个进程来执行，其中priority是一个固定不变的值，在进程创建时就已经确定，它代表了该进程的优先级，也代表这该进程在每一个调度周期中能够得到的时间片的多少；counter是一个动态变化的值，它反映了一个进程在当前的调度周期中还剩下的时间片。在每一个调度周期的开始，priority的值被赋给counter，然后每次该进程被调度执行时，counter值都减少。当counter值为零时，该进程用完自己在本调度周期中的时间片，不再参与本调度周期的进程调度。当所有进程的时间片都用完时，一个调度周期结束，然后周而复始。另外可以看出Linux系统中的调度周期不是静态的，它是一个动态变化的量，比如处于可运行状态的进程的多少和它们priority值都可以影响一个epoch的长短。值得注意的一点是，在2.4以上的内核中，priority被nice所取代，但二者作用类似。</p>
+<p>可见SCHED_OTHER调度策略本质上是一种比例共享的调度策略，它的这种设计方法能够保证进程调度时的公平性–一个低优先级的进程在每一个 epoch中也会得到自己应得的那些CPU执行时间，另外它也提供了不同进程的优先级区分，具有高priority值的进程能够获得更多的执行时间。对于实时进程来说，它们使用的是基于实时优先级rt_priority的优先级调度策略，但根据不同的调度策略，同一实时优先级的进程之间的调度方法有所不同：</p>
+<ul>
+<li>SCHED_FIFO：不同的进程根据静态优先级进行排队，然后在同一优先级的队列中，谁先准备好运行就先调度谁，并且正在运行的进程不会被终止直到以下情况发生：（1）.被有更高优先级的进程所强占CPU；（2）.自己因为资源请求而阻塞；（3）.自己主动放弃CPU（调用sched_yield）。</li>
+<li>SCHED_RR：这种调度策略跟上面的SCHED_FIFO一模一样，除了它给每个进程分配一个时间片，时间片到了正在执行的进程就放弃执行；时间片的长度可以通过sched_rr_get_interval调用得到。</li>
+</ul>
+<p>由于Linux系统本身是一个面向桌面的系统，所以将它应用于实时应用中时存在如下的一些问题：</p>
+<ul>
+<li>Linux系统中的调度单位为10ms，所以它不能够提供精确的定时；</li>
+<li>当一个进程调用系统调用进入内核态运行时，它是不可被抢占的；</li>
+<li>Linux内核实现中使用了大量的锁中断操作会造成中断的丢失；</li>
+<li>由于使用虚拟内存技术，当发生页出错时，需要从硬盘中读取交换数据，但硬盘读写由于存储位置的随机性会导致随机的读写时间，这在某些情况下会影响一些实时任务的截止期限；</li>
+<li>虽然Linux进程调度也支持实时优先级，但缺乏有效的实时任务的调度机制和调度算法；它的网络子系统的协议处理和其它设备的中断处理都没有与它对应的进程的调度关联起来，并且它们自身也没有明确的调度机制；</li>
+</ul>
+<h1 id="实时Linux研究"><a href="#实时Linux研究" class="headerlink" title="实时Linux研究"></a>实时Linux研究</h1><h2 id="瘦内核（微内核）-Thin-Kernel"><a href="#瘦内核（微内核）-Thin-Kernel" class="headerlink" title="瘦内核（微内核）- Thin-Kernel"></a>瘦内核（微内核）- Thin-Kernel</h2><p>瘦内核（或微内核）方法使用了第二个内核作为硬件与Linux内核间的抽象接口。非实时Linux内核在后台运行，作为瘦内核的一项低优先级任务托管全部非实时任务。实时任务直接在瘦内核上运行。瘦内核主要用于（除了托管实时任务外）中断管理。瘦内核截取中断以确保非实时内核无法抢占瘦内核的运行。这允许瘦内核提供硬实时支持。<br><img src="/img/20130603145524078" alt></p>
+<p>虽然瘦内核方法有自己的优势（硬实时支持与标准Linux内核共存），但这种方法也有缺点。实时任务和非实时任务是独立的，这造成了调试困难。而且，非实时任务并未得到Linux平台的完全支持（瘦内核之所以称为瘦的一个原因）。使用这种方法的例子有RTLinux（现在由Wind River Systems专有），实时应用程序接口（RTAI）和Xenomai。</p>
+<h2 id="超微内核"><a href="#超微内核" class="headerlink" title="超微内核"></a>超微内核</h2><p>这里瘦内核方法依赖于包含任务管理的最小内核，而超微内核法对内核进行更进一步的缩减。通过这种方式，它不像是一个内核而更像是一个硬件抽象层（HAL）。超微内核为运行于更高级别的多个操作系统提供了硬件资源共享。因为超微内核对硬件进行了抽象，因此它可为更高级别的操作系统提供优先权，从而支持实时性。<br><img src="/img/20130603145556421" alt></p>
+<p>注意，这种方法和运行多个操作系统的虚拟化方法有一些相似之处。使用这种方法的情况下，超微内核在实时和非实时内核中对硬件进行抽象。这与 hypervisor 从客户（guest）操作系统对裸机进行抽象的方式很相似。</p>
+<p>关于超微内核的示例是操作系统的Adaptive Domain Environment for Operating Systems（ADEOS）。ADEOS支持多个并发操作系统同步运行。当发生硬件事件后，ADEOS对链中的每个操作系统进行查询以确定使用哪一个系统处理事件。</p>
+<h2 id="资源内核（Resource-kernel）"><a href="#资源内核（Resource-kernel）" class="headerlink" title="资源内核（Resource-kernel）"></a>资源内核（Resource-kernel）</h2><p>另一个实时架构是资源内核法。这种方法为内核增加一个模块，为各种资源提供预留（reservation）。这种机制保证了对时分复用（time- multiplexed）系统资源的访问（CPU、网络或磁盘带宽）。这些资源拥有多个预留参数，如循环周期、需要的处理时间（也就是完成处理所需的时间），以及截止时间。<br><img src="/img/20130603145624453" alt></p>
+<p>资源内核提供了一组应用程序编程接口（API），允许任务请求这些预留资源。然后资源内核可以合并这些请求，使用任务定义的约束定义一个调度，从而提供确定的访问（如果无法提供确定性则返回错误）。通过调度算法，如Earliest-Deadline-First（EDF），内核可以处理动态的调度负载。</p>
+<p>资源内核法实现的一个示例是CMU公司的Linux/RK，它把可移植的资源内核集成到Linux中作为一个可加载模块。这种实现演化成商用的 TimeSys Linux/RT 产品。</p>
+<h2 id="标准的Linux内核最新版本2-6中加入了实时功能"><a href="#标准的Linux内核最新版本2-6中加入了实时功能" class="headerlink" title="标准的Linux内核最新版本2.6中加入了实时功能"></a>标准的Linux内核最新版本2.6中加入了实时功能</h2><p>目前探讨的这些方法在架构上都很有趣，但是它们都在内核的外围运行。然而，如果对标准Linux内核进行必要的修改使其支持实时性，结果会怎么样呢？</p>
+<p>今天，在2.6内核中，通过对内核进行简单配置使其完全可抢占，您就可以得到软实时功能。在标准2.6 Linux内核中，当用户空间的进程执行内核调用时（通过系统调用），它便不能被抢占。这意味着如果低优先级进程进行了系统调用后，高优先级进程必须等到调用结束后才能访问CPU。</p>
+<p>新的配置选项CONFIG_PREEMPT改变了这一内核行为，在高优先级任务可用的情况下（即使此进程正在进行系统调用），它允许进程被抢占。<br><img src="/img/20130603145647296" alt></p>
+<p>但这种配置选项也是一种折衷。虽然此选项实现了软实时性能并且即使在负载条件下也可使操作系统顺利地运行，但这样做也付出了代价。代价就是略微减低了吞吐量以及内核性能，原因是CONFIG_PREEMPT选项增加了开销。这种选项对桌面和嵌入式系统而言是有用的，但并不是在任何场景下都有用（例如，服务器）。</p>
+<p>在2.6内核中另一项有用的配置选项是高精度定时器。这个新选项允许定时器以1μs的精度运行（如果底层硬件支持的话），并通过红黑树实现对定时器的高效管理。通过红黑树，可以使用大量的定时器而不会对定时器子系统（O（log n））的性能造成影响。</p>
+<p>只需要一点额外的工作，就可以通过PREEMPT_RT补丁实现硬实时。PREEMPT_RT补丁提供了多项修改，可实现硬实时支持。其中一些修改包括重新实现一些内核锁定原语，从而实现完全可抢占，实现内核互斥的优先级继承，并把中断处理程序转换为内核线程以实现线程可抢占。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/19/Linux进程组-会话-守护进程/" rel="next" title="Linux进程组、会话、守护进程">
+                <i class="fa fa-chevron-left"></i> Linux进程组、会话、守护进程
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/20/cpp类中函数的重载、隐藏和覆盖/" rel="prev" title="C++类中函数的重载、隐藏和覆盖">
+                C++类中函数的重载、隐藏和覆盖 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">160</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/test.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Linux进程调度的目标"><span class="nav-number">1.</span> <span class="nav-text">Linux进程调度的目标</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Linux进程优先级"><span class="nav-number">2.</span> <span class="nav-text">Linux进程优先级</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#非实时进程调度"><span class="nav-number">3.</span> <span class="nav-text">非实时进程调度</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#现代方法CFS"><span class="nav-number">4.</span> <span class="nav-text">现代方法CFS</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Linux进程状态机"><span class="nav-number">5.</span> <span class="nav-text">Linux进程状态机</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#一些重要的杂项"><span class="nav-number">6.</span> <span class="nav-text">一些重要的杂项</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#调度程序的效率"><span class="nav-number">6.1.</span> <span class="nav-text">调度程序的效率</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#调度触发的时机"><span class="nav-number">6.2.</span> <span class="nav-text">调度触发的时机</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内核抢占"><span class="nav-number">6.3.</span> <span class="nav-text">内核抢占</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#多处理器下的负载均衡"><span class="nav-number">6.4.</span> <span class="nav-text">多处理器下的负载均衡</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#优先级继承"><span class="nav-number">6.5.</span> <span class="nav-text">优先级继承</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#中断处理线程化"><span class="nav-number">6.6.</span> <span class="nav-text">中断处理线程化</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#通用Linux系统"><span class="nav-number">7.</span> <span class="nav-text">通用Linux系统</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#实时Linux研究"><span class="nav-number">8.</span> <span class="nav-text">实时Linux研究</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#瘦内核（微内核）-Thin-Kernel"><span class="nav-number">8.1.</span> <span class="nav-text">瘦内核（微内核）- Thin-Kernel</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#超微内核"><span class="nav-number">8.2.</span> <span class="nav-text">超微内核</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#资源内核（Resource-kernel）"><span class="nav-number">8.3.</span> <span class="nav-text">资源内核（Resource-kernel）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#标准的Linux内核最新版本2-6中加入了实时功能"><span class="nav-number">8.4.</span> <span class="nav-text">标准的Linux内核最新版本2.6中加入了实时功能</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
