@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="C++,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="智能指针背后的设计思想无智能指针造成内存泄漏的例子12345678910void remodel(std::string &amp;amp; str)&amp;#123;    std::string * ps = new std::string(str);//堆内存    ...    if (weird_thing())        throw exception();    str = *ps;">
+<meta name="keywords" content="C++">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C++智能指针">
+<meta property="og:url" content="http://yoursite.com/2019/05/21/cpp智能指针/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="智能指针背后的设计思想无智能指针造成内存泄漏的例子12345678910void remodel(std::string &amp;amp; str)&amp;#123;    std::string * ps = new std::string(str);//堆内存    ...    if (weird_thing())        throw exception();    str = *ps;">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/2018081010344581.png">
+<meta property="og:image" content="http://yoursite.com/img/20180810103513927.png">
+<meta property="og:image" content="http://yoursite.com/img/20180810103527411.png">
+<meta property="og:updated_time" content="2019-05-21T09:30:20.210Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="C++智能指针">
+<meta name="twitter:description" content="智能指针背后的设计思想无智能指针造成内存泄漏的例子12345678910void remodel(std::string &amp;amp; str)&amp;#123;    std::string * ps = new std::string(str);//堆内存    ...    if (weird_thing())        throw exception();    str = *ps;">
+<meta name="twitter:image" content="http://yoursite.com/img/2018081010344581.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/05/21/cpp智能指针/">
+
+
+
+
+
+  <title>C++智能指针 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/21/cpp智能指针/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">C++智能指针</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-05-21T17:21:39+08:00">
+                2019-05-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="智能指针背后的设计思想"><a href="#智能指针背后的设计思想" class="headerlink" title="智能指针背后的设计思想"></a>智能指针背后的设计思想</h1><h2 id="无智能指针造成内存泄漏的例子"><a href="#无智能指针造成内存泄漏的例子" class="headerlink" title="无智能指针造成内存泄漏的例子"></a>无智能指针造成内存泄漏的例子</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">void remodel(std::string &amp; str)</span><br><span class="line">&#123;</span><br><span class="line">    std::string * ps = new std::string(str);//堆内存</span><br><span class="line">    ...</span><br><span class="line">    if (weird_thing())</span><br><span class="line">        throw exception();</span><br><span class="line">    str = *ps; </span><br><span class="line">    delete ps;</span><br><span class="line">    return;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当出现异常时（weird_thing()返回true），delete将不被执行，因此将导致内存泄露 。</p>
+<p>常规解决方案：<br>在throw exception()之前添加delete ps;<br>不要忘了最后一个delete ps;<br>出现问题：在一个大型的工程中，并不能保证所有的开发人员都能在合适的地方添加delete语句。</p>
+<h2 id="智能指针的设计思想"><a href="#智能指针的设计思想" class="headerlink" title="智能指针的设计思想"></a>智能指针的设计思想</h2><p>仿照本地变量能够自动从栈内存中删除的思想，对指针设计一个析构函数，该析构函数将在指针过期时自动释放它指向的内存，总结来说就是：将基本类型指针封装为类对象指针（这个类肯定是个模板，以适应不同基本类型的需求），并在析构函数中编写delete语句以用来删除指针指向的内存空间。</p>
+<p>转换remodel()函数的步骤：</p>
+<p>包含头义件memory（智能指针所在的头文件）；<br>将指向string的指针替换为指向string的智能指针对象；<br>删除delete语句。<br>使用auto_ptr修改该函数的结果：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;memory&gt;</span><br><span class="line">void remodel (std::string &amp; str)</span><br><span class="line">&#123;</span><br><span class="line">    std::auto_ptr&lt;std::string&gt; ps (new std::string(str))；</span><br><span class="line">    ...</span><br><span class="line">    if (weird_thing ())</span><br><span class="line">        throw exception()； </span><br><span class="line">    str = *ps； </span><br><span class="line">    // delete ps； NO LONGER NEEDED</span><br><span class="line">    return;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="C-智能指针简单介绍"><a href="#C-智能指针简单介绍" class="headerlink" title="C++智能指针简单介绍"></a>C++智能指针简单介绍</h1><p>STL一共给我们提供了四种智能指针：auto_ptr、unique_ptr、shared_ptr和weak_ptr。</p>
+<p>其中：auto_ptr在C++11中已将其摒弃。</p>
+<p>使用注意点：</p>
+<p>所有的智能指针类都有一个explicit构造函数，以指针作为参数。比如auto_ptr的类模板原型为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">templet&lt;class T&gt;</span><br><span class="line">class auto_ptr &#123;</span><br><span class="line">  explicit auto_ptr(X* p = 0) ; </span><br><span class="line">  ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>因此不能自动将指针转换为智能指针对象，必须显示调用：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">shared_ptr&lt;double&gt; pd;</span><br><span class="line">double *p_reg = new double;</span><br><span class="line">pd = p_reg;//NOT ALLOWED(implicit conversion)</span><br><span class="line">pd = shared_ptr&lt;double&gt;(p_reg);// ALLOWED (explicit conversion)</span><br><span class="line">shared_ptr&lt;double&gt; pshared = p_reg;//NOT ALLOWED (implicit conversion)</span><br><span class="line">shared_ptr&lt;double&gt; pshared(p_reg);//ALLOWED (explicit conversion)</span><br></pre></td></tr></table></figure></p>
+<p>对全部三种智能指针都应避免的一点：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">string vacation(&quot;I wandered lonely as a child.&quot;); //heap param</span><br><span class="line">shared_ptr&lt;string&gt; pvac(&amp;vacation);//NO!!</span><br></pre></td></tr></table></figure></p>
+<p>pvac过期时，程序将把delete运算符用于非堆(栈)内存，这是错误的！</p>
+<p>使用实例<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;iostream&gt;</span><br><span class="line">#include &lt;string&gt;</span><br><span class="line">#include &lt;memory&gt;</span><br><span class="line"></span><br><span class="line">class report</span><br><span class="line">&#123;</span><br><span class="line">private:</span><br><span class="line">    std::string str;</span><br><span class="line">public:</span><br><span class="line">    report(const std::string s) : str(s)&#123;</span><br><span class="line">        std::cout&lt;&lt;&quot;Object created.\n&quot;;        </span><br><span class="line">    &#125;</span><br><span class="line">    ~report()&#123;</span><br><span class="line">        std::cout&lt;&lt;&quot;Object deleted.\n&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">    void comment() const &#123;</span><br><span class="line">        std::cout&lt;&lt;str&lt;&lt;&quot;\n&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">int main()&#123;</span><br><span class="line">    &#123;        </span><br><span class="line">        std::auto_ptr&lt;report&gt; ps(new report(&quot;using auto ptr&quot;));</span><br><span class="line">        ps-&gt;comment();</span><br><span class="line">    &#125;//auto_ptr 作用域结束</span><br><span class="line">    &#123;</span><br><span class="line">        std::shared_ptr&lt;report&gt; ps(new report(&quot;using shared_ptr&quot;));</span><br><span class="line">        ps-&gt;comment();</span><br><span class="line">	&#125;//shared_ptr 作用域结束</span><br><span class="line">    &#123;</span><br><span class="line">        std::unique_ptr&lt;report&gt; ps(new report(&quot;using unique ptr&quot;));</span><br><span class="line">        ps-&gt;comment();</span><br><span class="line">    &#125;//unique_ptr 作用域结束</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="为什么摒弃auto-ptr"><a href="#为什么摒弃auto-ptr" class="headerlink" title="为什么摒弃auto_ptr?"></a>为什么摒弃auto_ptr?</h1><p>问题来源：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">auto_ptr&lt;string&gt; ps (new string(&quot;I reigned lonely as a cloud.&quot;));</span><br><span class="line">auto_ptr&lt;string&gt; vocation;</span><br><span class="line">vocation = ps;</span><br></pre></td></tr></table></figure></p>
+<p>如果ps和vocation是常规指针，则两个指针指向同一个string对象，当指针过期时，则程序会试图删除同一个对象，要避免这种问题，解决办法：</p>
+<p>定义赋值运算符，使之执行深复制。这样两个指针将指向不同的对象，其中的一个对象是另一个对象的副本，缺点是浪费空间，所以智能指针都未采取此方案。<br>建立所有权(ownership)概念。对于特定的对象，智能有一个智能对象可拥有，这样只能拥有对象的智能指针的析构函数会删除该对象。然后让赋值操作转让所有权。这就是用于auto_ptr和unique_ptr的策略，但unique_ptr的策略更严格。<br>创建智能更高的指针，跟踪引用特定对象的智能指针数。这称为引用计数。例如，赋值时，计数将加1，而指针过期时，计数将减1，当减为0时才调用delete。这是shared_ptr采用的策略。<br>同样的策略也适用于复制构造函数。</p>
+<p>摒弃auto_ptr的例子：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;iostream&gt;</span><br><span class="line">#include &lt;string&gt;</span><br><span class="line">#include &lt;memory&gt;</span><br><span class="line">using namespace std;</span><br><span class="line"></span><br><span class="line">int main()&#123;</span><br><span class="line">    auto_ptr&lt;string&gt; films[5] = &#123;</span><br><span class="line">        auto_ptr&lt;string&gt; (new string(&quot;Fowl Balls&quot;)),</span><br><span class="line">        auto_ptr&lt;string&gt; (new string(&quot;Duck Walks&quot;)),</span><br><span class="line">        auto_ptr&lt;string&gt; (new string(&quot;Chicken Runs&quot;)),</span><br><span class="line">        auto_ptr&lt;string&gt; (new string(&quot;Turkey Errors&quot;)),</span><br><span class="line">        auto_ptr&lt;string&gt; (new string(&quot;Goose Eggs&quot;))</span><br><span class="line">    &#125;;</span><br><span class="line">    auto_ptr&lt;string&gt; pwin;</span><br><span class="line">    pwin = films[2];//films[2] loses owership,将所有权从films[2]转让给pwin,此时films[2]不再引用该字符串从而变成空指针</span><br><span class="line">    cout&lt;&lt;&quot;The nominees for best avian baseball film are\n&quot;;</span><br><span class="line">    for(int i = 0;i &lt; 5;++i)</span><br><span class="line">    &#123;</span><br><span class="line">        cout&lt;&lt; *films[i]&lt;&lt;endl;</span><br><span class="line">    &#125;</span><br><span class="line">    cout&lt;&lt;&quot;The winner is &quot;&lt;&lt;*pwin&lt;&lt;endl;</span><br><span class="line">    cin.get();</span><br><span class="line">    </span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>运行下发现程序崩溃了，原因是films[2]已经是空指针了，输出空指针就会崩溃。如果把auto_ptr换成shared_ptr或unique_ptr后，程序就不会崩溃，原因如下：</p>
+<p>适用shared_ptr时运行正常，因为shared_ptr采用引用计数，pwin和films[2]都指向同一块内存，在释放空间时因为事先要判断引用计数值的大小，因此不会出现多次删除一个对象的错误。</p>
+<p>适用unique_ptr时编译出错，与auto_ptr一样，unique_ptr也采用所有权模型，但在适用unique_ptr时，程序不会等到运行阶段崩溃，在编译阶段下属代码就会出现错误：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">unique_ptr&lt;string&gt; pwin;</span><br><span class="line">pwin = films[2];//films[2] loses ownership</span><br></pre></td></tr></table></figure></p>
+<p>这就是为何摒弃auto_ptr的原因：避免潜在的内存泄漏问题。</p>
+<h1 id="unique-ptr为何优于auto-ptr？"><a href="#unique-ptr为何优于auto-ptr？" class="headerlink" title="unique_ptr为何优于auto_ptr？"></a>unique_ptr为何优于auto_ptr？</h1><h2 id="使用规则更严格"><a href="#使用规则更严格" class="headerlink" title="使用规则更严格"></a>使用规则更严格</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">auto_ptr&lt;string&gt; p1(new string(&quot;auto&quot;));  //#1</span><br><span class="line">  auto_ptr&lt;string&gt; p2;					//#2</span><br><span class="line">  p2 = p1;							   //#3</span><br></pre></td></tr></table></figure>
+<p>在语句#3中，p2接管string对象的所有权后，p1的所有权将被剥夺。–&gt;可防止p1和p2的析构函数试图删除同一个对象。但如果随后试图使用p1，则会出现错误。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">unique_ptr&lt;string&gt; p3(new string(&quot;auto&quot;));//#4</span><br><span class="line">unique_ptr&lt;string&gt; p4;//#5</span><br><span class="line">p4=p3;//#6</span><br></pre></td></tr></table></figure></p>
+<p>编译器会认为#6语句为非法，可以避免上述问题。</p>
+<h2 id="对悬挂指针的操作更智能"><a href="#对悬挂指针的操作更智能" class="headerlink" title="对悬挂指针的操作更智能"></a>对悬挂指针的操作更智能</h2><p>总体来说：允许临时悬挂指针的赋值，禁止其他情况的出现。</p>
+<p>示例：函数定义如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">unique_ptr&lt;string&gt; demo(const char *s)&#123;</span><br><span class="line">      unique_ptr&lt;string&gt; temp (new string(a));</span><br><span class="line">      return temp;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在程序中调用函数：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">unique_ptr&lt;string&gt; ps;</span><br><span class="line">ps = demo(&quot;unique special&quot;);</span><br></pre></td></tr></table></figure></p>
+<p>编译器允许此种赋值方式。总之：当程序试图将一个unique_ptr赋值给另一个时，如果源unique_ptr是个临时右值，编译器允许这么做；如果源unique_ptr将存在一段时间，编译器将禁止这么做。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">unique_ptr&lt;string&gt; pu1(new string(&quot;hello world&quot;));</span><br><span class="line">unique_ptr&lt;string&gt; pu2;</span><br><span class="line">pu2 = pu1;//#1 not allowed</span><br><span class="line">unique_ptr&lt;string&gt; pu3;</span><br><span class="line">pu3 = unique_ptr&lt;string&gt;(new string(&quot;you&quot;));//#2 allowed</span><br></pre></td></tr></table></figure></p>
+<p>如果确实想执行类似#1的操作，仅当以非智能的方式使用摒弃的智能指针时（如解除引用时），这种赋值才不安全。要安全的重用这种指针，可给它赋新值。C++有一个标准库函数std::move()，可以将原来的指针转让所有权变成空指针，可以对其重新赋值。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">unque_ptr&lt;string&gt; ps1,ps2;</span><br><span class="line">ps1 = demo(&quot;hello&quot;);</span><br><span class="line">ps2 = move(ps1);</span><br><span class="line">ps1 = demo(&quot;alexia&quot;);</span><br><span class="line">cout&lt;&lt;*ps2&lt;&lt;*ps1&lt;&lt;endl;</span><br></pre></td></tr></table></figure></p>
+<h1 id="如何选择智能指针"><a href="#如何选择智能指针" class="headerlink" title="如何选择智能指针"></a>如何选择智能指针</h1><h2 id="使用指南："><a href="#使用指南：" class="headerlink" title="使用指南："></a>使用指南：</h2><ol>
+<li><p>如果程序要使用多个指向同一个对象的指针，应选用shared_ptr。这样的情况包括：</p>
+<ul>
+<li>有一个指针数组，并使用一些辅助指针来标示特定的元素，如最大的元素和最小的元素；</li>
+<li>连个对象包含指向第三个对象的指针；</li>
+<li>STL容器包含指针。很多STL算法都支持复制和赋值操作，这些操作可用于shared_ptr，但不能用于unique_ptr（编译器发出warning）和auto_ptr（行为不确定）。如果你的编译器没有提供shared_ptr，可使用Boost库提供的shared_ptr。</li>
+</ul>
+</li>
+<li><p>如果程序不需要多个指向同一个对象的指针，则可使用unique_ptr。如果函数使用new分配内存，并返还指向该内存的指针，将其返回类型声明为unique_ptr是不错的选择。这样，所有权转让给接受返回值的unique_ptr，而该智能指针将负责调用delete。可将unique_ptr储存到STL容器中，只要不调用将unique_ptr复制或赋值给另一个算法（如sort())。例如，可在程序中使用类似于下面的代码段：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">unique_ptr&lt;int&gt; make_int(int n)&#123;</span><br><span class="line">    return unique_ptr&lt;int&gt;(new int(n));</span><br><span class="line">&#125;</span><br><span class="line">void show(unique_ptr&lt;int&gt; &amp;p1)&#123;</span><br><span class="line">    cout&lt;&lt;*a&lt;&lt;&apos; &apos;;</span><br><span class="line">&#125;</span><br><span class="line">int main()&#123;</span><br><span class="line">    ...</span><br><span class="line">    vector&lt;unique_ptr&lt;int&gt;&gt; vp(size);</span><br><span class="line">    for(int i=0; i&lt;vp.size();i++)&#123;</span><br><span class="line">        vp[i] = make_int(rand() %1000);//copy temporary unique_ptr</span><br><span class="line">    &#125;</span><br><span class="line">    vp.push_back(make_int(rand()%1000));// ok because arg is temporary</span><br><span class="line">    for_each(vp.begin(),vp.end(),show); //use for_each();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>其中push_back调用没有问题，因为它返回一个临时unique_ptr，该unique_ptr被赋值给vp中的一个unique_ptr。另外，如果按值而不是按引用给show()传递对象，for_each()将非法，因为这将导致使用一个来自vp的非临时unique_ptr初始化p1，而这是不允许的。前面说过，编译器将发现错误使用unique_ptr的企图。</p>
+<p>在unique_ptr为右值时，可将其赋给shared_ptr，这与将一个unique_ptr赋给一个需要满足的条件相同。与前面一样，在下面的代码中,make_int()的返回类型为unique_ptr<int>：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">unique_ptr&lt;int&gt; pup(make_int(rand() % 1000));   // ok</span><br><span class="line">shared_ptr&lt;int&gt; spp(pup);                       // not allowed, pup as lvalue</span><br><span class="line">shared_ptr&lt;int&gt; spr(make_int(rand() % 1000));   // ok</span><br></pre></td></tr></table></figure></int></p>
+<p>模板shared_ptr包含一个显式构造函数，可用于将右值unique_ptr转换为shared_ptr。shared_ptr将接管原来归unique_ptr所有的对象。</p>
+<p>在满足unique_ptr要求的条件时，也可使用auto_ptr，但unique_ptr是更好的选择。如果你的编译器没有unique_ptr，可考虑使用Boost库提供的scoped_ptr，它与unique_ptr类似。</p>
+<h1 id="弱引用智能指针-weak-ptr"><a href="#弱引用智能指针-weak-ptr" class="headerlink" title="弱引用智能指针 weak_ptr"></a>弱引用智能指针 weak_ptr</h1><p>设计weak_ptr的原因：解决使用shared_ptr因循环引用而不能释放资源的问题。</p>
+<h2 id="空悬指针问题"><a href="#空悬指针问题" class="headerlink" title="空悬指针问题"></a>空悬指针问题</h2><p><img src="/img/2018081010344581.png" alt></p>
+<p>有两个指针p1和p2，指向堆上的同一个对象Object，p1和p2位于不同的线程中。假设线程A通过p1指针将对象销毁了（尽管把p1置为NULL），那p2就成了空悬指针。这是一种典型的C/C++内存错误。</p>
+<p>使用weak_ptr能够帮助我们轻松解决上述的空悬指针问题（直接使用shared_ptr也是可以的）。</p>
+<p>weak_ptr不控制对象的生命期，但是它知道对象是否还活着，如果对象还活着，那么它可以提升为有效的shared_ptr（提升操作通过lock()函数获取所管理对象的强引用指针）；如果对象已经死了，提升会失败，返回一个空的shared_ptr。</p>
+<p>举个栗子 ：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;iostream&gt;</span><br><span class="line">#include &lt;memory&gt;</span><br><span class="line"></span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">    // OLD, problem with dangling pointer</span><br><span class="line">    // PROBLEM: ref will point to undefined data!</span><br><span class="line"></span><br><span class="line">    int* ptr = new int(10);</span><br><span class="line">    int* ref = ptr;</span><br><span class="line">    delete ptr;</span><br><span class="line"></span><br><span class="line">    // NEW</span><br><span class="line">    // SOLUTION: check expired() or lock() to determine if pointer is valid</span><br><span class="line">    // empty definition</span><br><span class="line">    std::shared_ptr&lt;int&gt; sptr;</span><br><span class="line">    // takes ownership of pointer</span><br><span class="line">    sptr.reset(new int);</span><br><span class="line">    *sptr = 10;</span><br><span class="line">    // get pointer to data without taking ownership</span><br><span class="line">    std::weak_ptr&lt;int&gt; weak1 = sptr;</span><br><span class="line">    // deletes managed object, acquires new pointer</span><br><span class="line">    sptr.reset(new int);</span><br><span class="line">    *sptr = 5;</span><br><span class="line">    // get pointer to new data without taking ownership</span><br><span class="line">    std::weak_ptr&lt;int&gt; weak2 = sptr;</span><br><span class="line">    // weak1 is expired!</span><br><span class="line">    if(auto tmp = weak1.lock())</span><br><span class="line">        std::cout &lt;&lt; *tmp &lt;&lt; &apos;\n&apos;;</span><br><span class="line">    else</span><br><span class="line">        std::cout &lt;&lt; &quot;weak1 is expired\n&quot;;</span><br><span class="line">    // weak2 points to new data (5)</span><br><span class="line">    if(auto tmp = weak2.lock())</span><br><span class="line">        std::cout &lt;&lt; *tmp &lt;&lt; &apos;\n&apos;;</span><br><span class="line">    else</span><br><span class="line">        std::cout &lt;&lt; &quot;weak2 is expired\n&quot;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>循环引用问题<br>栗子 大法：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;iostream&gt;</span><br><span class="line">#include &lt;boost/smart_ptr.hpp&gt;</span><br><span class="line">using namespace std;</span><br><span class="line">using namespace boost;</span><br><span class="line"></span><br><span class="line">class BB;</span><br><span class="line">class AA</span><br><span class="line">&#123;</span><br><span class="line">public:</span><br><span class="line">    AA() &#123; cout &lt;&lt; &quot;AA::AA() called&quot; &lt;&lt; endl; &#125;</span><br><span class="line">    ~AA() &#123; cout &lt;&lt; &quot;AA::~AA() called&quot; &lt;&lt; endl; &#125;</span><br><span class="line">    shared_ptr&lt;BB&gt; m_bb_ptr;  //!</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">class BB</span><br><span class="line">&#123;</span><br><span class="line">public:</span><br><span class="line">    BB() &#123; cout &lt;&lt; &quot;BB::BB() called&quot; &lt;&lt; endl; &#125;</span><br><span class="line">    ~BB() &#123; cout &lt;&lt; &quot;BB::~BB() called&quot; &lt;&lt; endl; &#125;</span><br><span class="line">    shared_ptr&lt;AA&gt; m_aa_ptr; //!</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">    shared_ptr&lt;AA&gt; ptr_a (new AA);</span><br><span class="line">    shared_ptr&lt;BB&gt; ptr_b ( new BB);</span><br><span class="line">    cout &lt;&lt; &quot;ptr_a use_count: &quot; &lt;&lt; ptr_a.use_count() &lt;&lt; endl;</span><br><span class="line">    cout &lt;&lt; &quot;ptr_b use_count: &quot; &lt;&lt; ptr_b.use_count() &lt;&lt; endl;</span><br><span class="line">    //下面两句导致了AA与BB的循环引用，结果就是AA和BB对象都不会析构</span><br><span class="line">    ptr_a-&gt;m_bb_ptr = ptr_b;</span><br><span class="line">    ptr_b-&gt;m_aa_ptr = ptr_a;</span><br><span class="line">    cout &lt;&lt; &quot;ptr_a use_count: &quot; &lt;&lt; ptr_a.use_count() &lt;&lt; endl;</span><br><span class="line">    cout &lt;&lt; &quot;ptr_b use_count: &quot; &lt;&lt; ptr_b.use_count() &lt;&lt; endl;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>运行结果：<br><img src="/img/20180810103513927.png" alt></p>
+<p>可以看到由于AA和BB内部的shared_ptr各自保存了对方的一次引用，所以导致了ptr_a和ptr_b销毁的时候都认为内部保存的指针计数没有变成0，所以AA和BB的析构函数不会被调用。解决方法就是把一个shared_ptr替换成weak_ptr。</p>
+<p>可以看到由于AA和BB内部的shared_ptr各自保存了对方的一次引用，所以导致了ptr_a和ptr_b销毁的时候都认为内部保存的指针计数没有变成0，所以AA和BB的析构函数不会被调用。解决方法就是把一个shared_ptr替换成weak_ptr。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;iostream&gt;</span><br><span class="line">#include &lt;boost/smart_ptr.hpp&gt;</span><br><span class="line">using namespace std;</span><br><span class="line">using namespace boost;</span><br><span class="line"></span><br><span class="line">class BB;</span><br><span class="line">class AA</span><br><span class="line">&#123;</span><br><span class="line">public:</span><br><span class="line">    AA() &#123; cout &lt;&lt; &quot;AA::AA() called&quot; &lt;&lt; endl; &#125;</span><br><span class="line">    ~AA() &#123; cout &lt;&lt; &quot;AA::~AA() called&quot; &lt;&lt; endl; &#125;</span><br><span class="line">    weak_ptr&lt;BB&gt; m_bb_ptr;  //!</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">class BB</span><br><span class="line">&#123;</span><br><span class="line">public:</span><br><span class="line">    BB() &#123; cout &lt;&lt; &quot;BB::BB() called&quot; &lt;&lt; endl; &#125;</span><br><span class="line">    ~BB() &#123; cout &lt;&lt; &quot;BB::~BB() called&quot; &lt;&lt; endl; &#125;</span><br><span class="line">    shared_ptr&lt;AA&gt; m_aa_ptr; //!</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">    shared_ptr&lt;AA&gt; ptr_a (new AA);</span><br><span class="line">    shared_ptr&lt;BB&gt; ptr_b ( new BB);</span><br><span class="line">    cout &lt;&lt; &quot;ptr_a use_count: &quot; &lt;&lt; ptr_a.use_count() &lt;&lt; endl;</span><br><span class="line">    cout &lt;&lt; &quot;ptr_b use_count: &quot; &lt;&lt; ptr_b.use_count() &lt;&lt; endl;</span><br><span class="line">    //下面两句导致了AA与BB的循环引用，结果就是AA和BB对象都不会析构</span><br><span class="line">    ptr_a-&gt;m_bb_ptr = ptr_b;</span><br><span class="line">    ptr_b-&gt;m_aa_ptr = ptr_a;</span><br><span class="line">    cout &lt;&lt; &quot;ptr_a use_count: &quot; &lt;&lt; ptr_a.use_count() &lt;&lt; endl;</span><br><span class="line">    cout &lt;&lt; &quot;ptr_b use_count: &quot; &lt;&lt; ptr_b.use_count() &lt;&lt; endl;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>运行结果：<br><img src="/img/20180810103527411.png" alt></p>
+<p>最后值得一提的是，虽然通过弱引用指针可以有效的解除循环引用，但这种方式必须在能预见会出现循环引用的情况下才能使用，即这个仅仅是一种编译期的解决方案，如果程序在运行过程中出现了循环引用，还是会造成内存泄漏的。因此，不要认为只要使用了智能指针便能杜绝内存泄漏。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/C/" rel="tag"># C++</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/21/Linux伙伴算法简介/" rel="next" title="Linux 伙伴算法简介">
+                <i class="fa fa-chevron-left"></i> Linux 伙伴算法简介
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">168</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/test.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#智能指针背后的设计思想"><span class="nav-number">1.</span> <span class="nav-text">智能指针背后的设计思想</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#无智能指针造成内存泄漏的例子"><span class="nav-number">1.1.</span> <span class="nav-text">无智能指针造成内存泄漏的例子</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#智能指针的设计思想"><span class="nav-number">1.2.</span> <span class="nav-text">智能指针的设计思想</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#C-智能指针简单介绍"><span class="nav-number">2.</span> <span class="nav-text">C++智能指针简单介绍</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#为什么摒弃auto-ptr"><span class="nav-number">3.</span> <span class="nav-text">为什么摒弃auto_ptr?</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#unique-ptr为何优于auto-ptr？"><span class="nav-number">4.</span> <span class="nav-text">unique_ptr为何优于auto_ptr？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用规则更严格"><span class="nav-number">4.1.</span> <span class="nav-text">使用规则更严格</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#对悬挂指针的操作更智能"><span class="nav-number">4.2.</span> <span class="nav-text">对悬挂指针的操作更智能</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#如何选择智能指针"><span class="nav-number">5.</span> <span class="nav-text">如何选择智能指针</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用指南："><span class="nav-number">5.1.</span> <span class="nav-text">使用指南：</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#弱引用智能指针-weak-ptr"><span class="nav-number">6.</span> <span class="nav-text">弱引用智能指针 weak_ptr</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#空悬指针问题"><span class="nav-number">6.1.</span> <span class="nav-text">空悬指针问题</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
