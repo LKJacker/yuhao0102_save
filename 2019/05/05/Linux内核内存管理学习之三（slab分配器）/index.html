@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="内核内存分配在linux内核中伙伴系统用来管理物理内存，其分配的单位是页，但是向用户程序一样，内核也需要动态分配内存，而伙伴系统分配的粒度又太大。由于内核无法借助标准的C库，因而需要别的手段来实现内核中动态内存的分配管理，linux采用的是slab分配器。slab分配器不仅可以提供动态内存的管理功能，而且可以作为经常分配并释放的内存的缓存。通过slab缓存，内核能够储备一些对象，供后续使用。需要注">
+<meta name="keywords" content="Linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux内核内存管理学习之三（slab分配器）">
+<meta property="og:url" content="http://yoursite.com/2019/05/05/Linux内核内存管理学习之三（slab分配器）/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="内核内存分配在linux内核中伙伴系统用来管理物理内存，其分配的单位是页，但是向用户程序一样，内核也需要动态分配内存，而伙伴系统分配的粒度又太大。由于内核无法借助标准的C库，因而需要别的手段来实现内核中动态内存的分配管理，linux采用的是slab分配器。slab分配器不仅可以提供动态内存的管理功能，而且可以作为经常分配并释放的内存的缓存。通过slab缓存，内核能够储备一些对象，供后续使用。需要注">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/20130817153633531.png">
+<meta property="og:image" content="http://yoursite.com/img/20130817155746281.png">
+<meta property="og:image" content="http://yoursite.com/img/20130818091237062.png">
+<meta property="og:image" content="http://yoursite.com/img/20130817210416921.png">
+<meta property="og:image" content="http://yoursite.com/img/20130818113122187.png">
+<meta property="og:image" content="http://yoursite.com/img/20130818120259218.png">
+<meta property="og:image" content="http://yoursite.com/img/20130818121330296.png">
+<meta property="og:updated_time" content="2019-05-05T09:21:00.632Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Linux内核内存管理学习之三（slab分配器）">
+<meta name="twitter:description" content="内核内存分配在linux内核中伙伴系统用来管理物理内存，其分配的单位是页，但是向用户程序一样，内核也需要动态分配内存，而伙伴系统分配的粒度又太大。由于内核无法借助标准的C库，因而需要别的手段来实现内核中动态内存的分配管理，linux采用的是slab分配器。slab分配器不仅可以提供动态内存的管理功能，而且可以作为经常分配并释放的内存的缓存。通过slab缓存，内核能够储备一些对象，供后续使用。需要注">
+<meta name="twitter:image" content="http://yoursite.com/img/20130817153633531.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/05/05/Linux内核内存管理学习之三（slab分配器）/">
+
+
+
+
+
+  <title>Linux内核内存管理学习之三（slab分配器） | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/05/Linux内核内存管理学习之三（slab分配器）/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Linux内核内存管理学习之三（slab分配器）</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-05-05T17:05:39+08:00">
+                2019-05-05
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="内核内存分配"><a href="#内核内存分配" class="headerlink" title="内核内存分配"></a>内核内存分配</h1><p>在linux内核中伙伴系统用来管理物理内存，其分配的单位是页，但是向用户程序一样，内核也需要动态分配内存，而伙伴系统分配的粒度又太大。由于内核无法借助标准的C库，因而需要别的手段来实现内核中动态内存的分配管理，linux采用的是slab分配器。slab分配器不仅可以提供动态内存的管理功能，而且可以作为经常分配并释放的内存的缓存。通过slab缓存，内核能够储备一些对象，供后续使用。需要注意的是slab分配器只管理内核的常规地址空间（准确的说是直接被映射到内核地址空间的那部分内存包括ZONE_NORMAL和ZONE_DMA）。<br>采用了slab分配器后，在释放内存时，slab分配器将释放的内存块保存在一个列表中，而不是返回给伙伴系统。在下一次内核申请同样类型的对象时，会使用该列表中的内存开。slab分配器分配的优点：</p>
+<ul>
+<li>可以提供小块内存的分配支持</li>
+<li>不必每次申请释放都和伙伴系统打交道，提供了分配释放效率</li>
+<li>如果在slab缓存的话，其在CPU高速缓存的概率也会较高。</li>
+<li>伙伴系统的操作队系统的数据和指令高速缓存有影响，slab分配器降低了这种副作用</li>
+<li>伙伴系统分配的页地址都页的倍数，这对CPU的高速缓存的利用有负面影响，页首地址对齐在页面大小上使得如果每次都将数据存放到从伙伴系统分配的页开始的位置会使得高速缓存的有的行被过度使用，而有的行几乎从不被使用。slab分配器通过着色使得slab对象能够均匀的使用高速缓存，提高高速缓存的利用率。</li>
+</ul>
+<p>在引入了slab分配器后，内核的内存管理方案如图所示：<br><img src="/img/20130817153633531.png" alt></p>
+<p>slab分配器也不是万能的，它也有缺陷：</p>
+<ul>
+<li>对于微型嵌入式系统，它显得比较复杂，这是可以使用经过优化的slob分配器，它使用内存块链表，并使用最先适配算法</li>
+<li>对于具有大量内存的大型系统，仅仅建立slab分配器的数据结构就需要大量内存，这时候可以使用经过优化的slub分配器</li>
+</ul>
+<p>无论是slab分配器家族的这三个中的那个一，它们提供的接口都是相同的：<br><code>kmalloc</code>,<code>__kmalloc</code>和<code>kmalloc_node</code>用于普通内存的分配<br><code>kmem_cache_alloc</code>，<code>kmem_cache_alloc_node</code>用于申请特定类型的内存<br>内核中普通内存的申请使用<code>kmalloc(size,flags)</code>,size是申请的大小，flags告诉分配器分配什么样的内存，如何分配等等。<br>内核中普通内存的释放使用<code>kfree(*ptr)</code>;释放ptr所指向的内存区。<br>可以通过/proc/slabinfo查看活动的缓存列表。</p>
+<h1 id="slab分配器的原理"><a href="#slab分配器的原理" class="headerlink" title="slab分配器的原理"></a>slab分配器的原理</h1><p>slab算法是1994年开发出来的并首先用于sun microsystem solaris 2.4操作系统。这种算法的使用基于以下几个前提：</p>
+<ul>
+<li>所存放数据的类型可以影响存储器取区的分配方式。</li>
+<li>内核函数倾向于反复请求同一类型的存储器区。</li>
+<li>对存储器区的请求可以根据它们发生的频率来分类。</li>
+<li>所引入的对象大小不是几何分布的。</li>
+<li>硬件高速缓存的高性能。在这种情况下，伙伴函数的每次调用都增加了对内存的平均访问时间。</li>
+</ul>
+<p>slab分配器把对象分组放进高速缓存。每个高速缓存都是同种类型对象的一种“储备”。一个cache管理一组大小固定的内存块（也称为对象实体），每个内存块都可用作一种数据结构。cache中的内存块来自一到多个slab。一个slab来自物理内存管理器的一到多个物理页，该slab被分成一组固定大小的块，被称为slab对象（object），一个slab属于一个cache，其中的对象就是该cache所管理的固定大小的内存块。所以一个cache可以有一到多个slab。下图给出了slab分配器的各个部分及其相互关系：<br><img src="/img/20130817155746281.png" alt></p>
+<p>在基于slab的内核内存管理器中，基本的概念是保存管理型数据的缓存（即slab cache，slab缓存）和保存被管理对象的各个slab。每个缓存都负责一种对象类型，比如kmalloc-128会负责管理65-128字节的内存的kmalloc分配。系统中的所有缓存类型都保存在一个链表slab_caches中。</p>
+<h2 id="slab缓存"><a href="#slab缓存" class="headerlink" title="slab缓存"></a>slab缓存</h2><p>slab缓存的详细结构 如图所示：<br><img src="/img/20130818091237062.png" alt></p>
+<p>每个缓存结构都包括了两个重要的成员：</p>
+<ul>
+<li><code>struct kmem_list3 **nodelists</code>：kmem_list3结构中包含了三个链表头，分别对应于完全用尽的slab链表，部分用尽的slab链，空闲的slab链表，其中部分空闲的在最开始</li>
+<li><code>struct array_cache *array[NR_CPUS + MAX_NUMNODES]</code>：array是一个数组，系统中的每一个CPU，每一个内存节点都对应该数组中的一个元素。array_cache结构包含了一些特定于该CPU/节点的管理数据以及一个数组，每个数组元素都指向一个该CPU/节点刚释放的内存对象。该数组有助于提高高速缓存的利用率。<ul>
+<li>当释放内存对象时，首先将内存对象释放到该数组中对应的元素中</li>
+<li>申请内存时，内核假定刚释放的内存对象仍然处于CPU高速缓存中，因而会先从该数组的对应数组元素中查找，看是否可以申请。</li>
+<li>当特定于CPU/节点的缓存数组是空时，会用slab缓存中的空闲对象填充它</li>
+</ul>
+</li>
+</ul>
+<p>因此，对象分配的次序为：</p>
+<ul>
+<li>特定于CPU/节点的缓存列表中的对象</li>
+<li>当前已经存在于slab缓存中中的未用对象</li>
+<li>从伙伴系统获得内存，然后创建的对象</li>
+</ul>
+<h2 id="slab对象"><a href="#slab对象" class="headerlink" title="slab对象"></a>slab对象</h2><p>对象在slab中不是连续排列的，其排列如图所示:<br><img src="/img/20130817210416921.png" alt></p>
+<p>slab对象的长度并不代表其确切的长度，因为需要对长度进行调整以满足对齐要求。对齐要求可能是：</p>
+<ul>
+<li>创建slab时指定了SLAB_HWCACHE_ALIGN标志，则会按照cache_line_size的返回值对齐，即对齐的硬件缓存行上。如果对象小于硬件缓存行的一半，则将多个对象放入一个缓存行。</li>
+<li>如果没有指定对齐标记，则对齐到BYTES_PER_WORD，即对齐到void指针所需字节数目。</li>
+</ul>
+<p>为了使得slab满足对齐要求，会在slab对象中添加填充字节以满足对齐要求,使用对齐的地址可以会加速内存访问。每个slab都对应一个管理结构，它可能位于slab内部也可能位于slab外部专门为它申请的内存中，它保存了所有的管理数据，也包括一个链表域用于将slab连接起来，还包括一个指针指向它所属的cache。<br>大多数情况下，slab内存区的长度是不能被对象长度整除的，因而就有了一些多余的内存，这些内存可以被用来以偏移量的形式给slab“着色”，着色后，缓存的各个slab成员会指定到不同的偏移量，进而可以将数据定位到不同的缓存行。<br>内核通过对象自身即可找到它对应的slab，过程是:对象的物理地址-&gt;物理地址对应的page结构。然后由page找到对应的slab以及cache（包含在page结构中）。</p>
+<h1 id="slab分配器的实现"><a href="#slab分配器的实现" class="headerlink" title="slab分配器的实现"></a>slab分配器的实现</h1><h2 id="使用的数据结构"><a href="#使用的数据结构" class="headerlink" title="使用的数据结构"></a>使用的数据结构</h2><p>linux使用struct kmem_cache表示slab缓存，使用struct kmem_list3管理缓存所对应的slab链表的链表头，使用struct array_cache管理特定于CPU的slab对象的缓存(注意不是slab缓存是slab对象的缓存)。</p>
+<h2 id="内核采用的其它保护机制"><a href="#内核采用的其它保护机制" class="headerlink" title="内核采用的其它保护机制"></a>内核采用的其它保护机制</h2><p>为了检测错误，内核采用了一些机制来对内存进行保护，主要的方法有：<br>危险区：在每个对象的开始和结束处增加一个额外的内存区，其中会填充一些特殊的字段。如果这个区域被修改了，可能就是某些代码访问了不该访问的内存区域<br>对象毒化：在建立和释放slab时，将对象用预定义的模式填充。如果在对象分配时发现该模式已经改变，就可能是发生了内存越界。</p>
+<h2 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h2><p>slab分配器的初始化涉及到一个鸡与蛋的问题。为了初始化slab数据结构，内核需要很多远小于一页的内存区，很显然由kmalloc分配这种内存最合适，但是kmalloc只有在slab分配器初始化完才能使用。内核借助一些技巧来解决该问题。<br>kmem_cache_init函数被内核用来初始化slab分配器。它在伙伴系统启用后调用。在SMP系统中，启动CPU正在运行，其它CPU还未初始化，它要在smp_init之前调用。slab采用多步逐步初始化slab分配器，其工作过程：<br>创建第一个名为kmem_cache的slab缓存，此时该缓存的管理数据结构使用的是静态分配的内存。在slab分配器初始化完成后，会将这里使用的静态数据结构替换为动态分配的内存。<br>初始化其它的slab缓存，由于已经初始化了第一个slab缓存，因此这一步是可行。<br>将初始化过程由于“鸡与蛋”的问题而使用的静态数据结构替换为动态分配的。</p>
+<h2 id="API"><a href="#API" class="headerlink" title="API"></a>API</h2><h3 id="创建缓存"><a href="#创建缓存" class="headerlink" title="创建缓存"></a>创建缓存</h3><p>slab分配器使用kmem_cache_create创建一个新的slab缓存。该函数的基本工作过程为：</p>
+<ul>
+<li>参数检查</li>
+<li>计算对齐</li>
+<li>分配缓存的管理结构所需的内存</li>
+<li>计算slab所需的物理内存大小以及每个slab中slab对象的个数</li>
+<li>计算slab管理部分应该放在哪里，并存储在缓存的flags域中</li>
+<li>计算slab的颜色，颜色数目存在color中，颜色偏移量存在color_off中</li>
+<li>建立每CPU的缓存</li>
+<li>将新创建的缓存添加到全局slab缓存链表slab_caches中</li>
+</ul>
+<h3 id="分配对象"><a href="#分配对象" class="headerlink" title="分配对象"></a>分配对象</h3><p>kmem_cache_alloc用于从指定的slab缓存分配对象。与kmalloc相比，它多了一个缓存指针的参数，用于指向所要从其中分配内存的缓存。<br>其工作过程如图：<br><img src="/img/20130818113122187.png" alt></p>
+<p>在NUMA系统中，如果在本节点分配失败，还会尝试其它节点。</p>
+<p>cache_grow用于缓存的增长，它会从伙伴系统获取内存。其流程如图所示：<br><img src="/img/20130818120259218.png" alt></p>
+<h3 id="释放对象"><a href="#释放对象" class="headerlink" title="释放对象"></a>释放对象</h3><p>kmem_cache_free用于将对象归还给指定的slab缓存，类似于kmem_cache_free，它比kfree多了一个指向所归还到的slab缓存指针参数。其流程如图：<br><img src="/img/20130818121330296.png" alt></p>
+<p>free_block会将缓存中前batchcount个对象移动到slab链表中，并且将缓存中剩余的对象向数组的头部移动。根据slab对象所属的slab的状态(inuse域)，slab对象可能被归给给部分空闲链表（如果该slab中有些slab对象正在被使用）或者空闲链表（该slab中没有其它对象正在被使用），同时如果加入到空闲slab链表中的slab对象数目超过了free_limit的限制（在kmem_list3结构中），则会调用slab_destroy销毁slab。</p>
+<h3 id="缓存收缩"><a href="#缓存收缩" class="headerlink" title="缓存收缩"></a>缓存收缩</h3><p>可以使用kmem_cache_shrink来回收一个slab缓存所管理的内存。它会释放尽可能多的slab。它会尝试回收用于每CPU缓存的内存空间（调用free_block），以及用于空闲链表的slab内存空间，slab的释放最终都由slab_destroy完成。</p>
+<h3 id="通用缓存"><a href="#通用缓存" class="headerlink" title="通用缓存"></a>通用缓存</h3><p>如果不涉及到特定类型的内存，而只是普通类型的内存，可以使用kmalloc和kfree来申请和释放缓存。内核会找到并使用适用于所申请的大小的通用slab缓存来进行分配和释放。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/05/Linux内核内存管理学习之二（物理内存管理--伙伴系统）/" rel="next" title="Linux内核内存管理学习之二（物理内存管理--伙伴系统）">
+                <i class="fa fa-chevron-left"></i> Linux内核内存管理学习之二（物理内存管理--伙伴系统）
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/05/Leetcode797/" rel="prev" title="Leetcode797. All Paths From Source to Target">
+                Leetcode797. All Paths From Source to Target <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">171</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/test.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#内核内存分配"><span class="nav-number">1.</span> <span class="nav-text">内核内存分配</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#slab分配器的原理"><span class="nav-number">2.</span> <span class="nav-text">slab分配器的原理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#slab缓存"><span class="nav-number">2.1.</span> <span class="nav-text">slab缓存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#slab对象"><span class="nav-number">2.2.</span> <span class="nav-text">slab对象</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#slab分配器的实现"><span class="nav-number">3.</span> <span class="nav-text">slab分配器的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用的数据结构"><span class="nav-number">3.1.</span> <span class="nav-text">使用的数据结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内核采用的其它保护机制"><span class="nav-number">3.2.</span> <span class="nav-text">内核采用的其它保护机制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#初始化"><span class="nav-number">3.3.</span> <span class="nav-text">初始化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#API"><span class="nav-number">3.4.</span> <span class="nav-text">API</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#创建缓存"><span class="nav-number">3.4.1.</span> <span class="nav-text">创建缓存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分配对象"><span class="nav-number">3.4.2.</span> <span class="nav-text">分配对象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#释放对象"><span class="nav-number">3.4.3.</span> <span class="nav-text">释放对象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#缓存收缩"><span class="nav-number">3.4.4.</span> <span class="nav-text">缓存收缩</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#通用缓存"><span class="nav-number">3.4.5.</span> <span class="nav-text">通用缓存</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
