@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="内存管理单元MMU这里假设大家了解虚拟内存的由来。参考《深入理解计算机系统》讲虚拟内存的章节 实际上我们写的程序，都是面向虚拟内存的。我们在程序中写的变量的地址，实际上是虚拟内存中的地址，当CPU想要访问该地址的时候，内存管理单元MMU会将该虚拟地址翻译成真实的物理地址，然后CPU就去真实的物理地址处取得数据。 这里说的虚拟地址，是指虚拟地址空间中地址。这里我们说的虚拟地址空间，实际上是在磁盘上的">
+<meta name="keywords" content="Linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="高速缓存以及TLB与虚拟内存">
+<meta property="og:url" content="http://yoursite.com/2019/06/03/高速缓存以及TLB与虚拟内存/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="内存管理单元MMU这里假设大家了解虚拟内存的由来。参考《深入理解计算机系统》讲虚拟内存的章节 实际上我们写的程序，都是面向虚拟内存的。我们在程序中写的变量的地址，实际上是虚拟内存中的地址，当CPU想要访问该地址的时候，内存管理单元MMU会将该虚拟地址翻译成真实的物理地址，然后CPU就去真实的物理地址处取得数据。 这里说的虚拟地址，是指虚拟地址空间中地址。这里我们说的虚拟地址空间，实际上是在磁盘上的">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/20181119112423399.png">
+<meta property="og:image" content="http://yoursite.com/img/20181119112903657.png">
+<meta property="og:image" content="http://yoursite.com/img/20181119115313659.png">
+<meta property="og:image" content="http://yoursite.com/img/20181119120908819.png">
+<meta property="og:image" content="http://yoursite.com/img/20181121111901706.png">
+<meta property="og:image" content="http://yoursite.com/img/20181121125038630.png">
+<meta property="og:image" content="http://yoursite.com/img/20181121223034687.png">
+<meta property="og:image" content="http://yoursite.com/img/20181121225302983.png">
+<meta property="og:image" content="http://yoursite.com/img/20181121231317315.png">
+<meta property="og:image" content="http://yoursite.com/img/20181121232326135.png">
+<meta property="og:image" content="http://yoursite.com/img/20181121235717510.png">
+<meta property="og:image" content="http://yoursite.com/img/20181122001017570.png">
+<meta property="og:image" content="http://yoursite.com/img/20181122002042281.png">
+<meta property="og:image" content="http://yoursite.com/img/20181122003552844.png">
+<meta property="og:image" content="http://yoursite.com/img/2018112422392167.png">
+<meta property="og:image" content="http://yoursite.com/img/20181124224828639.png">
+<meta property="og:image" content="http://yoursite.com/img/20181124232203347.png">
+<meta property="og:image" content="http://yoursite.com/img/2018112423524578.png">
+<meta property="og:image" content="http://yoursite.com/img/20181124235854808.png">
+<meta property="og:image" content="http://yoursite.com/img/20181125001227456.png">
+<meta property="og:image" content="http://yoursite.com/img/20181125001940207.png">
+<meta property="og:image" content="http://yoursite.com/img/20181125002533254.png">
+<meta property="og:image" content="http://yoursite.com/img/20181125003101680.png">
+<meta property="og:updated_time" content="2019-06-03T00:49:13.403Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="高速缓存以及TLB与虚拟内存">
+<meta name="twitter:description" content="内存管理单元MMU这里假设大家了解虚拟内存的由来。参考《深入理解计算机系统》讲虚拟内存的章节 实际上我们写的程序，都是面向虚拟内存的。我们在程序中写的变量的地址，实际上是虚拟内存中的地址，当CPU想要访问该地址的时候，内存管理单元MMU会将该虚拟地址翻译成真实的物理地址，然后CPU就去真实的物理地址处取得数据。 这里说的虚拟地址，是指虚拟地址空间中地址。这里我们说的虚拟地址空间，实际上是在磁盘上的">
+<meta name="twitter:image" content="http://yoursite.com/img/20181119112423399.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/06/03/高速缓存以及TLB与虚拟内存/">
+
+
+
+
+
+  <title>高速缓存以及TLB与虚拟内存 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/03/高速缓存以及TLB与虚拟内存/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">高速缓存以及TLB与虚拟内存</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-03T08:31:25+08:00">
+                2019-06-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="内存管理单元MMU"><a href="#内存管理单元MMU" class="headerlink" title="内存管理单元MMU"></a>内存管理单元MMU</h1><p>这里假设大家了解虚拟内存的由来。参考《深入理解计算机系统》讲虚拟内存的章节</p>
+<p>实际上我们写的程序，都是面向虚拟内存的。我们在程序中写的变量的地址，实际上是虚拟内存中的地址，当CPU想要访问该地址的时候，内存管理单元MMU会将该虚拟地址翻译成真实的物理地址，然后CPU就去真实的物理地址处取得数据。</p>
+<p>这里说的虚拟地址，是指虚拟地址空间中地址。这里我们说的虚拟地址空间，实际上是在磁盘上的一块空间（常见的是4G的进程虚拟地址空间）。具体这4G的虚拟地址空间的来龙去脉，参考《深入理解计算机系统》第九章。</p>
+<p>MMU：内存管理单元。它是一个硬件，不是软件。它用于将虚拟地址翻译成实际的物理内存地址。同时它还可以将特定的内存块设置成不同的读写属性，进而实现内存保护。注意，MMU是硬件管理，不是软件实现内存管理。</p>
+<p>总结来说，MMU能实现以下功能：</p>
+<p>虚拟内存。有了虚拟内存，可以在处理器上运行比实际物理内存大的应用程序。为了使用虚拟内存，操作系统通常要设置一个交换区（通常在硬盘上），通过将内存中不活跃的数据与指令放到交换区，以腾出物理内存来为其他程序服务。<br>内存保护。通过这一功能，可以将特定的内存块设置为读、写或者可执行的属性。比如将不可变的数据或者代码设为只读的，这样可以防止被恶意串改。</p>
+<h2 id="虚拟内存"><a href="#虚拟内存" class="headerlink" title="虚拟内存"></a>虚拟内存</h2><p>进程的概念大家都知道。</p>
+<p>每一个进程都独立的运行在自己的虚拟地址空间。为了理解这一个概念。我们可以看一个而简单的例子：</p>
+<p>看一下下面的代码：<br>main.c<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#include &lt;stdlib.h&gt;</span><br><span class="line"></span><br><span class="line">int g_int = 1;</span><br><span class="line">int main() &#123;</span><br><span class="line">	printf(&quot;g_int = %d\n&quot;,g_int);</span><br><span class="line">	printf(&quot;&amp;g_int = %d\n&quot;,&amp;g_int);</span><br><span class="line"></span><br><span class="line">	system(&quot;pause&quot;);//此处程序会停止执行，不会执行到return 0</span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>如果我同时运行该程序两次。打印结果会是一样么？答案是结果肯定一样，运行结果都为：<br><img src="/img/20181119112423399.png" alt></p>
+<p>当然，这是在我的计算机上，在你的计算机上g_int地址可能不一样，但是同时运行该程序两次，结果肯定是一样的。其实这个答案很多人都知道是一样的，初学者都知道。但是初学者说不清楚是为什么。</p>
+<p>这个进程运行两份实例的时候。在物理内存中，实际上是以下分布情况：<br><img src="/img/20181119112903657.png" alt></p>
+<p>进程1和进程2 位于不同的地址。但是我们程序打印的g_int全局变量的地址值，是一样的。</p>
+<p>这里就引入了虚拟内存的概念。我们写程序，面向的是虚拟地址空间。写的程序的内容，都可以看成是在虚拟地址空间中运行（实际上最终是将虚拟地址空间映射到了物理地址空间）。如下图：<br><img src="/img/20181119115313659.png" alt></p>
+<p>我们可以看到。main.o可执行程序，运行两份实例时，相当于两个进程。这两个进程都有自己独立的虚拟地址空间。然后将虚拟地址空间里的代码数据映射到内存中，从而被CPU执行与处理。在物理内存中，g_int这个全局变量的物理地址确实不同。但是在虚拟内存中，由于进程1与进程2的虚拟地址空间完全一样（同一个可执行程序代码），那么g_int地址，实际上就是一样的。</p>
+<p>CPU在执行指令与数据时，获得的是虚拟内存的地址。但是CPU只能去物理内存寻址。此时，MMU就派上用场了。MMU负责，将虚拟地址，翻译成，真正运行时的物理地址。</p>
+<p>MMU是如何将虚拟地址翻译成物理地址的，这个后面讲。现在先要了解一下交换区的概念。</p>
+<p>交换区： 实际上就是一块磁盘空间（硬盘空间）。虚拟内存与物理内存映射的时候，是将虚拟内存的代码放到交换区中，以后在CPU想要执行相关的指令或者数据时，如果内存中没有，先去交换区将需要的指令与数据映射到物理内存，然后CPU再执行。<br>虚拟内存与交换取的这种概念，实现了大内存需求量的（多个）进程，能够（同时）运行在较小的物理内存中。如下图所示：<br><img src="/img/20181119120908819.png" alt></p>
+<p>上图中，说的是进程的局部代码在物理内存中运行。是因为程序具有局部性原则，所以在某一段很小的时间段内，只有很少一部分代码会被CPU执行。具体可以参考下一篇文章。</p>
+<p>到这里，我们应该大致明白了虚拟内存的作用与简单机制。还剩下MMU如何翻译虚拟地址为物理地址的，这放到最后讲解。现在先总结一下虚拟内存机制：</p>
+<p>虚拟内存需要重新映射到物理内存<br>虚拟地址映射到物理地址中的实际地址<br>每次只有进程的少部分代码会在物理内存中运行<br>大部分代码依然位于磁盘中（存储器硬盘）</p>
+<h2 id="页式内存管理"><a href="#页式内存管理" class="headerlink" title="页式内存管理"></a>页式内存管理</h2><p>上一节笼统的介绍了虚拟内存的概念。接下来学习内存管理中的一种方式：页式内存管理。</p>
+<h3 id="页的概念"><a href="#页的概念" class="headerlink" title="页的概念"></a>页的概念</h3><p>由1.1的内容，我们知道了交换区。我们知道交换区里面存放的是大部分的可执行代码与数据。而物理内存中，执行的是少部分的可执行代码与数据。那么当物理内存中的代码与数据执行完需要执行接下来的代码，而刚好接下来的代码还在交换区中没有映射到物理内存（这称为缺页，后面会讲），那么此时就需要从交换区获取程序的代码，将它拿到物理内存执行。那么一次拿多少代码过来呢？这是一个问题！</p>
+<p>为了CPU的高效执行以及方便的内存管理（详细原因见以后的文章），每次需要拿一个页的代码。这个页，指的是一段连续的存储空间（常见的是4Kb），也叫作块。假设页的大小为P。在虚拟内存中，叫做虚拟页（VP）。从虚拟内存拿了一个页的代码要放到物理内存，那么自然物理内存也得有一个刚好一般大小的页才能存放虚拟页的代码。物理内存中的页叫做物理页（PP）</p>
+<p>在任何时刻，虚拟页都是以下三种状态中的一种：</p>
+<ul>
+<li>未分配的：VM系统还未分配的页（或者未创建）。未分配的页还没有任何数据与代码与他们相关联，因此也就不占用任何磁盘。</li>
+<li>缓存的： 当前已缓存在物理内存中的已分配页</li>
+<li>未缓存的：未缓存在物理内存中的已分配页</li>
+</ul>
+<p>下图展示了一个8个虚拟页的小虚拟内存。其中：虚拟页0和3还没有被分配，因此在磁盘上还不存在。虚拟页1、4、 6被缓存在物理内存中。虚拟页2、 5、 7已经被分配，但是还没有缓存到物理内存中去执行。<br><img src="/img/20181121111901706.png" alt></p>
+<h3 id="页表的概念"><a href="#页表的概念" class="headerlink" title="页表的概念"></a>页表的概念</h3><p>1.21节用到了缓存这个词。这里假设大家都理解缓存的概念。</p>
+<p>虚拟内存中的一些虚拟页是缓存在物理内存中被执行的。理所应当，应该有一种机制，来判断虚拟页，是否被缓存在了物理内存中的某个物理页上。如果不命中（需要一个页的代码，但是这个页未缓存在物理内存中），系统还必须知道这个虚拟页存放在磁盘上的哪个位置，从而在物理内存中选择一个空闲页或者替换一个牺牲页，并将需要的虚拟页从磁盘复制到物理内存中。</p>
+<p>这些功能，是由软硬件结合完成的。 包括操作系统软件，MMU中的地址翻译硬件，和一个存放在物理内存中的页表的数据结构。</p>
+<p>上一节说将虚拟页映射到物理页，实际上就是MMU地址翻译硬件将一个虚拟地址翻译成物理地址时，都会去读取页表的内容。操作系统负责维护页表的内容，以及在磁盘与物理内存之间来回传送页。</p>
+<p>下图是一个页表的基本组织结构（实际上不止那些内容）：<br><img src="/img/20181121125038630.png" alt></p>
+<p>页表实际上就是一个数组。这个数组存放的是一个称为页表条目（PTE）的结构。虚拟地址空间的每一个页在页表中，都有一个对应的页表条目（PTE）。虚拟页地址（首地址）翻译的时候就是查询的各个虚拟页在页表中的PTE，从而进行地址翻译的。</p>
+<p>现在假设每一个PTE都有一个有效位和一个n位字段的地址。其中</p>
+<p>有效位：表示对应的虚拟页是否缓存在了物理内存中。0表示未缓存。1表示已缓存。<br>n位地址字段：如果未缓存（有效字段为0），n位地址字段不为空的话，这个n位地址字段就表示该虚拟页在磁盘上的起始的位置。如果这个n位字段为空，那么就说明该虚拟页未分配。如果已缓存（有效字段为1），n位地址字段肯定不为空，它表示该虚拟页在物理内存中的起始地址。<br>综上分析，就得知，上图中：四个虚拟页VP1 , VP2, VP4 , VP7 是被缓存在物理内存中。 两个虚拟页VP0, VP5还未被分配。但是剩下的虚拟页VP3 ,VP6已经被分配了，但是还没有缓存到物理内存中去执行。</p>
+<p>注意：任意的物理页，都可以缓存任意的虚拟页。（因为物理内存是全相联的）</p>
+<h3 id="页命中"><a href="#页命中" class="headerlink" title="页命中"></a>页命中</h3><p>考虑下图的情形：<br><img src="/img/20181121223034687.png" alt></p>
+<p>假设现在CPU想读取VP2页面中的某一个字节的内容。会发生什么呢？</p>
+<p>当CPU得到一个地址vaddr想要访问它（这个addr就是上面想要访问的某一个字节的地址），通过后面会学习的MMU地址翻译硬件，将虚拟地址addr作为索引定位到页表的PTE条目中的PTE2（这里假设是PTE2），从内存中去读到PTE2的有效位为1，说明该虚拟页面已经被缓存了，所以CPU使用该PTE2条目中的物理内存地址（这个物理内存地址是PP1中的起始地址）构造出vaddr的物理地址paddr（这个地址是PP1页面起始地址或后面的某一个地址）。然后CPU就会去paddr这个物理内存地址去取数据。这种情况，就是也命中。</p>
+<p>实际上，上面的VP2的起始地址与paddr地址，很类似于内存的分段机制（X86以前就是分段机制），CPU访问内存的地址是“段地址：偏移地址”或者叫做“CS:IP”。而我们现在学习的是分页机制，他们都是一种内存管理机制。</p>
+<h3 id="缺页"><a href="#缺页" class="headerlink" title="缺页"></a>缺页</h3><p>什么是缺页？</p>
+<p>考虑以下图示情形：<br><img src="/img/20181121225302983.png" alt><br>当CPU想访问VP3页面中的某一个字节。会发生什么情况？</p>
+<p>由1.23小节的分析知，当地址翻译硬件MMU找到了PTE3后，发现有效位为0，则说明VP3并未缓存在物理内存中，并且触发一个缺页异常。缺页异常调用内核中的缺页异常处理程序，该程序会在物理内存中查询是否有空闲页面。如果物理内存中有空闲页面，则将VP3页面的内容从磁盘中复制到（映射）物理内存中的空闲页面。如果物理内存中没有空闲页面，则缺页异常处理程序就选择一个牺牲页，在此例中就是存放在PP3中的VP4。如果VP4已经被修改了，那么内核就会将它复制回磁盘。</p>
+<p>然后此时因为VP3已经在物理内存中被缓存了，就需要将页表更新，也就是更新PTE3。</p>
+<p>随后缺页异常处理程序返回。它会重新启动导致缺页的指令，该指令会重新将刚刚导致缺页的虚拟地址发送到MMU硬件翻译，但是此时，因为VP3已经被缓存，所以会页命中。</p>
+<p>下图是在经过了缺页后，我们的示例页表的状态：<br><img src="/img/20181121231317315.png" alt></p>
+<p>以上有一个过程是替换页面的过程，其中包含一个页面调度算法。这个以后会学习。<br>1.25 分配页面<br>当你在程序中调用malloc或者new分配内存时，发生了什么？调用malloc后，会在虚拟内存中分配页面。（注意malloc分配的内存时虚拟内存，当CPU访问的时候，首先肯定会发生缺页，然后再将该页缓存到物理内存中）</p>
+<p>如下图所示：<br>本身没有VP5这个虚拟页面，现在malloc后，新分配了一个虚拟页面VP5。<br><img src="/img/20181121232326135.png" alt></p>
+<p>分配好VP5这个虚拟页面后，还需要更新PTE条目，使得PTE5指向VP5。</p>
+<h3 id="程序的局部性原则"><a href="#程序的局部性原则" class="headerlink" title="程序的局部性原则"></a>程序的局部性原则</h3><p>虚拟内存这种机制会有什么问题？经常缺页会不会导致程序的执行效率低下？</p>
+<p>实际上，虽然会产生不命中现象，但是虚拟内存机制工作的很好。这主要与程序局部性原则有关！！！什么是程序的局部性？</p>
+<p>尽管在程序整个运行的生命周期，引用的不同的页面总数可能会超过物理内存的大小，但是局部性原则保证了在任意时刻：程序将趋向于在一个较小的活动页面集合上工作。 这个集合成为工作集或者常驻集合。在最开始，也就是将工作集页面调度到物理内存中之后，接下来对这个工作集的引用将导致页命中，而不会产生额外的磁盘流量。</p>
+<p>上面看似很完美，但是也有可能会出现这样一种情况：工作集的大小超过了物理内存的大小！！ 此时，页面会不停的换入换出。这种状态叫做抖动！！！</p>
+<p>当然，现在的计算机的物理内存的大小都非常大，一般不会出现抖动的现象！！！</p>
+<h2 id="虚拟内存作为内存管理工具"><a href="#虚拟内存作为内存管理工具" class="headerlink" title="虚拟内存作为内存管理工具"></a>虚拟内存作为内存管理工具</h2><p>虚拟内存为什么说是一种内存管理工具？</p>
+<p>虚拟内存大大地简化了内存管理，并提供了一种自然的保护内存的方法。</p>
+<p>到目前为止，我们都假设有一个单独的页表，将一个虚拟地址空间映射到物理地址空间。实际上，操作系统为每一个进程提供了一个独立的页表，因而也就是一个独立的虚拟地址空间。如下图：<br><img src="/img/20181121235717510.png" alt></p>
+<p>注意：多个虚拟页面，可以映射到同一个共享物理页面上。</p>
+<p>按需页面调度和独立的虚拟地址空间的结合，对系统中内存的使用和管理产生了深远的影响！！！如下：</p>
+<ul>
+<li>简化链接。</li>
+<li>简化加载</li>
+<li>简化共享</li>
+<li>简化内存分配<br>具体参考CSAPP：9.4节内容。</li>
+</ul>
+<h2 id="虚拟内存作为内存保护工具"><a href="#虚拟内存作为内存保护工具" class="headerlink" title="虚拟内存作为内存保护工具"></a>虚拟内存作为内存保护工具</h2><p>上一节学习了虚拟内存作为内存管理工具。</p>
+<p>其实虚拟内存还可以作为内存保护工具。如何做到？</p>
+<p>想一想，CPU在访问一个虚拟内存页面时，需要读取页表条目中的PTE条目。如果在PTE条目中加一些额外的许可位来控制对虚拟内存的访问，当CPU读到相应的许可位，就可以知道该虚拟内存是否可读或者可写，或者可执行？ 这样看来我们的页表就要变化一下，就如下图所示：<br><img src="/img/20181122001017570.png" alt></p>
+<p>上图中：</p>
+<ul>
+<li>SUP表示进程是否必须运行在内核模式（超级用户）下才能访问该页。</li>
+<li>READ表示是否可读</li>
+<li>WRITE表示是否可写</li>
+</ul>
+<p>如果一条指令违反了这些许可条件，那么CPU就会触发一个一般保护故障，将控制传递给一个内核中的异常处理程序。Linux shell 一般将这种异常报告为“段错误（segmentation fault）”</p>
+<h1 id="地址翻译"><a href="#地址翻译" class="headerlink" title="地址翻译"></a>地址翻译</h1><p>上面一直在说MMU通过读取页表的PTE将虚拟地址翻译成物理地址。到底是如何翻译的？</p>
+<p>如下图，展示了MMU是如何翻译地址的：<br><img src="/img/20181122002042281.png" alt></p>
+<p>看到这么复杂的图，不要害怕！！！ 下面讲解很容易懂！</p>
+<p>CPU中有一个控制寄存器，页表基址寄存器（PTBR）指向当前页表。<br>n位的虚拟地址，包含两个部分：虚拟页面偏移VPO（p位）与虚拟页号VPN（n-p位）<br>MMU利用虚拟内存的高n-p位VPN作为索引找到页表的对应的PTE条目，然后获取PTE条目对应的物理页号PPN<br>然后将PPN与VPO串联连接起来，就得到了实际的物理地址。（实际上就是PPN左移p位然后加上VPO，VPO=PPO）<br>到这里实际上我们已经更加的将这种地址串联与X86处理器中的分段机制很像。X86-16位的分段机制 也是将段地址CS左移4位然后与偏移地址IP相加，得到最终的物理地址。这是不是与上面的分页机制的地址翻译过程很像？ 实际上它们一个是实模式，一个是保护模式而已！</p>
+<p>MMU的地址翻译过程是不是很简单？如果不理解，就反复看，就理解了！！！</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>下面来总结一下，分页机制中，CPU获得一个虚拟地址后，有哪些步骤需要做：<br><img src="/img/20181122003552844.png" alt></p>
+<p>当页命中时，CPU硬件执行的步骤<br><img src="/img/2018112422392167.png" alt></p>
+<p>注释：VA：虚拟地址 PTEA：页表条目地址 PTE：页表条目 PA物理内存地址</p>
+<p>如上图，CPU的执行步骤如下：</p>
+<ul>
+<li>处理器生成一个虚拟地址，并把它传送给MMU</li>
+<li>MMU生成PTE地址，并从高速缓存/物理内存请求得到它</li>
+<li>高速缓存/物理内存向MMU返回PTE</li>
+<li>MMU根据得到的PTE索引页表，从而构造物理地址，并把物理地址传送给高速缓存/物理内存</li>
+<li>高速缓存/物理内存返回请求的数据或者指令给CPU</li>
+</ul>
+<p>当缺页时，CPU的硬件执行过程<br><img src="/img/20181124224828639.png" alt></p>
+<p>注释：VA：虚拟地址 PTEA：页表条目地址 PTE：页表条目</p>
+<p>如上图，CPU的执行步骤如下：</p>
+<ul>
+<li>处理器生成一个虚拟地址，并把它传送给MMU</li>
+<li>MMU生成PTE地址，并从高速缓存/物理内存请求得到它</li>
+<li>高速缓存/物理内存向MMU返回PTE</li>
+<li>PTE中的有效位是0，所以MMU触发了一次异常，传递CPU中的控制到操作系统内核中的缺页异常处理程序</li>
+<li>缺页异常处理程序确定出物理内存中的牺牲页，如果这个页面被修改了，就将它换出道磁盘</li>
+<li>缺页异常处理程序将需要的页面调入到高速缓存/物理内存，并更新内存中的PTE</li>
+<li>缺页异常处理程序返回到原来的进程，再次执行导致缺页的指令。CPU将引起缺页的地址再次发送给MMU。因为虚拟页面现在缓存在物理内存中了，所以此次就会命中，物理内存就会将所请求的数据或者指令返回给CPU</li>
+</ul>
+<p>可以看到，页命中与缺页的前三步，都是一样的。我们还可以总结出一个重要的结论：<br>页命中完全是由硬件来处理的，而缺页，却是由硬件和操作系统内核共同完成的。</p>
+<h1 id="高速缓存（Cache）的引入"><a href="#高速缓存（Cache）的引入" class="headerlink" title="高速缓存（Cache）的引入"></a>高速缓存（Cache）的引入</h1><p>看看上面分析页命中与缺页的过程中，出现了高速缓存，如果只有物理内存很好理解，现在出现高速缓存是啥意思？</p>
+<p>学习过上一篇文章，我们应该可以理解页命中，缺页这些简单的概念以及虚拟地址的寻址过程（如果不明白，建议先学习上一篇文章）。</p>
+<p>我们知道，CPU寻址时，从内存中获取指令与数据的时间还是相当大的（CPU的速度远远大于内存的速度）。所以高速缓存（Cache）就出现了。</p>
+<ul>
+<li>Cache是一种小容量高速存储器</li>
+<li>Cache的存取速度与CPU的运算速度几乎同量级</li>
+<li>Cache在现代计算机系统中直接内置于处理器芯片中</li>
+<li>在处理器和内存之间设置cache（精确来讲是将Cache放在MMU与物理内存之间）</li>
+<li>把内存中被频繁访问的数据和指令复制到cache中</li>
+<li>页表也在内存中，将被频繁访问的PTE，复制到Cache中</li>
+<li>大多数情况下，CPU可以直接从cache中取指令与数据</li>
+</ul>
+<p>如下图，我们先来看一个高速缓存与虚拟内存结合的例子，看看此时CPU的访问过程：<br><img src="/img/20181124232203347.png" alt></p>
+<p>这个图，其实很好理解！！！当MMU要查询PTEA以及PA时，都先去高速缓存中先查一下，看看有没有，如果高速缓存中有PTEA与PA，直接从高速缓存中获取数相应的PTE与数据。</p>
+<p>如果高速缓存中没有相应的PTEA或者PA时，就去物理内存中获取，然后从物理内存中获取之后，将获取到的PTE或者数据再缓存到高速缓存中，然后高速缓存将获取到的数据返回给CPU执行。</p>
+<p>注意：因为Cache是放在MMU与物理内存之间的，所以高速缓存无需处理保护问题，因为访问权限的检查是MMU地址翻译过程的一部分。</p>
+<h1 id="利用TLB加速地址翻译"><a href="#利用TLB加速地址翻译" class="headerlink" title="利用TLB加速地址翻译"></a>利用TLB加速地址翻译</h1><p>学到了这里，我们应该很清楚地址翻译的过程了。如果不清楚，就需要看上一篇文章或者深入理解计算机系统第九章。</p>
+<p>在地址翻译的过程中，CPU每产生一个虚拟地址（VP），MMU都要去别的地方查询一个PTE。这个别的地方指：高速缓存或者物理内存。在最坏的情况下（缺页），需要访问两次物理内存。这种开销是极其昂贵的。在最好的情况下，MMU也需要去高速缓存中获取PTE对应的值。虽然高速缓存已经很快了，但是相对于CPU内部来说，还是有点慢。那么能不能MMU不去别的地方获取PTE？能不能在MMU内部也搞一个类似于高速缓存的东西，来存储一部分经常被访问的PTE？答案是可以的！！！在MMU中，有一个小的缓存，称为翻译后备缓冲器（TLB）</p>
+<p>如下图示来看看带有TLB的 MMU，且TLB命中时，是如何执行的<br><img src="/img/2018112423524578.png" alt></p>
+<ul>
+<li>CPU产生一个虚拟地址</li>
+<li>第二部和第三部是MMU从TLB中取出相应的PTE</li>
+<li>MMU将这个虚拟地址翻译成一个物理地址，并将它发送到高速缓存/物理内存。</li>
+<li>高速缓存/物理内存将所请求的数据字返回给CPU</li>
+</ul>
+<p>我们可以看到，TLB是虚拟寻址的缓存。</p>
+<p>下面再来看看TLB不命中时，是如何执行的<br><img src="/img/20181124235854808.png" alt></p>
+<p>当TLB不命中时，关键点在于，MMU必须从L1高速缓存中获取到相应的PTE，新取出的PTE再放到TLB中，此时可能会覆盖一个已经存在的条目。那么当TLB中有了相应的PTE,MMU再去TLB中查找…</p>
+<h1 id="Cache与物理内存是如何映射的"><a href="#Cache与物理内存是如何映射的" class="headerlink" title="Cache与物理内存是如何映射的"></a>Cache与物理内存是如何映射的</h1><p>这里我们只学习一下直接映射法：</p>
+<h2 id="直接映射法："><a href="#直接映射法：" class="headerlink" title="直接映射法："></a>直接映射法：</h2><ul>
+<li>将cache和物理内存分成固定大小的块（如512byte/块）</li>
+<li>物理内存中的每一块在cache中都有固定的映射位置</li>
+<li>对应的映射公式为：<ul>
+<li>Pos（cache） = 内存块号 % cache总块数</li>
+</ul>
+</li>
+</ul>
+<p>如图：<br><img src="/img/20181125001227456.png" alt></p>
+<p>注意：任意一个物理内存块都可以映射到唯一固定的cache块（物理内存不同的块，可以映射到同一个cache块）。</p>
+<h2 id="直接映射原理"><a href="#直接映射原理" class="headerlink" title="直接映射原理"></a>直接映射原理</h2><p>比如我们想要访问某一个物理地址，我们如何知道这个地址是否在cache中？或者如何知道它在cache中的位置？</p>
+<p>首先，现在只有一个物理地址，需要根据这个物理地址进行判断。</p>
+<p>看下面，对物理地址有一个划分：<br><img src="/img/20181125001940207.png" alt></p>
+<p>以上的物理地址分为3部分，都是什么意思呢？</p>
+<p>我们利用以下规则来判断;</p>
+<ul>
+<li>根据物理地址的中间的c位，找到cache中对应的块</li>
+<li>比较物理地址的高t位，让它与cache中的flag比较，看是否相同<ul>
+<li>如果相同：说明数据在高速缓存中有缓存，那么此时根据物理内存的b位找到cache对应的块中的偏移</li>
+<li>如果不同：说明数据在缓存中没有缓存，此时就将物理内存中对应的数据复制到cache中</li>
+</ul>
+</li>
+</ul>
+<p>比如下面这个例子：<br><img src="/img/20181125002533254.png" alt></p>
+<h2 id="直接映射法的特点"><a href="#直接映射法的特点" class="headerlink" title="直接映射法的特点"></a>直接映射法的特点</h2><p>我们已经知道，直接映射法，很有可能不同的物理内存块映射到相同的cache块。所以直接映射法这样会导致缓存失效。但是直接映射法过程简单，所需耗时短！！</p>
+<h1 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a>总结</h1><p>下面笼统的用流程图概括一下处理器的数据访问过程：<br><img src="/img/20181125003101680.png" alt></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/31/cpp中手动获取调用堆栈/" rel="next" title="C++中手动获取调用堆栈">
+                <i class="fa fa-chevron-left"></i> C++中手动获取调用堆栈
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">184</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/test.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#内存管理单元MMU"><span class="nav-number">1.</span> <span class="nav-text">内存管理单元MMU</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#虚拟内存"><span class="nav-number">1.1.</span> <span class="nav-text">虚拟内存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#页式内存管理"><span class="nav-number">1.2.</span> <span class="nav-text">页式内存管理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#页的概念"><span class="nav-number">1.2.1.</span> <span class="nav-text">页的概念</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#页表的概念"><span class="nav-number">1.2.2.</span> <span class="nav-text">页表的概念</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#页命中"><span class="nav-number">1.2.3.</span> <span class="nav-text">页命中</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#缺页"><span class="nav-number">1.2.4.</span> <span class="nav-text">缺页</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#程序的局部性原则"><span class="nav-number">1.2.5.</span> <span class="nav-text">程序的局部性原则</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#虚拟内存作为内存管理工具"><span class="nav-number">1.3.</span> <span class="nav-text">虚拟内存作为内存管理工具</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#虚拟内存作为内存保护工具"><span class="nav-number">1.4.</span> <span class="nav-text">虚拟内存作为内存保护工具</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#地址翻译"><span class="nav-number">2.</span> <span class="nav-text">地址翻译</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#高速缓存（Cache）的引入"><span class="nav-number">4.</span> <span class="nav-text">高速缓存（Cache）的引入</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#利用TLB加速地址翻译"><span class="nav-number">5.</span> <span class="nav-text">利用TLB加速地址翻译</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Cache与物理内存是如何映射的"><span class="nav-number">6.</span> <span class="nav-text">Cache与物理内存是如何映射的</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#直接映射法："><span class="nav-number">6.1.</span> <span class="nav-text">直接映射法：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#直接映射原理"><span class="nav-number">6.2.</span> <span class="nav-text">直接映射原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#直接映射法的特点"><span class="nav-number">6.3.</span> <span class="nav-text">直接映射法的特点</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结-1"><span class="nav-number">7.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
