@@ -94,7 +94,7 @@
 <meta property="og:site_name" content="Hao Yu&#39;s blog">
 <meta property="og:description" content="PBS作业管理，即以qsub、qstat、qdel命令为核心的集群作业管理系统，且它是开源的。 在此环境下运行，用户不需要指定程序在哪些节点上运行，程序所需的硬件资源由PBS管理和分配。 qsub、qstat、qdel的功能分别为“提交作业”、“查看作业状态”、“删除作业”。 非PBS下mpi计算通常来说，使用mpirun即可，例如mpirun -np 16 ./pom.kii2b.exe &amp;lt">
 <meta property="og:locale" content="zn-ch">
-<meta property="og:updated_time" content="2019-04-12T07:46:22.827Z">
+<meta property="og:updated_time" content="2019-06-12T06:06:58.925Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="qsub教程">
 <meta name="twitter:description" content="PBS作业管理，即以qsub、qstat、qdel命令为核心的集群作业管理系统，且它是开源的。 在此环境下运行，用户不需要指定程序在哪些节点上运行，程序所需的硬件资源由PBS管理和分配。 qsub、qstat、qdel的功能分别为“提交作业”、“查看作业状态”、“删除作业”。 非PBS下mpi计算通常来说，使用mpirun即可，例如mpirun -np 16 ./pom.kii2b.exe &amp;lt">
@@ -360,6 +360,7 @@
 <p>由于存在需要多次提交相似作业的可能，例如我有20个文件夹的数据，每个文件夹里数据的处理方式相同，调用同一个程序，总不能写20个PBS脚本。因此更为通常的做法是，使用shell脚本进行qsub脚本输出再提交，举例如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">    PNAME=fz_letkf</span><br><span class="line">    NODE=1</span><br><span class="line">    NP=16</span><br><span class="line">    QSUBTIME=&quot;24:00:00&quot;</span><br><span class="line">    NOWDIR=`pwd`</span><br><span class="line">    QSUB=cess.letkf.qsub</span><br><span class="line">    LETKF=letkf020.m01</span><br><span class="line">cat &lt;&lt;EOF &gt;$QSUB</span><br><span class="line">#!/bin/sh</span><br><span class="line">#PBS -q hpca </span><br><span class="line">#PBS -V </span><br><span class="line">#PBS -N $PNAME</span><br><span class="line">#PBS -l nodes=$NODE:ppn=$NP</span><br><span class="line">#PBS -l walltime=&quot;$QSUBTIME&quot;</span><br><span class="line">#PBS -o /home/xfh_stu/WORK3/qsublog</span><br><span class="line">#PBS -j oe </span><br><span class="line">cd $NOWDIR</span><br><span class="line">mpirun ./$LETKF &lt; /dev/null</span><br><span class="line">mv pom.log ../$TIME.pom.log</span><br><span class="line">EOF</span><br><span class="line">    qsub $QSUB &gt;cessrunid</span><br></pre></td></tr></table></figure></p>
 <p>调用此脚本就会自动将PBS脚本输出至$QSUB文件中，并提交此作业。通常在这段代码外面会套上循环，每次修改相应变量，从而实现一次提交多个相似作业。</p>
 <p>在这里cat命令使用了一种叫做heredoc的写法，用于输出大段文字，同时还要替换其中的变量。界定符EOF是可以自定义的，不过通常来说都使用EOF。另外，用于结束的界定符必须顶格写（想不顶格也是可以的，但是有其他限制，且不方便）。</p>
+<p>命令格式：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">qsub [-a date_time] [-c interval] [-C directive_prefix]</span><br><span class="line">[-e path] [-I] [-j join] [-k keep] [-l resource_list] [-m mail_options]</span><br><span class="line">[-M user_list][-N name] [-o path] [-p priority] [-q destination] [-r c]</span><br><span class="line">[-S path_list] [-u user_list][-v variable_list] [-V]</span><br><span class="line">[-W additional_attributes] [-z]</span><br><span class="line">[script]</span><br></pre></td></tr></table></figure></p>
 <p>下面解释一下参数的意思。</p>
 <ul>
 <li><code>-q</code>：指定使用的队列。可使用<code>qstat -q</code>查看队列信息，包括队列名、资源限制、正在运行的任务数等。</li>
@@ -371,6 +372,7 @@
 </ul>
 <p>qsub成功提交作业后，会在stdout输出Job ID，形如作业ID.主机名，例如15252.manager。在上面的例子中，我将qsub的结果重定向至cessrunid文件中，用于存储作业ID，以便后续处理。</p>
 <h1 id="查看作业状态"><a href="#查看作业状态" class="headerlink" title="查看作业状态"></a>查看作业状态</h1><p>执行qstat即可查看当前正在执行的作业以及刚刚完成的作业。在S那一列，C表示已完成，R表示正在执行，Q表示正在等待，还有一些其他不常见的状态，可以man qstat并以job state为关键词查询即可。</p>
+<p>命令格式：<code>qatat [-f][-a][-i] [-n][-s] [-R] [-Q][-q][-B][-u]</code><br>参数说明：<br>-f jobid 列出指定作业的信息<br>-a 列出系统所有作业<br>-i 列出不在运行的作业<br>-n 列出分配给此作业的结点<br>-s 列出队列管理员与scheduler所提供的建议<br>-R 列出磁盘预留信息<br>-Q 操作符是destination id，指明请求的是队列状态<br>-q 列出队列状态，并以alternative形式显示<br>-au userid 列出指定用户的所有作业<br>-B 列出PBS Server信息<br>-r 列出所有正在运行的作业<br>-Qf queue 列出指定队列的信息<br>-u 若操作符为作业号，则列出其状态。<br>若操作符为destination id，则列出运行在其上的属于user_list中用户的作业状态。</p>
 <p>现在还有个问题，即如何在脚本中判断作业完成与否呢？一个很实际的例子是，我在脚本中一次提交完多个作业后，后续的脚本必须在完成这些作业后才能继续执行，那么就需要知道这些作业有没有完成。</p>
 <p>通常有两种思路：</p>
 <p>一是查看程序本应输出的文件有没有正常输出，即判断输出文件是否存在。或者在程序中写一些日志输出语句，脚本就可以通过查找日志文件某关键的一句话有没有输出从而知道程序运行有没有正常完成。</p>
@@ -382,6 +384,7 @@
 <p>如果文件存在，则说明作业已完成，即可break掉这个无限循环，继续后面的操作了。</p>
 <p>这里需要注意的一个地方就是，在无限循环里的每次判断中间要加上一个sleep语句，比如我设置的是每分钟跑一次循环，这样机器就不会由于每时每刻都在执行判断而耗尽资源。</p>
 <h1 id="删除作业"><a href="#删除作业" class="headerlink" title="删除作业"></a>删除作业</h1><p>执行qdel -W 15 15303即可在15秒后停止并删除Job ID为15303的作业。</p>
+<h1 id="管理作业"><a href="#管理作业" class="headerlink" title="管理作业"></a>管理作业</h1><p>qmgr 命令—用于队列管理<br>qmgr -c “create queue batch queue_type=execution”<br>qmgr -c “set queue batch started=true”<br>qmgr -c “set queue batch enabled=true”<br>qmgr -c “set queue batch resources_default.nodes=1″<br>qmgr -c “set queue batch resources_default.walltime=3600″<br>qmgr -c “set server default_queue=batch”</p>
 <h1 id="脚本的正确使用方法"><a href="#脚本的正确使用方法" class="headerlink" title="脚本的正确使用方法"></a>脚本的正确使用方法</h1><p>通常来说，我们都是在shell脚本中进行qsub脚本输出再提交该qsub脚本。</p>
 <p>这里存在一个问题，即shell脚本自身需要后台执行。如果执行前台执行脚本，就会导致断开SSH连接后，脚本就会停止执行。</p>
 <p>因此，需要使用nohup ./your.script.name.sh &amp;命令，它可以脚本在后台执行且将stdout重定向至nohup.out文件中。要注意命令最后的&amp;是不可缺少的，如果不写，脚本虽然也会在后台执行，但是在关闭SSH后就会停止。</p>
@@ -419,8 +422,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/04/12/Linux的nohup命令的用法/" rel="next" title="Linux的nohup命令的用法">
-                <i class="fa fa-chevron-left"></i> Linux的nohup命令的用法
+              <a href="/2019/04/12/Linux_IO模及select_poll_epoll详解/" rel="next" title="Linux IO模式及 select、poll、epoll详解">
+                <i class="fa fa-chevron-left"></i> Linux IO模式及 select、poll、epoll详解
               </a>
             
           </div>
@@ -429,8 +432,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2019/04/12/Linux_IO模及select_poll_epoll详解/" rel="prev" title="Linux IO模式及 select、poll、epoll详解">
-                Linux IO模式及 select、poll、epoll详解 <i class="fa fa-chevron-right"></i>
+              <a href="/2019/04/12/Leetcode977/" rel="prev" title="Leetcode977. Squares of a Sorted Array">
+                Leetcode977. Squares of a Sorted Array <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -509,7 +512,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">184</span>
+                  <span class="site-state-item-count">186</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -522,7 +525,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-count">10</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
@@ -572,7 +575,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#非PBS下mpi计算"><span class="nav-number">1.</span> <span class="nav-text">非PBS下mpi计算</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#PBS作业提交"><span class="nav-number">2.</span> <span class="nav-text">PBS作业提交</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#查看作业状态"><span class="nav-number">3.</span> <span class="nav-text">查看作业状态</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#删除作业"><span class="nav-number">4.</span> <span class="nav-text">删除作业</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#脚本的正确使用方法"><span class="nav-number">5.</span> <span class="nav-text">脚本的正确使用方法</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#非PBS下mpi计算"><span class="nav-number">1.</span> <span class="nav-text">非PBS下mpi计算</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#PBS作业提交"><span class="nav-number">2.</span> <span class="nav-text">PBS作业提交</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#查看作业状态"><span class="nav-number">3.</span> <span class="nav-text">查看作业状态</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#删除作业"><span class="nav-number">4.</span> <span class="nav-text">删除作业</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#管理作业"><span class="nav-number">5.</span> <span class="nav-text">管理作业</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#脚本的正确使用方法"><span class="nav-number">6.</span> <span class="nav-text">脚本的正确使用方法</span></a></li></ol></div>
             
 
           </div>
