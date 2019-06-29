@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="操作系统,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="实验八：文件系统实验目的通过完成本次实验，希望能达到以下目标：  了解基本的文件系统系统调用的实现方法； 了解一个基于索引节点组织方式的Simple FS文件系统的设计与实现； 了解文件系统抽象层-VFS的设计与实现；  实验内容本次实验涉及的是文件系统，通过分析了解ucore文件系统的总体架构设计，完善读写文件操作，从新实现基于文件系统的执行程序机制（即改写do_execve），从而可以完成执行">
+<meta name="keywords" content="操作系统">
+<meta property="og:type" content="article">
+<meta property="og:title" content="清华大学操作系统课程实验八">
+<meta property="og:url" content="http://yoursite.com/2019/06/29/清华大学操作系统课程实验八/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="实验八：文件系统实验目的通过完成本次实验，希望能达到以下目标：  了解基本的文件系统系统调用的实现方法； 了解一个基于索引节点组织方式的Simple FS文件系统的设计与实现； 了解文件系统抽象层-VFS的设计与实现；  实验内容本次实验涉及的是文件系统，通过分析了解ucore文件系统的总体架构设计，完善读写文件操作，从新实现基于文件系统的执行程序机制（即改写do_execve），从而可以完成执行">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/20190629002.png">
+<meta property="og:image" content="http://yoursite.com/img/20190629004.png">
+<meta property="og:updated_time" content="2019-06-29T16:00:11.309Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="清华大学操作系统课程实验八">
+<meta name="twitter:description" content="实验八：文件系统实验目的通过完成本次实验，希望能达到以下目标：  了解基本的文件系统系统调用的实现方法； 了解一个基于索引节点组织方式的Simple FS文件系统的设计与实现； 了解文件系统抽象层-VFS的设计与实现；  实验内容本次实验涉及的是文件系统，通过分析了解ucore文件系统的总体架构设计，完善读写文件操作，从新实现基于文件系统的执行程序机制（即改写do_execve），从而可以完成执行">
+<meta name="twitter:image" content="http://yoursite.com/img/20190629002.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/06/29/清华大学操作系统课程实验八/">
+
+
+
+
+
+  <title>清华大学操作系统课程实验八 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/29/清华大学操作系统课程实验八/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">清华大学操作系统课程实验八</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-29T23:56:00+08:00">
+                2019-06-29
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="实验八：文件系统"><a href="#实验八：文件系统" class="headerlink" title="实验八：文件系统"></a>实验八：文件系统</h1><h2 id="实验目的"><a href="#实验目的" class="headerlink" title="实验目的"></a>实验目的</h2><p>通过完成本次实验，希望能达到以下目标：</p>
+<ul>
+<li>了解基本的文件系统系统调用的实现方法；</li>
+<li>了解一个基于索引节点组织方式的Simple FS文件系统的设计与实现；</li>
+<li>了解文件系统抽象层-VFS的设计与实现；</li>
+</ul>
+<h2 id="实验内容"><a href="#实验内容" class="headerlink" title="实验内容"></a>实验内容</h2><p>本次实验涉及的是文件系统，通过分析了解ucore文件系统的总体架构设计，完善读写文件操作，从新实现基于文件系统的执行程序机制（即改写do_execve），从而可以完成执行存储在磁盘上的文件和实现文件读写等功能。</p>
+<h2 id="文件系统设计与实现"><a href="#文件系统设计与实现" class="headerlink" title="文件系统设计与实现"></a>文件系统设计与实现</h2><h3 id="ucore-文件系统总体介绍"><a href="#ucore-文件系统总体介绍" class="headerlink" title="ucore 文件系统总体介绍"></a>ucore 文件系统总体介绍</h3><p>UNIX提出了四个文件系统抽象概念：文件(file)、目录项(dentry)、索引节点(inode)和安装点(mount point)</p>
+<ul>
+<li>文件：文件中的内容可理解为是一有序字节，文件有一个方便应用程序识别的文件名称（也称文件路径名）。典型的文件操作有读、写、创建和删除等。</li>
+<li>目录项：目录项不是目录（又称文件路径），而是<strong>目录的组成部分</strong>。在UNIX中目录被看作一种特定的文件，而目录项是文件路径中的一部分。如一个文件路径名是“/test/testfile”，则包含的目录项为：<ul>
+<li>根目录“/”，</li>
+<li>目录“test”和文件“testfile”</li>
+<li>这三个都是目录项。</li>
+<li>一般而言，目录项包含目录项的名字（文件名或目录名）和目录项的索引节点位置。</li>
+</ul>
+</li>
+<li>索引节点：UNIX将文件的相关元数据信息（如访问控制权限、大小、拥有者、创建时间、数据内容等等信息）存储在一个单独的数据结构中，该结构被称为索引节点。</li>
+<li>安装点：在UNIX中，文件系统被安装在一个特定的文件路径位置，这个位置就是安装点。所有的已安装文件系统都作为<strong>根文件系统树中的叶子</strong>出现在系统中。</li>
+</ul>
+<p>ucore模仿了UNIX的文件系统设计，ucore的文件系统架构主要由四部分组成：</p>
+<ul>
+<li><strong>通用文件系统访问接口层</strong>：该层提供了一个从用户空间到文件系统的标准访问接口。这一层访问接口让应用程序能够通过一个简单的接口获得ucore内核的文件系统服务。</li>
+<li><strong>文件系统抽象层</strong>：向上提供一个一致的接口给内核其他部分（文件系统相关的系统调用实现模块和其他内核功能模块）访问。向下提供一个同样的抽象函数指针列表和数据结构屏蔽不同文件系统的实现细节。</li>
+<li><strong>Simple FS文件系统层</strong>：一个基于索引方式的简单文件系统实例。向上通过各种具体函数实现以对应文件系统抽象层提出的抽象函数。向下访问外设接口</li>
+<li><strong>外设接口层</strong>：向上提供device访问接口屏蔽不同硬件细节。向下实现访问各种具体设备驱动的接口，比如disk设备接口/串口设备接口/键盘设备接口等。</li>
+</ul>
+<p>假如应用程序操作文件（打开/创建/删除/读写）：</p>
+<ol>
+<li>通过文件系统的通用文件系统访问接口层为用户空间提供的访问接口进入文件系统内部；</li>
+<li>文件系统抽象层把访问请求转发给某一具体文件系统（比如SFS文件系统）；</li>
+<li>具体文件系统（Simple FS文件系统层）把应用程序的访问请求转化为对磁盘上的block的处理请求，并通过外设接口层交给磁盘驱动例程来完成具体的磁盘操作。</li>
+</ol>
+<ul>
+<li>通用文件系统访问接口<ul>
+<li>文件系统相关用户库<ul>
+<li>write::usr/libs/file.c</li>
+</ul>
+</li>
+<li>用户态文件系统相关系统调用访问接口<ul>
+<li>sys_write/sys_call::/usr/libs/syscall.c</li>
+</ul>
+</li>
+<li>内核态文件系统相关系统调用实现<ul>
+<li>sys_write::/kern/syscall/syscall.c</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>文件系统抽象层VFS<ul>
+<li>dir接口</li>
+<li>file接口</li>
+<li>inode接口</li>
+<li>etc…</li>
+<li>sysfile_write::kern/fs/sysfile.c </li>
+<li>file_write::/kern/fs/file.c </li>
+<li>vop_write::/kern/fs/vfs/inode.h</li>
+</ul>
+</li>
+<li>Simple FS文件系统实现<ul>
+<li>sfs的inode实现</li>
+<li>sfs的外设访问接口</li>
+<li>sfs_write::kern/fs/sfs/sfs_inode.c</li>
+<li>sfs_wbuf::/kern/fs/sfs/sfs_io.c</li>
+</ul>
+</li>
+<li>文件系统IO设备接口<ul>
+<li>device访问接口</li>
+<li>stdin/stdout访问接口</li>
+<li>etc…</li>
+<li>dop_io::/kern/fs/devs/dev.h</li>
+<li>disk0_io::/kern/fs/devs/dev_disk0.c</li>
+</ul>
+</li>
+<li>硬盘驱动、串口驱动<ul>
+<li>ide_write_secs::/kern/driver/ide.c</li>
+</ul>
+</li>
+</ul>
+<h4 id="ucore文件系统总体结构"><a href="#ucore文件系统总体结构" class="headerlink" title="ucore文件系统总体结构"></a>ucore文件系统总体结构</h4><p>从ucore操作系统不同的角度来看，ucore中的文件系统架构包含四类主要的数据结构, 它们分别是：</p>
+<ul>
+<li>超级块（SuperBlock），它主要从<strong>文件系统的全局角度</strong>描述特定文件系统的全局信息。它的作用范围是整个OS空间。</li>
+<li>索引节点（inode）：它主要从<strong>文件系统的单个文件的角度</strong>描述了文件的各种属性和数据所在位置。它的作用范围是整个OS空间。</li>
+<li>目录项（dentry）：它主要从<strong>文件系统的文件路径的角度</strong>描述了文件路径中的一个特定的目录项（注：一系列目录项形成目录/文件路径）。它的作用范围是整个OS空间。<ul>
+<li>对于SFS而言，inode(具体为struct sfs_disk_inode)对应于物理磁盘上的具体对象，</li>
+<li>dentry（具体为struct sfs_disk_entry）是一个内存实体，其中的ino成员指向对应的inode number，另外一个成员是file name(文件名).</li>
+</ul>
+</li>
+<li>文件（file），它主要从进程的角度描述了一个进程在访问文件时需要了解的文件标识，文件读写的位置，文件引用情况等信息。它的作用范围是某一具体进程。</li>
+</ul>
+<p><img src="/img/20190629002.png" alt="ucore中文件相关关键数据结构及其关系"></p>
+<h3 id="通用文件系统访问接口"><a href="#通用文件系统访问接口" class="headerlink" title="通用文件系统访问接口"></a>通用文件系统访问接口</h3><h4 id="文件和目录相关用户库函数"><a href="#文件和目录相关用户库函数" class="headerlink" title="文件和目录相关用户库函数"></a>文件和目录相关用户库函数</h4><p>在文件操作方面，最基本的相关函数是open、close、read、write。</p>
+<ul>
+<li>在读写一个文件之前，首先要用open系统调用将其打开。<ul>
+<li>open的第一个参数指定文件的路径名，可使用绝对路径名；</li>
+<li>第二个参数指定打开的方式，可设置为O_RDONLY、O_WRONLY、O_RDWR，分别表示只读、只写、可读可写。</li>
+<li>在打开一个文件后，就可以使用它返回的文件描述符fd对文件进行相关操作。</li>
+</ul>
+</li>
+<li>在使用完一个文件后，还要用close系统调用把它关闭，其参数就是文件描述符fd。这样它的文件描述符就可以空出来，给别的文件使用。</li>
+<li>读写文件内容的系统调用是read和write。read系统调用有三个参数：<ul>
+<li>一个指定所操作的文件描述符，一个指定读取数据的存放地址，最后一个指定读多少个字节。在C程序中调用该系统调用的方法如下：<code>count = read(filehandle, buffer, nbytes);</code>。</li>
+<li>该系统调用会把实际读到的字节数返回给count变量。在正常情形下这个值与nbytes相等，但有时可能会小一些。例如，在读文件时碰上了文件结束符，从而提前结束此次读操作。</li>
+</ul>
+</li>
+</ul>
+<p>对于目录而言，最常用的操作是跳转到某个目录，这里对应的用户库函数是<code>chdir</code>。然后就需要读目录的内容了，即列出目录中的文件或目录名，这在处理上与读文件类似，即需要：通过opendir函数打开目录，通过readdir来获取目录中的文件信息，读完后还需通过closedir函数来关闭目录。由于在ucore中把目录看成是一个特殊的文件，所以opendir和closedir实际上就是调用与文件相关的open和close函数。只有readdir需要调用获取目录内容的特殊系统调用sys_getdirentry。而且这里没有写目录这一操作。在目录中增加内容其实就是在此目录中创建文件，需要用到创建文件的函数。</p>
+<h4 id="文件和目录访问相关系统调用"><a href="#文件和目录访问相关系统调用" class="headerlink" title="文件和目录访问相关系统调用"></a>文件和目录访问相关系统调用</h4><p>与文件相关的open、close、read、write用户库函数对应的是sys_open、sys_close、sys_read、sys_write四个系统调用接口。与目录相关的readdir用户库函数对应的是sys_getdirentry系统调用。这些系统调用函数接口将通过syscall函数来获得ucore的内核服务。当到了ucore内核后，在调用文件系统抽象层的file接口和dir接口。</p>
+<h3 id="文件系统抽象层-VFS"><a href="#文件系统抽象层-VFS" class="headerlink" title="文件系统抽象层 - VFS"></a>文件系统抽象层 - VFS</h3><p>文件系统抽象层是把不同文件系统的对外共性接口提取出来，形成一个<strong>函数指针数组</strong>，这样，通用文件系统访问接口层只需访问文件系统抽象层，而不需关心具体文件系统的实现细节和接口。</p>
+<h4 id="file-amp-dir接口"><a href="#file-amp-dir接口" class="headerlink" title="file &amp; dir接口"></a>file &amp; dir接口</h4><p>file&amp;dir接口层定义了进程在内核中直接访问的文件相关信息，这定义在file数据结构中，具体描述如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">struct file &#123;</span><br><span class="line">    enum &#123;</span><br><span class="line">        FD_NONE, FD_INIT, FD_OPENED, FD_CLOSED,</span><br><span class="line">    &#125; status;                   //访问文件的执行状态</span><br><span class="line">    bool readable;              //文件是否可读</span><br><span class="line">    bool writable;              //文件是否可写</span><br><span class="line">    int fd;                     //文件在filemap中的索引值</span><br><span class="line">    off_t pos;                  //访问文件的当前位置</span><br><span class="line">    struct inode *node;         //该文件对应的内存inode指针</span><br><span class="line">    int open_count;             //打开此文件的次数</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>而在kern/process/proc.h中的proc_struct结构中描述了进程访问文件的数据接口files_struct，其数据结构定义如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">struct files_struct &#123;</span><br><span class="line">    struct inode *pwd;           //进程当前执行目录的内存inode指针</span><br><span class="line">    struct file *fd_array;       //进程打开文件的数组</span><br><span class="line">    atomic_t files_count;        //访问此文件的线程个数</span><br><span class="line">    semaphore_t files_sem;       //确保对进程控制块中fs_struct的互斥访问</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>当创建一个进程后，该进程的files_struct将会被初始化或复制父进程的files_struct。当用户进程打开一个文件时，将从fd_array数组中取得一个空闲file项，然后会把此file的成员变量node指针指向一个代表此文件的inode的起始地址。</p>
+<h4 id="inode-接口"><a href="#inode-接口" class="headerlink" title="inode 接口"></a>inode 接口</h4><p>index node是位于内存的索引节点，它是VFS结构中的重要数据结构，因为它实际负责把不同文件系统的特定索引节点信息（甚至不能算是一个索引节点）统一封装起来，避免了进程直接访问具体文件系统。其定义如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">struct inode &#123;</span><br><span class="line">    union &#123;                                   //包含不同文件系统特定inode信息的union成员变量</span><br><span class="line">        struct device __device_info;          //设备文件系统内存inode信息</span><br><span class="line">        struct sfs_inode __sfs_inode_info;    //SFS文件系统内存inode信息</span><br><span class="line">    &#125; in_info;   </span><br><span class="line">    enum &#123;</span><br><span class="line">        inode_type_device_info = 0x1234,</span><br><span class="line">        inode_type_sfs_inode_info,</span><br><span class="line">    &#125; in_type;                          //此inode所属文件系统类型</span><br><span class="line">    atomic_t ref_count;                 //此inode的引用计数</span><br><span class="line">    atomic_t open_count;                //打开此inode对应文件的个数</span><br><span class="line">    struct fs *in_fs;                   //抽象的文件系统，包含访问文件系统的函数指针</span><br><span class="line">    const struct inode_ops *in_ops;     //抽象的inode操作，包含访问inode的函数指针     </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>在inode中，有一成员变量为in_ops，这是对此inode的<strong>操作函数指针列表</strong>，其数据结构定义如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">struct inode_ops &#123;</span><br><span class="line">    unsigned long vop_magic;</span><br><span class="line">    int (*vop_open)(struct inode *node, uint32_t open_flags);</span><br><span class="line">    int (*vop_close)(struct inode *node);</span><br><span class="line">    int (*vop_read)(struct inode *node, struct iobuf *iob);</span><br><span class="line">    int (*vop_write)(struct inode *node, struct iobuf *iob);</span><br><span class="line">    int (*vop_getdirentry)(struct inode *node, struct iobuf *iob);</span><br><span class="line">    int (*vop_create)(struct inode *node, const char *name, bool excl, struct inode **node_store);</span><br><span class="line">    int (*vop_lookup)(struct inode *node, char *path, struct inode **node_store);</span><br><span class="line">……</span><br><span class="line"> &#125;;</span><br></pre></td></tr></table></figure></p>
+<p>参照上面对SFS中的索引节点操作函数的说明，可以看出inode_ops是<strong>对常规文件、目录、设备文件所有操作的一个抽象函数表示</strong>。对于某一具体的文件系统中的文件或目录，只需实现相关的函数，就可以被用户进程访问具体的文件了，且用户进程无需了解具体文件系统的实现细节。</p>
+<h3 id="Simple-FS-文件系统"><a href="#Simple-FS-文件系统" class="headerlink" title="Simple FS 文件系统"></a>Simple FS 文件系统</h3><p>ucore内核把所有文件都看作是字节流，任何内部逻辑结构都是专用的，由应用程序负责解释。但是ucore区分文件的物理结构。ucore目前支持如下几种类型的文件：</p>
+<ul>
+<li>常规文件：文件中包括的内容信息是由应用程序输入。SFS文件系统在普通文件上不强加任何内部结构，把其文件内容信息看作为字节。</li>
+<li>目录：包含一系列的entry，每个entry包含文件名和指向与之相关联的索引节点（index node）的指针。目录是按层次结构组织的。</li>
+<li>链接文件：实际上一个链接文件是一个已经存在的文件的另一个可选择的文件名。</li>
+<li>设备文件：不包含数据，但是提供了一个映射物理设备（如串口、键盘等）到一个文件名的机制。可通过设备文件访问外围设备。</li>
+<li>管道：管道是进程间通讯的一个基础设施。管道缓存了其输入端所接受的数据，以便在管道输出端读的进程能一个先进先出的方式来接受数据。</li>
+</ul>
+<p>SFS文件系统中目录和常规文件具有共同的属性，而这些属性保存在索引节点中。SFS通过索引节点来管理目录和常规文件，索引节点包含操作系统所需要的关于某个文件的关键信息，比如文件的属性、访问许可权以及其它控制信息都保存在索引节点中。可以有多个文件名可指向一个索引节点。</p>
+<h4 id="文件系统的布局"><a href="#文件系统的布局" class="headerlink" title="文件系统的布局"></a>文件系统的布局</h4><p>文件系统通常保存在磁盘上。在本实验中，第三个磁盘（即disk0，前两个磁盘分别是<code>ucore.img</code>和<code>swap.img</code>）用于存放一个SFS文件系统（Simple Filesystem）。通常文件系统中，磁盘的使用是以扇区（Sector）为单位的，但是为了实现简便，SFS 中以 block （4K，与内存 page 大小相等）为基本单位。<br>SFS文件系统的布局如下图所示。<br><code>superblock -&gt; root-dir inode -&gt; freemap -&gt; inode/file_data/dir_data_blocks</code></p>
+<p>第0个块（4K）是超级块（superblock），它包含了关于文件系统的所有关键参数，当计算机被启动或文件系统被首次接触时，超级块的内容就会被装入内存。其定义如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">struct sfs_super &#123;</span><br><span class="line">    uint32_t magic;                                  /* magic number, should be SFS_MAGIC */</span><br><span class="line">    uint32_t blocks;                                 /* # of blocks in fs */</span><br><span class="line">    uint32_t unused_blocks;                         /* # of unused blocks in fs */</span><br><span class="line">    char info[SFS_MAX_INFO_LEN + 1];                /* infomation for sfs  */</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>可以看到，包含：</p>
+<ul>
+<li>成员变量魔数magic，其值为<code>0x2f8dbe2a</code>，内核通过它来检查磁盘镜像是否是合法的 SFS img；</li>
+<li>成员变量blocks记录了SFS中所有block的数量，即 img 的大小；</li>
+<li>成员变量unused_block记录了SFS中还没有被使用的block的数量；</li>
+<li>成员变量info包含了字符串”simple file system”。</li>
+</ul>
+<p>第1个块放了一个root-dir的inode，用来记录根目录的相关信息。有关inode还将在后续部分介绍。通过这个root-dir的inode信息就可以定位并查找到根目录下的所有文件信息。</p>
+<p>从第2个块开始，根据SFS中所有块的数量，用1个bit来表示一个块的占用和未被占用的情况。这个区域称为SFS的freemap区域，这将占用若干个块空间。为了更好地记录和管理freemap区域，专门提供了两个文件kern/fs/sfs/bitmap.[ch]来完成根据一个块号查找或设置对应的bit位的值。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">struct bitmap &#123;</span><br><span class="line">    uint32_t nbits;</span><br><span class="line">    uint32_t nwords;</span><br><span class="line">    WORD_TYPE *map;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>最后在剩余的磁盘空间中，存放了所有其他目录和文件的inode信息和内容数据信息。需要注意的是虽然inode的大小小于一个块的大小（4096B），但为了实现简单，每个 inode 都占用一个完整的 block。<br>在sfs_fs.c文件中的sfs_do_mount函数中，完成了加载位于硬盘上的SFS文件系统的超级块superblock和freemap的工作。这样，在内存中就有了SFS文件系统的全局信息。</p>
+<p>在fs_init中分别调用了<code>vfs_init()</code>，<code>dev_init()</code>和<code>sfs_init()</code>，<code>sfs_init()</code>中调用了<code>sfs_mount(&quot;disk0&quot;)</code>，<code>sfs_mount</code>中调用了<code>vfs_mount(devname, sfs_do_mount);</code>，<code>vfs_mount()</code>中从设备列表中找到一个名字相同的设备，这个设备的fs应该是NULL，即它是没有被挂载到某个文件系统的。找到这个设备的inode中in_info，调用传进来的mountfunc，即sfs_do_mount<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line"> * sfs_do_mount - mount sfs file system.</span><br><span class="line"> *</span><br><span class="line"> * @dev:        the block device contains sfs file system</span><br><span class="line"> * @fs_store:   the fs struct in memroy</span><br><span class="line"> */</span><br><span class="line">static int</span><br><span class="line">sfs_do_mount(struct device *dev, struct fs **fs_store) &#123;</span><br><span class="line">    static_assert(SFS_BLKSIZE &gt;= sizeof(struct sfs_super));</span><br><span class="line">    static_assert(SFS_BLKSIZE &gt;= sizeof(struct sfs_disk_inode));</span><br><span class="line">    static_assert(SFS_BLKSIZE &gt;= sizeof(struct sfs_disk_entry));</span><br><span class="line"></span><br><span class="line">    if (dev-&gt;d_blocksize != SFS_BLKSIZE) &#123;</span><br><span class="line">        return -E_NA_DEV;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /* 分配一个fs的结构 */</span><br><span class="line">    struct fs *fs;</span><br><span class="line">    if ((fs = alloc_fs(sfs)) == NULL) &#123;</span><br><span class="line">        return -E_NO_MEM;</span><br><span class="line">    &#125;</span><br><span class="line">    /* 获取这个sfs的sfs_fs */</span><br><span class="line">    struct sfs_fs *sfs = fsop_info(fs, sfs);</span><br><span class="line">    sfs-&gt;dev = dev;</span><br><span class="line"></span><br><span class="line">    int ret = -E_NO_MEM;</span><br><span class="line">    void *sfs_buffer;</span><br><span class="line">    if ((sfs-&gt;sfs_buffer = sfs_buffer = kmalloc(SFS_BLKSIZE)) == NULL) &#123;</span><br><span class="line">        goto failed_cleanup_fs;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /* 专门用来读超级块的 */</span><br><span class="line">    if ((ret = sfs_init_read(dev, SFS_BLKN_SUPER, sfs_buffer)) != 0) &#123;</span><br><span class="line">        goto failed_cleanup_sfs_buffer;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ret = -E_INVAL;</span><br><span class="line"></span><br><span class="line">    struct sfs_super *super = sfs_buffer;</span><br><span class="line">    if (super-&gt;magic != SFS_MAGIC) &#123;</span><br><span class="line">    	// 开头一定要是魔数</span><br><span class="line">        cprintf(&quot;sfs: wrong magic in superblock. (%08x should be %08x).\n&quot;,</span><br><span class="line">                super-&gt;magic, SFS_MAGIC);</span><br><span class="line">        goto failed_cleanup_sfs_buffer;</span><br><span class="line">    &#125;</span><br><span class="line">    if (super-&gt;blocks &gt; dev-&gt;d_blocks) &#123;</span><br><span class="line">        cprintf(&quot;sfs: fs has %u blocks, device has %u blocks.\n&quot;,</span><br><span class="line">                super-&gt;blocks, dev-&gt;d_blocks);</span><br><span class="line">        goto failed_cleanup_sfs_buffer;</span><br><span class="line">    &#125;</span><br><span class="line">    super-&gt;info[SFS_MAX_INFO_LEN] = &apos;\0&apos;;</span><br><span class="line">    sfs-&gt;super = *super;</span><br><span class="line">    ret = -E_NO_MEM;</span><br><span class="line"></span><br><span class="line">    uint32_t i;</span><br><span class="line"></span><br><span class="line">    /* alloc and initialize hash list, 用于inode */</span><br><span class="line">    list_entry_t *hash_list;</span><br><span class="line">    if ((sfs-&gt;hash_list = hash_list = kmalloc(sizeof(list_entry_t) * SFS_HLIST_SIZE)) == NULL) &#123;</span><br><span class="line">        goto failed_cleanup_sfs_buffer;</span><br><span class="line">    &#125;</span><br><span class="line">    for (i = 0; i &lt; SFS_HLIST_SIZE; i ++) &#123;</span><br><span class="line">        list_init(hash_list + i);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /* load and check freemap */</span><br><span class="line">    struct bitmap *freemap;</span><br><span class="line">    uint32_t freemap_size_nbits = sfs_freemap_bits(super);</span><br><span class="line">    if ((sfs-&gt;freemap = freemap = bitmap_create(freemap_size_nbits)) == NULL) &#123;</span><br><span class="line">        goto failed_cleanup_hash_list;</span><br><span class="line">    &#125;</span><br><span class="line">    uint32_t freemap_size_nblks = sfs_freemap_blocks(super);</span><br><span class="line">    if ((ret = sfs_init_freemap(dev, freemap, SFS_BLKN_FREEMAP, freemap_size_nblks, sfs_buffer)) != 0) &#123;</span><br><span class="line">        goto failed_cleanup_freemap;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    uint32_t blocks = sfs-&gt;super.blocks, unused_blocks = 0;</span><br><span class="line">    for (i = 0; i &lt; freemap_size_nbits; i ++) &#123;</span><br><span class="line">        if (bitmap_test(freemap, i)) &#123;</span><br><span class="line">            unused_blocks ++;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    assert(unused_blocks == sfs-&gt;super.unused_blocks);</span><br><span class="line"></span><br><span class="line">    /* and other fields */</span><br><span class="line">    sfs-&gt;super_dirty = 0;</span><br><span class="line">    sem_init(&amp;(sfs-&gt;fs_sem), 1);</span><br><span class="line">    sem_init(&amp;(sfs-&gt;io_sem), 1);</span><br><span class="line">    sem_init(&amp;(sfs-&gt;mutex_sem), 1);</span><br><span class="line">    list_init(&amp;(sfs-&gt;inode_list));</span><br><span class="line">    cprintf(&quot;sfs: mount: &apos;%s&apos; (%d/%d/%d)\n&quot;, sfs-&gt;super.info,</span><br><span class="line">            blocks - unused_blocks, unused_blocks, blocks);</span><br><span class="line"></span><br><span class="line">    /* link addr of sync/get_root/unmount/cleanup funciton  fs&apos;s function pointers*/</span><br><span class="line">    fs-&gt;fs_sync = sfs_sync;</span><br><span class="line">    fs-&gt;fs_get_root = sfs_get_root;</span><br><span class="line">    fs-&gt;fs_unmount = sfs_unmount;</span><br><span class="line">    fs-&gt;fs_cleanup = sfs_cleanup;</span><br><span class="line">    *fs_store = fs;</span><br><span class="line">    return 0;</span><br><span class="line"></span><br><span class="line">failed_cleanup_freemap:</span><br><span class="line">    bitmap_destroy(freemap);</span><br><span class="line">failed_cleanup_hash_list:</span><br><span class="line">    kfree(hash_list);</span><br><span class="line">failed_cleanup_sfs_buffer:</span><br><span class="line">    kfree(sfs_buffer);</span><br><span class="line">failed_cleanup_fs:</span><br><span class="line">    kfree(fs);</span><br><span class="line">    return ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h4 id="索引节点"><a href="#索引节点" class="headerlink" title="索引节点"></a>索引节点</h4><p>在SFS文件系统中，需要记录文件内容的存储位置以及文件名与文件内容的对应关系。</p>
+<ul>
+<li>sfs_disk_inode记录了文件或目录的内容存储的索引信息，该数据结构在硬盘里储存，需要时读入内存。</li>
+<li>sfs_disk_entry表示一个目录中的一个文件或目录，包含该项所对应inode的位置和文件名，同样也在硬盘里储存，需要时读入内存。</li>
+</ul>
+<h5 id="磁盘索引节点"><a href="#磁盘索引节点" class="headerlink" title="磁盘索引节点"></a>磁盘索引节点</h5><p>SFS中的磁盘索引节点代表了一个实际位于磁盘上的文件。首先我们看看在硬盘上的索引节点的内容：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">struct sfs_disk_inode &#123;</span><br><span class="line">    uint32_t size;                          如果inode表示常规文件，则size是文件大小</span><br><span class="line">    uint16_t type;                          inode的文件类型</span><br><span class="line">    uint16_t nlinks;                        此inode的硬链接数</span><br><span class="line">    uint32_t blocks;                        此inode的数据块数的个数</span><br><span class="line">    uint32_t direct[SFS_NDIRECT];           此inode的直接数据块索引值（有SFS_NDIRECT个）</span><br><span class="line">    uint32_t indirect;                      此inode的一级间接数据块索引值</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>通过上表可以看出，如果inode表示的是文件，则成员变量direct[]直接指向了保存文件内容数据的数据块索引值。indirect间接指向了保存文件内容数据的数据块，indirect指向的是间接数据块（indirect_block），此数据块实际存放的全部是数据块索引，这些数据块索引指向的数据块才被用来存放文件内容数据。</p>
+<p>默认的，ucore 里 SFS_NDIRECT 是 12，即直接索引的数据页大小为 12 <em> 4k = 48k；当使用一级间接数据块索引时，ucore 支持最大的文件大小为 12 </em> 4k + 1024 * 4k = 48k + 4m。数据索引表内，0 表示一个无效的索引，inode 里 blocks 表示该文件或者目录占用的磁盘的 block 的个数。indiret 为 0 时，表示不使用一级索引块。（因为 block 0 用来保存 super block，它不可能被其他任何文件或目录使用，所以这么设计也是合理的）。</p>
+<p>对于普通文件，索引值指向的 block 中保存的是文件中的数据。而对于目录，索引值指向的数据保存的是目录下所有的文件名以及对应的索引节点所在的索引块（磁盘块）所形成的数组。数据结构如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">/* file entry (on disk) */</span><br><span class="line">struct sfs_disk_entry &#123;</span><br><span class="line">    uint32_t ino;                                   索引节点所占数据块索引值</span><br><span class="line">    char name[SFS_MAX_FNAME_LEN + 1];               文件名</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>操作系统中，每个文件系统下的 inode 都应该分配唯一的 inode 编号。SFS 下，为了实现的简便，每个 inode 直接用他所在的磁盘 block 的编号作为 inode 编号。比如，root block 的 inode 编号为 1；每个 sfs_disk_entry 数据结构中，name 表示目录下文件或文件夹的名称，ino 表示磁盘 block 编号，通过读取该 block 的数据，能够得到相应的文件或文件夹的 inode。ino 为0时，表示一个无效的 entry。<br>此外，和 inode 相似，每个 sfs_dirent_entry 也占用一个 block。</p>
+<h4 id="内存中的索引节点"><a href="#内存中的索引节点" class="headerlink" title="内存中的索引节点"></a>内存中的索引节点</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">/* inode for sfs */</span><br><span class="line">struct sfs_inode &#123;</span><br><span class="line">    struct sfs_disk_inode *din;                     /* on-disk inode */</span><br><span class="line">    uint32_t ino;                                   /* inode number */</span><br><span class="line">    uint32_t flags;                                 /* inode flags */</span><br><span class="line">    bool dirty;                                     /* true if inode modified */</span><br><span class="line">    int reclaim_count;                              /* kill inode if it hits zero */</span><br><span class="line">    semaphore_t sem;                                /* semaphore for din */</span><br><span class="line">    list_entry_t inode_link;                        /* entry for linked-list in sfs_fs */</span><br><span class="line">    list_entry_t hash_link;                         /* entry for hash linked-list in sfs_fs */</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>可以看到SFS中的内存inode包含了SFS的硬盘inode信息，而且还增加了其他一些信息，这属于是便于进行是判断否改写、互斥操作、回收和快速地定位等作用。需要注意，一个内存inode是在打开一个文件后才创建的，如果关机则相关信息都会消失。而硬盘inode的内容是保存在硬盘中的，只是在进程需要时才被读入到内存中，用于访问文件或目录的具体内容数据</p>
+<p>为了方便实现上面提到的多级数据的访问以及目录中 entry 的操作，对 inode SFS实现了一些辅助的函数：</p>
+<ul>
+<li><p>sfs_bmap_load_nolock：将对应 sfs_inode 的第 index 个索引指向的 block 的索引值取出存到相应的指针指向的单元（ino_store）。该函数只接受 index &lt;= inode-&gt;blocks 的参数。当 index == inode-&gt;blocks 时，该函数理解为需要为 inode 增长一个 block。并标记 inode 为 dirty（所有对 inode 数据的修改都要做这样的操作，这样，当 inode 不再使用的时候，sfs 能够保证 inode 数据能够被写回到磁盘）。sfs_bmap_load_nolock 调用的 sfs_bmap_get_nolock 来完成相应的操作，阅读 sfs_bmap_get_nolock，了解他是如何工作的。（sfs_bmap_get_nolock 只由 sfs_bmap_load_nolock 调用）</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line"> * sfs_bmap_load_nolock - according to the DIR&apos;s inode and the logical index of block in inode, find the NO. of</span><br><span class="line">disk block.</span><br><span class="line"> * @sfs:      sfs file system</span><br><span class="line"> * @sin:      sfs inode in memory</span><br><span class="line"> * @index:    the logical index of disk block in inode</span><br><span class="line"> * @ino_store:the NO. of disk block</span><br><span class="line"> */</span><br><span class="line">static int</span><br><span class="line">sfs_bmap_load_nolock(struct sfs_fs *sfs, struct sfs_inode *sin, uint32_t index, uint32_t *ino_store) &#123;</span><br><span class="line">    struct sfs_disk_inode *din = sin-&gt;din;</span><br><span class="line">    assert(index &lt;= din-&gt;blocks);</span><br><span class="line">    int ret;</span><br><span class="line">    uint32_t ino;</span><br><span class="line">    bool create = (index == din-&gt;blocks);</span><br><span class="line">    if ((ret = sfs_bmap_get_nolock(sfs, sin, index, create, &amp;ino)) != 0) &#123;</span><br><span class="line">        return ret;</span><br><span class="line">    &#125;</span><br><span class="line">    assert(sfs_block_inuse(sfs, ino));</span><br><span class="line">    if (create) &#123;</span><br><span class="line">        din-&gt;blocks ++;</span><br><span class="line">    &#125;</span><br><span class="line">    if (ino_store != NULL) &#123;</span><br><span class="line">        *ino_store = ino;</span><br><span class="line">    &#125;</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">/*</span><br><span class="line"> * sfs_bmap_get_nolock - according sfs_inode and index of block, find the NO. of disk block</span><br><span class="line"> *                       no lock protect</span><br><span class="line"> * @sfs:      sfs file system</span><br><span class="line"> * @sin:      sfs inode in memory</span><br><span class="line"> * @index:    the index of block in inode</span><br><span class="line"> * @create:   BOOL, if the block isn&apos;t allocated, if create = 1 the alloc a block,  otherwise just do nothing</span><br><span class="line"> * @ino_store: 0 OR the index of already inused block or new allocated block.</span><br><span class="line"> */</span><br><span class="line">static int</span><br><span class="line">sfs_bmap_get_nolock(struct sfs_fs *sfs, struct sfs_inode *sin, uint32_t index, bool create, uint32_t *ino_store)</span><br><span class="line"> &#123;</span><br><span class="line">    struct sfs_disk_inode *din = sin-&gt;din;</span><br><span class="line">    int ret;</span><br><span class="line">    uint32_t ent, ino;</span><br><span class="line">    // the index of disk block is in the fist SFS_NDIRECT direct blocks</span><br><span class="line">    if (index &lt; SFS_NDIRECT) &#123;</span><br><span class="line">        if ((ino = din-&gt;direct[index]) == 0 &amp;&amp; create) &#123;</span><br><span class="line">            if ((ret = sfs_block_alloc(sfs, &amp;ino)) != 0) &#123;</span><br><span class="line">                return ret;</span><br><span class="line">            &#125;</span><br><span class="line">            din-&gt;direct[index] = ino;</span><br><span class="line">            sin-&gt;dirty = 1;</span><br><span class="line">        &#125;</span><br><span class="line">        goto out;</span><br><span class="line">    &#125;</span><br><span class="line">    // the index of disk block is in the indirect blocks.</span><br><span class="line">    index -= SFS_NDIRECT;</span><br><span class="line">    if (index &lt; SFS_BLK_NENTRY) &#123;</span><br><span class="line">        ent = din-&gt;indirect;</span><br><span class="line">        if ((ret = sfs_bmap_get_sub_nolock(sfs, &amp;ent, index, create, &amp;ino)) != 0) &#123;</span><br><span class="line">            return ret;</span><br><span class="line">        &#125;</span><br><span class="line">        if (ent != din-&gt;indirect) &#123;</span><br><span class="line">            assert(din-&gt;indirect == 0);</span><br><span class="line">            din-&gt;indirect = ent;</span><br><span class="line">            sin-&gt;dirty = 1;</span><br><span class="line">        &#125;</span><br><span class="line">        goto out;</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        panic (&quot;sfs_bmap_get_nolock - index out of range&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">out:</span><br><span class="line">    assert(ino == 0 || sfs_block_inuse(sfs, ino));</span><br><span class="line">    *ino_store = ino;</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>sfs_bmap_truncate_nolock：将多级数据索引表的最后一个 entry 释放掉。他可以认为是 sfs_bmap_load_nolock 中，index == inode-&gt;blocks 的逆操作。当一个文件或目录被删除时，sfs 会循环调用该函数直到 inode-&gt;blocks 减为 0，释放所有的数据页。函数通过 sfs_bmap_free_nolock 来实现，他应该是 sfs_bmap_get_nolock 的逆操作。和 sfs_bmap_get_nolock 一样，调用 sfs_bmap_free_nolock 也要格外小心。</p>
+</li>
+<li>sfs_dirent_read_nolock：将目录的第 slot 个 entry 读取到指定的内存空间。他通过上面提到的函数来完成。</li>
+<li>sfs_dirent_search_nolock：是常用的查找函数。他在目录下查找 name，并且返回相应的搜索结果（文件或文件夹）的 inode 的编号（也是磁盘编号），和相应的 entry 在该目录的 index 编号以及目录下的数据页是否有空闲的 entry。（SFS 实现里文件的数据页是连续的，不存在任何空洞；而对于目录，数据页不是连续的，当某个 entry 删除的时候，SFS 通过设置 entry-&gt;ino 为0将该 entry 所在的 block 标记为 free，在需要添加新 entry 的时候，SFS 优先使用这些 free 的 entry，其次才会去在数据页尾追加新的 entry。</li>
+</ul>
+<p>注意，这些后缀为 nolock 的函数，只能在已经获得相应 inode 的semaphore才能调用。</p>
+<p>inode的文件操作函数<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">static const struct inode_ops sfs_node_fileops = &#123;</span><br><span class="line">    .vop_magic                      = VOP_MAGIC,</span><br><span class="line">    .vop_open                       = sfs_openfile,</span><br><span class="line">    .vop_close                      = sfs_close,</span><br><span class="line">    .vop_read                       = sfs_read,</span><br><span class="line">    .vop_write                      = sfs_write,</span><br><span class="line">    ……</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>上述sfs_openfile、sfs_close、sfs_read和sfs_write分别对应用户进程发出的open、close、read、write操作。其中sfs_openfile不用做什么事；sfs_close需要把对文件的修改内容写回到硬盘上，这样确保硬盘上的文件内容数据是最新的；sfs_read和sfs_write函数都调用了一个函数sfs_io，并最终通过访问硬盘驱动来完成对文件内容数据的读写。</p>
+<h5 id="inode的目录操作函数"><a href="#inode的目录操作函数" class="headerlink" title="inode的目录操作函数"></a>inode的目录操作函数</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">static const struct inode_ops sfs_node_dirops = &#123;</span><br><span class="line">    .vop_magic                      = VOP_MAGIC,</span><br><span class="line">    .vop_open                       = sfs_opendir,</span><br><span class="line">    .vop_close                      = sfs_close,</span><br><span class="line">    .vop_getdirentry                = sfs_getdirentry,</span><br><span class="line">    .vop_lookup                     = sfs_lookup,                           </span><br><span class="line">    ……</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>对于目录操作而言，由于目录也是一种文件，所以sfs_opendir、sys_close对应户进程发出的open、close函数。相对于sfs_open，sfs_opendir只是完成一些open函数传递的参数判断，没做其他更多的事情。目录的close操作与文件的close操作完全一致。由于目录的内容数据与文件的内容数据不同，所以读出目录的内容数据的函数是sfs_getdirentry，其主要工作是获取目录下的文件inode信息。</p>
+<h3 id="设备层文件-IO-层"><a href="#设备层文件-IO-层" class="headerlink" title="设备层文件 IO 层"></a>设备层文件 IO 层</h3><p>在本实验中，为了统一地访问设备，我们可以把一个设备看成一个文件，通过访问文件的接口来访问设备。目前实现了stdin设备文件文件、stdout设备文件、disk0设备。stdin设备就是键盘，stdout设备就是CONSOLE（串口、并口和文本显示器），而disk0设备是承载SFS文件系统的磁盘设备。下面我们逐一分析ucore是如何让用户把设备看成文件来访问。</p>
+<h4 id="关键数据结构"><a href="#关键数据结构" class="headerlink" title="关键数据结构"></a>关键数据结构</h4><p>为了表示一个设备，需要有对应的数据结构，ucore为此定义了<code>struct device</code>，其描述如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">struct device &#123;</span><br><span class="line">    size_t d_blocks;    //设备占用的数据块个数            </span><br><span class="line">    size_t d_blocksize;  //数据块的大小</span><br><span class="line">    int (*d_open)(struct device *dev, uint32_t open_flags);  //打开设备的函数指针</span><br><span class="line">    int (*d_close)(struct device *dev); //关闭设备的函数指针</span><br><span class="line">    int (*d_io)(struct device *dev, struct iobuf *iob, bool write); //读写设备的函数指针</span><br><span class="line">    int (*d_ioctl)(struct device *dev, int op, void *data); //用ioctl方式控制设备的函数指针</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>这个数据结构能够支持对块设备（比如磁盘）、字符设备（比如键盘、串口）的表示，完成对设备的基本操作。ucore虚拟文件系统为了把这些设备链接在一起，还定义了一个设备链表，即双向链表vdev_list，这样通过访问此链表，可以找到ucore能够访问的所有设备文件。</p>
+<p>但这个设备描述没有与文件系统以及表示一个文件的inode数据结构建立关系，为此，还需要另外一个数据结构把device和inode联通起来，这就<br>是vfs_dev_t数据结构：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">// device info entry in vdev_list </span><br><span class="line">typedef struct &#123;</span><br><span class="line">    const char *devname;</span><br><span class="line">    struct inode *devnode;</span><br><span class="line">    struct fs *fs;</span><br><span class="line">    bool mountable;</span><br><span class="line">    list_entry_t vdev_link;</span><br><span class="line">&#125; vfs_dev_t;</span><br></pre></td></tr></table></figure></p>
+<p>利用vfs_dev_t数据结构，就可以让文件系统通过一个链接vfs_dev_t结构的双向链表找到device对应的inode数据结构，一个inode节点的成员变量in_type的值是0x1234，则此 inode的成员变量in_info将成为一个device结构。这样inode就和一个设备建立了联系，这个inode就是一个设备文件。</p>
+<h4 id="stdout设备文件"><a href="#stdout设备文件" class="headerlink" title="stdout设备文件"></a>stdout设备文件</h4><h5 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h5><p>既然stdout设备是设备文件系统的文件，自然有自己的inode结构。在系统初始化时，即只需如下处理过程<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">kern_init ——&gt;</span><br><span class="line"> fs_init ——&gt; </span><br><span class="line"> dev_init ——&gt; </span><br><span class="line"> dev_init_stdout ——&gt;</span><br><span class="line"> dev_create_inode ——&gt; </span><br><span class="line"> stdout_device_init ——&gt; </span><br><span class="line"> vfs_add_dev</span><br></pre></td></tr></table></figure></p>
+<p>在dev_init_stdout中完成了对stdout设备文件的初始化。即首先创建了一个inode，然后通过<code>stdout_device_init</code>完成对inode中的成员变量<code>inode-&gt;__device_info</code>进行初始：<br>这里的stdout设备文件实际上就是指的console外设（它其实是串口、并口和CGA的组合型外设）。这个设备文件是一个只写设备，如果读这个设备，就会出错。接下来我们看看stdout设备的相关处理过程。</p>
+<h5 id="初始化-1"><a href="#初始化-1" class="headerlink" title="初始化"></a>初始化</h5><p>stdout设备文件的初始化过程主要由<code>stdout_device_init</code>完成，其具体实现如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">static void</span><br><span class="line">stdout_device_init(struct device *dev) &#123;</span><br><span class="line">    dev-&gt;d_blocks = 0;</span><br><span class="line">    dev-&gt;d_blocksize = 1;</span><br><span class="line">    dev-&gt;d_open = stdout_open;</span><br><span class="line">    dev-&gt;d_close = stdout_close;</span><br><span class="line">    dev-&gt;d_io = stdout_io;</span><br><span class="line">    dev-&gt;d_ioctl = stdout_ioctl;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>可以看到，stdout_open函数完成设备文件打开工作，如果发现用户进程调用open函数的参数flags不是只写（O_WRONLY），则会报错。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">static int</span><br><span class="line">stdout_open(struct device *dev, uint32_t open_flags) &#123;</span><br><span class="line">    if (open_flags != O_WRONLY) &#123;</span><br><span class="line">        return -E_INVAL;</span><br><span class="line">    &#125;</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h5 id="访问操作实现"><a href="#访问操作实现" class="headerlink" title="访问操作实现"></a>访问操作实现</h5><p>stdout_io函数完成设备的写操作工作，具体实现如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">static int</span><br><span class="line">stdout_io(struct device *dev, struct iobuf *iob, bool write) &#123;</span><br><span class="line">    if (write) &#123;</span><br><span class="line">        char *data = iob-&gt;io_base;</span><br><span class="line">        for (; iob-&gt;io_resid != 0; iob-&gt;io_resid --) &#123;</span><br><span class="line">            cputchar(*data ++);</span><br><span class="line">        &#125;</span><br><span class="line">        return 0;</span><br><span class="line">    &#125;</span><br><span class="line">    return -E_INVAL;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>可以看到，要写的数据放在iob-&gt;io_base所指的内存区域，一直写到iob-&gt;io_resid的值为0为止。每次写操作都是通过cputchar来完成的，此函数最终将通过console外设驱动来完成把数据输出到串口、并口和CGA显示器上过程。另外，也可以注意到，如果用户想执行读操作，则stdout_io函数直接返回错误值-E_INVAL。</p>
+<h4 id="stdin-设备文件"><a href="#stdin-设备文件" class="headerlink" title="stdin 设备文件"></a>stdin 设备文件</h4><p>这里的stdin设备文件实际上就是指的键盘。这个设备文件是一个只读设备，如果写这个设备，就会出错。接下来我们看看stdin设备的相关处理过程。</p>
+<h5 id="初始化-2"><a href="#初始化-2" class="headerlink" title="初始化"></a>初始化</h5><p>stdin设备文件的初始化过程主要由stdin_device_init完成了主要的初始化工作，具体实现如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">static void</span><br><span class="line">stdin_device_init(struct device *dev) &#123;</span><br><span class="line">    dev-&gt;d_blocks = 0;</span><br><span class="line">    dev-&gt;d_blocksize = 1;</span><br><span class="line">    dev-&gt;d_open = stdin_open;</span><br><span class="line">    dev-&gt;d_close = stdin_close;</span><br><span class="line">    dev-&gt;d_io = stdin_io;</span><br><span class="line">    dev-&gt;d_ioctl = stdin_ioctl;</span><br><span class="line"></span><br><span class="line">    p_rpos = p_wpos = 0;</span><br><span class="line">    wait_queue_init(wait_queue);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>相对于stdout的初始化过程，stdin的初始化相对复杂一些，<strong>多了一个stdin_buffer缓冲区</strong>，描述缓冲区读写位置的变量p_rpos、p_wpos以及用于等待缓冲区的等待队列wait_queue。在stdin_device_init函数的初始化中，也完成了对p_rpos、p_wpos和wait_queue的初始化。</p>
+<h5 id="访问操作实现-1"><a href="#访问操作实现-1" class="headerlink" title="访问操作实现"></a>访问操作实现</h5><p>stdin_io函数负责完成设备的读操作工作，具体实现如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">static int</span><br><span class="line">stdin_io(struct device *dev, struct iobuf *iob, bool write) &#123;</span><br><span class="line">    if (!write) &#123;</span><br><span class="line">        int ret;</span><br><span class="line">        if ((ret = dev_stdin_read(iob-&gt;io_base, iob-&gt;io_resid)) &gt; 0) &#123;</span><br><span class="line">            iob-&gt;io_resid -= ret;</span><br><span class="line">        &#125;</span><br><span class="line">        return ret;</span><br><span class="line">    &#125;</span><br><span class="line">    return -E_INVAL;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>可以看到，如果是写操作，则stdin_io函数直接报错返回。所以这也进一步说明了此设备文件是只读文件。如果此读操作，则此函数进一步调用dev_stdin_read函数完成对键盘设备的读入操作。dev_stdin_read函数的实现相对复杂一些，主要的流程如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">static int</span><br><span class="line">dev_stdin_read(char *buf, size_t len) &#123;</span><br><span class="line">    int ret = 0;</span><br><span class="line">    bool intr_flag;</span><br><span class="line">    local_intr_save(intr_flag);</span><br><span class="line">    &#123;</span><br><span class="line">        for (; ret &lt; len; ret ++, p_rpos ++) &#123;</span><br><span class="line">        try_again:</span><br><span class="line">            if (p_rpos &lt; p_wpos) &#123;</span><br><span class="line">                *buf ++ = stdin_buffer[p_rpos % stdin_BUFSIZE];</span><br><span class="line">            &#125;</span><br><span class="line">            else &#123;</span><br><span class="line">                wait_t __wait, *wait = &amp;__wait;</span><br><span class="line">                wait_current_set(wait_queue, wait, WT_KBD);</span><br><span class="line">                local_intr_restore(intr_flag);</span><br><span class="line"></span><br><span class="line">                schedule();</span><br><span class="line"></span><br><span class="line">                local_intr_save(intr_flag);</span><br><span class="line">                wait_current_del(wait_queue, wait);</span><br><span class="line">                if (wait-&gt;wakeup_flags == WT_KBD) &#123;</span><br><span class="line">                    goto try_again;</span><br><span class="line">                &#125;</span><br><span class="line">                break;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    local_intr_restore(intr_flag);</span><br><span class="line">    return ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在上述函数中可以看出，如果p_rpos &lt; p_wpos，则表示有键盘输入的新字符在stdin_buffer中，于是就从stdin_buffer中取出新字符放到iobuf指向的缓冲区中；如果p_rpos &gt;=p_wpos，则表明没有新字符，这样调用read用户态库函数的用户进程就需要采用等待队列的睡眠操作进入睡眠状态，等待键盘输入字符的产生。</p>
+<p>当识别出中断是键盘中断（中断号为IRQ_OFFSET + IRQ_KBD）时，会调用dev_stdin_write函数，来把字符写入到stdin_buffer中，且会通过等待队列的唤醒操作唤醒正在等待键盘输入的用户进程。</p>
+<h3 id="实验执行流程概述"><a href="#实验执行流程概述" class="headerlink" title="实验执行流程概述"></a>实验执行流程概述</h3><p>kern_init函数增加了对fs_init函数的调用。fs_init函数就是文件系统初始化的总控函数，它进一步调用了虚拟文件系统初始化函数vfs_init，与文件相关的设备初始化函数dev_init和Simple FS文件系统的初始化函数sfs_init。这三个初始化函数联合在一起，协同完成了整个虚拟文件系统、SFS文件系统和文件系统对应的设备（键盘、串口、磁盘）的初始化工作。其函数调用关系图如下所示：<br><img src="/img/20190629004.png" alt></p>
+<p>vfs_init如下所示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">// vfs_init -  vfs initialize</span><br><span class="line">void</span><br><span class="line">vfs_init(void) &#123;</span><br><span class="line">    sem_init(&amp;bootfs_sem, 1);</span><br><span class="line">    vfs_devlist_init();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>sem_init函数主要是初始化了信号量和等待队列：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">void</span><br><span class="line">sem_init(semaphore_t *sem, int value) &#123;</span><br><span class="line">    sem-&gt;value = value;</span><br><span class="line">    wait_queue_init(&amp;(sem-&gt;wait_queue));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>vfs_devlist_init主要是初始化设备列表，建立了一个device list双向链表vdev_list，为后续具体设备（键盘、串口、磁盘）以文件的形式呈现建立查找访问通道<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">void</span><br><span class="line">vfs_devlist_init(void) &#123;</span><br><span class="line">    list_init(&amp;vdev_list);</span><br><span class="line">    sem_init(&amp;vdev_list_sem, 1);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>dev_init函数通过进一步调用disk0/stdin/stdout_device_init完成对具体设备的初始化，把它们抽象成一个设备文件，并建立对应的inode数据结构，最后把它们链入到vdev_list中。这样通过虚拟文件系统就可以方便地以文件的形式访问这些设备了。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">#define init_device(x)                                  \</span><br><span class="line">    do &#123;                                                \</span><br><span class="line">        extern void dev_init_##x(void);                 \</span><br><span class="line">        dev_init_##x();                                 \</span><br><span class="line">    &#125; while (0)</span><br><span class="line"></span><br><span class="line">/* dev_init - Initialization functions for builtin vfs-level devices. */</span><br><span class="line">void</span><br><span class="line">dev_init(void) &#123;</span><br><span class="line">   // init_device(null);</span><br><span class="line">    init_device(stdin);</span><br><span class="line">    init_device(stdout);</span><br><span class="line">    init_device(disk0);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">void</span><br><span class="line">dev_init_disk0(void) &#123;</span><br><span class="line">    struct inode *node;</span><br><span class="line">    if ((node = dev_create_inode()) == NULL) &#123;</span><br><span class="line">        panic(&quot;disk0: dev_create_node.\n&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">    disk0_device_init(vop_info(node, device));</span><br><span class="line"></span><br><span class="line">    int ret;</span><br><span class="line">    if ((ret = vfs_add_dev(&quot;disk0&quot;, node, 1)) != 0) &#123;</span><br><span class="line">        panic(&quot;disk0: vfs_add_dev: %e.\n&quot;, ret);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">dev_init_stdin(void) &#123;</span><br><span class="line">    struct inode *node;</span><br><span class="line">    if ((node = dev_create_inode()) == NULL) &#123;</span><br><span class="line">        panic(&quot;stdin: dev_create_node.\n&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">    stdin_device_init(vop_info(node, device));</span><br><span class="line"></span><br><span class="line">    int ret;</span><br><span class="line">    if ((ret = vfs_add_dev(&quot;stdin&quot;, node, 0)) != 0) &#123;</span><br><span class="line">        panic(&quot;stdin: vfs_add_dev: %e.\n&quot;, ret);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">void</span><br><span class="line">dev_init_stdout(void) &#123;</span><br><span class="line">    struct inode *node;</span><br><span class="line">    if ((node = dev_create_inode()) == NULL) &#123;</span><br><span class="line">        panic(&quot;stdout: dev_create_node.\n&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">    stdout_device_init(vop_info(node, device));</span><br><span class="line"></span><br><span class="line">    int ret;</span><br><span class="line">    if ((ret = vfs_add_dev(&quot;stdout&quot;, node, 0)) != 0) &#123;</span><br><span class="line">        panic(&quot;stdout: vfs_add_dev: %e.\n&quot;, ret);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>sfs_init是完成对Simple FS的初始化工作，并把此实例文件系统挂在虚拟文件系统中，从而让ucore的其他部分能够通过访问虚拟文件系统的接口来进一步访问到SFS实例文件系统。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line"> * sfs_init - mount sfs on disk0</span><br><span class="line"> *</span><br><span class="line"> * CALL GRAPH:</span><br><span class="line"> *   kern_init--&gt;fs_init--&gt;sfs_init</span><br><span class="line"> */</span><br><span class="line">void</span><br><span class="line">sfs_init(void) &#123;</span><br><span class="line">    int ret;</span><br><span class="line">    if ((ret = sfs_mount(&quot;disk0&quot;)) != 0) &#123;</span><br><span class="line">        panic(&quot;failed: sfs: sfs_mount: %e.\n&quot;, ret);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在sfs_init中调用了sfs_mount –&gt; vfs_mount 进行挂载：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">int</span><br><span class="line">sfs_mount(const char *devname) &#123;</span><br><span class="line">    return vfs_mount(devname, sfs_do_mount);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>vfs_mount把一个文件系统挂载到系统上<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line"> * vfs_mount - Mount a filesystem. Once we&apos;ve found the device, call MOUNTFUNC to</span><br><span class="line"> *             set up the filesystem and hand back a struct fs.</span><br><span class="line"> *</span><br><span class="line"> * The DATA argument is passed through unchanged to MOUNTFUNC.</span><br><span class="line"> */</span><br><span class="line">int</span><br><span class="line">vfs_mount(const char *devname, int (*mountfunc)(struct device *dev, struct fs **fs_store)) &#123;</span><br><span class="line">    int ret;</span><br><span class="line">    lock_vdev_list();</span><br><span class="line">    // 信号量操作</span><br><span class="line">    vfs_dev_t *vdev;</span><br><span class="line">    if ((ret = find_mount(devname, &amp;vdev)) != 0) &#123;</span><br><span class="line">    	// 找一个同名设备</span><br><span class="line">        goto out;</span><br><span class="line">    &#125;</span><br><span class="line">    if (vdev-&gt;fs != NULL) &#123;</span><br><span class="line">        ret = -E_BUSY;</span><br><span class="line">        // 如果这个设备已经被挂载到一个文件系统上了，就不能被再挂载</span><br><span class="line">        goto out;</span><br><span class="line">    &#125;</span><br><span class="line">    assert(vdev-&gt;devname != NULL &amp;&amp; vdev-&gt;mountable);</span><br><span class="line"></span><br><span class="line">    struct device *dev = vop_info(vdev-&gt;devnode, device);</span><br><span class="line">    if ((ret = mountfunc(dev, &amp;(vdev-&gt;fs))) == 0) &#123;</span><br><span class="line">        assert(vdev-&gt;fs != NULL);</span><br><span class="line">        cprintf(&quot;vfs: mount %s.\n&quot;, vdev-&gt;devname);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">out:</span><br><span class="line">    unlock_vdev_list();</span><br><span class="line">    // 解锁</span><br><span class="line">    return ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>对于vop_info：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">#define __vop_info(node, type)                                      \</span><br><span class="line">    (&#123;                                                              \</span><br><span class="line">        struct inode *__node = (node);                              \</span><br><span class="line">        assert(__node != NULL &amp;&amp; check_inode_type(__node, type));   \</span><br><span class="line">        &amp;(__node-&gt;in_info.__##type##_info);                         \</span><br><span class="line">     &#125;)</span><br><span class="line"></span><br><span class="line">#define vop_info(node, type)                                        __vop_info(node, type)</span><br></pre></td></tr></table></figure></p>
+<p><code>__##type##_info</code>是一个<code>struct device</code>或<code>struct sfs_inode</code>的结构体，一般调用vop_info的时候都是给一个变量赋值为一个设备的结构体。</p>
+<p><code>mountfunc</code>竟然是一个参数，流批流批。。。溯源的话有<code>sfs_do_mount</code>作为参数，下文介绍sfs_do_mount，太多了。。。</p>
+<h3 id="文件操作实现"><a href="#文件操作实现" class="headerlink" title="文件操作实现"></a>文件操作实现</h3><h4 id="打开文件"><a href="#打开文件" class="headerlink" title="打开文件"></a>打开文件</h4><p>有了上述分析后，我们可以看看如果一个用户进程打开文件会做哪些事情？首先假定用户进程需要打开的文件已经存在在硬盘上。以user/sfs_filetest1.c为例，首先用户进程会调用在main函数中的如下语句：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">int fd1 = safe_open(&quot;sfs\_filetest1&quot;, O_RDONLY);</span><br></pre></td></tr></table></figure></p>
+<p>如果ucore能够正常查找到这个文件，就会返回一个代表文件的文件描述符fd1，这样在接下来的读写文件过程中，就直接用这样fd1来代表就可以了。</p>
+<p>safe_open实现如下，在open中调用了sys_open，接着调用了syscall，执行系统调用：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">static int safe_open(const char *path, int open_flags)</span><br><span class="line">&#123;</span><br><span class="line">        int fd = open(path, open_flags);</span><br><span class="line">        printf(&quot;fd is %d\n&quot;,fd);</span><br><span class="line">        assert(fd &gt;= 0);</span><br><span class="line">        return fd;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h5 id="通用文件访问接口层的处理流程"><a href="#通用文件访问接口层的处理流程" class="headerlink" title="通用文件访问接口层的处理流程"></a>通用文件访问接口层的处理流程</h5><p>进一步调用如下用户态函数： <code>open-&gt;sys_open</code>-&gt;<code>syscall</code>，从而引起系统调用进入到内核态。到了内核态后，通过中断处理例程，会调用到<code>sys_open</code>内核函数，并进一步调用<code>sysfile_open</code>内核函数。到了这里，需要把位于用户空间的字符串”sfs_filetest1”拷贝到内核空间中的字符串path中，这里copy_path完成了本功能，这里不再列出。进入到文件系统抽象层的处理流程完成进一步的打开文件操作中。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">static int</span><br><span class="line">sys_open(uint32_t arg[]) &#123;</span><br><span class="line">    const char *path = (const char *)arg[0];</span><br><span class="line">    uint32_t open_flags = (uint32_t)arg[1];</span><br><span class="line">    return sysfile_open(path, open_flags);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">/* sysfile_open - open file */</span><br><span class="line">int</span><br><span class="line">sysfile_open(const char *__path, uint32_t open_flags) &#123;</span><br><span class="line">    int ret;</span><br><span class="line">    char *path;</span><br><span class="line">    if ((ret = copy_path(&amp;path, __path)) != 0) &#123;</span><br><span class="line">        return ret;</span><br><span class="line">    &#125;</span><br><span class="line">    ret = file_open(path, open_flags);</span><br><span class="line">    kfree(path);</span><br><span class="line">    return ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h5 id="文件系统抽象层的处理流程"><a href="#文件系统抽象层的处理流程" class="headerlink" title="文件系统抽象层的处理流程"></a>文件系统抽象层的处理流程</h5><ul>
+<li><p>分配一个空闲的file数据结构变量file。</p>
+<ul>
+<li>在文件系统抽象层的处理中，首先调用的是file_open函数，它要给这个即将打开的文件分配一个file数据结构的变量，这个变量其实是当前进程的打开文件数组<code>current-&gt;fs_struct-&gt;filemap[]</code>中的一个空闲元素（即还没用于一个打开的文件），而这个元素的索引值就是最终要返回到用户进程并赋值给变量fd1。到了这一步还仅仅是给当前用户进程分配了一个file数据结构的变量，还没有找到对应的文件索引节点。</li>
+</ul>
+</li>
+<li><p>调用<code>vfs_open</code>函数来找到path指出的文件所对应的基于inode数据结构的VFS索引节点node。</p>
+<ul>
+<li><code>vfs_open</code>函数需要完成：<ul>
+<li>确定读写权限；</li>
+<li>通过vfs_lookup找到path对应文件的inode；首先是调用get_device，先对路径字符串进行判断，看是不是声明了设备（有：）或者是绝对路径（有/）。如果是相对路径，调用vfs_get_curdir获得当前的路径。如果有设备名，则根据路径中的设备名在设备list中找到这个设备，返回一个inode。如果是绝对路径，则返回根目录。如果开头有个‘:’，说明是在当前文件系统中，返回的是当前目录。</li>
+<li>找到文件设备的根目录“/”的索引节点需要注意，这里的<code>vfs_lookup</code>函数是一个针对目录的操作函数，它会调用<code>vop_lookup</code>函数来找到SFS文件系统中的“/”目录下的“sfs_filetest1”文件。为此，<code>vfs_lookup</code>函数首先调用<code>get_device</code>函数，并进一步调用<code>vfs_get_bootfs</code>函数来找到根目录“/”对应的inode。这个inode就是位于vfs.c中的inode变量bootfs_node。这个变量在init_main函数（位于kern/process/proc.c）执行时获得了赋值。</li>
+<li>通过调用vop_lookup函数来查找到根目录“/”下对应文件sfs_filetest1的索引节点，如果找到就返回此索引节点。</li>
+</ul>
+</li>
+<li>调用vop_open函数打开文件。</li>
+<li>调用了vop_truncate（应该是这个sfs_truncfile），调整文件大小到适当的大小（按照块个数计算）</li>
+<li>调用了vfs_fsync，如果发生了什么使得这个块变成dirty了，就调用d_io把它写进去。</li>
+</ul>
+</li>
+<li><p>把file和node建立联系，设置file的读写权限，如果是append模式的话还要把file的pos设置到末尾。完成后，将返回到file_open函数中，通过执行语句“file-&gt;node=node;”，就把当前进程的current-&gt;fs_struct-&gt;filemap[fd]（即file所指变量）的成员变量node指针指向了代表sfs_filetest1文件的索引节点inode。</p>
+</li>
+<li>这时返回fd。经过重重回退，通过系统调用返回，用户态的syscall-&gt;sys_open-&gt;open-&gt;safe_open等用户函数的层层函数返回，最终把fd赋值给fd1。自此完成了打开文件操作。<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">// open file</span><br><span class="line">int</span><br><span class="line">file_open(char *path, uint32_t open_flags) &#123;</span><br><span class="line">    bool readable = 0, writable = 0;</span><br><span class="line">    switch (open_flags &amp; O_ACCMODE) &#123;</span><br><span class="line">        case O_RDONLY: readable = 1; break;</span><br><span class="line">        case O_WRONLY: writable = 1; break;</span><br><span class="line">        case O_RDWR:</span><br><span class="line">            readable = writable = 1;</span><br><span class="line">            break;</span><br><span class="line">        default:</span><br><span class="line">            return -E_INVAL;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    int ret;</span><br><span class="line">    struct file *file;</span><br><span class="line">    if ((ret = fd_array_alloc(NO_FD, &amp;file)) != 0) &#123;</span><br><span class="line">        return ret;</span><br><span class="line">    &#125;</span><br><span class="line">//分配一个file数据结构的变量</span><br><span class="line"></span><br><span class="line">    struct inode *node;</span><br><span class="line">    if ((ret = vfs_open(path, open_flags, &amp;node)) != 0) &#123;</span><br><span class="line">        fd_array_free(file);</span><br><span class="line">        return ret;</span><br><span class="line">    &#125;</span><br><span class="line">//找到path指出的文件所对应的基于inode数据结构的VFS索引节点node</span><br><span class="line"></span><br><span class="line">    file-&gt;pos = 0;</span><br><span class="line">    if (open_flags &amp; O_APPEND) &#123;</span><br><span class="line">        struct stat __stat, *stat = &amp;__stat;</span><br><span class="line">        if ((ret = vop_fstat(node, stat)) != 0) &#123;</span><br><span class="line">            vfs_close(node);</span><br><span class="line">            fd_array_free(file);</span><br><span class="line">            return ret;</span><br><span class="line">        &#125;</span><br><span class="line">        file-&gt;pos = stat-&gt;st_size;</span><br><span class="line">    &#125;</span><br><span class="line">// 根据open_flags找当前指针应该指在文件的什么位置</span><br><span class="line"></span><br><span class="line">    file-&gt;node = node;</span><br><span class="line">    file-&gt;readable = readable;</span><br><span class="line">    file-&gt;writable = writable;</span><br><span class="line">    fd_array_open(file);</span><br><span class="line">    return file-&gt;fd;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h5 id="SFS文件系统层的处理流程"><a href="#SFS文件系统层的处理流程" class="headerlink" title="SFS文件系统层的处理流程"></a>SFS文件系统层的处理流程</h5><p>在sfs_inode.c中的<code>sfs_node_dirops</code>变量定义了“.vop_lookup = sfs_lookup”，所以我们重点分析sfs_lookup的实现。</p>
+<p>sfs_lookup有三个参数：node，path，node_store。其中node是根目录“/”所对应的inode节点；path是文件sfs_filetest1的绝对路径/sfs_filetest1，而node_store是经过查找获得的sfs_filetest1所对应的inode节点。<br>sfs_lookup函数以“/”为分割符，从左至右逐一分解path获得各个子目录和最终文件对应的inode节点。在本例中是调用sfs_lookup_once查找以根目录下的文件sfs_filetest1所对应的inode节点。当无法分解path后，就意味着找到了sfs_filetest1对应的inode节点，就可顺利返回了。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line"> * sfs_lookup - Parse path relative to the passed directory</span><br><span class="line"> *              DIR, and hand back the inode for the file it</span><br><span class="line"> *              refers to.</span><br><span class="line"> */</span><br><span class="line">static int</span><br><span class="line">sfs_lookup(struct inode *node, char *path, struct inode **node_store) &#123;</span><br><span class="line">    struct sfs_fs *sfs = fsop_info(vop_fs(node), sfs);</span><br><span class="line">    assert(*path != &apos;\0&apos; &amp;&amp; *path != &apos;/&apos;);</span><br><span class="line">    vop_ref_inc(node);</span><br><span class="line">    struct sfs_inode *sin = vop_info(node, sfs_inode);</span><br><span class="line">    // 找到sfs_inode __sfs_inode_info。</span><br><span class="line">    if (sin-&gt;din-&gt;type != SFS_TYPE_DIR) &#123;</span><br><span class="line">        vop_ref_dec(node);</span><br><span class="line">        return -E_NOTDIR;</span><br><span class="line">    &#125;</span><br><span class="line">    struct inode *subnode;</span><br><span class="line">    int ret = sfs_lookup_once(sfs, sin, path, &amp;subnode, NULL);</span><br><span class="line">    // 找到与路径相符的inode并加载到subnode里。</span><br><span class="line">    vop_ref_dec(node);</span><br><span class="line">    if (ret != 0) &#123;</span><br><span class="line">        return ret;</span><br><span class="line">    &#125;</span><br><span class="line">    *node_store = subnode;</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h4 id="读文件"><a href="#读文件" class="headerlink" title="读文件"></a>读文件</h4><p>用户进程有如下语句：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">read(fd, data, len);</span><br></pre></td></tr></table></figure></p>
+<p>即读取fd对应文件，读取长度为len，存入data中。下面来分析一下读文件的实现。</p>
+<h5 id="通用文件访问接口层的处理流程-1"><a href="#通用文件访问接口层的处理流程-1" class="headerlink" title="通用文件访问接口层的处理流程"></a>通用文件访问接口层的处理流程</h5><p>进一步调用如下用户态函数：<code>read-&gt;sys_read-&gt;syscall</code>，从而引起系统调用进入到内核态。到了内核态以后，通过中断处理例程，会调用到<code>sys_read</code>内核函数，并进一步调用<code>sysfile_read</code>内核函数，进入到文件系统抽象层处理流程完成进一步读文件的操作。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">static int</span><br><span class="line">sys_read(uint32_t arg[]) &#123;</span><br><span class="line">    int fd = (int)arg[0];</span><br><span class="line">    void *base = (void *)arg[1];</span><br><span class="line">    size_t len = (size_t)arg[2];</span><br><span class="line">    return sysfile_read(fd, base, len);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h5 id="文件系统抽象层的处理流程-1"><a href="#文件系统抽象层的处理流程-1" class="headerlink" title="文件系统抽象层的处理流程"></a>文件系统抽象层的处理流程</h5><ul>
+<li>检查错误，即检查读取长度是否为0和文件是否可读。</li>
+<li>分配buffer空间，即调用kmalloc函数分配4096字节的buffer空间。</li>
+<li>读文件过程<ul>
+<li>实际读文件。<ul>
+<li>循环读取文件，每次读取buffer大小。</li>
+<li>每次循环中，先检查剩余部分大小，若其小于4096字节，则只读取剩余部分的大小。</li>
+<li>调用file_read函数（详细分析见后）将文件内容读取到buffer中，alen为实际大小。</li>
+<li>调用copy_to_user函数将读到的内容拷贝到用户的内存空间中。</li>
+<li>调整各变量以进行下一次循环读取，直至指定长度读取完成。</li>
+<li>最后函数调用层层返回至用户程序，用户程序收到了读到的文件内容。</li>
+</ul>
+</li>
+<li>file_read函数<ul>
+<li>这个函数是读文件的核心函数。函数有4个参数，<ul>
+<li>fd是文件描述符，</li>
+<li>base是缓存的基地址，</li>
+<li>len是要读取的长度，</li>
+<li>copied_store存放实际读取的长度。</li>
+</ul>
+</li>
+<li>函数首先调用<code>fd2file</code>函数找到对应的file结构，并检查是否可读。</li>
+<li>调用<code>filemap_acquire</code>函数使打开这个文件的计数加1。</li>
+<li>调用vop_read函数将文件内容读到iob中（详细分析见后）。</li>
+<li>调整文件指针偏移量pos的值，使其向后移动实际读到的字节数iobuf_used(iob)。</li>
+<li>调用filemap_release函数使打开这个文件的计数减1，若打开计数为0，则释放file。<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line">/* sysfile_read - read file */</span><br><span class="line">int</span><br><span class="line">sysfile_read(int fd, void *base, size_t len) &#123;</span><br><span class="line">    struct mm_struct *mm = current-&gt;mm;</span><br><span class="line">    if (len == 0) &#123;</span><br><span class="line">        return 0;</span><br><span class="line">    &#125;</span><br><span class="line">    if (!file_testfd(fd, 1, 0)) &#123;</span><br><span class="line">        return -E_INVAL;</span><br><span class="line">    &#125;</span><br><span class="line">// 检查读取长度是否为0和文件是否可读</span><br><span class="line"></span><br><span class="line">    void *buffer;</span><br><span class="line">    if ((buffer = kmalloc(IOBUF_SIZE)) == NULL) &#123;</span><br><span class="line">        return -E_NO_MEM;</span><br><span class="line">    &#125;</span><br><span class="line">// 调用kmalloc函数分配4096字节的buffer空间</span><br><span class="line"></span><br><span class="line">    int ret = 0;</span><br><span class="line">    size_t copied = 0, alen;</span><br><span class="line">    while (len != 0) &#123;</span><br><span class="line">        if ((alen = IOBUF_SIZE) &gt; len) &#123;</span><br><span class="line">            alen = len;</span><br><span class="line">        &#125;</span><br><span class="line">        ret = file_read(fd, buffer, alen, &amp;alen);</span><br><span class="line">        // 将文件内容读取到buffer中，alen为实际大小       </span><br><span class="line">        if (alen != 0) &#123;</span><br><span class="line">            lock_mm(mm);</span><br><span class="line">            &#123;</span><br><span class="line">                if (copy_to_user(mm, base, buffer, alen)) &#123;</span><br><span class="line">                    // copy_to_user在vmm.c中，检查权限后memcpy</span><br><span class="line">                    assert(len &gt;= alen);</span><br><span class="line">                    base += alen, len -= alen, copied += alen;</span><br><span class="line">                &#125;</span><br><span class="line">                // 调用copy_to_user函数将读到的内容拷贝到用户的内存空间中</span><br><span class="line">                // 调整各变量以进行下一次循环读取，直至指定长度读取完成</span><br><span class="line">                else if (ret == 0) &#123;</span><br><span class="line">                    ret = -E_INVAL;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            unlock_mm(mm);</span><br><span class="line">        &#125;</span><br><span class="line">        if (ret != 0 || alen == 0) &#123;</span><br><span class="line">            goto out;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">out:</span><br><span class="line">    kfree(buffer);</span><br><span class="line">    if (copied != 0) &#123;</span><br><span class="line">        return copied;</span><br><span class="line">    &#125;</span><br><span class="line">    return ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">// read file</span><br><span class="line">int</span><br><span class="line">file_read(int fd, void *base, size_t len, size_t *copied_store) &#123;</span><br><span class="line">    int ret;</span><br><span class="line">    struct file *file;</span><br><span class="line">    *copied_store = 0;</span><br><span class="line">    if ((ret = fd2file(fd, &amp;file)) != 0) &#123;</span><br><span class="line">        return ret;</span><br><span class="line">    &#125;</span><br><span class="line">    // 找到对应的file结构</span><br><span class="line"></span><br><span class="line">    if (!file-&gt;readable) &#123;</span><br><span class="line">        return -E_INVAL;</span><br><span class="line">    &#125;</span><br><span class="line">    fd_array_acquire(file);</span><br><span class="line">    // 打开这个文件的计数加1</span><br><span class="line"></span><br><span class="line">    struct iobuf __iob, *iob = iobuf_init(&amp;__iob, base, len, file-&gt;pos);</span><br><span class="line">    ret = vop_read(file-&gt;node, iob);</span><br><span class="line">    // 文件内容读到iob中，通过sfs_read --&gt; sfs_io，获取到inode，执行sfs_io_nolock。</span><br><span class="line"></span><br><span class="line">    size_t copied = iobuf_used(iob);</span><br><span class="line">    if (file-&gt;status == FD_OPENED) &#123;</span><br><span class="line">        file-&gt;pos += copied;</span><br><span class="line">    &#125;</span><br><span class="line">    *copied_store = copied;</span><br><span class="line">    fd_array_release(file);</span><br><span class="line">    return ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="SFS文件系统层的处理流程-1"><a href="#SFS文件系统层的处理流程-1" class="headerlink" title="SFS文件系统层的处理流程"></a>SFS文件系统层的处理流程</h5><p><code>vop_read</code>函数实际上是对<code>sfs_read</code>的包装。在sfs_inode.c中<code>sfs_node_fileops</code>变量定义了<code>.vop_read = sfs_read</code>，所以下面来分析sfs_read函数的实现。</p>
+<ul>
+<li>sfs_read函数调用sfs_io函数。<ul>
+<li>它有三个参数，node是对应文件的inode，iob是缓存，write表示是读还是写的布尔值（0表示读，1表示写），这里是0。</li>
+<li>函数先找到inode对应sfs和sin，</li>
+<li>然后调用sfs_io_nolock函数进行读取文件操作，</li>
+<li>最后调用iobuf_skip函数调整iobuf的指针。<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line"> * sfs_io - Rd/Wr file. the wrapper of sfs_io_nolock</span><br><span class="line">            with lock protect</span><br><span class="line"> */</span><br><span class="line">static inline int</span><br><span class="line">sfs_io(struct inode *node, struct iobuf *iob, bool write) &#123;</span><br><span class="line">    struct sfs_fs *sfs = fsop_info(vop_fs(node), sfs);</span><br><span class="line">    struct sfs_inode *sin = vop_info(node, sfs_inode);</span><br><span class="line">    int ret;</span><br><span class="line">    lock_sin(sin);</span><br><span class="line">    &#123;</span><br><span class="line">        size_t alen = iob-&gt;io_resid;</span><br><span class="line">        ret = sfs_io_nolock(sfs, sin, iob-&gt;io_base, iob-&gt;io_offset, &amp;alen, write);</span><br><span class="line">        if (alen != 0) &#123;</span><br><span class="line">            iobuf_skip(iob, alen);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    unlock_sin(sin);</span><br><span class="line">    return ret;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">/*</span><br><span class="line"> * iobuf_skip - change the current position of io buffer</span><br><span class="line"> */</span><br><span class="line">void</span><br><span class="line">iobuf_skip(struct iobuf *iob, size_t n) &#123;</span><br><span class="line">    assert(iob-&gt;io_resid &gt;= n);</span><br><span class="line">    iob-&gt;io_base += n, iob-&gt;io_offset += n, iob-&gt;io_resid -= n;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="练习1-完成读文件操作的实现"><a href="#练习1-完成读文件操作的实现" class="headerlink" title="练习1: 完成读文件操作的实现"></a>练习1: 完成读文件操作的实现</h3><p>首先完成proc.c中process控制块的初始化，在<code>static struct proc_struct *alloc_proc(void)</code>中添加：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">proc-&gt;filesp = NULL;</span><br></pre></td></tr></table></figure></p>
+<p>如果调用了read系统调用，继续调用sys_read函数，和sysfile_read函数，在这个函数中，创建了缓冲区，进一步复制到用户空间的指定位置去；从文件读取数据的函数是file_read。</p>
+<p>在file_read函数中，通过文件描述符找到相应文件对应的内存中的inode信息，调用vop_read进行读取处理，vop_read继续调用sfs_read函数，然后调用sfs_io函数和sfs_io_nolock函数。</p>
+<ul>
+<li>在sfs_io_nolock函数中，<ul>
+<li>先计算一些辅助变量，并处理一些特殊情况（比如越界），</li>
+<li>然后有<code>sfs_buf_op = sfs_rbuf</code>，<code>sfs_block_op = sfs_rblock</code>，设置读取的函数操作。</li>
+<li>先处理起始的没有对齐到块的部分，再以块为单位循环处理中间的部分，最后处理末尾剩余的部分。</li>
+<li>每部分中都调用sfs_bmap_load_nolock函数得到blkno对应的inode编号，</li>
+<li>并调用<code>sfs_rbuf</code>或<code>sfs_rblock</code>函数读取数据（中间部分调用sfs_rblock，起始和末尾部分调用sfs_rbuf），调整相关变量。</li>
+<li>完成后如果<code>offset + alen &gt; din-&gt;fileinfo.size</code>（写文件时会出现这种情况，读文件时不会出现这种情况，alen为实际读写的长度），则调整文件大小为<code>offset + alen</code>并设置dirty变量。</li>
+</ul>
+</li>
+<li><code>sfs_bmap_load_nolock</code>函数将对应<code>sfs_inode</code>的第index个索引指向的block的索引值取出存到相应的指针指向的单元（ino_store）。<ul>
+<li>调用sfs_bmap_get_nolock来完成相应的操作。</li>
+<li>sfs_rbuf和sfs_rblock函数最终都调用sfs_rwblock_nolock函数完成操作，</li>
+<li>而sfs_rwblock_nolock函数调用dop_io-&gt;disk0_io-&gt;disk0_read_blks_nolock-&gt;ide_read_secs完成对磁盘的操作。</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line"> * sfs_io_nolock - Rd/Wr a file contentfrom offset position to offset+ length  disk blocks&lt;--&gt;buffer (in memroy) * * @sfs:      sfs file system</span><br><span class="line"> * @sin:      sfs inode in memory</span><br><span class="line"> * @buf:      the buffer Rd/Wr</span><br><span class="line"> * @offset:   the offset of file</span><br><span class="line"> * @alenp:    the length need to read (is a pointer). and will RETURN the really Rd/Wr lenght</span><br><span class="line"> * @write:    BOOL, 0 read, 1 write</span><br><span class="line"> */</span><br><span class="line">static int</span><br><span class="line">sfs_io_nolock(struct sfs_fs *sfs, struct sfs_inode *sin, void *buf, off_t offset, size_t *alenp, bool write) &#123;</span><br><span class="line">    struct sfs_disk_inode *din = sin-&gt;din;</span><br><span class="line">    assert(din-&gt;type != SFS_TYPE_DIR);</span><br><span class="line">    off_t endpos = offset + *alenp, blkoff;</span><br><span class="line">    *alenp = 0;</span><br><span class="line">    // 计算出读写的长度，从初始偏移量走到文件的哪个位置</span><br><span class="line">    if (offset &lt; 0 || offset &gt;= SFS_MAX_FILE_SIZE || offset &gt; endpos) &#123;</span><br><span class="line">        return -E_INVAL;</span><br><span class="line">    &#125;</span><br><span class="line">    if (offset == endpos) &#123;</span><br><span class="line">        return 0;</span><br><span class="line">    &#125;</span><br><span class="line">    if (endpos &gt; SFS_MAX_FILE_SIZE) &#123;</span><br><span class="line">        endpos = SFS_MAX_FILE_SIZE;</span><br><span class="line">    &#125;</span><br><span class="line">    // 文件过大，到了最大支持的文件长度了</span><br><span class="line"></span><br><span class="line">    if (!write) &#123;</span><br><span class="line">        if (offset &gt;= din-&gt;size) &#123;</span><br><span class="line">            return 0;</span><br><span class="line">        &#125;</span><br><span class="line">        if (endpos &gt; din-&gt;size) &#123;</span><br><span class="line">            endpos = din-&gt;size;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    // 如果end position超过了文件大小，就把它移动到这个文件的末尾</span><br><span class="line"></span><br><span class="line">    int (*sfs_buf_op)(struct sfs_fs *sfs, void *buf, size_t len, uint32_t blkno, off_t offset);</span><br><span class="line">    int (*sfs_block_op)(struct sfs_fs *sfs, void *buf, uint32_t blkno, uint32_t nblks);</span><br><span class="line">    if (write) &#123;</span><br><span class="line">        sfs_buf_op = sfs_wbuf, sfs_block_op = sfs_wblock;</span><br><span class="line">    &#125;</span><br><span class="line">    else &#123;</span><br><span class="line">        sfs_buf_op = sfs_rbuf, sfs_block_op = sfs_rblock;</span><br><span class="line">    &#125;</span><br><span class="line">    // 设置读取/写入的函数操作</span><br><span class="line"></span><br><span class="line">    int ret = 0;</span><br><span class="line">    size_t size, alen = 0;</span><br><span class="line">    uint32_t ino;</span><br><span class="line">    uint32_t blkno = offset / SFS_BLKSIZE;          // 起始的block序号</span><br><span class="line">    uint32_t nblks = endpos / SFS_BLKSIZE - blkno;  // 一共要读写多少个block？</span><br><span class="line"></span><br><span class="line">//LAB8:EXERCISE1 YOUR CODE </span><br><span class="line">//HINT: call sfs_bmap_load_nolock, sfs_rbuf, sfs_rblock,etc. </span><br><span class="line">// read different kind of blocks in file</span><br><span class="line"> /*</span><br><span class="line">  * (1) If offset isn&apos;t aligned with the first block, Rd/Wr some content from offset to the end of the first block</span><br><span class="line">  * NOTICE: useful function: sfs_bmap_load_nolock, sfs_buf_op</span><br><span class="line">  * Rd/Wr size = (nblks != 0) ? (SFS_BLKSIZE - blkoff) : (endpos - offset)</span><br><span class="line">  * (2) Rd/Wr aligned blocks</span><br><span class="line">  * NOTICE: useful function: sfs_bmap_load_nolock, sfs_block_op</span><br><span class="line">  * (3) If end position isn&apos;t aligned with the last block, Rd/Wr some content from begin to the (endpos % SFS_BLKSIZE) of the last block</span><br><span class="line">  * NOTICE: useful function: sfs_bmap_load_nolock, sfs_buf_op</span><br><span class="line">  */</span><br><span class="line">    if (offset % SFS_BLKSIZE != 0 || endpos / SFS_BLKSIZE == offset / SFS_BLKSIZE)&#123;</span><br><span class="line">        blkoff = offset % SFS_BLKSIZE;</span><br><span class="line">        size = (nblks != 0) ? (SFS_BLKSIZE - blkoff) : (endpos - offset);</span><br><span class="line">        if ((ret = sfs_bmap_load_nolock(sfs, sin, blkno, &amp;ino)) != 0) goto out;</span><br><span class="line">        if ((ret = sfs_buf_op(sfs, buf, size, ino, blkoff)) != 0) goto out;</span><br><span class="line">        alen += size;</span><br><span class="line">        buf += size;</span><br><span class="line">    &#125;</span><br><span class="line">    // 处理如果不是从块的开头开始写的情况，如果偏移量%块大小不是0则是从块内部开始写的。如果nblks是0的话说明只有一个块里的一部分需要写。先把这个写了。</span><br><span class="line"></span><br><span class="line">    uint32_t my_nblks = nblks;</span><br><span class="line">    if (offset % SFS_BLKSIZE != 0 &amp;&amp; my_nblks &gt; 0)</span><br><span class="line">        my_nblks --;</span><br><span class="line">    // 如果是从一个块的一部分开始写的，那在总的块数上需要减一。</span><br><span class="line">    if (my_nblks &gt; 0) &#123;</span><br><span class="line">        int temp_blkno = (offset % SFS_BLKSIZE == 0) ? blkno: blkno + 1</span><br><span class="line">        if ((ret = sfs_bmap_load_nolock(sfs, sin, temp_blkno, &amp;ino)) != 0)</span><br><span class="line">            goto out;</span><br><span class="line">        if ((ret = sfs_block_op(sfs, buf, ino, my_nblks)) != 0)</span><br><span class="line">        // 这里的sfs_block_op是一个循环，把mu_nblks个块进行读写，跟开头和结尾的那个sfs_buf_op不一样</span><br><span class="line">            goto out;</span><br><span class="line">        size = SFS_BLKSIZE * my_nblks;</span><br><span class="line">        alen += size;</span><br><span class="line">        buf += size;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    //下边就是处理如果最后一部分是最后一块的一部分的了，ino存储了disk上的inode的编号，然后在下边的sfs_buf_op中，处理最后一小块</span><br><span class="line">    if (endpos % SFS_BLKSIZE != 0 &amp;&amp; endpos / SFS_BLKSIZE != offset / SFS_BLKSIZE) &#123;</span><br><span class="line">            size = endpos % SFS_BLKSIZE;</span><br><span class="line">            if ((ret = sfs_bmap_load_nolock(sfs, sin, endpos / SFS_BLKSIZE, &amp;ino) == 0) != 0) goto out;</span><br><span class="line">            if ((ret = sfs_buf_op(sfs, buf, size, ino, 0)) != 0) goto out;</span><br><span class="line">            alen += size;</span><br><span class="line">            buf += size;</span><br><span class="line">    &#125;</span><br><span class="line">out:</span><br><span class="line">    *alenp = alen;</span><br><span class="line">    if (offset + alen &gt; sin-&gt;din-&gt;size) &#123;</span><br><span class="line">        sin-&gt;din-&gt;size = offset + alen;</span><br><span class="line">        sin-&gt;dirty = 1;</span><br><span class="line">    &#125;</span><br><span class="line">    return ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>请在实验报告中给出设计实现”UNIX的PIPE机制“的概要设方案，鼓励给出详细设计方案。<ul>
+<li>PIPE机制可以看成是一个缓冲区，可以在磁盘上（或内存中？）保留一部分空间作为pipe机制的缓冲区。当两个进程之间要求建立pipe时，在两个进程的进程控制块上修改某些属性表明这个进程是管道数据的发送方还是接受方，这样就可以将stdin或stdout重定向到生成的临时文件里，在两个进程中打开这个临时文件。</li>
+<li>当进程A使用stdout写时，查询PCB中的相关变量，把这些stdout数据输出到临时文件中；</li>
+<li>当进程B使用stdin的时候，查询PCB中的信息，从临时文件中读取数据；</li>
+</ul>
+</li>
+</ul>
+<h3 id="练习2-完成基于文件系统的执行程序机制的实现"><a href="#练习2-完成基于文件系统的执行程序机制的实现" class="headerlink" title="练习2: 完成基于文件系统的执行程序机制的实现"></a>练习2: 完成基于文件系统的执行程序机制的实现</h3><p>改写proc.c中的load_icode函数和其他相关函数，实现基于文件系统的执行程序机制。首先是在do_execve中进行文件名和命令行参数的复制，执行sysfie_open打开相关文件，fd是已经打开的这个文件。执行： make qemu。如果能看看到sh用户程序的执行界面，则基本成功了。如果在sh用户界面上可 以执行”ls”,”hello”等其他放置在sfs文件系统中的其他执行程序，则可以认为本实验基本成功。</p>
+<ul>
+<li>给要执行的用户进程创建一个新的内存管理结构mm，</li>
+<li>创建用户内存空间的新的页目录表；</li>
+<li>将磁盘上的ELF文件的TEXT/DATA/BSS段正确地加载到用户空间中；</li>
+<li>从磁盘中读取elf文件的header；</li>
+<li>根据elfheader中的信息，获取到磁盘上的program header；</li>
+<li>对于每一个program header:<ul>
+<li>为TEXT/DATA段在用户内存空间上的保存分配物理内存页，同时建立物理页和虚拟页的映射关系；</li>
+<li>从磁盘上读取TEXT/DATA段，并且复制到用户内存空间上去；</li>
+<li>根据program header得知是否需要创建BBS段，如果是，则分配相应的内存空间，并且全部初始化成0，并且建立物理页和虚拟页的映射关系；</li>
+</ul>
+</li>
+<li>将用户栈的虚拟空间设置为合法，并且为栈顶部分先分配4个物理页，建立好映射关系；</li>
+<li>切换到用户地址空间；</li>
+<li>设置好用户栈上的信息，即需要传递给执行程序的参数；</li>
+<li>设置好中断帧；</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br></pre></td><td class="code"><pre><span class="line">static int</span><br><span class="line">load_icode(int fd, int argc, char **kargv) &#123;</span><br><span class="line">    /* LAB8:EXERCISE2 YOUR CODE  HINT:how to load the file with handler fd  in to process&apos;s memory? how to setup argc/argv?</span><br><span class="line">     * MACROs or Functions:</span><br><span class="line">     *  mm_create        - create a mm</span><br><span class="line">     *  setup_pgdir      - setup pgdir in mm</span><br><span class="line">     *  load_icode_read  - read raw data content of program file</span><br><span class="line">     *  mm_map           - build new vma</span><br><span class="line">     *  pgdir_alloc_page - allocate new memory for  TEXT/DATA/BSS/stack parts</span><br><span class="line">     *  lcr3             - update Page Directory Addr Register -- CR3</span><br><span class="line">     *</span><br><span class="line">     * (1) create a new mm for current process</span><br><span class="line">     * (2) create a new PDT, and mm-&gt;pgdir= kernel virtual addr of PDT</span><br><span class="line">     * (3) copy TEXT/DATA/BSS parts in binary to memory space of process</span><br><span class="line">     *    (3.1) read raw data content in file and resolve elfhdr</span><br><span class="line">     *    (3.2) read raw data content in file and resolve proghdr based on info in elfhdr</span><br><span class="line">     *    (3.3) call mm_map to build vma related to TEXT/DATA</span><br><span class="line">     *    (3.4) callpgdir_alloc_page to allocate page for TEXT/DATA, read contents in file</span><br><span class="line">     *          and copy them into the new allocated pages</span><br><span class="line">     *    (3.5) callpgdir_alloc_page to allocate pages for BSS, memset zero in these pages</span><br><span class="line">     * (4) call mm_map to setup user stack, and put parameters into user stack</span><br><span class="line">     * (5) setup current process&apos;s mm, cr3, reset pgidr (using lcr3 MARCO)</span><br><span class="line">     * (6) setup uargc and uargv in user stacks</span><br><span class="line">     * (7) setup trapframe for user environment</span><br><span class="line">     * (8) if up steps failed, you should cleanup the env.</span><br><span class="line">     */</span><br><span class="line">    if (current-&gt;mm != NULL) &#123;</span><br><span class="line">        panic(&quot;load_icode: current-&gt;mm must be empty.\n&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    int ret = -E_NO_MEM;</span><br><span class="line">    struct mm_struct *mm;</span><br><span class="line">    //(1) create a new mm for current process</span><br><span class="line">    if ((mm = mm_create()) == NULL) &#123;</span><br><span class="line">        goto bad_mm;</span><br><span class="line">    &#125;</span><br><span class="line">    //(2) create a new PDT, and mm-&gt;pgdir= kernel virtual addr of PDT</span><br><span class="line">    if (setup_pgdir(mm) != 0) &#123;</span><br><span class="line">        goto bad_pgdir_cleanup_mm;</span><br><span class="line">    &#125;</span><br><span class="line">    //(3) copy TEXT/DATA section, build BSS parts in binary to memory space of process</span><br><span class="line">    struct Page *page;</span><br><span class="line">    //(3.1) get the file header of the bianry program (ELF format)</span><br><span class="line">    struct elfhdr elf;</span><br><span class="line">    off_t offset = 0;</span><br><span class="line"></span><br><span class="line">    if((ret = load_icode_read(fd, (void*)&amp;elf, sizeof(struct elfhdr), 0)) != 0) &#123;</span><br><span class="line">        // elf header读取到elf中，这里的参数比较复杂需要先取地址再类型转换</span><br><span class="line">        goto bad_elf_cleanup_pgdir;</span><br><span class="line">    &#125;	</span><br><span class="line">    if (elf.e_magic != ELF_MAGIC) &#123;</span><br><span class="line">        //检查是不是魔数，如果是的话才是对的elf文件</span><br><span class="line">        ret = -E_INVAL_ELF;</span><br><span class="line">        goto bad_elf_cleanup_pgdir;</span><br><span class="line">    &#125;</span><br><span class="line">    offset += sizeof(struct elfhdr);</span><br><span class="line">    // 这个文件已经读取到elf header 之后了</span><br><span class="line"></span><br><span class="line">    uint32_t vm_flags, perm;</span><br><span class="line">    struct proghdr ph;</span><br><span class="line">    for (int i=0; i &lt; elf.e_phnum; i ++) &#123;</span><br><span class="line">    // e_phnum is number of entries in program header.</span><br><span class="line">    //(3.4) find every program section headers</span><br><span class="line">    // 第二三个参数分别是读取的长度和在文件中的偏移量。</span><br><span class="line">    	off_t phoff = elf.e_phoff + sizeof(struct proghdr) * i;</span><br><span class="line">        load_icode_read(fd, (void*)&amp;ph, sizeof(struct proghdr), phoff);</span><br><span class="line">        if (ph.p_type != ELF_PT_LOAD) &#123;</span><br><span class="line">            continue ;</span><br><span class="line">        &#125;</span><br><span class="line">        if (ph.p_filesz &gt; ph.p_memsz) &#123;</span><br><span class="line">            ret = -E_INVAL_ELF;</span><br><span class="line">            goto bad_cleanup_mmap;</span><br><span class="line">        &#125;</span><br><span class="line">        if (ph.p_filesz == 0) &#123;</span><br><span class="line">            continue ;</span><br><span class="line">        &#125;</span><br><span class="line">        // call mm_map fun to setup the new vma ( ph-&gt;p_va, ph-&gt;p_memsz)</span><br><span class="line">        vm_flags = 0, perm = PTE_U;</span><br><span class="line">        if (ph.p_flags &amp; ELF_PF_X) vm_flags |= VM_EXEC;</span><br><span class="line">        if (ph.p_flags &amp; ELF_PF_W) vm_flags |= VM_WRITE;</span><br><span class="line">        if (ph.p_flags &amp; ELF_PF_R) vm_flags |= VM_READ;</span><br><span class="line">        if (vm_flags &amp; VM_WRITE) perm |= PTE_W;</span><br><span class="line">        if ((ret = mm_map(mm, ph.p_va, ph.p_memsz, vm_flags, NULL)) != 0) &#123;</span><br><span class="line">            goto bad_cleanup_mmap;</span><br><span class="line">        &#125;</span><br><span class="line">        // 虚拟内存管理的权限控制，并设置映射</span><br><span class="line">        </span><br><span class="line">	    offset = ph.p_offset;</span><br><span class="line">        size_t off, size;</span><br><span class="line">        uintptr_t start = ph.p_va, end=ph.p_va+ph.p_filesz, la = ROUNDDOWN(start, PGSIZE);</span><br><span class="line">        // start 和 end 是vma中的segment的起始和结尾</span><br><span class="line">        ret = -E_NO_MEM;</span><br><span class="line"></span><br><span class="line">        while (start &lt; end) &#123;</span><br><span class="line">            if ((page = pgdir_alloc_page(mm-&gt;pgdir, la, perm)) == NULL) &#123;</span><br><span class="line">            	ret = -E_NO_MEM;</span><br><span class="line">                goto bad_cleanup_mmap;</span><br><span class="line">            &#125;</span><br><span class="line">            off = start - la, size = PGSIZE - off, la += PGSIZE;</span><br><span class="line">            if (end &lt; la) &#123;</span><br><span class="line">                size -= la - end;</span><br><span class="line">            &#125;</span><br><span class="line">	        load_icode_read(fd, page2kva(page)+off, size, offset);</span><br><span class="line">            //memcpy(page2kva(page) + off, from, size);</span><br><span class="line">            start += size, offset += size;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">      // build BSS section of binary program</span><br><span class="line">        end = ph.p_va + ph.p_memsz;</span><br><span class="line">        if (start &lt; la) &#123;</span><br><span class="line">            /* ph-&gt;p_memsz == ph-&gt;p_filesz */</span><br><span class="line">            if (start == end) &#123;</span><br><span class="line">                continue ;</span><br><span class="line">            &#125;</span><br><span class="line">            off = start + PGSIZE - la, size = PGSIZE - off;</span><br><span class="line">            if (end &lt; la) &#123;</span><br><span class="line">                size -= la - end;</span><br><span class="line">            &#125;</span><br><span class="line">            memset(page2kva(page) + off, 0, size);</span><br><span class="line">            start += size;</span><br><span class="line">            assert((end &lt; la &amp;&amp; start == end) || (end &gt;= la &amp;&amp; start == la));</span><br><span class="line">        &#125;</span><br><span class="line">        while (start &lt; end) &#123;</span><br><span class="line">            if ((page = pgdir_alloc_page(mm-&gt;pgdir, la, perm)) == NULL) &#123;</span><br><span class="line">            	ret = -E_NO_MEM;</span><br><span class="line">                goto bad_cleanup_mmap;</span><br><span class="line">            &#125;</span><br><span class="line">            off = start - la, size = PGSIZE - off, la += PGSIZE;</span><br><span class="line">            if (end &lt; la) &#123;</span><br><span class="line">                size -= la - end;</span><br><span class="line">            &#125;</span><br><span class="line">            memset(page2kva(page), 0, size);</span><br><span class="line">            start += size;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    sysfile_close(fd);</span><br><span class="line">    //(4) build user stack memory</span><br><span class="line">    vm_flags = VM_READ | VM_WRITE | VM_STACK;</span><br><span class="line">    if ((ret = mm_map(mm, USTACKTOP - USTACKSIZE, USTACKSIZE, vm_flags, NULL)) != 0) &#123;</span><br><span class="line">        goto bad_cleanup_mmap;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    uint32_t stacktop = USTACKTOP;</span><br><span class="line">    uint32_t argsize = 0;</span><br><span class="line">    for(int j = 0; j&lt; argc ; j++)</span><br><span class="line">        argsize += (1 + strlen(kargv[j]));</span><br><span class="line">    // 计算传进来的参数的大小和长度，并进行取整</span><br><span class="line">    argsize = (argsize / sizeof(long)+1)*sizeof(long);</span><br><span class="line">    argsize += (2+argc)*sizeof(long);</span><br><span class="line">    stacktop = USTACKTOP - argsize;</span><br><span class="line">    uint32_t pagen = argsize / PGSIZE + 4;</span><br><span class="line">    for (int j = 1; j &lt;= 4; ++ j) &#123;</span><br><span class="line">        assert(pgdir_alloc_page(mm-&gt;pgdir, USTACKTOP-PGSIZE*j , PTE_USER) != NULL);</span><br><span class="line">    &#125;</span><br><span class="line">    //(5) set current process&apos;s mm, sr3, and set CR3 reg = physical addr of Page Directory</span><br><span class="line">    mm_count_inc(mm);</span><br><span class="line">    current-&gt;mm = mm;</span><br><span class="line">    current-&gt;cr3 = PADDR(mm-&gt;pgdir);</span><br><span class="line">    lcr3(PADDR(mm-&gt;pgdir));</span><br><span class="line"></span><br><span class="line">    //(6) setup trapframe for user environment</span><br><span class="line">    uint32_t now_pos = stacktop, argvp;</span><br><span class="line">    *((uint32_t*)now_pos) = argc;</span><br><span class="line">    now_pos += 4;</span><br><span class="line">    *((uint32_t *) now_pos) = argvp = now_pos + 4;</span><br><span class="line">    now_pos += 4;</span><br><span class="line">    now_pos += argc*4;</span><br><span class="line">    //压栈</span><br><span class="line">    for (int j = 0; j &lt; argc; ++ j) &#123;</span><br><span class="line">        argsize = strlen(kargv[j]) + 1; </span><br><span class="line">        memcpy((void *) now_pos, kargv[j], argsize);</span><br><span class="line">        *((uint32_t *) (argvp + j * 4)) = now_pos;</span><br><span class="line">        now_pos += argsize;</span><br><span class="line">    &#125;	</span><br><span class="line"></span><br><span class="line">    /* LAB5:EXERCISE1 YOUR CODE</span><br><span class="line">     * should set tf_cs,tf_ds,tf_es,tf_ss,tf_esp,tf_eip,tf_eflags</span><br><span class="line">     * NOTICE: If we set trapframe correctly, then the user level process can return to USER MODE from kernel. So</span><br><span class="line">     *          tf_cs should be USER_CS segment (see memlayout.h)</span><br><span class="line">     *          tf_ds=tf_es=tf_ss should be USER_DS segment</span><br><span class="line">     *          tf_esp should be the top addr of user stack (USTACKTOP)</span><br><span class="line">     *          tf_eip should be the entry point of this binary program (elf-&gt;e_entry)</span><br><span class="line">     *          tf_eflags should be set to enable computer to produce Interrupt</span><br><span class="line">     */</span><br><span class="line">    struct trapframe *tf = current-&gt;tf;</span><br><span class="line">    memset(tf, 0, sizeof(struct trapframe));</span><br><span class="line">    tf-&gt;tf_cs = USER_CS;</span><br><span class="line">    tf-&gt;tf_ds = tf-&gt;tf_es = tf-&gt;tf_ss = USER_DS;</span><br><span class="line">    tf-&gt;tf_esp = stacktop;</span><br><span class="line">    tf-&gt;tf_eip = elf.e_entry;</span><br><span class="line">    tf-&gt;tf_eflags = 0x2 | FL_IF; // to enable interrupt</span><br><span class="line">    ret = 0;</span><br><span class="line">out:</span><br><span class="line">    return ret;</span><br><span class="line">bad_cleanup_mmap:</span><br><span class="line">    exit_mmap(mm);</span><br><span class="line">bad_elf_cleanup_pgdir:</span><br><span class="line">    put_pgdir(mm);</span><br><span class="line">bad_pgdir_cleanup_mm:</span><br><span class="line">    mm_destroy(mm);</span><br><span class="line">bad_mm:</span><br><span class="line">    goto out;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>UNIX的硬链接和软链接机制：</p>
+<p>硬链接：</p>
+<ul>
+<li>文件有相同的 inode 及 data block；</li>
+<li>只能对已存在的文件进行创建；</li>
+<li>不能交叉文件系统进行硬链接的创建；</li>
+<li>不能对目录进行创建，只可对文件创建；</li>
+<li>删除一个硬链接文件并不影响其他有相同 inode 号的文件。</li>
+</ul>
+<p>软链接：</p>
+<ul>
+<li>软链接有自己的文件属性及权限等；</li>
+<li>可对不存在的文件或目录创建软链接；</li>
+<li>软链接可交叉文件系统；</li>
+<li>软链接可对文件或目录创建；</li>
+<li>创建软链接时，链接计数 i_nlink 不会增加；</li>
+<li>删除软链接并不影响被指向的文件，但若被指向的原文件被删除，则相关软连接被称为死链接</li>
+</ul>
+<p>硬链接： 与普通文件没什么不同，inode 都指向同一个文件在硬盘中的区块<br>软链接： 保存了其代表的文件的绝对路径，是另外一种文件，在硬盘上有独立的区块，访问时替换自身路径。</p>
+<p>sfs_disk_inode结构体中有一个nlinks变量，如果要创建一个文件的软链接，这个软链接也要创建inode，只是它的类型是链接，找一个域设置它所指向的文件inode，如果文件是一个链接，就可以通过保存的inode位置进行操作；当删除一个软链接时，直接删掉inode即可；</p>
+<p>硬链接与文件是共享inode的，如果创建一个硬链接，需要将源文件中的被链接的计数加1；当删除一个硬链接的时候，除了需要删掉inode之外，还需要将硬链接指向的文件的被链接计数减1，如果减到了0，则需要将A删除掉；</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/操作系统/" rel="tag"># 操作系统</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/29/清华大学操作系统课程实验一/" rel="next" title="清华大学操作系统课程实验一">
+                <i class="fa fa-chevron-left"></i> 清华大学操作系统课程实验一
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/29/清华大学操作系统课程实验六/" rel="prev" title="清华大学操作系统课程实验六">
+                清华大学操作系统课程实验六 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">200</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/test.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#实验八：文件系统"><span class="nav-number">1.</span> <span class="nav-text">实验八：文件系统</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#实验目的"><span class="nav-number">1.1.</span> <span class="nav-text">实验目的</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实验内容"><span class="nav-number">1.2.</span> <span class="nav-text">实验内容</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#文件系统设计与实现"><span class="nav-number">1.3.</span> <span class="nav-text">文件系统设计与实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ucore-文件系统总体介绍"><span class="nav-number">1.3.1.</span> <span class="nav-text">ucore 文件系统总体介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#ucore文件系统总体结构"><span class="nav-number">1.3.1.1.</span> <span class="nav-text">ucore文件系统总体结构</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#通用文件系统访问接口"><span class="nav-number">1.3.2.</span> <span class="nav-text">通用文件系统访问接口</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#文件和目录相关用户库函数"><span class="nav-number">1.3.2.1.</span> <span class="nav-text">文件和目录相关用户库函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#文件和目录访问相关系统调用"><span class="nav-number">1.3.2.2.</span> <span class="nav-text">文件和目录访问相关系统调用</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#文件系统抽象层-VFS"><span class="nav-number">1.3.3.</span> <span class="nav-text">文件系统抽象层 - VFS</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#file-amp-dir接口"><span class="nav-number">1.3.3.1.</span> <span class="nav-text">file &amp; dir接口</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#inode-接口"><span class="nav-number">1.3.3.2.</span> <span class="nav-text">inode 接口</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Simple-FS-文件系统"><span class="nav-number">1.3.4.</span> <span class="nav-text">Simple FS 文件系统</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#文件系统的布局"><span class="nav-number">1.3.4.1.</span> <span class="nav-text">文件系统的布局</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#索引节点"><span class="nav-number">1.3.4.2.</span> <span class="nav-text">索引节点</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#磁盘索引节点"><span class="nav-number">1.3.4.2.1.</span> <span class="nav-text">磁盘索引节点</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#内存中的索引节点"><span class="nav-number">1.3.4.3.</span> <span class="nav-text">内存中的索引节点</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#inode的目录操作函数"><span class="nav-number">1.3.4.3.1.</span> <span class="nav-text">inode的目录操作函数</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#设备层文件-IO-层"><span class="nav-number">1.3.5.</span> <span class="nav-text">设备层文件 IO 层</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#关键数据结构"><span class="nav-number">1.3.5.1.</span> <span class="nav-text">关键数据结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#stdout设备文件"><span class="nav-number">1.3.5.2.</span> <span class="nav-text">stdout设备文件</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#初始化"><span class="nav-number">1.3.5.2.1.</span> <span class="nav-text">初始化</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#初始化-1"><span class="nav-number">1.3.5.2.2.</span> <span class="nav-text">初始化</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#访问操作实现"><span class="nav-number">1.3.5.2.3.</span> <span class="nav-text">访问操作实现</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#stdin-设备文件"><span class="nav-number">1.3.5.3.</span> <span class="nav-text">stdin 设备文件</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#初始化-2"><span class="nav-number">1.3.5.3.1.</span> <span class="nav-text">初始化</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#访问操作实现-1"><span class="nav-number">1.3.5.3.2.</span> <span class="nav-text">访问操作实现</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#实验执行流程概述"><span class="nav-number">1.3.6.</span> <span class="nav-text">实验执行流程概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#文件操作实现"><span class="nav-number">1.3.7.</span> <span class="nav-text">文件操作实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#打开文件"><span class="nav-number">1.3.7.1.</span> <span class="nav-text">打开文件</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#通用文件访问接口层的处理流程"><span class="nav-number">1.3.7.1.1.</span> <span class="nav-text">通用文件访问接口层的处理流程</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#文件系统抽象层的处理流程"><span class="nav-number">1.3.7.1.2.</span> <span class="nav-text">文件系统抽象层的处理流程</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#SFS文件系统层的处理流程"><span class="nav-number">1.3.7.1.3.</span> <span class="nav-text">SFS文件系统层的处理流程</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#读文件"><span class="nav-number">1.3.7.2.</span> <span class="nav-text">读文件</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#通用文件访问接口层的处理流程-1"><span class="nav-number">1.3.7.2.1.</span> <span class="nav-text">通用文件访问接口层的处理流程</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#文件系统抽象层的处理流程-1"><span class="nav-number">1.3.7.2.2.</span> <span class="nav-text">文件系统抽象层的处理流程</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#SFS文件系统层的处理流程-1"><span class="nav-number">1.3.7.2.3.</span> <span class="nav-text">SFS文件系统层的处理流程</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#练习1-完成读文件操作的实现"><span class="nav-number">1.3.8.</span> <span class="nav-text">练习1: 完成读文件操作的实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#练习2-完成基于文件系统的执行程序机制的实现"><span class="nav-number">1.3.9.</span> <span class="nav-text">练习2: 完成基于文件系统的执行程序机制的实现</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>

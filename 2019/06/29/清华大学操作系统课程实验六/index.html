@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="操作系统,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="实验六: 调度器实验目的 理解操作系统的调度管理机制 熟悉 ucore 的系统调度器框架，以及缺省的Round-Robin 调度算法 基于调度器框架实现一个(Stride Scheduling)调度算法来替换缺省的调度算法  实验内容 实验五完成了用户进程的管理，可在用户态运行多个进程。 之前采用的调度策略是很简单的FIFO调度策略。 本次实验，主要是熟悉ucore的系统调度器框架，以及基于此框架">
+<meta name="keywords" content="操作系统">
+<meta property="og:type" content="article">
+<meta property="og:title" content="清华大学操作系统课程实验六">
+<meta property="og:url" content="http://yoursite.com/2019/06/29/清华大学操作系统课程实验六/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="实验六: 调度器实验目的 理解操作系统的调度管理机制 熟悉 ucore 的系统调度器框架，以及缺省的Round-Robin 调度算法 基于调度器框架实现一个(Stride Scheduling)调度算法来替换缺省的调度算法  实验内容 实验五完成了用户进程的管理，可在用户态运行多个进程。 之前采用的调度策略是很简单的FIFO调度策略。 本次实验，主要是熟悉ucore的系统调度器框架，以及基于此框架">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2019-06-29T16:00:11.652Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="清华大学操作系统课程实验六">
+<meta name="twitter:description" content="实验六: 调度器实验目的 理解操作系统的调度管理机制 熟悉 ucore 的系统调度器框架，以及缺省的Round-Robin 调度算法 基于调度器框架实现一个(Stride Scheduling)调度算法来替换缺省的调度算法  实验内容 实验五完成了用户进程的管理，可在用户态运行多个进程。 之前采用的调度策略是很简单的FIFO调度策略。 本次实验，主要是熟悉ucore的系统调度器框架，以及基于此框架">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/06/29/清华大学操作系统课程实验六/">
+
+
+
+
+
+  <title>清华大学操作系统课程实验六 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/29/清华大学操作系统课程实验六/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">清华大学操作系统课程实验六</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-29T23:56:00+08:00">
+                2019-06-29
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="实验六-调度器"><a href="#实验六-调度器" class="headerlink" title="实验六: 调度器"></a>实验六: 调度器</h1><h2 id="实验目的"><a href="#实验目的" class="headerlink" title="实验目的"></a>实验目的</h2><ul>
+<li>理解操作系统的调度管理机制</li>
+<li>熟悉 ucore 的系统调度器框架，以及缺省的Round-Robin 调度算法</li>
+<li>基于调度器框架实现一个(Stride Scheduling)调度算法来替换缺省的调度算法</li>
+</ul>
+<h2 id="实验内容"><a href="#实验内容" class="headerlink" title="实验内容"></a>实验内容</h2><ul>
+<li>实验五完成了用户进程的管理，可在用户态运行多个进程。</li>
+<li>之前采用的调度策略是很简单的FIFO调度策略。</li>
+<li>本次实验，主要是熟悉ucore的系统调度器框架，以及基于此框架的Round-Robin（RR） 调度算法。</li>
+<li>然后参考RR调度算法的实现，完成Stride Scheduling调度算法。</li>
+</ul>
+<h2 id="调度框架和调度算法设计与实现"><a href="#调度框架和调度算法设计与实现" class="headerlink" title="调度框架和调度算法设计与实现"></a>调度框架和调度算法设计与实现</h2><p>实验六中的kern/schedule/sched.c只实现了调度器框架，而不再涉及具体的调度算法实现，调度算法在单独的文件（default_sched.[ch]）中实现。</p>
+<p>在init.c中的kern_init函数中的proc_init之前增加了对sched_init函数的调用。sched_init函数主要完成了对实现特定调度算法的调度类（sched_class，这里是default_sched_class）的绑定，使得ucore在后续的执行中，能够通过调度框架找到实现特定调度算法的调度类并完成进程调度相关工作。</p>
+<h3 id="进程状态"><a href="#进程状态" class="headerlink" title="进程状态"></a>进程状态</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">struct proc_struct &#123;</span><br><span class="line">    enum proc_state state;                      // Process state</span><br><span class="line">    int pid;                                    // Process ID</span><br><span class="line">    int runs;                                   // the running times of Proces</span><br><span class="line">    uintptr_t kstack;                           // Process kernel stack</span><br><span class="line">    volatile bool need_resched;                 // bool value: need to be rescheduled to release CPU?</span><br><span class="line">    struct proc_struct *parent;                 // the parent process</span><br><span class="line">    struct mm_struct *mm;                       // Process&apos;s memory management field</span><br><span class="line">    struct context context;                     // Switch here to run process</span><br><span class="line">    struct trapframe *tf;                       // Trap frame for current interrupt</span><br><span class="line">    uintptr_t cr3;                              // CR3 register: the base addr of Page Directroy Table(PDT)</span><br><span class="line">    uint32_t flags;                             // Process flag</span><br><span class="line">    char name[PROC_NAME_LEN + 1];               // Process name</span><br><span class="line">    list_entry_t list_link;                     // Process link list</span><br><span class="line">    list_entry_t hash_link;                     // Process hash list</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>ucore定义的进程控制块struct proc_struct包含了成员变量state,用于描述进程的运行状态，而running和runnable共享同一个状态(state)值(PROC_RUNNABLE。不同之处在于处于running态的进程不会放在运行队列中。进程的正常生命周期如下：</p>
+<ul>
+<li>进程首先在 cpu 初始化或者 sys_fork 的时候被创建，当为该进程分配了一个进程控制块之后，该进程进入 uninit态(在proc.c 中 alloc_proc)。</li>
+<li>当进程完全完成初始化之后，该进程转为runnable态。</li>
+<li>当到达调度点时，由调度器<code>sched_class</code>根据运行队列run_queue的内容来判断一个进程是否应该被运行，即把处于runnable态的进程转换成running状态，从而占用CPU执行。</li>
+<li>running态的进程通过wait等系统调用被阻塞，进入sleeping态。</li>
+<li>sleeping态的进程被wakeup变成runnable态的进程。</li>
+<li>running态的进程主动 exit 变成zombie态，然后由其父进程完成对其资源的最后释放，子进程的进程控制块成为unused。</li>
+<li>所有从runnable态变成其他状态的进程都要出运行队列，反之，被放入某个运行队列中。</li>
+</ul>
+<h3 id="进程调度实现"><a href="#进程调度实现" class="headerlink" title="进程调度实现"></a>进程调度实现</h3><h4 id="内核抢占点"><a href="#内核抢占点" class="headerlink" title="内核抢占点"></a>内核抢占点</h4><p>对于用户进程而言，由于有中断的产生，可以随时打断用户进程的执行，转到操作系统内部，从而给了操作系统以调度控制权，让操作系统可以根据具体情况（比如用户进程时间片已经用完了）选择其他用户进程执行。这体现了用户进程的可抢占性。</p>
+<p>ucore内核执行是不可抢占的（non-preemptive），即在执行“任意”内核代码时，CPU控制权不可被强制剥夺。这里需要注意，不是在所有情况下ucore内核执行都是不可抢占的，有以下几种“固定”情况是例外：</p>
+<ol>
+<li>进行同步互斥操作，比如争抢一个信号量、锁（lab7中会详细分析）；</li>
+<li>进行磁盘读写等耗时的异步操作，由于等待完成的耗时太长，ucore会调用shcedule让其他就绪进程执行。</li>
+</ol>
+<p>以上两种是因为某个资源（也可称为事件）无法得到满足，无法继续执行下去，从而不得不主动放弃对CPU的控制权。在lab5中有几种情况是调用了schedule函数的。</p>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>位置</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>proc.c:do_exit</td>
+<td>用户线程执行结束，主动放弃CPU</td>
+</tr>
+<tr>
+<td>2</td>
+<td>proc.c:do_wait</td>
+<td>用户线程等待着子进程结束，主动放弃CPU</td>
+</tr>
+<tr>
+<td>3</td>
+<td>proc.c:init_main</td>
+<td>Init_porc内核线程等待所有用户进程结束；所有用户进程结束后回收系统资源</td>
+</tr>
+<tr>
+<td>4</td>
+<td>proc.c:cpu_idle</td>
+<td>idleproc内核线程等待处于就绪态的进程或线程，如果有选择一个并切换</td>
+</tr>
+<tr>
+<td>5</td>
+<td>sync.h:lock</td>
+<td>进程无法得到锁，则主动放弃CPU</td>
+</tr>
+<tr>
+<td>6</td>
+<td>trap.c:trap</td>
+<td>修改当前进程时间片，若时间片用完，则设置need_resched为1，让当前进程放弃CPU</td>
+</tr>
+</tbody>
+</table>
+<p>第1、2、5处的执行位置体现了由于获取某种资源一时等不到满足、进程要退出、进程要睡眠等原因而不得不主动放弃CPU。第3、4处的执行位置比较特殊，initproc内核线程等待用户进程结束而执行schedule函数；idle内核线程在没有进程处于就绪态时才执行，一旦有了就绪态的进程，它将执行schedule函数完成进程调度。这里只有第6处的位置比较特殊：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">if (!in_kernel) &#123;</span><br><span class="line">    ……</span><br><span class="line"></span><br><span class="line">    if (current-&gt;need_resched) &#123;</span><br><span class="line">        schedule();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>只有当进程在用户态执行到“任意”某处用户代码位置时发生了中断，且当前进程控制块成员变量need_resched为1（表示需要调度了）时，才会执行shedule函数。这实际上体现了对用户进程的可抢占性。如果没有第一行的if语句，那么就可以体现对内核代码的可抢占性。但如果要把这一行if语句去掉，我们就不得不实现对ucore中的所有全局变量的互斥访问操作，以防止所谓的race-condition现象，这样ucore的实现复杂度会增加不少。</p>
+<p>Race condition旨在描述一个系统或者进程的输出依赖于不受控制的事件出现顺序或者出现时机。此词源自于两个信号试着彼此竞争，来影响谁先输出。 举例来说，如果计算机中的两个进程同时试图修改一个共享内存的内容，在没有并发控制的情况下，最后的结果依赖于两个进程的执行顺序与时机。而且如果发生了并发访问冲突，则最后的结果是不正确的。从维基百科的定义来看，race condition不仅仅是出现在程序中。以下讨论的race conditon全是计算机中多个进程同时访问一个共享内存，共享变量的例子。</p>
+<p>要阻止出现race condition情况的关键就是不能让多个进程同时访问那块共享内存。访问共享内存的那段代码就是critical section。所有的解决方法都是围绕这个critical section来设计的。想要成功的解决race condition问题，并且程序还可以正确运行，从理论上应该满足以下四个条件： </p>
+<ol>
+<li>不会有两个及以上进程同时出现在他们的critical section。 </li>
+<li>不要做任何关于CPU速度和数量的假设。 </li>
+<li>任何进程在运行到critical section之外时都不能阻塞其他进程。 </li>
+<li>不会有进程永远等在critical section之前。</li>
+</ol>
+<h4 id="进程切换过程"><a href="#进程切换过程" class="headerlink" title="进程切换过程"></a>进程切换过程</h4><p>进程调度函数schedule选择了下一个将占用CPU执行的进程后，将调用进程切换，从而让新的进程得以执行。</p>
+<p>两个用户进程，在二者进行进程切换的过程中，具体的步骤如下：</p>
+<ol>
+<li>首先在执行某进程A的用户代码时，出现了一个<code>trap</code>，这个时候就会从进程A的用户态切换到内核态(过程(1))，并且保存好进程A的trapframe；当内核态处理中断时发现需要进行进程切换时，ucore要通过schedule函数选择下一个将占用CPU执行的进程（即进程B），然后会调用proc_run函数，proc_run函数进一步调用switch_to函数，切换到进程B的内核态(过程(2))，继续进程B上一次在内核态的操作，并通过iret指令，最终将执行权转交给进程B的用户空间(过程(3))。</li>
+<li>当进程B由于某种原因发生中断之后(过程(4))，会从进程B的用户态切换到<strong>内核态</strong>，并且保存好进程B的trapframe；当内核态处理中断时发现需要进行进程切换时，即需要切换到进程A，ucore再次切换到进程A(过程(5))，会执行进程A上一次在内核调用schedule函数返回后的下一行代码，这行代码当然还是在进程A的上一次中断处理流程中。最后当进程A的中断处理完毕的时候，执行权又会反交给进程A的用户代码(过程(6))。这就是在只有两个进程的情况下，进程切换间的大体流程。</li>
+</ol>
+<h3 id="调度框架和调度算法"><a href="#调度框架和调度算法" class="headerlink" title="调度框架和调度算法"></a>调度框架和调度算法</h3><h4 id="设计思路"><a href="#设计思路" class="headerlink" title="设计思路"></a>设计思路</h4><p>在操作方面，如果需要选择一个就绪进程，就可以从基于某种组织方式的就绪进程集合中选择出一个进程执行。<strong>选择</strong>是在集合中挑选一个“合适”的进程，<strong>出</strong>意味着离开就绪进程集合。</p>
+<p>另外考虑到一个处于运行态的进程还会由于某种原因（比如时间片用完了）回到就绪态而不能继续占用CPU执行，这就会重新进入到就绪进程集合中。这两种情况就形成了调度器相关的三个基本操作：<strong>在就绪进程集合中选择</strong>、<strong>进入就绪进程集合</strong>和<strong>离开就绪进程集合</strong>。这三个操作属于调度器的基本操作。</p>
+<p>在进程的执行过程中，<strong>就绪进程的等待时间</strong>和<strong>执行进程的执行时间</strong>是影响调度选择的重要因素。这些进程状态变化的情况需要及时让进程调度器知道，便于选择更合适的进程执行。所以这种进程变化的情况就形成了调度器相关的一个变化感知操作：<strong>timer时间事件感知操作</strong>。这样在进程运行或等待的过程中，调度器可以调整进程控制块中与进程调度相关的属性值（比如消耗的时间片、进程优先级等），并可能导致对进程组织形式的调整（比如以时间片大小的顺序来重排双向链表等），并最终可能导致调选择新的进程占用CPU运行。这个操作属于调度器的进程调度属性调整操作。</p>
+<h4 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h4><ul>
+<li>在 ucore 中，调度器引入 run-queue（简称rq,即运行队列）的概念，通过链表结构管理进程。</li>
+<li>由于目前 ucore 设计运行在单CPU上，其内部只有一个全局的运行队列，用来管理系统内全部的进程。</li>
+<li>运行队列通过链表的形式进行组织。链表的每一个节点是一个list_entry_t,每个list_entry_t 又对应到了<code>struct proc_struct *</code>，这其间的转换是通过宏<code>le2proc</code>来完成。</li>
+<li>具体来说，我们知道在<code>struct proc_struct</code>中有一个叫<code>run_link</code>的<code>list_entry_t</code>，因此可以通过偏移量逆向找到对因某个<code>run_list</code>的<code>struct proc_struct</code>。即进程结构指针<code>proc = le2proc(链表节点指针, run_link)</code>。</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">// The introduction of scheduling classes is borrrowed from Linux, and makes the</span><br><span class="line">// core scheduler quite extensible. These classes (the scheduler modules) encapsulate</span><br><span class="line">// the scheduling policies.</span><br><span class="line">struct sched_class &#123;</span><br><span class="line">    // the name of sched_class</span><br><span class="line">    const char *name;</span><br><span class="line">    // 初始化运行队列</span><br><span class="line">    void (*init)(struct run_queue *rq);</span><br><span class="line"></span><br><span class="line">    // put the proc into runqueue, and this function must be called with rq_lock</span><br><span class="line">    // 进程放入运行队列</span><br><span class="line">    void (*enqueue)(struct run_queue *rq, struct proc_struct *proc);</span><br><span class="line"></span><br><span class="line">    // get the proc out runqueue, and this function must be called with rq_lock</span><br><span class="line">    // 从队列中取出</span><br><span class="line">    void (*dequeue)(struct run_queue *rq, struct proc_struct *proc);</span><br><span class="line"></span><br><span class="line">    // choose the next runnable task</span><br><span class="line">    // 选择下一个可运行的任务</span><br><span class="line">    struct proc_struct *(*pick_next)(struct run_queue *rq);</span><br><span class="line"></span><br><span class="line">    // dealer of the time-tick</span><br><span class="line">    // 处理tick中断</span><br><span class="line">    void (*proc_tick)(struct run_queue *rq, struct proc_struct *proc);</span><br><span class="line"></span><br><span class="line">    /* for SMP support in the future</span><br><span class="line">     *  load_balance</span><br><span class="line">     *     void (*load_balance)(struct rq* rq);</span><br><span class="line">     *  get some proc from this rq, used in load_balance,</span><br><span class="line">     *  return value is the num of gotten proc</span><br><span class="line">     *  int (*get_proc)(struct rq* rq, struct proc* procs_moved[]);</span><br><span class="line">     */</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>proc.h 中的 struct proc_struct 中也记录了一些调度相关的信息：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">struct proc_struct &#123;</span><br><span class="line">    enum proc_state state;                      // Process state</span><br><span class="line">    int pid;                                    // Process ID</span><br><span class="line">    int runs;                                   // the running times of Proces</span><br><span class="line">    uintptr_t kstack;                           // Process kernel stack</span><br><span class="line">    volatile bool need_resched;                 // bool value: need to be rescheduled to release CPU?</span><br><span class="line">    struct proc_struct *parent;                 // the parent process</span><br><span class="line">    struct mm_struct *mm;                       // Process&apos;s memory management field</span><br><span class="line">    struct context context;                     // Switch here to run process</span><br><span class="line">    struct trapframe *tf;                       // Trap frame for current interrupt</span><br><span class="line">    uintptr_t cr3;                              // CR3 register: the base addr of Page Directroy Table(PDT)</span><br><span class="line">    uint32_t flags;                             // Process flag</span><br><span class="line">    char name[PROC_NAME_LEN + 1];               // Process name</span><br><span class="line">    list_entry_t list_link;                     // Process link list</span><br><span class="line">    list_entry_t hash_link;                     // Process hash list</span><br><span class="line">    int exit_code;                              // exit code (be sent to parent proc)</span><br><span class="line">    uint32_t wait_state;                        // waiting state</span><br><span class="line">    struct proc_struct *cptr, *yptr, *optr;     // relations between processes</span><br><span class="line">    struct run_queue *rq;                       // running queue contains Process</span><br><span class="line">    list_entry_t run_link;                      // the entry linked in run queue </span><br><span class="line">    // 该进程的调度链表结构，该结构内部的连接组成了 运行队列 列表</span><br><span class="line"></span><br><span class="line">    int time_slice;                             // time slice for occupying the CPU</span><br><span class="line">    // 进程剩余的时间片</span><br><span class="line">    skew_heap_entry_t lab6_run_pool;            // FOR LAB6 ONLY: the entry in the run pool</span><br><span class="line">    //在优先队列中用到的</span><br><span class="line"></span><br><span class="line">    uint32_t lab6_stride;                       // FOR LAB6 ONLY: the current stride of the process</span><br><span class="line">    // 步进值</span><br><span class="line"></span><br><span class="line">    uint32_t lab6_priority;                     // FOR LAB6 ONLY: the priority of process, set by lab6_set_priority(uint32_t)</span><br><span class="line">    // 优先级</span><br><span class="line"></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>RR调度算法在<code>RR_sched_class</code>调度策略类中实现。<br>通过数据结构 struct run_queue 来描述完整的 run_queue（运行队列）。它的主要结构如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">struct run_queue &#123;</span><br><span class="line">    //其运行队列的哨兵结构，可以看作是队列头和尾</span><br><span class="line">    list_entry_t run_list;</span><br><span class="line">    //优先队列形式的进程容器，只在 LAB6 中使用</span><br><span class="line">    skew_heap_entry_t *lab6_run_pool;</span><br><span class="line">    //表示其内部的进程总数</span><br><span class="line">    unsigned int proc_num;</span><br><span class="line">    //每个进程一轮占用的最多时间片</span><br><span class="line">    int max_time_slice;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>在 ucore 框架中，运行队列存储的是当前可以调度的进程，所以，只有状态为runnable的进程才能够进入运行队列。当前正在运行的进程并不会在运行队列中。</p>
+<h4 id="调度点的相关关键函数"><a href="#调度点的相关关键函数" class="headerlink" title="调度点的相关关键函数"></a>调度点的相关关键函数</h4><p>如果我们能够让<code>wakup_proc</code>、<code>schedule</code>、<code>run_timer_list</code>这三个调度相关函数的实现与具体调度算法无关，那么就可以认为ucore实现了一个与调度算法无关的调度框架。</p>
+<p><code>wakeup_proc</code>函数完成了把一个就绪进程放入到就绪进程队列中的工作，为此还调用了一个调度类接口函数<code>sched_class_enqueue</code>，这使得<code>wakeup_proc</code>的实现与具体调度算法无关。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">void wakeup_proc(struct proc_struct *proc) &#123;</span><br><span class="line">    assert(proc-&gt;state != PROC_ZOMBIE);</span><br><span class="line">    bool intr_flag;</span><br><span class="line">    local_intr_save(intr_flag);</span><br><span class="line">    &#123;</span><br><span class="line">        if (proc-&gt;state != PROC_RUNNABLE) &#123;</span><br><span class="line">            proc-&gt;state = PROC_RUNNABLE;</span><br><span class="line">            proc-&gt;wait_state = 0;</span><br><span class="line">            if (proc != current) &#123;</span><br><span class="line">                sched_class_enqueue(proc);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        else &#123;</span><br><span class="line">            warn(&quot;wakeup runnable process.\n&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    local_intr_restore(intr_flag);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><code>schedule</code>函数完成了与调度框架和调度算法相关三件事情:</p>
+<ul>
+<li>把当前继续占用CPU执行的运行进程放放入到就绪进程队列中；</li>
+<li>从就绪进程队列中选择一个“合适”就绪进程；</li>
+<li>把这个“合适”的就绪进程从就绪进程队列中取出；</li>
+<li>如果没有的话，说明现在没有合适的进程可以执行，就执行idle_proc；</li>
+<li>加了一个runs，表明这个进程运行过几次了；</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">void schedule(void) &#123;</span><br><span class="line">    bool intr_flag;</span><br><span class="line">    struct proc_struct *next;</span><br><span class="line">    local_intr_save(intr_flag);</span><br><span class="line">    &#123;</span><br><span class="line">        current-&gt;need_resched = 0;</span><br><span class="line">        if (current-&gt;state == PROC_RUNNABLE) &#123;</span><br><span class="line">            sched_class_enqueue(current);</span><br><span class="line">        &#125;</span><br><span class="line">        if ((next = sched_class_pick_next()) != NULL) &#123;</span><br><span class="line">            sched_class_dequeue(next);</span><br><span class="line">        &#125;</span><br><span class="line">        if (next == NULL) &#123;</span><br><span class="line">            next = idleproc;</span><br><span class="line">        &#125;</span><br><span class="line">        next-&gt;runs ++;</span><br><span class="line">        if (next != current) &#123;</span><br><span class="line">            proc_run(next);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    local_intr_restore(intr_flag);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>run_time_list在lab6中并没有涉及，是在lab7中的。</p>
+<p>通过调用三个调度类接口函数<code>sched_class_enqueue</code>、<code>sched_class_pick_next</code>、<code>sched_class_enqueue</code>来使得完成这三件事情与具体的调度算法无关。<code>run_timer_list</code>函数在每次timer中断处理过程中被调用，从而可用来调用调度算法所需的timer时间事件感知操作，调整相关进程的进程调度相关的属性值。通过调用调度类接口函数<code>sched_class_proc_tick</code>使得此操作与具体调度算法无关。<br>这里涉及了一系列调度类接口函数：</p>
+<ul>
+<li>sched_class_enqueue</li>
+<li>sched_class_dequeue</li>
+<li>sched_class_pick_next</li>
+<li>sched_class_proc_tick</li>
+</ul>
+<p>这4个函数的实现其实就是调用某基于sched_class数据结构的特定调度算法实现的4个指针函数。采用这样的调度类框架后，如果我们需要实现一个新的调度算法，则我们需要定义一个针对此算法的调度类的实例，一个就绪进程队列的组织结构描述就行了，其他的事情都可交给调度类框架来完成。</p>
+<h4 id="RR调度算法"><a href="#RR调度算法" class="headerlink" title="RR调度算法"></a>RR调度算法</h4><p>RR调度算法的调度思想是让所有runnable态的进程分时轮流使用CPU时间。</p>
+<p>RR调度器维护当前runnable进程的有序运行队列。当前进程的时间片用完之后，调度器将当前进程放置到运行队列的尾部，再从其头部取出进程进行调度。</p>
+<p>RR调度算法的就绪队列在组织结构上也是一个双向链表，只是增加了一个成员变量，表明在此就绪进程队列中的最大执行时间片。而且在进程控制块proc_struct中增加了一个成员变量time_slice，用来记录进程当前的可运行时间片段。这是由于RR调度算法需要考虑执行进程的运行时间不能太长。在每个timer到时的时候，操作系统会递减当前执行进程的time_slice，当time_slice为0时，就意味着这个进程运行了一段时间（这个时间片段称为进程的时间片），需要把CPU让给其他进程执行，于是操作系统就需要让此进程重新回到rq的队列尾，且重置此进程的时间片为就绪队列的成员变量最大时间片max_time_slice值，然后再从rq的队列头取出一个新的进程执行。</p>
+<p>RR_enqueue的函数实现如下表所示。即把某进程的进程控制块指针放入到rq队列末尾，且如果进程控制块的时间片为0，则需要把它重置为rq成员变量max_time_slice。这表示如果进程在当前的执行时间片已经用完，需要等到下一次有机会运行时，才能再执行一段时间。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">static void RR_enqueue(struct run_queue *rq, struct proc_struct *proc) &#123;</span><br><span class="line">    assert(list_empty(&amp;(proc-&gt;run_link)));</span><br><span class="line">    list_add_before(&amp;(rq-&gt;run_list), &amp;(proc-&gt;run_link));</span><br><span class="line">    if (proc-&gt;time_slice == 0 || proc-&gt;time_slice &gt; rq-&gt;max_time_slice) &#123;</span><br><span class="line">        proc-&gt;time_slice = rq-&gt;max_time_slice;</span><br><span class="line">    &#125;</span><br><span class="line">    proc-&gt;rq = rq;</span><br><span class="line">    rq-&gt;proc_num ++;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>RR_pick_next的函数实现如下表所示。即选取就绪进程队列rq中的队头队列元素，并把队列元素转换成进程控制块指针。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">static struct proc_struct *</span><br><span class="line">RR_pick_next(struct run_queue *rq) &#123;</span><br><span class="line">    list_entry_t *le = list_next(&amp;(rq-&gt;run_list));</span><br><span class="line">    if (le != &amp;(rq-&gt;run_list)) &#123;</span><br><span class="line">        return le2proc(le, run_link);</span><br><span class="line">    &#125;</span><br><span class="line">    return NULL;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>RR_dequeue的函数实现如下表所示。即把就绪进程队列rq的进程控制块指针的队列元素删除，并把表示就绪进程个数的proc_num减一。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">static void RR_dequeue(struct run_queue *rq, struct proc_struct *proc) &#123;</span><br><span class="line">    assert(!list_empty(&amp;(proc-&gt;run_link)) &amp;&amp; proc-&gt;rq == rq);</span><br><span class="line">    list_del_init(&amp;(proc-&gt;run_link));</span><br><span class="line">    rq-&gt;proc_num --;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>RR_proc_tick的函数实现如下表所示。每次timer到时后，trap函数将会间接调用此函数来把当前执行进程的时间片time_slice减一。如果time_slice降到零，则设置此进程成员变量need_resched标识为1，这样在下一次中断来后执行trap函数时，会由于当前进程程成员变量need_resched标识为1而执行schedule函数，从而把当前执行进程放回就绪队列末尾，而从就绪队列头取出在就绪队列上等待时间最久的那个就绪进程执行。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">static void</span><br><span class="line">RR_proc_tick(struct run_queue *rq, struct proc_struct *proc) &#123;</span><br><span class="line">    if (proc-&gt;time_slice &gt; 0) &#123;</span><br><span class="line">        proc-&gt;time_slice --;</span><br><span class="line">    &#125;</span><br><span class="line">    if (proc-&gt;time_slice == 0) &#123;</span><br><span class="line">        proc-&gt;need_resched = 1;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="Stride-Scheduling"><a href="#Stride-Scheduling" class="headerlink" title="Stride Scheduling"></a>Stride Scheduling</h3><h4 id="基本思路"><a href="#基本思路" class="headerlink" title="基本思路"></a>基本思路</h4><ol>
+<li>为每个runnable的进程设置一个当前状态stride，表示该进程当前的调度权，也可以表示这个进程执行了多久了。另外定义其对应的pass值，表示对应进程在调度后，stride 需要进行的累加值。</li>
+<li>每次需要调度时，从当前 runnable 态的进程中选择<strong>stride最小</strong>的进程调度。</li>
+<li>对于获得调度的进程P，将对应的stride加上其对应的步长pass（只与进程的优先权有关系）。</li>
+<li>在一段固定的时间之后，回到2步骤，重新调度当前stride最小的进程。</li>
+</ol>
+<p>可以证明，如果令<code>P.pass =BigStride / P.priority</code>，其中<code>P.priority</code>表示进程的优先权（大于 1），而 BigStride 表示一个预先定义的大常数，则该调度方案为每个进程分配的时间将与其优先级成正比。</p>
+<p>将该调度器应用到 ucore 的调度器框架中来，则需要将调度器接口实现如下：</p>
+<ul>
+<li>init:<ul>
+<li>初始化调度器类的信息（如果有的话）。</li>
+<li>初始化当前的运行队列为一个空的容器结构。（比如和RR调度算法一样，初始化为一个有序列表）</li>
+</ul>
+</li>
+<li>enqueue<ul>
+<li>初始化刚进入运行队列的进程 proc的stride属性。</li>
+<li>将 proc插入放入运行队列中去（注意：这里并不要求放置在队列头部）。</li>
+</ul>
+</li>
+<li>dequeue<ul>
+<li>从运行队列中删除相应的元素。</li>
+</ul>
+</li>
+<li>pick next<ul>
+<li>扫描整个运行队列，返回其中stride值最小的对应进程。</li>
+<li>更新对应进程的stride值，即pass = BIG_STRIDE / P-&gt;priority; P-&gt;stride += pass。</li>
+</ul>
+</li>
+<li>proc tick:<ul>
+<li>检测当前进程是否已用完分配的时间片。如果时间片用完，应该正确设置进程结构的相关标记来引起进程切换。</li>
+<li>一个 process 最多可以连续运行 rq.max_time_slice个时间片。</li>
+</ul>
+</li>
+</ul>
+<h4 id="使用优先队列实现-Stride-Scheduling"><a href="#使用优先队列实现-Stride-Scheduling" class="headerlink" title="使用优先队列实现 Stride Scheduling"></a>使用优先队列实现 Stride Scheduling</h4><p>使用优化的优先队列数据结构实现该调度。</p>
+<p>优先队列是这样一种数据结构：使用者可以快速的插入和删除队列中的元素，并且在预先指定的顺序下快速取得当前在队列中的最小（或者最大）值及其对应元素。可以看到，这样的数据结构非常符合 Stride 调度器的实现。</p>
+<p>libs/skew_heap.h中是优先队列的一个实现。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">static inline void skew_heap_init(skew_heap_entry_t *a) __attribute__((always_inline));</span><br><span class="line">// 初始化一个队列节点</span><br><span class="line"></span><br><span class="line">static inline skew_heap_entry_t *skew_heap_merge(</span><br><span class="line">     skew_heap_entry_t *a, skew_heap_entry_t *b,</span><br><span class="line">     compare_f comp);</span><br><span class="line">// 合并两个优先队列</span><br><span class="line"></span><br><span class="line">static inline skew_heap_entry_t *skew_heap_insert(</span><br><span class="line">     skew_heap_entry_t *a, skew_heap_entry_t *b,</span><br><span class="line">     compare_f comp) __attribute__((always_inline));</span><br><span class="line">// 将节点 b 插入至以节点 a 为队列头的队列中去，返回插入后的队列</span><br><span class="line"></span><br><span class="line">static inline skew_heap_entry_t *skew_heap_remove(</span><br><span class="line">     skew_heap_entry_t *a, skew_heap_entry_t *b,</span><br><span class="line">     compare_f comp) __attribute__((always_inline));</span><br><span class="line">// 将节点 b 插入从以节点 a 为队列头的队列中去，返回删除后的队列</span><br></pre></td></tr></table></figure></p>
+<p>当使用优先队列作为Stride调度器的实现方式之后，运行队列结构也需要作相关改变，其中包括：</p>
+<ol>
+<li><code>struct run_queue</code>中的<code>lab6_run_pool</code>指针，在使用优先队列的实现中表示当前优先队列的头元素，如果优先队列为空，则其指向空指针（NULL）。</li>
+<li><code>struct proc_struct</code>中的<code>lab6_run_pool</code>结构，表示当前进程对应的优先队列节点。本次实验已经修改了系统相关部分的代码，使得其能够很好地适应LAB6新加入的数据结构和接口。而在实验中我们需要做的是用优先队列实现一个正确和高效的Stride调度器，如果用较简略的伪代码描述，则有：</li>
+</ol>
+<ul>
+<li>init(rq):<ul>
+<li>Initialize rq-&gt;run_list</li>
+<li>Set rq-&gt;lab6_run_pool to NULL</li>
+<li>Set rq-&gt;proc_num to 0</li>
+</ul>
+</li>
+<li>enqueue(rq, proc)<ul>
+<li>Initialize proc-&gt;time_slice</li>
+<li>Insert proc-&gt;lab6_run_pool into rq-&gt;lab6_run_pool</li>
+<li>rq-&gt;proc_num ++</li>
+</ul>
+</li>
+<li>dequeue(rq, proc)<ul>
+<li>Remove proc-&gt;lab6_run_pool from rq-&gt;lab6_run_pool</li>
+<li>rq-&gt;proc_num –</li>
+</ul>
+</li>
+<li>pick_next(rq)<ul>
+<li>If rq-&gt;lab6_run_pool == NULL, return NULL</li>
+<li>Find the proc corresponding to the pointer rq-&gt;lab6_run_pool</li>
+<li>proc-&gt;lab6_stride += BIG_STRIDE / proc-&gt;lab6_priority</li>
+<li>Return proc</li>
+</ul>
+</li>
+<li>proc_tick(rq, proc):<ul>
+<li>If proc-&gt;time_slice &gt; 0, proc-&gt;time_slice –<br>– If proc-&gt;time_slice == 0, set the flag proc-&gt;need_resched    </li>
+</ul>
+</li>
+</ul>
+<h2 id="练习1-使用-Round-Robin-调度算法（不需要编码）"><a href="#练习1-使用-Round-Robin-调度算法（不需要编码）" class="headerlink" title="练习1: 使用 Round Robin 调度算法（不需要编码）"></a>练习1: 使用 Round Robin 调度算法（不需要编码）</h2><p>与之前相比，新增了斜堆数据结构的实现；新增了调度算法Round Robin的实现，具体为调用sched.c文件中的<code>sched_class</code>的一系列函数，主要有enqueue、dequeue、pick_next等。之后，这些函数进一步调用调度器中的相应函数，默认该调度器为Round Robin调度器，这是在<code>default_sched.[c|h]</code>中定义的；新增了set_priority，get_time等函数；</p>
+<p>首先在init.c中调用了sched_init函数，在这里把sched_class赋值为default_sched_class，也就是RR，如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">void</span><br><span class="line">sched_init(void) &#123;</span><br><span class="line">    list_init(&amp;timer_list);</span><br><span class="line"></span><br><span class="line">    sched_class = &amp;default_sched_class;</span><br><span class="line">    rq = &amp;__rq;</span><br><span class="line">    rq-&gt;max_time_slice = MAX_TIME_SLICE;</span><br><span class="line">    sched_class-&gt;init(rq);</span><br><span class="line">    cprintf(&quot;sched class: %s\n&quot;, sched_class-&gt;name);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li>RR_init函数：这个函数会被封装为sched_init函数，用于调度算法的初始化，它是在ucore的init.c里面被调用进行初始化，主要完成了计时器list、run_queue的run_list的初始化；</li>
+<li>enqueue函数：将某个进程放入调用算法中的可执行队列中，被封装成sched_class_enqueue函数，这个函数仅在wakeup_proc和schedule函数中被调用，wakeup_proc将某个不是RUNNABLE的进程改成RUNNABLE的并调用enqueue加入可执行队列，而后者是将正在执行的进程换出到可执行队列中去并取出一个可执行进程；</li>
+<li>dequeue函数：将某个在队列中的进程取出，sched_class_dequeue将其封装并在schedule中被调用，将调度算法选择的进程从等待的可执行进程队列中取出；</li>
+<li>pick_next函数：根据调度算法选择下一个要执行的进程，仅在schedule中被调用；</li>
+<li>proc_tick函数：在时钟中断时执行的操作，时间片减一，当时间片为0时，说明这个进程需要重新调度了。仅在进行时间中断的ISR中调用；</li>
+</ul>
+<blockquote>
+<p>请理解并分析sched_calss中各个函数指针的用法，并接合Round Robin 调度算法描述ucore的调度执行过程：</p>
+</blockquote>
+<ul>
+<li>ucore中的调度主要通过schedule和wakeup_proc函数完成，schedule主要把当前执行的进程入队，调用sched_class_pick_next选择下一个执行的进程并将其出队，开始执行。scheduleha函数把当前的进程入队，挑选一个进程将其出队并开始执行。</li>
+<li>当需要将某一个进程加入就绪进程队列中，需要调用enqueue，将其插入到使用链表组织run_queue的队尾，将这个进程的能够使用的时间片初始化为max_time_slice；</li>
+<li>当需要将某一个进程从就绪队列中取出，需要调用dequeue，调用list_del_init将其直接删除即可；</li>
+<li>当需要取出执行的下一个进程时，只需调用pick_next将就绪队列run_queue的队头取出即可；</li>
+<li>在一个时钟中断中，调用proc_tick将当前执行的进程的剩余可执行时间减1，一旦减到了0，则这个进程的need_resched为1，设成可以被调度的，这样之后就会调用schedule函数将这个进程切换出去；</li>
+</ul>
+<blockquote>
+<p>请在实验报告中简要说明如何设计实现”多级反馈队列调度算法“，给出概要设计，鼓励给出详细设计;</p>
+</blockquote>
+<p>1.调度机制：</p>
+<ol>
+<li>进程在进入待调度的队列等待时，首先进入优先级最高的Q1等待。</li>
+<li>设置多个就绪队列。在系统中设置多个就绪队列，并为每个队列赋予不同的优先级，从第一个开始逐个降低。不同队列进程中所赋予的执行时间也不同，优先级越高，时间片越小。</li>
+<li>每个队列都采用FCFS（先来先服务）算法。轮到该进程执行时，若在该时间片内完成，便撤离操作系统，否则调度程序将其转入第二队列的末尾等待调度，…….。若进程最后被调到第N队列中时，便采用RR方式运行。</li>
+<li>按队列优先级调度。调度按照优先级最高队列中诸进程运行，仅当第一队列空闲时才调度第二队列进程执行。若低优先级队列执行中有优先级高队列进程执行，应立刻将此进程放入队列末尾，把处理机分配给新到高优先级进程。</li>
+</ol>
+<ul>
+<li>设置N个多级反馈队列的入口，Q0，Q1，Q2，Q3，…，编号越靠前的队列优先级越低，优先级越低的队列上时间片的长度越大；</li>
+<li>调用sched_init对调度算法初始化的时候需要同时对N个队列进行初始化；</li>
+<li>在将进程加入到就绪进程集合的时候，观察这个进程的时间片有没有使用完，如果使用完了，就将所在队列的优先级调低，加入到优先级低一级的队列中去，如果没有使用完时间片，则加入到当前优先级的队列中去；</li>
+<li>在同一个优先级的队列内使用时间片轮转算法；</li>
+<li>在选择下一个执行的进程的时候，先考虑更高优先级的队列中是否存在任务，如果不存在在去找较低优先级的队列；</li>
+<li>从就绪进程集合中删除某一个进程的话直接在对应队列中删除；</li>
+</ul>
+<h2 id="练习2：实现-Stride-Scheduling-调度算法（需要编码）"><a href="#练习2：实现-Stride-Scheduling-调度算法（需要编码）" class="headerlink" title="练习2：实现 Stride Scheduling 调度算法（需要编码）"></a>练习2：实现 Stride Scheduling 调度算法（需要编码）</h2><p><strong>啊啊啊忘了在trap.c里改怪不得怎么都搞不对啊啊啊啊啊啊啊啊啊这下子总算有170了！！！</strong></p>
+<p>还是先看看代码里斜堆（skew heap）的实现吧，好多地方要用到这个结构，具体可以在yuhao0102.github.io里仔细看。<br>在libs/skew.h中定义了skew heap。</p>
+<p>猜测这只是一个入口，类似链表那种实现，不包括数据，只有指针。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">struct skew_heap_entry &#123;</span><br><span class="line">     struct skew_heap_entry *parent, *left, *right;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p><code>proc_stride_comp_f</code>函数是用来比较这两个进程的stride的，a比b大返回1，相等返回0，a比b小返回-1。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">/* The compare function for two skew_heap_node_t&apos;s and the</span><br><span class="line"> * corresponding procs*/</span><br><span class="line">static int proc_stride_comp_f(void *a, void *b)</span><br><span class="line">&#123;</span><br><span class="line">     struct proc_struct *p = le2proc(a, lab6_run_pool);</span><br><span class="line">     struct proc_struct *q = le2proc(b, lab6_run_pool);</span><br><span class="line">     int32_t c = p-&gt;lab6_stride - q-&gt;lab6_stride;</span><br><span class="line">     if (c &gt; 0) return 1;</span><br><span class="line">     else if (c == 0) return 0;</span><br><span class="line">     else return -1;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这是初始化的函数，把三个指针初始化为NULL<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">static inline void</span><br><span class="line">skew_heap_init(skew_heap_entry_t *a)</span><br><span class="line">&#123;</span><br><span class="line">     a-&gt;left = a-&gt;right = a-&gt;parent = NULL;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这个是把两个堆merge在一起的操作，强行内联hhh，这个是递归的！<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">static inline skew_heap_entry_t *</span><br><span class="line">skew_heap_merge(skew_heap_entry_t *a, skew_heap_entry_t *b,</span><br><span class="line">                compare_f comp)</span><br><span class="line">&#123;</span><br><span class="line">     if (a == NULL) return b;</span><br><span class="line">     else if (b == NULL) return a;</span><br><span class="line">// 如果a或b有一个为空，则返回另一个</span><br><span class="line"></span><br><span class="line">     skew_heap_entry_t *l, *r;</span><br><span class="line">     if (comp(a, b) == -1)</span><br><span class="line">     &#123;</span><br><span class="line">          r = a-&gt;left;</span><br><span class="line">          l = skew_heap_merge(a-&gt;right, b, comp);</span><br><span class="line"></span><br><span class="line">          a-&gt;left = l;</span><br><span class="line">          a-&gt;right = r;</span><br><span class="line">          if (l) l-&gt;parent = a;</span><br><span class="line"></span><br><span class="line">          return a;</span><br><span class="line">// 否则判断a和b的值哪个大，如果a比b小，则a的右子树和b合并，a作为堆顶        </span><br><span class="line">     &#125;</span><br><span class="line">     else</span><br><span class="line">     &#123;</span><br><span class="line">          r = b-&gt;left;</span><br><span class="line">          l = skew_heap_merge(a, b-&gt;right, comp);</span><br><span class="line"></span><br><span class="line">          b-&gt;left = l;</span><br><span class="line">          b-&gt;right = r;</span><br><span class="line">          if (l) </span><br><span class="line">          	l-&gt;parent = b;</span><br><span class="line">	      return b;</span><br><span class="line">// 另一种情况	      </span><br><span class="line">     &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>insert就是把一个单节点的堆跟大堆合并<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">static inline skew_heap_entry_t *</span><br><span class="line">skew_heap_insert(skew_heap_entry_t *a, skew_heap_entry_t *b,</span><br><span class="line">                 compare_f comp)</span><br><span class="line">&#123;</span><br><span class="line">     skew_heap_init(b);</span><br><span class="line">     return skew_heap_merge(a, b, comp);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>删除就是把节点的左右子树进行merge，比较简单，记得删掉这个节点之后补充它的parent即可<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">static inline skew_heap_entry_t *</span><br><span class="line">skew_heap_remove(skew_heap_entry_t *a, skew_heap_entry_t *b,</span><br><span class="line">                 compare_f comp)</span><br><span class="line">&#123;</span><br><span class="line">     skew_heap_entry_t *p   = b-&gt;parent;</span><br><span class="line">     skew_heap_entry_t *rep = skew_heap_merge(b-&gt;left, b-&gt;right, comp);</span><br><span class="line">     if (rep) rep-&gt;parent = p;</span><br><span class="line"></span><br><span class="line">     if (p)</span><br><span class="line">     &#123;</span><br><span class="line">          if (p-&gt;left == b)</span><br><span class="line">               p-&gt;left = rep;</span><br><span class="line">          else p-&gt;right = rep;</span><br><span class="line">          return a;</span><br><span class="line">     &#125;</span><br><span class="line">     else return rep;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>首先把default_sched.c中设置RR调度器为默认调度器的部分注释掉，然后把default_sched_stride_c改成default_sched_stride.c，这里对默认调度器进行了重新定义。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">struct sched_class default_sched_class = &#123;</span><br><span class="line">     .name = &quot;stride_scheduler&quot;,</span><br><span class="line">     .init = stride_init,</span><br><span class="line">     .enqueue = stride_enqueue,</span><br><span class="line">     .dequeue = stride_dequeue,</span><br><span class="line">     .pick_next = stride_pick_next,</span><br><span class="line">     .proc_tick = stride_proc_tick,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>针对PCB的初始化，代码如下，综合了几个实验的初始化代码，也是一个总结：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line">//LAB4:EXERCISE1 YOUR CODE</span><br><span class="line">/*</span><br><span class="line"> * below fields in proc_struct need to be initialized</span><br><span class="line"> *       enum proc_state state;                      // Process state</span><br><span class="line"> *       int pid;                                    // Process ID</span><br><span class="line"> *       int runs;                                   // the running times of Proces</span><br><span class="line"> *       uintptr_t kstack;                           // Process kernel stack</span><br><span class="line"> *       volatile bool need_resched;                 // bool value: need to be rescheduled to release CPU?</span><br><span class="line"> *       struct proc_struct *parent;                 // the parent process</span><br><span class="line"> *       struct mm_struct *mm;                       // Process&apos;s memory management field</span><br><span class="line"> *       struct context context;                     // Switch here to run process</span><br><span class="line"> *       struct trapframe *tf;                       // Trap frame for current interrupt</span><br><span class="line"> *       uintptr_t cr3;                              // CR3 register: the base addr of Page Directroy Table(PDT)</span><br><span class="line"> *       uint32_t flags;                             // Process flag</span><br><span class="line"> *       char name[PROC_NAME_LEN + 1];               // Process name</span><br><span class="line"> */</span><br><span class="line">        proc-&gt;state = PROC_UNINIT;</span><br><span class="line">        proc-&gt;pid = -1;</span><br><span class="line">        proc-&gt;cr3 = boot_cr3;</span><br><span class="line"></span><br><span class="line">        proc-&gt;runs = 0;</span><br><span class="line">        proc-&gt;kstack = 0;</span><br><span class="line">        proc-&gt;need_resched = 0;</span><br><span class="line">        proc-&gt;parent = NULL;</span><br><span class="line">        proc-&gt;mm = NULL;</span><br><span class="line">        memset(&amp;proc-&gt;context, 0, sizeof(struct context));</span><br><span class="line">        proc-&gt;tf = NULL;</span><br><span class="line">        proc-&gt;flags = 0;</span><br><span class="line">        memset(proc-&gt;name, 0, PROC_NAME_LEN);</span><br><span class="line"></span><br><span class="line">//LAB5 YOUR CODE : (update LAB4 steps)</span><br><span class="line">/*</span><br><span class="line"> * below fields(add in LAB5) in proc_struct need to be initialized</span><br><span class="line"> *       uint32_t wait_state;                        // waiting state</span><br><span class="line"> *       struct proc_struct *cptr, *yptr, *optr;     // relations between processes</span><br><span class="line"> */</span><br><span class="line">        proc-&gt;wait_state = 0;</span><br><span class="line">        proc-&gt;cptr = proc-&gt;optr = proc-&gt;yptr = NULL;</span><br><span class="line">//LAB6 YOUR CODE : (update LAB5 steps)</span><br><span class="line">/*</span><br><span class="line"> * below fields(add in LAB6) in proc_struct need to be initialized</span><br><span class="line"> *     struct run_queue *rq;                       // running queue contains Process</span><br><span class="line"> *     list_entry_t run_link;                      // the entry linked in run queue</span><br><span class="line"> *     int time_slice;                             // time slice for occupying the CPU</span><br><span class="line"> *     skew_heap_entry_t lab6_run_pool;            // FOR LAB6 ONLY: the entry in the run pool</span><br><span class="line"> *     uint32_t lab6_stride;                       // FOR LAB6 ONLY: the current stride of the process</span><br><span class="line"> *     uint32_t lab6_priority;                     // FOR LAB6 ONLY: the priority of process, set by lab6_set_priority(uint32_t)</span><br><span class="line"> */</span><br><span class="line">        proc-&gt;rq = NULL;</span><br><span class="line">        memset(&amp;proc-&gt;run_link, 0, sizeof(list_entry_t));</span><br><span class="line">        proc-&gt;time_slice = 0;</span><br><span class="line">        memset(&amp;proc-&gt;lab6_run_pool,0,sizeof(skew_heap_entry_t));</span><br><span class="line">        proc-&gt;lab6_stride=0;</span><br><span class="line">        proc-&gt;lab6_priority=1;</span><br></pre></td></tr></table></figure></p>
+<p>主要就是在<code>vim kern/schedule/default_sched_stride.c</code>里的修改。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#define BIG_STRIDE ((uint32_t)(1&lt;&lt;31)-3)</span><br></pre></td></tr></table></figure></p>
+<p>BIG_STRIDE应该设置成小于2^32-1的一个常数。</p>
+<p>这个函数用来对run_queue进行初始化等操作<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line"> * stride_init initializes the run-queue rq with correct assignment for</span><br><span class="line"> * member variables, including:</span><br><span class="line"> *</span><br><span class="line"> *   - run_list: should be a empty list after initialization.</span><br><span class="line"> *   - lab6_run_pool: NULL</span><br><span class="line"> *   - proc_num: 0</span><br><span class="line"> *   - max_time_slice: no need here, the variable would be assigned by the caller.</span><br><span class="line"> *</span><br><span class="line"> * hint: see libs/list.h for routines of the list structures.</span><br><span class="line"> */</span><br><span class="line">static void</span><br><span class="line">stride_init(struct run_queue *rq) &#123;</span><br><span class="line">     /* LAB6: YOUR CODE</span><br><span class="line">      * (1) init the ready process list: rq-&gt;run_list</span><br><span class="line">      * (2) init the run pool: rq-&gt;lab6_run_pool</span><br><span class="line">      * (3) set number of process: rq-&gt;proc_num to 0</span><br><span class="line">      */</span><br><span class="line">      list_init(&amp;rq-&gt;run_list);</span><br><span class="line">      rq-&gt;lab6_run_pool = NULL;</span><br><span class="line">      rq-&gt;proc_num = 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">/*</span><br><span class="line"> * stride_enqueue inserts the process ``proc&apos;&apos; into the run-queue</span><br><span class="line"> * ``rq&apos;&apos;. The procedure should verify/initialize the relevant members</span><br><span class="line"> * of ``proc&apos;&apos;, and then put the ``lab6_run_pool&apos;&apos; node into the</span><br><span class="line"> * queue(since we use priority queue here). The procedure should also</span><br><span class="line"> * update the meta date in ``rq&apos;&apos; structure.</span><br><span class="line"> *</span><br><span class="line"> * proc-&gt;time_slice denotes the time slices allocation for the</span><br><span class="line"> * process, which should set to rq-&gt;max_time_slice.</span><br><span class="line"> *</span><br><span class="line"> * hint: see libs/skew_heap.h for routines of the priority</span><br><span class="line"> * queue structures.</span><br><span class="line"> */</span><br><span class="line">static void</span><br><span class="line">stride_enqueue(struct run_queue *rq, struct proc_struct *proc) &#123;</span><br><span class="line">     /* LAB6: YOUR CODE</span><br><span class="line">      * (1) insert the proc into rq correctly</span><br><span class="line">      * NOTICE: you can use skew_heap or list. Important functions</span><br><span class="line">      *         skew_heap_insert: insert a entry into skew_heap</span><br><span class="line">      *         list_add_before: insert  a entry into the last of list</span><br><span class="line">      * (2) recalculate proc-&gt;time_slice</span><br><span class="line">      * (3) set proc-&gt;rq pointer to rq</span><br><span class="line">      * (4) increase rq-&gt;proc_num</span><br><span class="line">      */</span><br><span class="line">      rq-&gt;lab6_run_pool = skew_heap_insert(rq-&gt;lab6_run_pool, &amp;proc-&gt;lab6_run_pool, proc_stride_comp_f);</span><br><span class="line">      // 做插入操作，把这个进程插到run_pool里。</span><br><span class="line">      if(proc-&gt;time_slice == 0 || proc-&gt;time_slice &gt; rq-&gt;max_time_slice) &#123;</span><br><span class="line">          proc-&gt;time_slice = rq-&gt;max_time_slice;</span><br><span class="line">      &#125;</span><br><span class="line">      // 如果这个进程的时间片不符合要求，就把它初始化成最大值。</span><br><span class="line">      proc-&gt;rq = rq;</span><br><span class="line">      rq-&gt;proc_num ++;</span><br><span class="line">      //run_queue里的进程数++</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>做删除操作，把这个进程从run_pool里删除，并且将run_queue里的进程数减一。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line"> * stride_dequeue removes the process ``proc&apos;&apos; from the run-queue</span><br><span class="line"> * ``rq&apos;&apos;, the operation would be finished by the skew_heap_remove</span><br><span class="line"> * operations. Remember to update the ``rq&apos;&apos; structure.</span><br><span class="line"> *</span><br><span class="line"> * hint: see libs/skew_heap.h for routines of the priority</span><br><span class="line"> * queue structures.</span><br><span class="line"> */</span><br><span class="line">static void</span><br><span class="line">stride_dequeue(struct run_queue *rq, struct proc_struct *proc) &#123;</span><br><span class="line">     /* LAB6: YOUR CODE</span><br><span class="line">      * (1) remove the proc from rq correctly</span><br><span class="line">      * NOTICE: you can use skew_heap or list. Important functions</span><br><span class="line">      *         skew_heap_remove: remove a entry from skew_heap</span><br><span class="line">      *         list_del_init: remove a entry from the  list</span><br><span class="line">      */</span><br><span class="line">      rq-&gt;lab6_run_pool = skew_heap_remove(rq-&gt;lab6_run_pool, &amp;proc-&gt;lab6_run_pool, proc_stride_comp_f);</span><br><span class="line">      rq-&gt;proc_num --;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>pick_next从run_queue中选择stride值最小的进程，即斜堆的根节点对应的进程，并且返回这个proc，同时更新这个proc的stride<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line"> * stride_pick_next pick the element from the ``run-queue&apos;&apos;, with the</span><br><span class="line"> * minimum value of stride, and returns the corresponding process</span><br><span class="line"> * pointer. The process pointer would be calculated by macro le2proc,</span><br><span class="line"> * see kern/process/proc.h for definition. Return NULL if</span><br><span class="line"> * there is no process in the queue.</span><br><span class="line"> *</span><br><span class="line"> * When one proc structure is selected, remember to update the stride</span><br><span class="line"> * property of the proc. (stride += BIG_STRIDE / priority)</span><br><span class="line"> *</span><br><span class="line"> * hint: see libs/skew_heap.h for routines of the priority</span><br><span class="line"> * queue structures.</span><br><span class="line"> */</span><br><span class="line">static struct proc_struct *</span><br><span class="line">stride_pick_next(struct run_queue *rq) &#123;</span><br><span class="line">     /* LAB6: YOUR CODE</span><br><span class="line">      * (1) get a  proc_struct pointer p  with the minimum value of stride</span><br><span class="line">             (1.1) If using skew_heap, we can use le2proc get the p from rq-&gt;lab6_run_poll</span><br><span class="line">             (1.2) If using list, we have to search list to find the p with minimum stride value</span><br><span class="line">      * (2) update p;s stride value: p-&gt;lab6_stride</span><br><span class="line">      * (3) return p</span><br><span class="line">      */</span><br><span class="line">      if (rq-&gt;lab6_run_pool == NULL)</span><br><span class="line">          return NULL;</span><br><span class="line">      struct proc_struct *p = le2proc(rq-&gt;lab6_run_pool, lab6_run_pool);</span><br><span class="line">      p-&gt;lab6_stride += BIG_STRIDE/p-&gt;lab6_priority;</span><br><span class="line">      return p;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>要在trap的时候调用！！！！如果这个proc的时间片还有的话，就减一，如果这个时间片为0了，就把它设成可调度的，参与调度。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line"> * stride_proc_tick works with the tick event of current process. You</span><br><span class="line"> * should check whether the time slices for current process is</span><br><span class="line"> * exhausted and update the proc struct ``proc&apos;&apos;. proc-&gt;time_slice</span><br><span class="line"> * denotes the time slices left for current</span><br><span class="line"> * process. proc-&gt;need_resched is the flag variable for process</span><br><span class="line"> * switching.</span><br><span class="line"> */</span><br><span class="line">static void</span><br><span class="line">stride_proc_tick(struct run_queue *rq, struct proc_struct *proc) &#123;</span><br><span class="line">     /* LAB6: YOUR CODE */</span><br><span class="line">        if (proc-&gt;time_slice &gt; 0) &#123;</span><br><span class="line">                proc-&gt;time_slice --;</span><br><span class="line">        &#125;</span><br><span class="line">        if (proc-&gt;time_slice == 0) &#123;</span><br><span class="line">                proc-&gt;need_resched = 1;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/操作系统/" rel="tag"># 操作系统</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/29/清华大学操作系统课程实验八/" rel="next" title="清华大学操作系统课程实验八">
+                <i class="fa fa-chevron-left"></i> 清华大学操作系统课程实验八
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">200</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/test.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#实验六-调度器"><span class="nav-number">1.</span> <span class="nav-text">实验六: 调度器</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#实验目的"><span class="nav-number">1.1.</span> <span class="nav-text">实验目的</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实验内容"><span class="nav-number">1.2.</span> <span class="nav-text">实验内容</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#调度框架和调度算法设计与实现"><span class="nav-number">1.3.</span> <span class="nav-text">调度框架和调度算法设计与实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#进程状态"><span class="nav-number">1.3.1.</span> <span class="nav-text">进程状态</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#进程调度实现"><span class="nav-number">1.3.2.</span> <span class="nav-text">进程调度实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#内核抢占点"><span class="nav-number">1.3.2.1.</span> <span class="nav-text">内核抢占点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#进程切换过程"><span class="nav-number">1.3.2.2.</span> <span class="nav-text">进程切换过程</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#调度框架和调度算法"><span class="nav-number">1.3.3.</span> <span class="nav-text">调度框架和调度算法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#设计思路"><span class="nav-number">1.3.3.1.</span> <span class="nav-text">设计思路</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#数据结构"><span class="nav-number">1.3.3.2.</span> <span class="nav-text">数据结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#调度点的相关关键函数"><span class="nav-number">1.3.3.3.</span> <span class="nav-text">调度点的相关关键函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#RR调度算法"><span class="nav-number">1.3.3.4.</span> <span class="nav-text">RR调度算法</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Stride-Scheduling"><span class="nav-number">1.3.4.</span> <span class="nav-text">Stride Scheduling</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#基本思路"><span class="nav-number">1.3.4.1.</span> <span class="nav-text">基本思路</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#使用优先队列实现-Stride-Scheduling"><span class="nav-number">1.3.4.2.</span> <span class="nav-text">使用优先队列实现 Stride Scheduling</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#练习1-使用-Round-Robin-调度算法（不需要编码）"><span class="nav-number">1.4.</span> <span class="nav-text">练习1: 使用 Round Robin 调度算法（不需要编码）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#练习2：实现-Stride-Scheduling-调度算法（需要编码）"><span class="nav-number">1.5.</span> <span class="nav-text">练习2：实现 Stride Scheduling 调度算法（需要编码）</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>

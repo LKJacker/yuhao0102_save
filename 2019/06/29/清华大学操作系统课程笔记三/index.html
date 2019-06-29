@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="操作系统,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="第十一讲 进程和线程11.1 进程的概念进程是一个具有一定功能的程序在一个数据集合中的一次动态执行过程。源代码到可执行文件再到加载到进程地址内存空间（堆、栈、代码段）。进程浩瀚了正在运行的一个程序的所有状态的信息，进程是由：  代码 数据 状态寄存器：CPU状态CR0、指令指针IP等 通用寄存器：AX、BX、CX… 进程占用系统资源：打开文件、已分配内存  特点：  动态性：动态创建 并发性：独立">
+<meta name="keywords" content="操作系统">
+<meta property="og:type" content="article">
+<meta property="og:title" content="清华大学操作系统课程笔记三">
+<meta property="og:url" content="http://yoursite.com/2019/06/29/清华大学操作系统课程笔记三/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="第十一讲 进程和线程11.1 进程的概念进程是一个具有一定功能的程序在一个数据集合中的一次动态执行过程。源代码到可执行文件再到加载到进程地址内存空间（堆、栈、代码段）。进程浩瀚了正在运行的一个程序的所有状态的信息，进程是由：  代码 数据 状态寄存器：CPU状态CR0、指令指针IP等 通用寄存器：AX、BX、CX… 进程占用系统资源：打开文件、已分配内存  特点：  动态性：动态创建 并发性：独立">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2019-06-29T16:00:12.710Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="清华大学操作系统课程笔记三">
+<meta name="twitter:description" content="第十一讲 进程和线程11.1 进程的概念进程是一个具有一定功能的程序在一个数据集合中的一次动态执行过程。源代码到可执行文件再到加载到进程地址内存空间（堆、栈、代码段）。进程浩瀚了正在运行的一个程序的所有状态的信息，进程是由：  代码 数据 状态寄存器：CPU状态CR0、指令指针IP等 通用寄存器：AX、BX、CX… 进程占用系统资源：打开文件、已分配内存  特点：  动态性：动态创建 并发性：独立">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/06/29/清华大学操作系统课程笔记三/">
+
+
+
+
+
+  <title>清华大学操作系统课程笔记三 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/29/清华大学操作系统课程笔记三/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">清华大学操作系统课程笔记三</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-29T23:56:00+08:00">
+                2019-06-29
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="第十一讲-进程和线程"><a href="#第十一讲-进程和线程" class="headerlink" title="第十一讲 进程和线程"></a>第十一讲 进程和线程</h1><h2 id="11-1-进程的概念"><a href="#11-1-进程的概念" class="headerlink" title="11.1 进程的概念"></a>11.1 进程的概念</h2><p>进程是一个具有一定功能的程序在一个<strong>数据集合</strong>中的一次<strong>动态执行</strong>过程。源代码到可执行文件再到加载到进程地址内存空间（堆、栈、代码段）。进程浩瀚了正在运行的一个程序的所有状态的信息，进程是由：</p>
+<ul>
+<li>代码</li>
+<li>数据</li>
+<li>状态寄存器：CPU状态CR0、指令指针IP等</li>
+<li>通用寄存器：AX、BX、CX…</li>
+<li>进程占用系统资源：打开文件、已分配内存</li>
+</ul>
+<p>特点：</p>
+<ul>
+<li>动态性：动态创建</li>
+<li>并发性：独立调度并占用处理机运行</li>
+<li>独立性：不同进程相互工作不影响</li>
+<li>制约性：因访问共享数据和资源或进程间同步产生制约</li>
+</ul>
+<p>进程是处于运行状态程序的抽象，程序是一个静态的可执行文件，进程是执行中的程序，是程序+执行状态；同一个程序的多次执行过程对应不同进程；进程执行需要内存和CPU。<br>进程是动态的，程序是动态的，程序是有序代码的集合，进程是程序的俄执行，进程有核心态和用户态；进程是暂时的，程序是永久的，进程的组成包括<strong>程序</strong>、<strong>数据</strong>和<strong>进程控制块</strong>。</p>
+<h2 id="11-2-进程控制块（PCB）"><a href="#11-2-进程控制块（PCB）" class="headerlink" title="11.2 进程控制块（PCB）"></a>11.2 进程控制块（PCB）</h2><p>是操作系统控制进程运行的信息集合。操作系统用PCB来描述进程的基本情况和运行变化的过程。PCB是<strong>进程存在的唯一标志</strong>。</p>
+<ul>
+<li>进程创建：生成该进程的PCB；</li>
+<li>进程终止：回收PCB；</li>
+<li>进程的组织管理：通过对PCB的组织管理实现。</li>
+</ul>
+<p>进程控制块内容：</p>
+<ul>
+<li>进程标识信息</li>
+<li>处理机现场保存：从进程地址空间抽取PC、SP、其他寄存器保存</li>
+<li>进程控制信息：调度和状态信息（调度进程和处理机使用情况）、进程间通信信息（通信相关的标识）、存储管理信息（指向进程映像存储空间数据结构）、进程所用资源（进程使用的系统资源，文件等）、有关数据结构链接信息（与PCB有关的进程队列）</li>
+</ul>
+<p>进程控制块的组织：</p>
+<ul>
+<li>链表：同一状态的进程其PCB组织成一个链表，多个状态对应不同链表；</li>
+<li>索引表：同一状态的进程归入一个索引表，由索引指向PCB，多个状态对应多个不同的索引表。</li>
+</ul>
+<h2 id="11-3-进程状态"><a href="#11-3-进程状态" class="headerlink" title="11.3 进程状态"></a>11.3 进程状态</h2><p>操作系统为了维护进程执行中的变化来维护进程的状态。进程的生命周期分为：</p>
+<ul>
+<li>进程创建：创建PCB、拷贝数据。引起进程创建主要有：系统初始化、用户请求创建进程、正在执行的进程执行了创建进程的调用；</li>
+<li>进程就绪：放入等待队列中等待运行；</li>
+<li>进程执行：内核选择一个就绪进程，占用处理机并执行；</li>
+<li>进程等待：进程执行的某项条件不满足，比如请求并等待系统服务、启动某种操作无法马上完成，<strong>只有进程自身知道何时需要等待某种事件的发生</strong>；</li>
+<li>进程抢占：高优先级的进程就绪或进程执行时间片用完；</li>
+<li>进程唤醒：被阻塞的进程需要的资源可满足，进程只能被别的进程或操作系统唤醒；</li>
+<li>进程结束：把进程执行占用的资源释放，有几种可能：正常、错误退出、致命错误、强制退出。</li>
+</ul>
+<p>N个进程交替运行，假定进程1执行sleep()，内核里调用计时器，进程1把当前进程占用寄存器的状态保存，切换进程2，如果计时器到点了，计时器产生中断，保存进程2的状态，恢复进程1的状态。</p>
+<h2 id="11-4-三状态进程模型"><a href="#11-4-三状态进程模型" class="headerlink" title="11.4 三状态进程模型"></a>11.4 三状态进程模型</h2><p>核心是：</p>
+<ul>
+<li>就绪：进程获得了除了处理机之外的所有资源，得到处理机即可运行；</li>
+<li>运行：进程正在处理机上执行；</li>
+<li>等待：进程在等待某一事件在等待。</li>
+</ul>
+<p>辅助状态两种：</p>
+<ul>
+<li>创建：一个进程正在被创建，还未被转到就绪状态之前的状态；</li>
+<li>结束：进程正在从系统中消失的状态，这是因为进程结束或其他原因所导致。</li>
+</ul>
+<p>状态转换：</p>
+<ul>
+<li>创建 -&gt; 就绪：进程被创建并完成初始化，变成就绪状态；</li>
+<li>就绪 -&gt; 运行：处于就绪状态的进程被调度程序选中，分配到处理机上运行；</li>
+<li>运行 -&gt; 结束：进程表示它已经完成或因为出错，当前运行今晨会由操作系统作结束处理；</li>
+<li>运行 -&gt; 就绪：处于运行状态的进程在其运行过程中，由于分配给它的处理机时间片用完而让出处理机；</li>
+<li>运行 -&gt; 等待：当进程请求某资源且必须等待时；</li>
+<li>等待 -&gt; 就绪：进程等待的某事件到来时，它从阻塞状态变到就绪状态；</li>
+</ul>
+<h2 id="11-5-挂起进程模型"><a href="#11-5-挂起进程模型" class="headerlink" title="11.5 挂起进程模型"></a>11.5 挂起进程模型</h2><p>处于挂起状态的进程映像在磁盘上，目的是减少进程占用内存。</p>
+<ul>
+<li>等待挂起：进程在外存并等待某事件的发生；</li>
+<li>就绪挂起：进程在外存，但是只要进入内存即可运行；</li>
+<li>挂起：把进程从内存转到外存</li>
+</ul>
+<p>增加了内存的转换：</p>
+<ul>
+<li>等待 -&gt; 等待挂起：没有进程处于就绪状态或就绪状态要求更多内存资源；</li>
+<li>就绪到就绪挂起：有高优先级等待进程（系统认为很快就绪）和低优先级就绪进程；</li>
+<li>运行 -&gt; 就绪挂起：对抢先式分时系统，当有高优先级等待挂起进程因事件出现而进入就绪挂起；</li>
+</ul>
+<p>从外存转到内存的转换：激活</p>
+<ul>
+<li>就绪挂起 -&gt; 就绪：没有就绪进程或挂起就绪进程优先级高于就绪进程；</li>
+<li>等待挂起 -&gt; 等待：进程释放了足够内存，并有高优先级的等待挂起进程；</li>
+</ul>
+<p>状态队列：有操作系统维护一组队列，表示系统所有进程的当前状态。<br>根据进程状态不同，进程PCB加入不同队列，进程状态切换时，加入不同队列。</p>
+<h2 id="11-6-线程的概念"><a href="#11-6-线程的概念" class="headerlink" title="11.6 线程的概念"></a>11.6 线程的概念</h2><ul>
+<li>为什么要引入线程<br>在进程内部增加一类实体，满足实体之间可以并发执行且实体之间可以共享相同的地址空间。线程是进程的一部分，描述指令流执行状态，它是进程中指令执行流的最小单元，是CPU调度的单位。这种剥离为并发提供了可能，描述了在进程资源环境中的指令流执行状态；进程扮演了资源分配的角色。<br>原来只有一个指令指针，现在有多个堆栈和指令指针。线程=进程-共享资源。<br>但是如果一个线程有异常，会导致其所属进程的所有线程都崩。  </li>
+<li>比较</li>
+<li>进程是资源分配单位，线程是CPU调度单位；</li>
+<li>进程有一个完整的资源平台，线程只独享指令流执行的必要资源，如寄存器和栈；</li>
+<li>线程具有就绪、等待和运行三种基本状态和其转移关系；</li>
+<li>线程能减少并发执行的时间和空间开销：</li>
+</ul>
+<ol>
+<li>线程创建时间短；</li>
+<li>线程的终止时间比进程短；</li>
+<li>同一进程的线程切换时间比进程短；</li>
+<li>由于同一进程的各个线程共享内存和文件资源，可不通过内核进行直接通信。</li>
+</ol>
+<h2 id="11-7-用户线程"><a href="#11-7-用户线程" class="headerlink" title="11.7 用户线程"></a>11.7 用户线程</h2><p>三种实现方式：  </p>
+<ul>
+<li>用户线程：在用户空间实现，通过用户级的线程库函数完成线程的管理。在操作系统内核中仍然只有进程控制块来描述处理机的调度的情况，操作系统并不感知应用态有多线程的支持，多线程的支持是用户的函数库支持的。在应用程序内部通过构造相应的线程控制块<br>来控制一个进程内部多个线程的交替执行和同步。<br>这种方法不依赖操作系统内核，用于不支持线程的多线程的操作系统。每个进程有私有的<strong>线程控制块(TCB)</strong>，TCB由线程库函数维护；同一进程的用户线程切换速度快，无需用户态/核心态的切换，且允许每个进程有自己的线程调度算法。<br>缺点就是不支持基于线程的处理机抢占， 除非当前运行的线程主动放弃CPU，他所在进程的其他线程无法抢占CPU。<br>POSIX Pthreads、Math C-threads、Solaris threads  </li>
+<li>内核线程：在内核中实现，Windows、Solaris、Linux  </li>
+<li>轻量级进程：在内核中实现，支持用户进程。</li>
+</ul>
+<h2 id="11-8-内核线程"><a href="#11-8-内核线程" class="headerlink" title="11.8 内核线程"></a>11.8 内核线程</h2><p>内核通过系统调用完成的线程机制。由内核维护PCB和TCB，线程执行系统调用而阻塞不影响其他线程，以线程为单位的进程调度会更合理。<br><strong>轻权进程</strong>：内核支持的用户线程，一个进程有多个轻量级进程，每个轻权进程由一个单独的内核线程来支持。在内核支持线程，轻权进程来绑定用户线程。<br>用户线程与内核线程的对应关系：一对一、多对一、多对多。</p>
+<h1 id="第十二讲-进程控制"><a href="#第十二讲-进程控制" class="headerlink" title="第十二讲 进程控制"></a>第十二讲 进程控制</h1><h2 id="12-1-进程切换"><a href="#12-1-进程切换" class="headerlink" title="12.1 进程切换"></a>12.1 进程切换</h2><p>上下文切换，暂停当前运行的进程，从当前运行状态转变成其他状态，调度另一个进程从就绪状态变成运行状态，在此过程中实现<strong>进程上下文的保存和快速切换</strong>。维护进程生命周期的信息（寄存器等）。</p>
+<p>进程控制块PCB：内核为每个进程维护了对应的PCB，将相同状态的进程的PCB放置在同一个队列中。</p>
+<p>ucore中的进程控制块结构proc_struct：</p>
+<ul>
+<li>进程ID、父进程ID，组ID；</li>
+<li>进程状态信息、地址空间起始、页表起始、是否允许调度；</li>
+<li>进程所占用的资源struct mm_struct* mm；</li>
+<li>现场保护的上下文切换的context；</li>
+<li>用于描述当前进程在哪个状态队列中的指针，等。</li>
+</ul>
+<p>ucore的切换流程：开始调度 -&gt; 清除调度标志 -&gt; 查找就绪进程 -&gt; 修改进程状态 -&gt; 进程切换switch_to()。<br>switch_to用汇编写成。。。</p>
+<h2 id="12-2-进程创建"><a href="#12-2-进程创建" class="headerlink" title="12.2 进程创建"></a>12.2 进程创建</h2><p>Windows进程创建API：CreateProcess<br>Unix进程创建系统调用：fork/exec，fork()把一个进程复制成两个进程，exec()用新程序重写当前进程。</p>
+<p>fork()的地址空间复制：fork调用对子进程就是在调用时间对父进程地址空间的一次复制。执行到fork时，复制一份，只有PID不同。系统调用exec()加载新程序取代当前运行的程序。加载进来后把代码换掉。</p>
+<p>ucore中的do_fork：分配进程控制块数据结构、创建堆栈、复制内存数据结构、设置进程标识等。操作系统没有新的任务执行，则创建空闲进程，在proc_init中分配idleproc需要的资源，初始化idleproc的PCB。</p>
+<p>fork的开销昂贵，在fork中内存复制是没用的，子进程将可能关闭打开的文件和连接，所以可以将fork和exec联系起来。产生了vfork，创建进程时不再创建一个同样的内存映像，用时再加载，一些时候称为轻量级fork。这时子进程应立即执行exec。现在使用写时复制技术。</p>
+<h2 id="12-3-进程加载"><a href="#12-3-进程加载" class="headerlink" title="12.3 进程加载"></a>12.3 进程加载</h2><p>应用程序通过exec加载可执行文件，允许进程加载一个完全不同的程序，并从main开始执行。不同系统加载可执行文件的格式不同，并且允许进程加载时指定启动参数（argc,argv），exec调用成功时，它与运行exec之前是相同的进程，但是运行了不同的程序，且代码段和堆栈重写。主要是可执行文件格式的识别，有sys_exec、do_execv、load_icode函数。</p>
+<p>ucore中第一个用户态进程是由proc_init创建的，执行了init_main创建内核线程，创建了shell程序。</p>
+<h2 id="12-4-进程等待与退出"><a href="#12-4-进程等待与退出" class="headerlink" title="12.4 进程等待与退出"></a>12.4 进程等待与退出</h2><p>父子进程的交互，完成子进程的资源回收。</p>
+<p>子进程通过exit()向父进程返回一个值，父进程通过wait()接受并处理这个返回值。wait()父进程先等待，还是子进程先做exit()，这两种情况会导致它下面的处理有一些区别。</p>
+<p>如果有子进程存活，也就是说父进程创建的子进程还有子进程，那这时候父进程进入等待状态，等待子进程的返回结果，父进程先执行wait，等到子进程执行的时候它执行exit()，这是exit ()是在wait之后执行的。这时候，子进程的exit()退出，唤醒父进程，父进程由等待状态回到就绪状态，父进程就处理子进程的返回的这个返回值，这是wait在前exit()在后的情况。</p>
+<p>如果不是这样那就有一种情况，就是有僵尸子进程等待，就是子进程先执行exit()，这时它返回一个值，等待父进程的处理，exit()在前，如果子进程还一直处在这个等待的状态，在这里等待父进程的处理，父进程的wait就直接返回，如果有多个的话就从其中一个返回它的值。</p>
+<p>进程的有序终止exit()，完成资源回收。</p>
+<ul>
+<li>调用参数作为进程的结果；</li>
+<li>关闭所有打开的文件等占用资源；</li>
+<li>释放内存，释放进程相关的内核数据结构；</li>
+<li>检查父进程是否存活，如存活则保留结果的值直到父进程需要他。</li>
+<li>清理所有等待的僵尸进程。</li>
+</ul>
+<h1 id="第十三讲-实验四-内核线程管理"><a href="#第十三讲-实验四-内核线程管理" class="headerlink" title="第十三讲 实验四 内核线程管理"></a>第十三讲 实验四 内核线程管理</h1><h2 id="13-1-总体介绍"><a href="#13-1-总体介绍" class="headerlink" title="13.1 总体介绍"></a>13.1 总体介绍</h2><p>了解内核线程创建执行的管理过程。了解内核线程的切换和基本调度过程，对TCB充分了解。</p>
+<h2 id="13-2-关键数据结构"><a href="#13-2-关键数据结构" class="headerlink" title="13.2 关键数据结构"></a>13.2 关键数据结构</h2><p>struct proc_struct：TCB</p>
+<ul>
+<li>pid和name代表了标识符。</li>
+<li>state、runs、need_reshed代表了状态和是否需要调度</li>
+<li>cr3不太需要，因为共用进程的页表</li>
+<li>kstack代表了堆栈</li>
+<li>mm_struct不太需要，在ucore的统一管理下</li>
+<li>context是通常说的上下文，基本都是寄存器，代表了当前线程的状态</li>
+<li>trap_frame代表中断产生时的信息（硬件保存）、段寄存器的信息（软件保存）</li>
+<li>一些list，父进程的信息和线程控制块的链表</li>
+<li>基于hash的list，查找对应的线程比较快</li>
+</ul>
+<h2 id="13-3-执行流程"><a href="#13-3-执行流程" class="headerlink" title="13.3 执行流程"></a>13.3 执行流程</h2><p>kern_init最开始初始化，proc_init完成一系列的创建内核线程并执行。</p>
+<p>创建第0号内核线程idleproc：</p>
+<ul>
+<li>alloc_proc创建TCB的内存块<br>-init idle_proc，设置pid、stat、kstack等</li>
+</ul>
+<p>创建第1个内核线程：</p>
+<ul>
+<li>initproc：</li>
+<li>keep trapframe调用了do_fork，copy_thread等，如何跳到入口正确执行？是用户态还是内核态？</li>
+<li>init_proc</li>
+<li>init kernel stack，可以放到两个list中执行了</li>
+<li>开始调度执行</li>
+<li>找到线程队列中哪个是处于就绪的，切换switch kstack、页表、上下文，根据trapframe跳到内核线程的入口地址，开始执行函数。</li>
+</ul>
+<h2 id="13-4-实际操作"><a href="#13-4-实际操作" class="headerlink" title="13.4 实际操作"></a>13.4 实际操作</h2><p>关注proc_init创建第0、1号线程。switch_to完成两个内核线程的切换。</p>
+<h1 id="第十四讲-实验五-用户进程管理"><a href="#第十四讲-实验五-用户进程管理" class="headerlink" title="第十四讲 实验五 用户进程管理"></a>第十四讲 实验五 用户进程管理</h1><h2 id="14-1-总体介绍"><a href="#14-1-总体介绍" class="headerlink" title="14.1 总体介绍"></a>14.1 总体介绍</h2><p>第一个用户进程如何创建、进程管理的实现机制、系统调用的框架实现。<br>构造出第一个用户进程：建立用户代码/数据段 —&gt; 创建内核线程 —&gt; 创建用户进程“壳” —&gt; 填写用户进程 —&gt; 执行用户进程(特权级转换) —&gt; 完成系统调用 —&gt; 结束用户进程(资源回收)</p>
+<h2 id="14-2-进程的内存布局"><a href="#14-2-进程的内存布局" class="headerlink" title="14.2 进程的内存布局"></a>14.2 进程的内存布局</h2><p>内核虚拟内存布局有一部分是对实际物理空间的映射，0xC0000000到0xF8000000，映射为物理空间。一个Page Tabel，0xFAC00000到0xB0000000，一开始只是管理内核空间的映射关系，有了用户进程后，页表需要扩展。</p>
+<p>进程虚拟内存空间：<br>Ivalid Memory<br>User Stack————0xB0000000<br>………..<br>User Program &amp; Heap—0x00800000<br>Invalid Memory<br>User STAB Data(optional，调试信息)<br>Invalid Memory    </p>
+<p>Invalid Memory一旦访问为非法，确保访问到这些是产生page fault，使之不能随意访问。</p>
+<h2 id="14-3-执行ELF格式的二进制代码-do-execve的实现"><a href="#14-3-执行ELF格式的二进制代码-do-execve的实现" class="headerlink" title="14.3 执行ELF格式的二进制代码-do_execve的实现"></a>14.3 执行ELF格式的二进制代码-do_execve的实现</h2><p>do_execve建好一个壳并把程序加载进来。本实验用到一个PCB（process control block），其实是跟上一个实验的TCB一样的。</p>
+<p>首先，把之前的内存空间清空，只留下PCB，换成自己的程序。把cr3这个页表基址指向boot_cr3内核页表；把进程内存管理区域清空，对应页表清空，导致内存没有了；<strong>load_icode</strong>加载执行程序。</p>
+<h2 id="14-4-执行ELF格式的二进制代码-load-icode的实现"><a href="#14-4-执行ELF格式的二进制代码-load-icode的实现" class="headerlink" title="14.4 执行ELF格式的二进制代码-load_icode的实现"></a>14.4 执行ELF格式的二进制代码-load_icode的实现</h2><p>前边已经把内存管理清空了，先创建一个新内存管理空间mm_create和新页表setup_pgdir；填上我执行代码的内容，找到要加载的程序的代码段和数据段，根据代码段和数据段的虚拟地址通过mm_map完成对合法空间的建立；从程序的内存区域拷贝过来，建立物理地址和虚拟地址的映射关系；准备all_zero的内存；设置相应堆栈空间（用户态空间），使用mm_map建立；把页表的起始地址换成新建好的页表的起始地址。</p>
+<p>完成trapframe的设置。trapframe保存了打断的中断状态保存，完成特权级转变，从kernel转换到user。</p>
+<p>x86特权级：从ring 0 —&gt; ring 3，一个ring 0栈空间，构造一个信息使得执行iret时能回到用户态，重新设置ss和cs，从ring0到ring3。</p>
+<p>用户进程有两个栈，用户栈和内核栈，通过系统调用转化。</p>
+<h2 id="14-5-进程复制"><a href="#14-5-进程复制" class="headerlink" title="14.5 进程复制"></a>14.5 进程复制</h2><p>父进程如何构造子进程？<br>一个函数叫do_fork，是一个内核函数，完成用户空间的拷贝。首先，父进程创建进程控制块，初始化kernel stack，分配页空间和内核里的虚地址。copy_mm为新进程建立新虚存空间。copy_range拷贝父进程的内存到新进程。拷贝父进程的trapframe到新进程。添加新的proc_struct到proc_list并唤醒新进程。执行完do_fork后父进程得到子进程的pid，子进程得到0。</p>
+<h2 id="14-6-内存管理的copy-on-write机制"><a href="#14-6-内存管理的copy-on-write机制" class="headerlink" title="14.6 内存管理的copy-on-write机制"></a>14.6 内存管理的copy-on-write机制</h2><p>进程A通过do_fork创建进程B，二者重用一段空间，使得空间占用量大大减少，如果是只读的话没问题。一旦某进程做了写操作，因为页表设置成只读，则产生page_fault，触发copy-on-write机制，真正为子进程复制页表。进程创建的开销大大减小，且有效减少空间。</p>
+<p>一个物理页可能被多个虚拟页引用，这个个数很重要，因为在进程运行时可能会出现换入换出，如何进行有效换入换出，有可能那个页既在内存中也在虚存中。</p>
+<p>dup_mmap完成内存管理的复制。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/操作系统/" rel="tag"># 操作系统</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/29/清华大学操作系统课程实验四/" rel="next" title="清华大学操作系统课程实验四">
+                <i class="fa fa-chevron-left"></i> 清华大学操作系统课程实验四
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/29/清华大学操作系统课程笔记二/" rel="prev" title="清华大学操作系统课程笔记二">
+                清华大学操作系统课程笔记二 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">200</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/test.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#第十一讲-进程和线程"><span class="nav-number">1.</span> <span class="nav-text">第十一讲 进程和线程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#11-1-进程的概念"><span class="nav-number">1.1.</span> <span class="nav-text">11.1 进程的概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#11-2-进程控制块（PCB）"><span class="nav-number">1.2.</span> <span class="nav-text">11.2 进程控制块（PCB）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#11-3-进程状态"><span class="nav-number">1.3.</span> <span class="nav-text">11.3 进程状态</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#11-4-三状态进程模型"><span class="nav-number">1.4.</span> <span class="nav-text">11.4 三状态进程模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#11-5-挂起进程模型"><span class="nav-number">1.5.</span> <span class="nav-text">11.5 挂起进程模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#11-6-线程的概念"><span class="nav-number">1.6.</span> <span class="nav-text">11.6 线程的概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#11-7-用户线程"><span class="nav-number">1.7.</span> <span class="nav-text">11.7 用户线程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#11-8-内核线程"><span class="nav-number">1.8.</span> <span class="nav-text">11.8 内核线程</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#第十二讲-进程控制"><span class="nav-number">2.</span> <span class="nav-text">第十二讲 进程控制</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#12-1-进程切换"><span class="nav-number">2.1.</span> <span class="nav-text">12.1 进程切换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#12-2-进程创建"><span class="nav-number">2.2.</span> <span class="nav-text">12.2 进程创建</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#12-3-进程加载"><span class="nav-number">2.3.</span> <span class="nav-text">12.3 进程加载</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#12-4-进程等待与退出"><span class="nav-number">2.4.</span> <span class="nav-text">12.4 进程等待与退出</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#第十三讲-实验四-内核线程管理"><span class="nav-number">3.</span> <span class="nav-text">第十三讲 实验四 内核线程管理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#13-1-总体介绍"><span class="nav-number">3.1.</span> <span class="nav-text">13.1 总体介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#13-2-关键数据结构"><span class="nav-number">3.2.</span> <span class="nav-text">13.2 关键数据结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#13-3-执行流程"><span class="nav-number">3.3.</span> <span class="nav-text">13.3 执行流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#13-4-实际操作"><span class="nav-number">3.4.</span> <span class="nav-text">13.4 实际操作</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#第十四讲-实验五-用户进程管理"><span class="nav-number">4.</span> <span class="nav-text">第十四讲 实验五 用户进程管理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#14-1-总体介绍"><span class="nav-number">4.1.</span> <span class="nav-text">14.1 总体介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#14-2-进程的内存布局"><span class="nav-number">4.2.</span> <span class="nav-text">14.2 进程的内存布局</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#14-3-执行ELF格式的二进制代码-do-execve的实现"><span class="nav-number">4.3.</span> <span class="nav-text">14.3 执行ELF格式的二进制代码-do_execve的实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#14-4-执行ELF格式的二进制代码-load-icode的实现"><span class="nav-number">4.4.</span> <span class="nav-text">14.4 执行ELF格式的二进制代码-load_icode的实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#14-5-进程复制"><span class="nav-number">4.5.</span> <span class="nav-text">14.5 进程复制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#14-6-内存管理的copy-on-write机制"><span class="nav-number">4.6.</span> <span class="nav-text">14.6 内存管理的copy-on-write机制</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>

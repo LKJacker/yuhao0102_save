@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="操作系统,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="实验三实验内容在实验二的基础上，借助页表机制和实验一中涉及的中断异常处理机制，完成Pgfault异常处理和FIFO页替换算法的实现，结合磁盘提供的缓存空间，从而能够支持虚存管理，提供一个比实际物理内存空间“更大”的虚拟内存空间给系统使用。这个实验与实际操作系统中的实现比较起来要简单，不过需要了解实验一和实验二的具体实现。实际操作系统系统中的虚拟内存管理设计与实现是相当复杂的，涉及到与进程管理系统、">
+<meta name="keywords" content="操作系统">
+<meta property="og:type" content="article">
+<meta property="og:title" content="清华大学操作系统课程实验三">
+<meta property="og:url" content="http://yoursite.com/2019/06/29/清华大学操作系统课程实验三/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="实验三实验内容在实验二的基础上，借助页表机制和实验一中涉及的中断异常处理机制，完成Pgfault异常处理和FIFO页替换算法的实现，结合磁盘提供的缓存空间，从而能够支持虚存管理，提供一个比实际物理内存空间“更大”的虚拟内存空间给系统使用。这个实验与实际操作系统中的实现比较起来要简单，不过需要了解实验一和实验二的具体实现。实际操作系统系统中的虚拟内存管理设计与实现是相当复杂的，涉及到与进程管理系统、">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2019-06-29T16:00:10.562Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="清华大学操作系统课程实验三">
+<meta name="twitter:description" content="实验三实验内容在实验二的基础上，借助页表机制和实验一中涉及的中断异常处理机制，完成Pgfault异常处理和FIFO页替换算法的实现，结合磁盘提供的缓存空间，从而能够支持虚存管理，提供一个比实际物理内存空间“更大”的虚拟内存空间给系统使用。这个实验与实际操作系统中的实现比较起来要简单，不过需要了解实验一和实验二的具体实现。实际操作系统系统中的虚拟内存管理设计与实现是相当复杂的，涉及到与进程管理系统、">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/06/29/清华大学操作系统课程实验三/">
+
+
+
+
+
+  <title>清华大学操作系统课程实验三 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/29/清华大学操作系统课程实验三/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">清华大学操作系统课程实验三</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-29T23:56:00+08:00">
+                2019-06-29
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="实验三"><a href="#实验三" class="headerlink" title="实验三"></a>实验三</h1><h2 id="实验内容"><a href="#实验内容" class="headerlink" title="实验内容"></a>实验内容</h2><p>在实验二的基础上，借助页表机制和实验一中涉及的中断异常处理机制，完成Pgfault异常处理和FIFO页替换算法的实现，结合磁盘提供的缓存空间，从而能够支持虚存管理，提供一个比实际物理内存空间“更大”的虚拟内存空间给系统使用。<br>这个实验与实际操作系统中的实现比较起来要简单，不过需要了解实验一和实验二的具体实现。实际操作系统系统中的虚拟内存管理设计与实现是相当复杂的，涉及到与进程管理系统、文件系统等的交叉访问。</p>
+<h2 id="简单原理"><a href="#简单原理" class="headerlink" title="简单原理"></a>简单原理</h2><blockquote>
+<p>copy from gitbook<br>通过内存地址虚拟化，可以使得软件在没有访问某虚拟内存地址时不分配具体的物理内存，而只有在实际访问某虚拟内存地址时，操作系统再动态地分配物理内存，建立虚拟内存到物理内存的页映射关系，这种技术称为按需分页（demand paging）。  </p>
+</blockquote>
+<blockquote>
+<p>把不经常访问的数据所占的内存空间临时写到硬盘上，这样可以腾出更多的空闲内存空间给经常访问的数据；当CPU访问到不经常访问的数据时，再把这些数据从硬盘读入到内存中，这种技术称为页换入换出（page swap in/out）。这种内存管理技术给了程序员更大的内存“空间”，从而可以让更多的程序在内存中并发运行。</p>
+</blockquote>
+<p>参考ucore总控函数kern_init的代码，在调用完成虚拟内存初始化的vmm_init函数之前，需要首先调用pmm_init函数完成物理内存的管理，调用pic_init函数完成中断控制器的初始化，调用idt_init函数完成中断描述符表的初始化。<br>在调用完idt_init函数之后，将进一步调用新函数<strong>vmm_init、ide_init、swap_init</strong>。<br>do_pgfault函数会申请一个空闲物理页，并建立好虚实映射关系，从而使得这样的“合法”虚拟页有实际的物理页帧对应。<br>ide_init就是完成对用于页换入换出的硬盘（简称swap硬盘）的初始化工作。完成ide_init函数后，ucore就可以对这个swap硬盘进行读写操作了。</p>
+<p>vmm设计包括两部分：mm_struct（mm）和vma_struct（vma）。mm是具有相同PDT的连续虚拟内存区域集的内存管理器。 vma是一个连续的虚拟内存区域。 vma中存在线性链接列表，mm的vma的redblack链接列表。（redblack是啥？）<br>建立mm_struct和vma_struct数据结构。当访问内存产生pagefault异常时，可获得访问的内存的方式（读或写）以及具体的虚拟内存地址，这样ucore就可以查询此地址，看是否属于vma_struct数据结构中描述的合法地址范围中，如果在，则可根据具体情况进行请求调页/页换入换出处理；如果不在，则报错。<br>两种数据结构：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">struct mm_struct &#123;</span><br><span class="line">    // 链接所有属于同一页目录表的虚拟内存空间</span><br><span class="line">    list_entry_t mmap_list;</span><br><span class="line">    // 指向当前正在使用的虚拟内存空间，直接使用这个指针就能找到下一次要用到的虚拟空间</span><br><span class="line">    struct vma_struct *mmap_cache;</span><br><span class="line">    pde_t *pgdir; // 第一级页表的起始地址，即页目录表项PDT。通过访问pgdir可以查找某虚拟地址对应的页表项是否存在以及页表项的属性等</span><br><span class="line">    int map_count; // 记录了链接了的vma_struct个数，共享了几次</span><br><span class="line">    void *sm_priv; // 指向记录页访问情况的链表头。</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">struct vma_struct &#123;</span><br><span class="line">	// 描述应用程序对虚拟内存“需求”</span><br><span class="line">    struct mm_struct *vm_mm; // 指向更高抽象层次的数据结构</span><br><span class="line">    // the set of vma using the same PDT</span><br><span class="line">    uintptr_t vm_start; // 连续地址虚拟内存空间的起始位置</span><br><span class="line">    uintptr_t vm_end; // 连续地址虚拟内存空间的结束位置</span><br><span class="line">    uint32_t vm_flags; // 标志属性（读/写/执行）</span><br><span class="line">    //link将一系列虚拟内存空间连接起来</span><br><span class="line">    list_entry_t list_link;</span><br><span class="line">&#125;;</span><br><span class="line">vm_flags：</span><br><span class="line">#define VM_READ 0x00000001 //只读</span><br><span class="line">#define VM_WRITE 0x00000002 //可读写</span><br><span class="line">#define VM_EXEC 0x00000004 //可执行</span><br></pre></td></tr></table></figure></p>
+<p>具体函数：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">// mm_create -  alloc a mm_struct &amp; initialize it.</span><br><span class="line">struct mm_struct * mm_create(void) &#123;</span><br><span class="line">    struct mm_struct *mm = kmalloc(sizeof(struct mm_struct));</span><br><span class="line">    if (mm != NULL) &#123;</span><br><span class="line">        list_init(&amp;(mm-&gt;mmap_list));</span><br><span class="line">        mm-&gt;mmap_cache = NULL;</span><br><span class="line">        mm-&gt;pgdir = NULL;</span><br><span class="line">        mm-&gt;map_count = 0;</span><br><span class="line"></span><br><span class="line">        if (swap_init_ok) swap_init_mm(mm);</span><br><span class="line">        else mm-&gt;sm_priv = NULL;</span><br><span class="line">    &#125;</span><br><span class="line">    return mm;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// mm_destroy - free mm and mm internal fields</span><br><span class="line">void mm_destroy(struct mm_struct *mm) &#123;</span><br><span class="line">    list_entry_t *list = &amp;(mm-&gt;mmap_list), *le;</span><br><span class="line">    while ((le = list_next(list)) != list) &#123;</span><br><span class="line">        list_del(le);</span><br><span class="line">        kfree(le2vma(le, list_link),sizeof(struct vma_struct));  //kfree vma</span><br><span class="line">    &#125;</span><br><span class="line">    kfree(mm, sizeof(struct mm_struct)); //kfree mm</span><br><span class="line">    mm=NULL;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>设备驱动程序或者内核模块中动态开辟内存，不是用malloc，而是kmalloc ,vmalloc，<br>释放内存用的是kfree,vfree，kmalloc函数返回的是虚拟地址(线性地址)。</p>
+<p>kmalloc特殊之处在于它分配的内存是物理上连续的,这对于要进行DMA的设备十分重要。<br>而用vmalloc分配的内存只是线性地址连续,物理地址不一定连续,不能直接用于DMA。vmalloc函数的工作方式类似于kmalloc，只不过前者分配的内存虚拟地址是连续的，而物理地址则无需连续。</p>
+<p>通过vmalloc获得的页必须一个一个地进行映射，效率不高， 因此，只在不得已(一般是为了获得大块内存)时使用。vmalloc函数返回一个指针，指向逻辑上连续的一块内存区，其大小至少为size。在发生错误 时，函数返回NULL。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">// vma_create - 新建一个vma_struct并且初始化(地址范围： vm_start~vm_end)</span><br><span class="line">struct vma_struct * vma_create(uintptr_t vm_start, uintptr_t vm_end, uint32_t vm_flags) &#123;</span><br><span class="line">    struct vma_struct *vma = kmalloc(sizeof(struct vma_struct));</span><br><span class="line"></span><br><span class="line">    if (vma != NULL) &#123;</span><br><span class="line">        vma-&gt;vm_start = vm_start;</span><br><span class="line">        vma-&gt;vm_end = vm_end;</span><br><span class="line">        vma-&gt;vm_flags = vm_flags;</span><br><span class="line">    &#125;</span><br><span class="line">    return vma;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="Page-Fault异常处理"><a href="#Page-Fault异常处理" class="headerlink" title="Page Fault异常处理"></a>Page Fault异常处理</h2><p>处理该异常主要用do_pgfault函数，当启动分页机制以后，如果一条指令或数据的虚拟地址所对应的物理页框不在内存中或者访问的类型有错误（比如写一个只读页或用户态程序访问内核态的数据等），就会发生页访问异常。产生页访问异常的原因主要有：</p>
+<blockquote>
+<p>目标页帧不存在（页表项全为0，即该线性地址与物理地址尚未建立映射或者已经撤销)；<br>相应的物理页帧不在内存中（页表项非空，但Present标志位=0，比如在swap分区或磁盘文件上)；<br>不满足访问权限（此时页表项P标志=1，但低权限的程序试图访问高权限的地址空间，或者有程序试图写只读页面）。</p>
+</blockquote>
+<p>当出现上面情况之一，那么就会产生页面page fault（#PF）异常。CPU会把产生异常的线性地址存储在CR2中，并且把表示页访问异常类型的值（简称页访问异常错误码，errorCode）保存在中断栈中。CR2是页故障线性地址寄存器，保存最后一次出现页故障的全32位线性地址。CR2用于发生页异常时报告出错信息。产生页访问异常后，CPU把引起页访问异常的线性地址装到寄存器CR2中，并给出了出错码errorCode，说明了页访问异常的类型。操作系统中对应的中断服务例程可以检查CR2的内容，从而查出线性地址空间中的哪个页引起本次异常。</p>
+<p>CPU在当前<strong>内核栈</strong>保存当前被打断的程序现场，即依次压入当前被打断程序使用的EFLAGS，CS，EIP，errorCode；由于页访问异常的中断号是0xE，CPU把异常中断号0xE对应的中断服务例程的地址（vectors.S中的标号vector14处）加载到CS和EIP寄存器中，开始执行中断服务例程。</p>
+<p>这时ucore开始处理异常中断，首先需要保存硬件没有保存的寄存器。在vectors.S中的标号vector14处先把中断号压入内核栈，然后再在trapentry.S中的标号__alltraps处把DS、ES和其他通用寄存器都压栈。自此，被打断的程序执行现场（context）被保存在内核栈中。接下来，在trap.c的trap函数开始了中断服务例程的处理流程，大致调用关系为：</p>
+<blockquote>
+<p>trap –&gt; trap_dispatch –&gt; pgfault_handler –&gt; do_pgfault</p>
+</blockquote>
+<p>ucore中do_pgfault函数是完成页访问异常处理的主要函数，它根据从CPU的控制寄存器CR2中获取的页访问异常的物理地址以及根据errorCode的错误类型来查找此地址是否在某个VMA的地址范围内以及是否满足正确的读写权限，如果在此范围内并且权限也正确，这认为这是一次<strong>合法访问，但没有建立虚实对应关系</strong>。所以需要分配一个空闲的内存页，并修改页表完成虚地址到物理地址的映射，刷新TLB，然后调用iret产生软中断，返回到产生页访问异常的指令处重新执行此指令。如果该虚地址不在某VMA范围内，则认为是一次非法访问。</p>
+<h2 id="页面置换机制的实现"><a href="#页面置换机制的实现" class="headerlink" title="页面置换机制的实现"></a>页面置换机制的实现</h2><p>当缺页中断发生时，操作系统把应用程序当前需要的数据或代码放到内存中来，然后重新执行应用程序产生异常的访存指令。如果在把硬盘中对应的数据或代码调入内存前，操作系统发现物理内存已经没有空闲空间了，这时操作系统必须把它认为“不常用”的页换出到磁盘上去，以腾出内存空闲空间给应用程序所需的数据或代码。 </p>
+<ul>
+<li><p>先进先出：选择在内存中驻留时间最久的页予以淘汰。将调入内存的页按照调入的先后顺序链接成一个队列，队列头指向内存中驻留时间最久的页，队列尾指向最近被调入内存的页。因为那些常被访问的页，往往在内存中也停留得最久，结果它们因变“老”而不得不被置换出去。FIFO算法的另一个缺点是，它有一种异常现象（Belady现象），即在增加放置页的页帧的情况下，反而使页访问异常次数增多。</p>
+</li>
+<li><p>时钟替换算法：是LRU算法的一种近似实现。时钟页替换算法把各个页面组织成环形链表的形式，类似于一个钟的表面。然后把一个指针（简称当前指针）指向最老的那个页面，即最先进来的那个页面。另外，时钟算法需要在页表项（PTE）中设置了一位访问位来表示此页表项对应的页当前是否被访问过。当该页被访问时，CPU中的MMU硬件将把访问位置“1”。当操作系统需要淘汰页时，对当前指针指向的页所对应的页表项进行查询，如果访问位为“0”，则淘汰该页，如果该页被写过，则还要把它换出到硬盘上；如果访问位为“1”，则将该页表项的此位置“0”，继续访问下一个页。该算法近似地体现了LRU的思想，且易于实现，开销少，需要硬件支持来设置访问位。时钟页替换算法在本质上与FIFO算法是类似的，不同之处是在时钟页替换算法中跳过了访问位为1的页。</p>
+</li>
+<li><p>改进时钟页替换算法：在时钟置换算法中，淘汰一个页面时只考虑了页面是否被访问过，但在实际情况中，还应考虑被淘汰的页面是否被修改过。因为淘汰修改过的页面还需要写回硬盘，使得其置换代价大于未修改过的页面，所以<strong>优先淘汰没有修改的页</strong>，减少磁盘操作次数。改进的时钟置换算法除了<strong>考虑页面的访问情况，还需考虑页面的修改情况</strong>。即该算法不但希望淘汰的页面是最近未使用的页，而且还希望被淘汰的页是在主存驻留期间其页面内容未被修改过的。这需要为每一页的对应页表项内容中增加一位引用位和一位修改位。当该页被访问时，CPU中的MMU硬件将把访问位置“1”。当该页被“写”时，CPU中的MMU硬件将把修改位置“1”。这样这两位就存在四种可能的组合情况：（0，0）表示最近未被引用也未被修改，首先选择此页淘汰；（0，1）最近未被使用，但被修改，其次选择；（1，0）最近使用而未修改，再次选择；（1，1）最近使用且修改，最后选择。该算法与时钟算法相比，可进一步减少磁盘的I/O操作次数。</p>
+</li>
+</ul>
+<h2 id="页面置换机制"><a href="#页面置换机制" class="headerlink" title="页面置换机制"></a>页面置换机制</h2><h3 id="可以被换出的页"><a href="#可以被换出的页" class="headerlink" title="可以被换出的页"></a>可以被换出的页</h3><p>只有映射到用户空间且被用户程序直接访问的页面才能被交换，被内核直接使用的内核空间的页面不能被换出！！！操作系统是执行的关键代码，需要保证运行的高效性和实时性，如果在操作系统执行过程中，发生了缺页现象，则操作系统不得不等很长时间（硬盘的访问速度比内存的访问速度慢2到3个数量级），这将导致整个系统运行低效。</p>
+<p><strong>当一个Page Table Entry用来描述一般意义上的物理页时，它维护各种权限和映射关系，以及应该有PTE_P标记；但当它用来描述一个被置换出去的物理页时，它被用来维护该物理页与swap磁盘上扇区的映射关系，并且该PTE不应该由MMU将它解释成物理页映射(即没有 PTE_P 标记)</strong>。</p>
+<p>与此同时对应的权限则交由mm_struct来维护，当对位于该页的内存地址进行访问的时候，必然导致 page fault，然后ucore能够根据 PTE 描述的swap项将相应的物理页重新建立起来，并根据虚存所描述的权限重新设置好 PTE 使得内存访问能够继续正常进行。</p>
+<h3 id="虚存中的页与硬盘上的扇区之间的映射关系"><a href="#虚存中的页与硬盘上的扇区之间的映射关系" class="headerlink" title="虚存中的页与硬盘上的扇区之间的映射关系"></a>虚存中的页与硬盘上的扇区之间的映射关系</h3><p>一个页被换出到硬盘，则PTE最低位present位应该是0，表示虚实地址映射关系不存在，接下来7位为保留位，表示页帧号的24位地址用来表示在硬盘上的地址。<br>-—————————-<br>| offset     |       reserved       |       0       |<br>-—————————-<br>24 bits  &nbsp;&nbsp; 7 bits &nbsp;&nbsp; 1 bit  </p>
+<h3 id="执行换入换出的时机"><a href="#执行换入换出的时机" class="headerlink" title="执行换入换出的时机"></a>执行换入换出的时机</h3><p>当ucore或应用程序访问地址所在的页不在内存时，就会产生page fault异常，引起调用do_pgfault函数，此函数会判断产生访问异常的地址属于check_mm_struct某个vma表示的合法虚拟地址空间，且保存在硬盘swap文件中。</p>
+<p>ucore目前大致有两种策略来实现换出操作，即<strong>积极换出策略</strong>和<strong>消极换出策略</strong>。积极换出策略是指操作系统周期性地（或在系统不忙的时候）主动把某些认为“不常用”的页换出到硬盘上，从而确保系统中总有一定数量的空闲页存在，这样当需要空闲页时，基本上能够及时满足需求；消极换出策略是指，只是当试图得到空闲页时，发现当前没有空闲的物理页可供分配，这时才开始查找“不常用”页面，并把一个或多个这样的页换出到硬盘上。</p>
+<h3 id="页替换算法的数据结构设计"><a href="#页替换算法的数据结构设计" class="headerlink" title="页替换算法的数据结构设计"></a>页替换算法的数据结构设计</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">struct Page &#123;  </span><br><span class="line">……   </span><br><span class="line">list_entry_t pra_page_link;   </span><br><span class="line">uintptr_t pra_vaddr;   </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>pra_page_link构造了按页的第一次访问时间进行排序的一个链表，这个链表的开始表示第一次访问时间最近的页，链表结尾表示第一次访问时间最远的页。当然链表头可以就可设置为pra_list_head（定义在swap_fifo.c中），构造的时机是在page fault发生后，进行do_pgfault函数时。pra_vaddr可以用来记录此物理页对应的虚拟页起始地址。</p>
+<p>当一个物理页（struct Page）需要被swap出去的时候，首先需要确保它已经分配了一个位于磁盘上的swap page（由连续的8个扇区组成）。这里为了简化设计，在swap_check函数中建立了每个虚拟页唯一对应的swap page，其对应关系设定为：<code>虚拟页对应的PTE的索引值 = swap page的扇区起始位置*8</code>。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">struct swap_manager  </span><br><span class="line">&#123;  </span><br><span class="line">    const char *name;  </span><br><span class="line">    /* swap manager 全局初始化 */  </span><br><span class="line">    int (*init) (void);  </span><br><span class="line">    /* 对mm_struct中的数据进行初始化 */  </span><br><span class="line">    int (*init_mm) (struct mm_struct *mm);  </span><br><span class="line">    /* 时钟中断处理 */  </span><br><span class="line">    int (*tick_event) (struct mm_struct *mm);  </span><br><span class="line">    /* Called when map a swappable page into the mm_struct */  </span><br><span class="line">    int (*map_swappable) (struct mm_struct *mm, uintptr_t addr, struct Page *page, int swap_in);   </span><br><span class="line">    /* When a page is marked as shared, this routine is called to delete the addr entry from the swap manager */</span><br><span class="line">    int (*set_unswappable) (struct mm_struct *mm, uintptr_t addr);  </span><br><span class="line">    /* Try to swap out a page, return then victim */  </span><br><span class="line">    int (*swap_out_victim) (struct mm_struct *mm, struct Page *ptr_page, int in_tick);  </span><br><span class="line">    /* check the page relpacement algorithm */  </span><br><span class="line">    int (*check_swap)(void);   </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>map_swappable函数用于记录页访问情况相关属性，swap_out_vistim函数用于挑选需要换出的页。显然第二个函数依赖于第一个函数记录的页访问情况。tick_event函数指针也很重要，结合定时产生的中断，可以实现一种积极的换页策略。</p>
+<ol>
+<li>准备：为了实现FIFO置换算法，我们应该管理所有可交换的页面，因此我们可以根据时间顺序将这些页面链接到pra_list_head。 使用list.h中的struct list。 struct list是一个简单的双向链表实现，具体函数包括：list_init，list_add（list_add_after），list_add_before，list_del，list_next，list_prev。 将通用列表结构转换为特殊结构（例如结构页面）。可以找到一些宏：le2page（在memlayout.h中），le2vma（在vmm.h中），le2proc（在proc.h中）等；</li>
+<li>_fifo_init_mm：初始化pra_list_head并让mm -&gt; sm_priv指向pra_list_head的addr。 现在，从内存控制struct mm_struct，我们可以调用FIFO算法；</li>
+<li>_fifo_map_swappable：将最近访问的页放到 pra_list_head 队列最后；</li>
+<li>_fifo_swap_out_victim：最早访问的页面从pra_list_head队列中剔除，然后*ptr_page赋值为这一页。</li>
+</ol>
+<h2 id="读代码"><a href="#读代码" class="headerlink" title="读代码"></a>读代码</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line">与虚拟地址范围[VPT，VPT + PTSIZE]对应的页面目录条目(page directory entry,PDE)指向页面目录本身。 因此，页面目录被视为页面表和页面目录。</span><br><span class="line">将页面目录视为页表的一个结果是可以通过虚拟地址VPT处的“虚拟页表(virtual page table,VPT)”访问所有PTE。 数字n的PTE存储在vpt[n]中。</span><br><span class="line">第二个结果是当前页面目录的内容将始终在虚拟地址PGADDR（PDX（VPT），PDX（VPT），0）处可用，vpd设置如下。</span><br><span class="line">*/</span><br><span class="line">pte_t * const vpt = (pte_t *)VPT;</span><br><span class="line">pde_t * const vpd = (pde_t *)PGADDR(PDX(VPT), PDX(VPT), 0);</span><br></pre></td></tr></table></figure>
+<h2 id="练习1：给未被映射的地址映射上物理页"><a href="#练习1：给未被映射的地址映射上物理页" class="headerlink" title="练习1：给未被映射的地址映射上物理页"></a>练习1：给未被映射的地址映射上物理页</h2><p>完成do_pgfault（mm/vmm.c）函数，给未被映射的地址映射上物理页。设置访问权限的时候 需要参考页面所在VMA的权限，同时需要注意映射物理页时需要操作内存控制结构所指定的页表，而不是内核的页表。</p>
+<p>引入虚拟内存后，可能会出现某一些虚拟内存空间是合法的（在vma中），但是还没有为其分配具体的内存页，这样的话，在访问这些虚拟页的时候就会产生pagefault异常，从而使得OS可以在异常处理时完成对这些虚拟页的物理页分配，在中端返回之后就可以正常进行内存的访问了。将出现了异常的线性地址保存在cr2寄存器中；再到trap_dispatch函数，在该函数中会根据中断号，将page fault的处理交给pgfault_handler函数，进一步交给do_pgfault函数进行处理。产生页面异常的原因主要有:</p>
+<ul>
+<li>目标页面不存在（页表项全为0，即该线性地址与物理地址尚未建立映射或者已经撤销）；</li>
+<li>相应的物理页面不在内存中（页表项非空，但Present标志位=0，比如在swap分区或磁盘文件上）；</li>
+<li>访问权限不符合（此时页表项P标志=1，比如企图写只读页面）。<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">do_pgfault - 处理缺页中断的中断处理例程 interrupt handler to process the page fault execption</span><br><span class="line">@mm         : the control struct for a set of vma using the same PDT</span><br><span class="line">@error_code : the error code recorded in trapframe-&gt;tf_err which is setted by x86 hardware</span><br><span class="line">@addr       : the addr which causes a memory access exception, (the contents of the CR2 register)</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>调用栈： trap–&gt; trap_dispatch–&gt;pgfault_handler–&gt;do_pgfault<br>处理器为ucore的do_pgfault函数提供了两项信息，以帮助诊断异常并从中恢复。<br>(1) CR2寄存器的内容。 处理器使用产生异常的32位线性地址加载CR2寄存器。 do_pgfault可以使用此地址来查找相应的页面目录和页表条目。<br>(2) 在内核栈中的错误码。缺页错误码与其他异常的错误码不同，错误码可以通知中断处理例程以下信息:</p>
+<ul>
+<li>P flag(bit 0) 表明异常是否是因为一个不存在的页(0)或违反访问权限或使用保留位(1)；</li>
+<li>W/R flag(bit 1) 表明引起异常的访存操作是读(0)还是写(1)；</li>
+<li>U/S flag (bit 2) 表明引起异常时处理器是在用户态(1)还是内核态(0)</li>
+</ul>
+<blockquote>
+<p><code>do_pgfault(struct mm_struct *mm, uint32_t error_code, uintptr_t addr)</code><br>第一个是一个mm_struct变量，其中保存了所使用的PDT，合法的虚拟地址空间（使用链表组织），以及与后文的swap机制相关的数据；而第二个参数是产生pagefault的时候硬件产生的error code，可以用于帮助判断发生page fault的原因，而最后一个参数则是出现page fault的线性地址（保存在cr2寄存器中的线性地址）。</p>
+</blockquote>
+<ol>
+<li>查询mm_struct中的虚拟地址链表（线性地址对等映射，因此线性地址等于虚拟地址），确定出现page_fault的线性地址是否合法；</li>
+<li>使用error code（包含了这次内存访问为读/写，对应物理页是否存在）判断是否出现权限问题，如果出现问题则直接返回；</li>
+<li>根据合法虚拟地址（mm_struct中保存的合法虚拟地址链表中）生成对应产生的物理页的权限；</li>
+<li>使用get_pte获取出错的线性地址所对应的虚拟页起始地址对应到的页表项，同时使用页表项保存物理地址（P为1）和被换出的物理页在swap中的位置（P为0），并规定swap中第0个页空出来不用于交换。<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br></pre></td><td class="code"><pre><span class="line">int do_pgfault(struct mm_struct *mm, uint32_t error_code, uintptr_t addr) &#123;</span><br><span class="line">    int ret = -E_INVAL;</span><br><span class="line"></span><br><span class="line">    //根据传进的mm和地址addr，找一个vma，这个vma是在mm的mmap_cache中的，find_vma主要是先找mm中的mmap_cache，如果还不存在，就在mm的mmap_list中找，这个vma用le2vma宏进行转换，直到找到一个地址空间合适的vma，把这个vma赋值给mmap_cache。</span><br><span class="line">    struct vma_struct *vma = find_vma(mm, addr);</span><br><span class="line"></span><br><span class="line">    pgfault_num++;</span><br><span class="line">    //检查找到的vma是否为空或符合地址范围</span><br><span class="line">    if (vma == NULL || vma-&gt;vm_start &gt; addr) &#123;</span><br><span class="line">        cprintf(&quot;not valid addr %x, and  can not find it in vma\n&quot;, addr);</span><br><span class="line">        goto failed;</span><br><span class="line">    &#125;</span><br><span class="line">    //如果present位是0，代表没有映射关系，不存在物理页和虚拟页帧的对应关系</span><br><span class="line">    //error_code在cr2寄存器中的后几位，对这个errorcode进行判断，确定读写权限和p位是否为1</span><br><span class="line">    switch (error_code &amp; 3) &#123;</span><br><span class="line">    default:</span><br><span class="line">            /* error code flag : default is 3 ( W/R=1, P=1): write, present */</span><br><span class="line">    case 2: /* error code flag : (W/R=1, P=0): write, not present */</span><br><span class="line">        if (!(vma-&gt;vm_flags &amp; VM_WRITE)) &#123;</span><br><span class="line">            cprintf(&quot;do_pgfault failed: error code flag = write AND not present, but the addr&apos;s vma cannot write</span><br><span class="line">\n&quot;);</span><br><span class="line">            goto failed;</span><br><span class="line">        &#125;</span><br><span class="line">        break;</span><br><span class="line">    case 1: /* error code flag : (W/R=0, P=1): read, present */</span><br><span class="line">        cprintf(&quot;do_pgfault failed: error code flag = read AND present\n&quot;);</span><br><span class="line">        goto failed;</span><br><span class="line">    case 0: /* error code flag : (W/R=0, P=0): read, not present */</span><br><span class="line">        if (!(vma-&gt;vm_flags &amp; (VM_READ | VM_EXEC))) &#123;</span><br><span class="line">            cprintf(&quot;do_pgfault failed: error code flag = read AND not present, but the addr&apos;s vma cannot read or exec\n&quot;);</span><br><span class="line">            goto failed;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /* IF (write an existed addr ) OR</span><br><span class="line">     *    (write an non_existed addr &amp;&amp; addr is writable) OR</span><br><span class="line">     *    (read  an non_existed addr &amp;&amp; addr is readable)</span><br><span class="line">     * THEN</span><br><span class="line">     *    continue process</span><br><span class="line">     * 写一个存在的地址、写一个不存在的地址但是地址是可写的、读一个不存在的地址但是地址是可读的</span><br><span class="line">     */</span><br><span class="line">    uint32_t perm = PTE_U;</span><br><span class="line">    if (vma-&gt;vm_flags &amp; VM_WRITE) &#123;</span><br><span class="line">        perm |= PTE_W;</span><br><span class="line">    &#125;</span><br><span class="line">    // 生成一个权限控制</span><br><span class="line">    addr = ROUNDDOWN(addr, PGSIZE);</span><br><span class="line">    // 向下舍入到n的最接近的倍数</span><br><span class="line"></span><br><span class="line">    ret = -E_NO_MEM;</span><br><span class="line"></span><br><span class="line">    pte_t *ptep=NULL;</span><br><span class="line">    /*LAB3 EXERCISE 1: YOUR CODE</span><br><span class="line">    * 本次实验用到的宏和定义：</span><br><span class="line">    *   get_pte : 获得pte，返回pte的线性地址、虚拟地址</span><br><span class="line">    *             if the PT contians this pte didn&apos;t exist, alloc a page for PT (notice the 3th parameter &apos;1&apos;)</span><br><span class="line">    *   pgdir_alloc_page : 调用alloc_page 和 page_insert 分配一个页大小的内存空间，设置物理地址和线性地址的映射关系</span><br><span class="line">    * DEFINES:</span><br><span class="line">    *   VM_WRITE  : If vma-&gt;vm_flags &amp; VM_WRITE == 1/0, then the vma is writable/non writable</span><br><span class="line">    *   PTE_W           0x002                   // page table/directory entry flags bit : Writeable</span><br><span class="line">    *   PTE_U           0x004                   // page table/directory entry flags bit : User can access</span><br><span class="line">    * VARIABLES:</span><br><span class="line">    *   mm-&gt;pgdir : the PDT of these vma</span><br><span class="line">    *</span><br><span class="line">    */</span><br><span class="line"></span><br><span class="line">    /*LAB3 EXERCISE 1: YOUR CODE*/</span><br><span class="line">    ptep = get_pte(mm-&gt;pgdir, addr, 1);</span><br><span class="line">    // 第三个参数create代表是否在查找page_directory的过程中没找到的话要不要创建，在这里要创建</span><br><span class="line">    if (ptep == NULL) &#123;</span><br><span class="line">        cprintf(&quot;get_pte return a NULL.\n&quot;);</span><br><span class="line">        goto failed;</span><br><span class="line">    &#125;</span><br><span class="line">    //(1) 找到一个pte，如果需要的物理页是没有分配而不是被换出到外存中</span><br><span class="line">    //如果物理地址不存在，则分配一个页面并使用逻辑地址映射物理地址，pgdir_alloc_page一个函数就能分配页和设置映射关系</span><br><span class="line">    if (*ptep == 0) &#123;</span><br><span class="line">        struct Page* page = pgdir_alloc_page(mm-&gt;pgdir, addr, perm);</span><br><span class="line">        if(page == NULL) &#123;</span><br><span class="line">            cprintf(&quot;pgdir_alloc_page return a NULL.\n&quot;);</span><br><span class="line">            goto failed;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    else &#123;</span><br><span class="line">    /*LAB3 EXERCISE 2: YOUR CODE</span><br><span class="line">    * 现在我们认为这个pte是一个swap的，我们应该将数据从disk加载到带有物理地址的页面，并将物理地址映射到逻辑地址，触发交换管理器来记录该页面的访问情况。</span><br><span class="line">    *</span><br><span class="line">    *  MACROs or Functions:</span><br><span class="line">    *    swap_in(mm, addr, &amp;page) : 分配一个内存页，根据PTE中的swap地址找到磁盘页的地址，读进内存页中</span><br><span class="line">    *    page_insert ： 创建页的物理地址和线性地址的映射关系</span><br><span class="line">    *    swap_map_swappable ： 设置这一个页是可交换的</span><br><span class="line">    */</span><br><span class="line">        if(swap_init_ok) &#123;    // 判断是否当前交换机制正确被初始化</span><br><span class="line">            struct Page *page=NULL;</span><br><span class="line">            ret = swap_in(mm, addr, &amp;page);   // 将物理页换入到内存中</span><br><span class="line">            if (ret != 0) &#123;</span><br><span class="line">                cprintf(&quot;swap_in failed.\n&quot;);</span><br><span class="line">                goto failed;</span><br><span class="line">            &#125;</span><br><span class="line">            page_insert(mm-&gt;pgdir, page, addr, perm);</span><br><span class="line">            //(2) According to the mm, addr AND page, setup the map of phy addr &lt;---&gt; logical addr</span><br><span class="line">            // 将物理页与虚拟页建立映射关系</span><br><span class="line">            swap_map_swappable(mm, addr, page, 1);</span><br><span class="line">            //(3) make the page swappable。设置当前的物理页为可交换的</span><br><span class="line">            page-&gt;pra_vaddr = addr;</span><br><span class="line">            //同时在物理页中维护其对应到的虚拟页的信息；</span><br><span class="line">            //网上有人说这个语句最好应当放置在page_insert函数中，</span><br><span class="line">            //在该建立映射关系的函数外对物理page对应的虚拟地址进行维护显得有些不太合适（感觉好有道理）</span><br><span class="line">        &#125;</span><br><span class="line">        else &#123;</span><br><span class="line">            cprintf(&quot;no swap_init_ok but ptep is %x, failed\n&quot;,*ptep);</span><br><span class="line">            goto failed;</span><br><span class="line">        &#125;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   ret = 0;</span><br><span class="line">failed:</span><br><span class="line">    return ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>问题：</p>
+<ul>
+<li>请描述页目录项（Page Director Entry）和页表（Page Table Entry）中组成部分对ucore实现页替换算法的潜在用处。</li>
+</ul>
+<p>首先不妨先分析PDE以及PTE中各个组成部分以及其含义；</p>
+<p>接下来先描述页目录项的每个组成部分，PDE（页目录项）的具体组成如下图所示；描述每一个组成部分的含义如下：</p>
+<ul>
+<li>前20位表示4K对齐的该PDE对应的页表起始位置（物理地址，该物理地址的高20位即PDE中的高20位，低12位为0）；</li>
+<li>第9-11位未被CPU使用，可保留给OS使用；</li>
+<li>接下来的第8位可忽略；</li>
+<li>第7位用于设置Page大小，0表示4KB；</li>
+<li>第6位恒为0；</li>
+<li>第5位用于表示该页是否被使用过；</li>
+<li>第4位设置为1则表示不对该页进行缓存；</li>
+<li>第3位设置是否使用write through缓存写策略；</li>
+<li>第2位表示该页的访问需要的特权级；</li>
+<li>第1位表示是否允许读写；</li>
+<li>第0位为该PDE的存在位；</li>
+</ul>
+<p>接下来描述页表项（PTE）中的每个组成部分的含义，具体组成如下图所示：</p>
+<ul>
+<li>高20位与PDE相似的，用于表示该PTE指向的物理页的物理地址；</li>
+<li>9-11位保留给OS使用；</li>
+<li>7-8位恒为0；</li>
+<li>第6位表示该页是否为dirty，即是否需要在swap out的时候写回外存；</li>
+<li>第5位表示是否被访问；</li>
+<li>3-4位恒为0；</li>
+<li>0-2位分别表示存在位、是否允许读写、访问该页需要的特权级；</li>
+</ul>
+<p>可以发现无论是PTE还是TDE，都具有着一些保留的位供操作系统使用，也就是说ucore可以利用这些位来完成一些其他的内存管理相关的算法，比如可以在这些位里保存最近一段时间内该页的被访问的次数（仅能表示0-7次），用于辅助近似地实现虚拟内存管理中的换出策略的LRU之类的算法；也就是说这些保留位有利于OS进行功能的拓展；</p>
+<blockquote>
+<p>作者：AmadeusChan<br>链接：<a href="https://www.jianshu.com/p/8d6ce61ac678" target="_blank" rel="noopener">https://www.jianshu.com/p/8d6ce61ac678</a><br>来源：简书</p>
+</blockquote>
+<p>如果ucore的缺页服务例程在执行过程中访问内存，出现了页访问异常，请问硬件要做哪些事情？</p>
+<p>考虑到ucore的缺页服务例程如果在访问内容中出现了缺页异常，则会有可能导致ucore最终无法完成缺页的处理，因此一般不应该将缺页的ISR以及OS中的其他一些关键代码或者数据换出到外存中，以确保操作系统的正常运行；如果缺页ISR在执行过程中遇到页访问异常，则最终硬件需要完成的处理与正常出现页访问异常的处理相一致，均为：</p>
+<ul>
+<li>将发生错误的线性地址保存在cr2寄存器中;</li>
+<li>在中断栈中依次压入EFLAGS，CS, EIP，以及页访问异常码errorcode，由于ISR一定是运行在内核态下的，因此不需要压入ss和esp以及进行栈的切换；</li>
+<li>根据中断描述符表查询到对应页访问异常的ISR，跳转到对应的ISR处执行，接下来将由软件进行处理；</li>
+</ul>
+<h2 id="练习2：补充完成基于FIFO的页面替换算法"><a href="#练习2：补充完成基于FIFO的页面替换算法" class="headerlink" title="练习2：补充完成基于FIFO的页面替换算法"></a>练习2：补充完成基于FIFO的页面替换算法</h2><p>维基百科：最简单的页面替换算法（Page Replace Algorithm）是FIFO算法。先进先出页面替换算法是一种低开销算法。这个想法从名称中可以明显看出 - 操作系统跟踪队列中内存中的所有页面，最近到达的放在后面，最早到达的放在前面。当需要更换页面时，会选择队列最前面的页面（最旧的页面）。虽然FIFO开销小且直观，但在实际应用中表现不佳。因此，它很少以未修改的形式使用。该算法存在Belady异常。</p>
+<p> FIFO的详细信息</p>
+<ol>
+<li>准备：为了实现FIFO，我们应该管理所有可交换的页面，这样我们就可以按照时间顺序将这些页面链接到pra_list_head。将通用list换为特殊结构（例如Page）；</li>
+<li>_fifo_init_mm：初始化pra_list_head并让mm-&gt; sm_priv指向pra_list_head的addr。 现在，从内存控制struct mm_struct，我们可以访问FIFO；</li>
+<li>_fifo_map_swappable: 最近到达的页需要放到pra_list_head队列的最末尾；</li>
+<li>_fifo_swap_out_victim: 最早到达的页面在pra_list_head队列最前边，我们应该将它踢出去。</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">将当前的物理页面插入到FIFO算法中维护的可被交换出去的物理页面链表中的末尾，从而保证该链表中越接近链表头的物理页面在内存中的驻留时间越长；</span><br><span class="line">static int _fifo_map_swappable(struct mm_struct *mm, uintptr_t addr, struct Page *page, int swap_in)</span><br><span class="line">&#123;</span><br><span class="line">    list_entry_t *head=(list_entry_t*) mm-&gt;sm_priv;</span><br><span class="line">    // 找到链表入口</span><br><span class="line">    list_entry_t *entry=&amp;(page-&gt;pra_page_link); </span><br><span class="line">    // 找到当前物理页用于组织成链表的list_entry_t</span><br><span class="line"></span><br><span class="line">    assert(entry != NULL &amp;&amp; head != NULL);</span><br><span class="line">    /*LAB3 EXERCISE 2: YOUR CODE*/</span><br><span class="line">    // link the most recent arrival page at the back of the pra_list_head qeueue</span><br><span class="line">    // 将当前指定的物理页插入到链表的末尾</span><br><span class="line">    list_add(head, entry);</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">static int</span><br><span class="line">_fifo_swap_out_victim(struct mm_struct *mm, struct Page ** ptr_page, int in_tick)</span><br><span class="line">&#123;</span><br><span class="line">     list_entry_t *head=(list_entry_t*) mm-&gt;sm_priv; </span><br><span class="line">     // 找到链表的入口</span><br><span class="line">     assert(head != NULL);</span><br><span class="line">     assert(in_tick==0);</span><br><span class="line">     /* Select the victim */</span><br><span class="line">     /*LAB3 EXERCISE 2: YOUR CODE*/</span><br><span class="line">     // unlink the earliest arrival page in front of pra_list_head qeueue</span><br><span class="line">     //list_entry_t *le = head-&gt;prev; the given answer</span><br><span class="line">     list_entry_t *le = list_next(head);</span><br><span class="line">     // 取出链表头，即最早进入的物理页面</span><br><span class="line">     assert(le != NULL);</span><br><span class="line">     // 确保链表非空</span><br><span class="line">     struct Page *p = le2page(le,pra_page_link);</span><br><span class="line">     // 找到对应的物理页面的Page结构</span><br><span class="line">     list_del(le);</span><br><span class="line">     // 从链表上删除取出的即将被换出的物理页面</span><br><span class="line">     assert(p != NULL);</span><br><span class="line">     *ptr_page = p;</span><br><span class="line">     // assign the value of *ptr_page to the addr of this page</span><br><span class="line">     return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果在_fifo_map_swappable函数中使用的是list_add_before的话，在_fifo_swap_out_victim中应该使用list_next(head)取得要被删除的页；如果在_fifo_map_swappable函数中使用的是list_add的话，在_fifo_swap_out_victim中应该使用head-&gt;prev取得要被删除的页；这个链表是双向循环链表！</p>
+<p>如果要在ucore上实现”extended clock页替换算法”请给你的设计方案，现有的swap_manager框架是否足以支持在ucore中实现此算法？如果是，请给你的设计方案。如果不是，请给出你的新的扩展和基此扩展的设计方案。并需要回答如下问题</p>
+<p>在现有框架基础上可以支持Extended clock算法。</p>
+<p>根据上文中提及到的PTE的组成部分可知，PTE中包含了dirty位和访问位，因此可以确定某一个虚拟页是否被访问过以及写过，但是，考虑到在替换算法的时候是将物理页面进行换出，而可能存在着多个虚拟页面映射到同一个物理页面这种情况，也就是说某一个物理页面是否dirty和是否被访问过是有这些所有的虚拟页面共同决定的，而在原先的实验框架中，物理页的描述信息Page结构中默认只包括了一个对应的虚拟页的地址，应当采用链表的方式，在Page中扩充一个成员，把物理页对应的所有虚拟页都给保存下来；而物理页的dirty位和访问位均为只需要某一个对应的虚拟页对应位被置成1即可置成1；<br>完成了上述对物理页描述信息的拓展之后，考虑对FIFO算法的框架进行修改得到拓展时钟算法的框架，由于这两种算法都是将所有可以换出的物理页面均按照进入内存的顺序连成一个环形链表，因此初始化，将某个页面置为可以/不可以换出这些函数均不需要进行大的修改(小的修改包括在初始化当前指针等)，唯一需要进行重写的函数是选择换出物理页的函数swap_out_victim，对该函数的修改如下：</p>
+<p>从当前指针开始，对环形链表进行扫描，根据指针指向的物理页的状态（表示为(access, dirty)）来确定应当进行何种修改：如果状态是(0, 0)，则将该物理页面从链表上去下，该物理页面记为换出页面，但是由于这个时候这个页面不是dirty的，因此事实上不需要将其写入swap分区；<br>如果状态是(0,1)，则将该物理页对应的虚拟页的PTE中的dirty位都改成0，并且将该物理页写入到外存中，然后指针跳转到下一个物理页；如果状态是(1, 0), 将该物理页对应的虚拟页的PTE中的访问位都置成0，然后指针跳转到下一个物理页面；如果状态是(1, 1)，则该物理页的所有对应虚拟页的PTE中的访问为置成0，然后指针跳转到下一个物理页面；</p>
+<p>需要被换出的页的特征是什么？</p>
+<p>该物理页在当前指针上一次扫过之前没有被访问过；<br>该物理页的内容与其在外存中保存的数据是一致的, 即没有被修改过;</p>
+<p>在ucore中如何判断具有这样特征的页？</p>
+<p>在ucore中判断具有这种特征的页的方式已经在上文设计方案中提及过了，具体为：</p>
+<p>假如某物理页对应的所有虚拟页中存在一个dirty的页，则认为这个物理页为dirty，否则不这么认为；<br>假如某物理页对应的所有虚拟页中存在一个被访问过的页，则认为这个物理页为被访问过的，否则不这么认为；</p>
+<p>何时进行换入和换出操作？</p>
+<p>在产生page fault的时候进行换入操作；<br>换出操作源于在算法中将物理页的dirty从1修改成0的时候，因此这个时候如果不进行写出到外存，就会造成数据的不一致，具体写出内存的时机是比较细节的问题, 可以在修改dirty的时候写入外存，或者是在这个物理页面上打一个需要写出的标记，到了最终删除这个物理页面的时候，如果发现了这个写出的标记，则在这个时候再写入外存；后者使用一个写延迟标记，有利于多个写操作的合并，从而降低缺页的代价；</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/操作系统/" rel="tag"># 操作系统</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/29/清华大学操作系统课程实验二/" rel="next" title="清华大学操作系统课程实验二">
+                <i class="fa fa-chevron-left"></i> 清华大学操作系统课程实验二
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/29/清华大学操作系统课程实验五/" rel="prev" title="清华大学操作系统课程实验五">
+                清华大学操作系统课程实验五 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">200</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/test.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#实验三"><span class="nav-number">1.</span> <span class="nav-text">实验三</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#实验内容"><span class="nav-number">1.1.</span> <span class="nav-text">实验内容</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#简单原理"><span class="nav-number">1.2.</span> <span class="nav-text">简单原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Page-Fault异常处理"><span class="nav-number">1.3.</span> <span class="nav-text">Page Fault异常处理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#页面置换机制的实现"><span class="nav-number">1.4.</span> <span class="nav-text">页面置换机制的实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#页面置换机制"><span class="nav-number">1.5.</span> <span class="nav-text">页面置换机制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#可以被换出的页"><span class="nav-number">1.5.1.</span> <span class="nav-text">可以被换出的页</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#虚存中的页与硬盘上的扇区之间的映射关系"><span class="nav-number">1.5.2.</span> <span class="nav-text">虚存中的页与硬盘上的扇区之间的映射关系</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#执行换入换出的时机"><span class="nav-number">1.5.3.</span> <span class="nav-text">执行换入换出的时机</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#页替换算法的数据结构设计"><span class="nav-number">1.5.4.</span> <span class="nav-text">页替换算法的数据结构设计</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#读代码"><span class="nav-number">1.6.</span> <span class="nav-text">读代码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#练习1：给未被映射的地址映射上物理页"><span class="nav-number">1.7.</span> <span class="nav-text">练习1：给未被映射的地址映射上物理页</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#练习2：补充完成基于FIFO的页面替换算法"><span class="nav-number">1.8.</span> <span class="nav-text">练习2：补充完成基于FIFO的页面替换算法</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>

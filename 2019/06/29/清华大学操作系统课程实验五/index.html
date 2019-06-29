@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="操作系统,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="实验五：用户进程管理实验目的了解第一个用户进程创建过程了解系统调用框架的实现机制了解ucore如何实现系统调用sys_fork/sys_exec/sys_exit/sys_wait来进行进程管理   实验内容实验4的线程运行都在内核态。实验5创建了用户进程，让用户进程在用户态执行，且在需要ucore支持时，可通过系统调用来让ucore提供服务。为此需要构造出第一个用户进程，并通过系统调用sys_f">
+<meta name="keywords" content="操作系统">
+<meta property="og:type" content="article">
+<meta property="og:title" content="清华大学操作系统课程实验五">
+<meta property="og:url" content="http://yoursite.com/2019/06/29/清华大学操作系统课程实验五/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="实验五：用户进程管理实验目的了解第一个用户进程创建过程了解系统调用框架的实现机制了解ucore如何实现系统调用sys_fork/sys_exec/sys_exit/sys_wait来进行进程管理   实验内容实验4的线程运行都在内核态。实验5创建了用户进程，让用户进程在用户态执行，且在需要ucore支持时，可通过系统调用来让ucore提供服务。为此需要构造出第一个用户进程，并通过系统调用sys_f">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2019-06-29T16:00:11.109Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="清华大学操作系统课程实验五">
+<meta name="twitter:description" content="实验五：用户进程管理实验目的了解第一个用户进程创建过程了解系统调用框架的实现机制了解ucore如何实现系统调用sys_fork/sys_exec/sys_exit/sys_wait来进行进程管理   实验内容实验4的线程运行都在内核态。实验5创建了用户进程，让用户进程在用户态执行，且在需要ucore支持时，可通过系统调用来让ucore提供服务。为此需要构造出第一个用户进程，并通过系统调用sys_f">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/06/29/清华大学操作系统课程实验五/">
+
+
+
+
+
+  <title>清华大学操作系统课程实验五 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/29/清华大学操作系统课程实验五/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">清华大学操作系统课程实验五</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-29T23:56:00+08:00">
+                2019-06-29
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="实验五：用户进程管理"><a href="#实验五：用户进程管理" class="headerlink" title="实验五：用户进程管理"></a>实验五：用户进程管理</h1><h2 id="实验目的"><a href="#实验目的" class="headerlink" title="实验目的"></a>实验目的</h2><p>了解第一个用户进程创建过程<br>了解系统调用框架的实现机制<br>了解ucore如何实现系统调用sys_fork/sys_exec/sys_exit/sys_wait来进行进程管理  </p>
+<h2 id="实验内容"><a href="#实验内容" class="headerlink" title="实验内容"></a>实验内容</h2><p>实验4的线程运行都在内核态。实验5创建了用户进程，让用户进程在用户态执行，且在需要ucore支持时，可通过系统调用来让ucore提供服务。为此需要构造出第一个用户进程，并通过系统调用sys_fork/sys_exec/sys_exit/sys_wait来支持运行不同的应用程序，完成对用户进程的执行过程的基本管理。</p>
+<h2 id="预备知识"><a href="#预备知识" class="headerlink" title="预备知识"></a>预备知识</h2><h3 id="实验执行流程概述"><a href="#实验执行流程概述" class="headerlink" title="实验执行流程概述"></a>实验执行流程概述</h3><p>提供各种操作系统功能的<strong>内核线程只能在CPU核心态运行是操作系统自身的要求</strong>，操作系统就要呆在核心态，才能管理整个计算机系统。ucore提供了用户态进程的创建和执行机制，给应用程序执行提供一个用户态运行环境。显然，由于进程的执行空间扩展到了用户态空间，且出现了创建子进程执行应用程序等与lab4有较大不同的地方，所以具体实现的不同主要集中在<strong>进程管理</strong>和<strong>内存管理部分</strong>。</p>
+<p>首先，我们从ucore的初始化部分来看，kern_init中调用的物理内存初始化，进程管理初始化等都有一定的变化。在内存管理部分，与lab4最大的区别就是<strong>增加用户态虚拟内存的管理</strong>。</p>
+<ul>
+<li>首先为了管理用户态的虚拟内存，需要对页表的内容进行扩展，能够<strong>把部分物理内存映射为用户态虚拟内存</strong>。如果某进程执行过程中，CPU在用户态下执行（在CS段寄存器最低两位包含有一个2位的优先级域，如果为0，表示CPU运行在特权态；如果为3，表示CPU运行在用户态。），则可以访问本进程页表描述的用户态虚拟内存，但由于权限不够，不能访问内核态虚拟内存。</li>
+<li>另一方面，在用户态内存空间和内核态内核空间之间需要拷贝数据，让<strong>CPU处在内核态才能完成对用户空间的读或写</strong>，为此需要设计专门的拷贝函数（copy_from_user和copy_to_user）完成。但反之则会导致违反CPU的权限管理，导致内存访问异常。</li>
+<li>在进程管理方面，主要涉及到的是进程控制块中与内存管理相关的部分，包括建立进程的页表和维护进程可访问空间（可能还没有建立虚实映射关系）的信息；</li>
+<li>加载一个ELF格式的程序到进程控制块管理的内存中的方法；</li>
+<li>在进程复制（fork）过程中，把父进程的内存空间拷贝到子进程内存空间的技术；</li>
+<li>另外一部分与用户态进程生命周期管理相关，包括让进程放弃CPU而睡眠等待某事件、让父进程等待子进程结束、一个进程杀死另一个进程、给进程发消息、建立进程的血缘关系链表。</li>
+</ul>
+<p>在用户进程管理中，首先，构造出第一个进程idle_proc，作为所有后续进程的祖先；然后，在proc_init函数中，对idle_proc进行进一步初始化，通过alloc把当前ucore的执行环境转变成idle内核线程的执行现场；然后调用kernl_thread来创建第二个内核线程init_main，而init_main内核线程有创建了user_main内核线程。到此，内核线程创建完毕。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">// proc_init - set up the first kernel thread idleproc &quot;idle&quot; by itself and</span><br><span class="line">//           - create the second kernel thread init_main</span><br><span class="line">void</span><br><span class="line">proc_init(void) &#123;</span><br><span class="line">    int i;</span><br><span class="line"></span><br><span class="line">    list_init(&amp;proc_list);</span><br><span class="line">    for (i = 0; i &lt; HASH_LIST_SIZE; i ++) &#123;</span><br><span class="line">        list_init(hash_list + i);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    if ((idleproc = alloc_proc()) == NULL) &#123;</span><br><span class="line">        panic(&quot;cannot alloc idleproc.\n&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    idleproc-&gt;pid = 0;</span><br><span class="line">    idleproc-&gt;state = PROC_RUNNABLE;</span><br><span class="line">    idleproc-&gt;kstack = (uintptr_t)bootstack;</span><br><span class="line">    idleproc-&gt;need_resched = 1;</span><br><span class="line">    set_proc_name(idleproc, &quot;idle&quot;);</span><br><span class="line">    nr_process ++;</span><br><span class="line"></span><br><span class="line">    current = idleproc;</span><br><span class="line"></span><br><span class="line">    int pid = kernel_thread(init_main, NULL, 0);</span><br><span class="line">    if (pid &lt;= 0) &#123;</span><br><span class="line">        panic(&quot;create init_main failed.\n&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    initproc = find_proc(pid);</span><br><span class="line">    set_proc_name(initproc, &quot;init&quot;);</span><br><span class="line"></span><br><span class="line">    assert(idleproc != NULL &amp;&amp; idleproc-&gt;pid == 0);</span><br><span class="line">    assert(initproc != NULL &amp;&amp; initproc-&gt;pid == 1);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>接下来是用户进程的创建过程。第一步实际上是通过user_main函数调用kernel_tread创建子进程，通过kernel_execve调用来把某一具体程序的执行内容放入内存。</p>
+<p>具体的放置方式是根据<strong>ld在此文件上的地址分配</strong>为基本原则，把程序的不同部分放到某进程的用户空间中，从而通过此进程来完成程序描述的任务。一旦执行了这一程序对应的进程，就会从内核态切换到用户态继续执行。</p>
+<p>以此类推：</p>
+<blockquote>
+<p><strong>CPU在用户空间执行的用户进程，其地址空间不会被其他用户的进程影响，但由于系统调用（用户进程直接获得操作系统服务的唯一通道）、外设中断和异常中断的会随时产生，从而间接推动了用户进程实现用户态到到内核态的切换工作。当进程执行结束后，需回收进程占用和没消耗完毕的设备整个过程，且为新的创建进程请求提供服务。</strong></p>
+</blockquote>
+<h3 id="创建用户进程"><a href="#创建用户进程" class="headerlink" title="创建用户进程"></a>创建用户进程</h3><h4 id="应用程序的组成和编译"><a href="#应用程序的组成和编译" class="headerlink" title="应用程序的组成和编译"></a>应用程序的组成和编译</h4><p>lab5中新增了一个文件夹user，其中是用于本实验的用户程序。如hello.c<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#include &lt;ulib.h&gt;</span><br><span class="line"></span><br><span class="line">int main(void) &#123;</span><br><span class="line">    cprintf(&quot;Hello world!!.\n&quot;);</span><br><span class="line">    cprintf(&quot;I am process %d.\n&quot;, getpid());</span><br><span class="line">    cprintf(&quot;hello pass.\n&quot;);</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>按照手册，注释掉Makefile的第六行，编译，（部分）输出如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">gcc -Iuser/ -fno-builtin -Wall -ggdb -m32 -gstabs -nostdinc  </span><br><span class="line">-fno-stack-protector -Ilibs/ -Iuser/include/ -Iuser/libs/ -c user/pgdir.c -o obj/user/pgdir.o</span><br><span class="line"></span><br><span class="line">ld -m    elf_i386 -nostdlib -T tools/user.ld -o obj/__user_pgdir.out  </span><br><span class="line">  obj/user/libs/panic.o obj/user/libs/syscall.o obj/user/libs/ulib.o </span><br><span class="line">  obj/user/libs/initcode.o obj/user/libs/stdio.o obj/user/libs/umain.o  </span><br><span class="line">  obj/libs/string.o obj/libs/printfmt.o obj/libs/hash.o obj/libs/rand.o obj/user/pgdir.o</span><br><span class="line"></span><br><span class="line">+ ld bin/kernel</span><br><span class="line">ld -m elf_i386 -nostdlib -T tools/kernel.ld -o bin/kernel  </span><br><span class="line">  obj/kern/init/entry.o obj/kern/init/init.o obj/kern/libs/stdio.o </span><br><span class="line">  obj/kern/libs/readline.o obj/kern/debug/panic.o obj/kern/debug/kdebug.o</span><br><span class="line">  obj/kern/debug/kmonitor.o obj/kern/driver/ide.o obj/kern/driver/clock.o </span><br><span class="line">  obj/kern/driver/console.o obj/kern/driver/picirq.o obj/kern/driver/intr.o </span><br><span class="line">  obj/kern/trap/trap.o obj/kern/trap/vectors.o obj/kern/trap/trapentry.o </span><br><span class="line">  obj/kern/mm/pmm.o obj/kern/mm/swap_fifo.o obj/kern/mm/vmm.o obj/kern/mm/kmalloc.o </span><br><span class="line">  obj/kern/mm/swap.o obj/kern/mm/default_pmm.o obj/kern/fs/swapfs.o obj/kern/process/entry.o </span><br><span class="line">  obj/kern/process/switch.o obj/kern/process/proc.o obj/kern/schedule/sched.o </span><br><span class="line">  obj/kern/syscall/syscall.o  obj/libs/string.o obj/libs/printfmt.o obj/libs/hash.o obj/libs/rand.o </span><br><span class="line">  -b binary  obj/__user_badarg.out obj/__user_forktree.out obj/__user_faultread.out obj/__user_divzero.out </span><br><span class="line">  obj/__user_exit.out obj/__user_hello.out obj/__user_waitkill.out obj/__user_softint.out obj/__user_spin.out</span><br><span class="line">  obj/__user_yield.out obj/__user_badsegment.out obj/__user_testbss.out obj/__user_faultreadkernel.out </span><br><span class="line">  obj/__user_forktest.out obj/__user_pgdir.out</span><br></pre></td></tr></table></figure></p>
+<p>从中可以看出，hello应用程序不仅仅是hello.c，还包含了支持hello应用程序的用户态库：</p>
+<ul>
+<li>user/libs/initcode.S：所有应用程序的起始用户态执行地址“_start”，调整了EBP和ESP后，调用umain函数。</li>
+<li>user/libs/umain.c：实现了umain函数，这是所有应用程序执行的第一个C函数，它将调用应用程序的main函数，并在main函数结束后调用exit函数，而exit函数最终将调用sys_exit系统调用，让操作系统回收进程资源。</li>
+<li>user/libs/ulib.[ch]：实现了最小的C函数库，除了一些与系统调用无关的函数，其他函数是对访问系统调用的包装。</li>
+<li>user/libs/syscall.[ch]：用户层发出系统调用的具体实现。</li>
+<li>user/libs/stdio.c：实现cprintf函数，通过系统调用sys_putc来完成字符输出。</li>
+<li>user/libs/panic.c：实现__panic/__warn函数，通过系统调用sys_exit完成用户进程退出。</li>
+</ul>
+<p>在make的最后一步执行了一个ld命令，把hello应用程序的执行码obj/__user_hello.out连接在了ucore kernel的末尾。且ld命令会在kernel中会把__user_hello.out的位置和大小记录在全局变量<strong>_binary_obj___user_hello_out_start</strong>和<strong>_binary_obj___user_hello_out_size</strong>中，这样这个hello用户程序就能够和ucore内核一起被 bootloader加载到内存里中，并且通过这两个全局变量定位hello用户程序执行码的起始位置和大小。</p>
+<h4 id="用户进程的虚拟地址空间"><a href="#用户进程的虚拟地址空间" class="headerlink" title="用户进程的虚拟地址空间"></a>用户进程的虚拟地址空间</h4><p>在tools/user.ld描述了用户程序的用户虚拟空间的执行入口虚拟地址：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SECTIONS &#123;</span><br><span class="line">    /* Load programs at this address: &quot;.&quot; means the current address */</span><br><span class="line">    . = 0x800020;</span><br></pre></td></tr></table></figure></p>
+<p>在tools/kernel.ld描述了操作系统的内核虚拟空间的起始入口虚拟地址：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SECTIONS &#123;</span><br><span class="line">    /* Load the kernel at this address: &quot;.&quot; means the current address */</span><br><span class="line">    . = 0xC0100000;</span><br></pre></td></tr></table></figure></p>
+<p>这样ucore把用户进程的虚拟地址空间分了两块:</p>
+<ul>
+<li>一块与内核线程一样，是所有用户进程都共享的内核虚拟地址空间，映射到同样的物理内存空间中，这样在物理内存中只需放置一份内核代码，使得用户进程从用户态进入核心态时，内核代码可以统一应对不同的内核程序；</li>
+<li>另外一块是用户虚拟地址空间，虽然虚拟地址范围一样，但映射到不同且没有交集的物理内存空间中。这样当ucore把用户进程的执行代码（即应用程序的执行代码）和数据（即应用程序的全局变量等）放到用户虚拟地址空间中时，确保了各个进程不会“非法”访问到其他进程的物理内存空间。</li>
+</ul>
+<p>这样ucore给一个用户进程具体设定的虚拟内存空间（kern/mm/memlayout.h）如下所示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"> Virtual memory map:                                          Permissions</span><br><span class="line">                                                              kernel/user</span><br><span class="line"></span><br><span class="line">     4G ------------------&gt; +---------------------------------+</span><br><span class="line">                            |                                 |</span><br><span class="line">                            |         Empty Memory (*)        |</span><br><span class="line">                            |                                 |</span><br><span class="line">                            +---------------------------------+ 0xFB000000</span><br><span class="line">                            |   Cur. Page Table (Kern, RW)    | RW/-- PTSIZE</span><br><span class="line">     VPT -----------------&gt; +---------------------------------+ 0xFAC00000</span><br><span class="line">                            |        Invalid Memory (*)       | --/--</span><br><span class="line">     KERNTOP -------------&gt; +---------------------------------+ 0xF8000000</span><br><span class="line">                            |                                 |</span><br><span class="line">                            |    Remapped Physical Memory     | RW/-- KMEMSIZE</span><br><span class="line">                            |                                 |</span><br><span class="line">     KERNBASE ------------&gt; +---------------------------------+ 0xC0000000</span><br><span class="line">                            |        Invalid Memory (*)       | --/--</span><br><span class="line">     USERTOP -------------&gt; +---------------------------------+ 0xB0000000</span><br><span class="line">                            |           User stack            |</span><br><span class="line">                            +---------------------------------+</span><br><span class="line">                            |                                 |</span><br><span class="line">                            :                                 :</span><br><span class="line">                            |         ~~~~~~~~~~~~~~~~        |</span><br><span class="line">                            |         ~~~~~~~~~~~~~~~~        |</span><br><span class="line">                            :                                 :</span><br><span class="line">                            |                                 |</span><br><span class="line">                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span><br><span class="line">                            |       User Program &amp; Heap       |</span><br><span class="line">     UTEXT ---------------&gt; +---------------------------------+ 0x00800000</span><br><span class="line">                            |        Invalid Memory (*)       | --/--</span><br><span class="line">                            |  - - - - - - - - - - - - - - -  |</span><br><span class="line">                            |    User STAB Data (optional)    |</span><br><span class="line">     USERBASE, USTAB------&gt; +---------------------------------+ 0x00200000</span><br><span class="line">                            |        Invalid Memory (*)       | --/--</span><br><span class="line">     0 -------------------&gt; +---------------------------------+ 0x00000000</span><br><span class="line">(*) Note: The kernel ensures that &quot;Invalid Memory&quot; is *never* mapped.</span><br><span class="line">    &quot;Empty Memory&quot; is normally unmapped, but user programs may map pages</span><br><span class="line">    there if desired.</span><br><span class="line"></span><br><span class="line">*/</span><br></pre></td></tr></table></figure></p>
+<h4 id="创建并执行用户进程"><a href="#创建并执行用户进程" class="headerlink" title="创建并执行用户进程"></a>创建并执行用户进程</h4><p>在确定了用户进程的执行代码和数据，以及用户进程的虚拟空间布局后，我们可以来创建用户进程了。在本实验中第一个用户进程是由第二个内核线程initproc通过把hello应用程序执行码覆盖到initproc的用户虚拟内存空间来创建的，相关代码如下所示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"> // kernel_execve - do SYS_exec syscall to exec a user program called by user_main kernel_thread</span><br><span class="line">    static int</span><br><span class="line">    kernel_execve(const char *name, unsigned char *binary, size_t size) &#123;</span><br><span class="line">    int ret, len = strlen(name);</span><br><span class="line">    asm volatile (</span><br><span class="line">        &quot;int %1;&quot;</span><br><span class="line">        : &quot;=a&quot; (ret)</span><br><span class="line">        : &quot;i&quot; (T_SYSCALL), &quot;0&quot; (SYS_exec), &quot;d&quot; (name), &quot;c&quot; (len), &quot;b&quot; (binary), &quot;D&quot; (size)</span><br><span class="line">        : &quot;memory&quot;);</span><br><span class="line">    return ret;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">    #define __KERNEL_EXECVE(name, binary, size) (&#123;                          \</span><br><span class="line">            cprintf(&quot;kernel_execve: pid = %d, name = \&quot;%s\&quot;.\n&quot;,        \</span><br><span class="line">                    current-&gt;pid, name);                                \</span><br><span class="line">            kernel_execve(name, binary, (size_t)(size));                \</span><br><span class="line">        &#125;)</span><br><span class="line"></span><br><span class="line">    #define KERNEL_EXECVE(x) (&#123;                                             \</span><br><span class="line">            extern unsigned char _binary_obj___user_##x##_out_start[],  \</span><br><span class="line">                _binary_obj___user_##x##_out_size[];                    \</span><br><span class="line">            __KERNEL_EXECVE(#x, _binary_obj___user_##x##_out_start,     \</span><br><span class="line">                            _binary_obj___user_##x##_out_size);         \</span><br><span class="line">        &#125;)</span><br><span class="line">……</span><br><span class="line">// init_main - the second kernel thread used to create kswapd_main &amp; user_main kernel threads</span><br><span class="line">static int init_main(void *arg) &#123;</span><br><span class="line">    #ifdef TEST</span><br><span class="line">    KERNEL_EXECVE2(TEST, TESTSTART, TESTSIZE);</span><br><span class="line">    #else</span><br><span class="line">    KERNEL_EXECVE(hello);</span><br><span class="line">    #endif</span><br><span class="line">    panic(&quot;kernel_execve failed.\n&quot;);</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><strong>##的作用是参数的连接，把“exit”这个字符串连接到这个宏中的x对应位置</strong><br><strong>#的作用是使一个东西字符串化</strong></p>
+<p>Initproc的执行主体是init_main函数，这个函数在缺省情况下是执行宏KERNEL_EXECVE(hello)，而这个宏最终是调用kernel_execve函数来调用SYS_exec系统调用，由于ld在链接hello应用程序执行码时定义了两全局变量：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">_binary_obj___user_hello_out_start：hello执行码的起始位置</span><br><span class="line">_binary_obj___user_hello_out_size中：hello执行码的大小</span><br></pre></td></tr></table></figure></p>
+<p>kernel_execve把这两个变量作为SYS_exec系统调用的参数，让ucore来创建此用户进程。当ucore收到此系统调用后，将依次调用如下函数：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">vector128(vectors.S) --&gt;</span><br><span class="line">__alltraps(trapentry.S) --&gt; trap(trap.c) --&gt; trap_dispatch(trap.c) --&gt; syscall(syscall.c) --&gt; sys_exec（syscall.c）--&gt; do_execve(proc.c)</span><br></pre></td></tr></table></figure></p>
+<p>最终通过do_execve函数来完成用户进程的创建工作。此函数的主要工作流程如下：</p>
+<ul>
+<li>为加载新的执行码做好<strong>用户态内存空间清空</strong>准备。如果mm不为NULL，则设置页表为内核空间页表，且进一步判断mm的引用计数减1后是否为0，如果为0，则表明没有进程再需要此进程所占用的内存空间，为此将根据mm中的记录，释放进程所占用户空间内存和进程页表本身所占空间。最后把当前进程的mm内存管理指针为空。由于此处的initproc是内核线程，所以mm为NULL，整个处理都不会做。</li>
+<li><strong>加载应用程序执行码到当前进程的新创建的用户态虚拟空间中</strong>。这里涉及到读ELF格式的文件，申请内存空间，建立用户态虚存空间，加载应用程序执行码等。load_icode函数完成了整个复杂的工作。</li>
+<li>load_icode函数的主要工作就是给用户进程建立一个能够让用户进程正常运行的用户环境。此函数有一百多行，完成了如下重要工作：</li>
+</ul>
+<ol>
+<li>调用mm_create函数来申请进程的内存管理数据结构mm所需内存空间，并对mm进行初始化；</li>
+<li>调用setup_pgdir来申请一个页目录表所需的一个页大小的内存空间，并把描述ucore内核虚空间映射的内核页表（boot_pgdir所指）的内容拷贝到此新目录表中，最后让mm-&gt;pgdir指向此页目录表，这就是进程新的页目录表了，且能够正确映射内核虚空间；</li>
+<li>根据应用程序执行码的起始位置来解析此ELF格式的执行程序，并调用mm_map函数根据ELF格式的执行程序说明的各个段（代码段、数据段、BSS段等）的起始位置和大小建立对应的vma结构，并把vma插入到mm结构中，从而表明了用户进程的合法用户态虚拟地址空间；</li>
+<li>调用根据执行程序各个段的大小分配物理内存空间，并根据执行程序各个段的起始位置确定虚拟地址，并在页表中建立好物理地址和虚拟地址的映射关系，然后把执行程序各个段的内容拷贝到相应的内核虚拟地址中，至此应用程序执行码和数据已经根据编译时设定地址放置到虚拟内存中了；</li>
+</ol>
+<ul>
+<li>需要<strong>给用户进程设置用户栈</strong>，为此调用mm_mmap函数建立用户栈的vma结构，明确用户栈的位置在用户虚空间的顶端，大小为256个页，即1MB，并分配一定数量的物理内存且建立好栈的虚地址<-->物理地址映射关系；</--></li>
+<li>至此,进程内的内存管理vma和mm数据结构已经建立完成，于是把<strong>mm-&gt;pgdir赋值到cr3寄存器中</strong>，即<strong>更新了用户进程的虚拟内存空间</strong>，此时的initproc已经被hello的代码和数据覆盖，成为了第一个用户进程，但此时这个用户进程的执行现场还没建立好；</li>
+<li>先清空进程的中断帧，再<strong>重新设置进程的中断帧</strong>，使得在执行中断返回指令“iret”后，能够让CPU转到用户态特权级，并回到用户态内存空间，使用用户态的代码段、数据段和堆栈，且能够跳转到用户进程的第一条指令执行，并确保在用户态能够响应中断；</li>
+<li>至此，用户进程的用户环境已经搭建完毕。此时initproc将按产生系统调用的函数调用路径原路返回，执行中断返回指令“iret”（位于trapentry.S的最后一句）后，将切换到用户进程hello的第一条语句位置_start处（位于user/libs/initcode.S的第三句）开始执行。</li>
+</ul>
+<h4 id="进程退出和等待进程"><a href="#进程退出和等待进程" class="headerlink" title="进程退出和等待进程"></a>进程退出和等待进程</h4><p>ucore分了两步来完成进程退出工作，首先，进程本身完成大部分资源的占用内存回收工作，然后父进程完成剩余资源占用内存的回收工作。为何不让进程本身完成所有的资源回收工作呢？这是因为进程要执行回收操作，就表明此进程还存在，还在执行指令，这就需要内核栈的空间不能释放，且表示进程存在的进程控制块不能释放。所以需要父进程来帮忙释放子进程无法完成的这两个资源回收工作。</p>
+<p>为此在用户态的函数库中提供了exit函数，此函数最终访问sys_exit系统调用接口让操作系统来帮助当前进程执行退出过程中的部分资源回收。</p>
+<p>首先，exit函数会把一个退出码error_code传递给ucore，ucore通过执行内核函数do_exit来完成对当前进程的退出处理，主要工作是回收当前进程所占的大部分内存资源，并通知父进程完成最后的回收工作，具体流程如下：</p>
+<ol>
+<li>如果current-&gt;mm != NULL，表示是用户进程，则开始回收此用户进程所占用的用户态虚拟内存空间；</li>
+</ol>
+<ul>
+<li>首先执行“lcr3(boot_cr3)”，切换到内核态的页表上，这样当前用户进程目前只能在内核虚拟地址空间执行了，这是为了确保后续释放用户态内存和进程页表的工作能够正常执行；</li>
+<li>如果当前进程控制块的成员变量mm的成员变量mm_count减1后为0（表明这个mm没有再被其他进程共享，可以彻底释放进程所占的用户虚拟空间了。），则开始回收用户进程所占的内存资源：</li>
+<li>调用exit_mmap函数释放current-&gt;mm-&gt;vma链表中每个vma描述的进程合法空间中实际分配的内存，然后把对应的页表项内容清空，最后还把页表所占用的空间释放并把对应的页目录表项清空；</li>
+<li>调用put_pgdir函数释放当前进程的页目录所占的内存；</li>
+<li>调用mm_destroy函数释放mm中的vma所占内存，最后释放mm所占内存；</li>
+<li>此时设置current-&gt;mm为NULL，表示与当前进程相关的用户虚拟内存空间和对应的内存管理成员变量所占的内核虚拟内存空间已经回收完毕；</li>
+</ul>
+<ol start="2">
+<li>这时，设置当前进程的执行状态<code>current-&gt;state=PROC_ZOMBIE</code>，当前进程的退出码current-&gt;exit_code=error_code。此时当前进程已经不能被调度了，需要此进程的父进程来做最后的回收工作（即回收描述此进程的内核栈和进程控制块）；</li>
+<li>如果当前进程的父进程current-&gt;parent处于等待子进程状态：<br><code>current-&gt;parent-&gt;wait_state==WT_CHILD</code>，<br>则唤醒父进程（即执行“<code>wakup_proc(current-&gt;parent)</code>”），让父进程帮助自己完成最后的资源回收；</li>
+<li>如果当前进程还有子进程，则需要把这些子进程的父进程指针设置为内核线程initproc，且各个子进程指针需要插入到initproc的子进程链表中。如果某个子进程的执行状态是PROC_ZOMBIE，则需要唤醒initproc来完成对此子进程的最后回收工作。</li>
+<li>执行schedule()函数，选择新的进程执行。</li>
+</ol>
+<p>那么父进程如何完成对子进程的最后回收工作呢？这要求父进程要执行wait用户函数或wait_pid用户函数，这两个函数的区别是，<strong>wait函数等待任意子进程的结束通知</strong>，而<strong>wait_pid函数等待进程id号为pid的子进程结束通知</strong>。这两个函数最终访问sys_wait系统调用接口让ucore来完成对子进程的最后回收工作，即回收子进程的内核栈和进程控制块所占内存空间，具体流程如下：</p>
+<ol>
+<li>如果pid!=0，表示只找一个进程id号为pid的退出状态的子进程，否则找任意一个处于退出状态的子进程；</li>
+<li>如果此子进程的执行状态不为PROC_ZOMBIE，表明此子进程还没有退出，则当前进程只好设置自己的执行状态为PROC_SLEEPING，睡眠原因为WT_CHILD（即等待子进程退出），调用schedule()函数选择新的进程执行，自己睡眠等待，如果被唤醒，则重复跳回步骤1处执行；</li>
+<li>如果此子进程的执行状态为PROC_ZOMBIE，表明此子进程处于退出状态，需要当前进程（即子进程的父进程）完成对子进程的最终回收工作，即首先把子进程控制块从两个进程队列proc_list和hash_list中删除，并释放子进程的内核堆栈和进程控制块。自此，子进程才彻底地结束了它的执行过程，消除了它所占用的所有资源。</li>
+</ol>
+<h4 id="系统调用实现"><a href="#系统调用实现" class="headerlink" title="系统调用实现"></a>系统调用实现</h4><p>用户进程只能在操作系统给它圈定好的“用户环境”中执行，但“用户环境”限制了用户进程能够执行的指令，即用户进程只能执行一般的指令，无法执行特权指令。如果用户进程想执行一些需要特权指令的任务，比如通过网卡发网络包等，只能让操作系统来代劳了。于是就需要一种机制来确保用户进程不能执行特权指令，但能够请操作系统“帮忙”完成需要特权指令的任务，这种机制就是系统调用。</p>
+<p>采用系统调用机制为用户进程提供一个获得操作系统服务的统一接口层：</p>
+<ul>
+<li>一来可简化用户进程的实现，把一些共性的、繁琐的、与硬件相关、与特权指令相关的任务放到操作系统层来实现，但提供一个简洁的接口给用户进程调用；</li>
+<li>二来这层接口事先可规定好，且严格检查用户进程传递进来的参数和操作系统要返回的数据，使得让操作系统给用户进程服务的同时，保护操作系统不会被用户进程破坏。</li>
+</ul>
+<p>从硬件层面上看，需要硬件能够支持在用户态的用户进程通过某种机制切换到内核态。</p>
+<h5 id="初始化系统调用对应的中断描述符"><a href="#初始化系统调用对应的中断描述符" class="headerlink" title="初始化系统调用对应的中断描述符"></a>初始化系统调用对应的中断描述符</h5><p>在ucore初始化函数kern_init中调用了idt_init函数来初始化中断描述符表，并设置一个特定中断号的中断门，专门用于用户进程访问系统调用。此事由ide_init函数完成：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">void</span><br><span class="line">idt_init(void) &#123;</span><br><span class="line">    extern uintptr_t __vectors[];</span><br><span class="line">    int i;</span><br><span class="line">    for (i = 0; i &lt; sizeof(idt) / sizeof(struct gatedesc); i ++) &#123;</span><br><span class="line">        SETGATE(idt[i], 0, GD_KTEXT, __vectors[i], DPL_KERNEL);</span><br><span class="line">    &#125;</span><br><span class="line">    SETGATE(idt[T_SYSCALL], 1, GD_KTEXT, __vectors[T_SYSCALL], DPL_USER);</span><br><span class="line">    lidt(&amp;idt_pd);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在上述代码中，可以看到在执行加载中断描述符表lidt指令前，专门设置了一个特殊的中断描述符idt[T_SYSCALL]，它的特权级设置为DPL_USER，中断向量处理地址在<strong>vectors[T_SYSCALL]处。这样建立好这个中断描述符后，一旦用户进程执行“INT T_SYSCALL”后，由于此中断允许用户态进程产生（注意它的特权级设置为DPL_USER），所以CPU就会从用户态切换到内核态，保存相关寄存器，并跳转到</strong>vectors[T_SYSCALL]处开始执行，形成如下执行路径：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">vector128(vectors.S) --&gt; </span><br><span class="line">__alltraps(trapentry.S) --&gt; trap(trap.c) --&gt; trap_dispatch(trap.c) --&gt; syscall(syscall.c)</span><br></pre></td></tr></table></figure></p>
+<h5 id="建立系统调用的用户库准备"><a href="#建立系统调用的用户库准备" class="headerlink" title="建立系统调用的用户库准备"></a>建立系统调用的用户库准备</h5><p>在操作系统中初始化好系统调用相关的中断描述符、中断处理起始地址等后，还需在用户态的应用程序中初始化好相关工作，简化应用程序访问系统调用的复杂性。为此在用户态建立了一个中间层，即简化的libc实现，在user/libs/ulib.[ch]和user/libs/syscall.[ch]中完成了对访问系统调用的封装。用户态最终的访问系统调用函数是syscall，实现如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">static inline int</span><br><span class="line">syscall(int num, ...) &#123;</span><br><span class="line">    va_list ap;</span><br><span class="line">    va_start(ap, num);</span><br><span class="line">    uint32_t a[MAX_ARGS];</span><br><span class="line">    int i, ret;</span><br><span class="line">    for (i = 0; i &lt; MAX_ARGS; i ++) &#123;</span><br><span class="line">        a[i] = va_arg(ap, uint32_t);</span><br><span class="line">    &#125;</span><br><span class="line">    va_end(ap);</span><br><span class="line"></span><br><span class="line">    asm volatile (</span><br><span class="line">        &quot;int %1;&quot;</span><br><span class="line">        : &quot;=a&quot; (ret)</span><br><span class="line">        : &quot;i&quot; (T_SYSCALL),</span><br><span class="line">          &quot;a&quot; (num),</span><br><span class="line">          &quot;d&quot; (a[0]),</span><br><span class="line">          &quot;c&quot; (a[1]),</span><br><span class="line">          &quot;b&quot; (a[2]),</span><br><span class="line">          &quot;D&quot; (a[3]),</span><br><span class="line">          &quot;S&quot; (a[4])</span><br><span class="line">        : &quot;cc&quot;, &quot;memory&quot;);</span><br><span class="line">    return ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>从中可以看出，应用程序调用的exit/fork/wait/getpid等库函数最终都会调用syscall函数，只是调用的参数不同而已，如果看最终的汇编代码会更清楚：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">……</span><br><span class="line">  34:    8b 55 d4               mov    -0x2c(%ebp),%edx</span><br><span class="line">  37:    8b 4d d8               mov    -0x28(%ebp),%ecx</span><br><span class="line">  3a:    8b 5d dc               mov    -0x24(%ebp),%ebx</span><br><span class="line">  3d:    8b 7d e0               mov    -0x20(%ebp),%edi</span><br><span class="line">  40:    8b 75 e4               mov    -0x1c(%ebp),%esi</span><br><span class="line">  43:    8b 45 08               mov    0x8(%ebp),%eax</span><br><span class="line">  46:    cd 80                  int    $0x80</span><br><span class="line">  48:    89 45 f0               mov    %eax,-0x10(%ebp)</span><br><span class="line">……</span><br></pre></td></tr></table></figure></p>
+<p>可以看到其实是把系统调用号放到EAX，其他5个参数a[0]~a[4]分别保存到EDX/ECX/EBX/EDI/ESI五个寄存器中，及最多用6个寄存器来传递系统调用的参数，且系统调用的返回结果是EAX。比如对于getpid库函数而言，系统调用号（SYS_getpid=18）是保存在EAX中，返回值（调用此库函数的的当前进程号pid）也在EAX中。</p>
+<h5 id="与用户进程相关的系统调用"><a href="#与用户进程相关的系统调用" class="headerlink" title="与用户进程相关的系统调用"></a>与用户进程相关的系统调用</h5><p>在本实验中，与进程相关的各个系统调用属性如下所示：<br>|系统调用名  | 含义 | 具体完成服务的函数 |<br>|—-|—-|—-|<br>|SYS_exit   | process exit  |  do_exit |<br>|SYS_fork   | create child process, dup mm  |  do_fork–&gt;wakeup_proc |<br>|SYS_wait   | wait child process | do_wait |<br>|SYS_exec   | after fork, process execute a new program  | load a program and refresh the mm |<br>|SYS_yield  | process flag itself need resecheduling | proc-&gt;need_sched=1, then scheduler will rescheule this process |<br>|SYS_kill   | kill process  |  do_kill–&gt;proc-&gt;flags |= PF_EXITING, –&gt;wakeup_proc–&gt;do_wait–&gt;do_exit |<br>|SYS_getpid | get the process’s pid |  |</p>
+<p><br></p>
+<h5 id="系统调用的执行过程"><a href="#系统调用的执行过程" class="headerlink" title="系统调用的执行过程"></a>系统调用的执行过程</h5><p>与用户态的函数库调用执行过程相比，系统调用执行过程的有四点主要的不同：</p>
+<ul>
+<li>不是通过“CALL”指令而是通过“INT”指令发起调用；</li>
+<li>不是通过“RET”指令，而是通过“IRET”指令完成调用返回；</li>
+<li>当到达内核态后，操作系统需要严格检查系统调用传递的参数，确保不破坏整个系统的安全性；</li>
+<li>执行系统调用可导致进程等待某事件发生，从而可引起进程切换；</li>
+</ul>
+<p>下面我们以getpid系统调用的执行过程大致看看操作系统是如何完成整个执行过程的。当用户进程调用getpid函数，最终执行到<code>INT T_SYSCALL</code>指令后，CPU根据操作系统建立的系统调用中断描述符，转入内核态，并跳转到vector128处（kern/trap/vectors.S），开始了操作系统的系统调用执行过程，函数调用和返回操作的关系如下所示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">vector128(vectors.S) --&gt; </span><br><span class="line">__alltraps(trapentry.S) --&gt; trap(trap.c) --&gt; trap_dispatch(trap.c) --&gt; syscall(syscall.c) --&gt; sys_getpid(syscall.c) --&gt; …… --&gt; __trapret(trapentry.S)</span><br></pre></td></tr></table></figure></p>
+<p>在执行trap函数前，软件还需进一步保存执行系统调用前的执行现场，即把与用户进程继续执行所需的相关寄存器等当前内容保存到当前进程的中断帧trapframe中（注意，在创建进程是，把进程的trapframe放在给进程的内核栈分配的空间的顶部）。软件做的工作在vector128和__alltraps的起始部分：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">vectors.S::vector128起始处:</span><br><span class="line">  pushl $0</span><br><span class="line">  pushl $128</span><br><span class="line">......</span><br><span class="line">trapentry.S::__alltraps起始处:</span><br><span class="line">pushl %ds</span><br><span class="line">  pushl %es</span><br><span class="line">  pushal</span><br><span class="line">……</span><br></pre></td></tr></table></figure></p>
+<p>自此，用于保存用户态的用户进程执行现场的trapframe的内容填写完毕，操作系统可开始完成具体的系统调用服务。在sys_getpid函数中，简单地把当前进程的pid成员变量做为函数返回值就是一个具体的系统调用服务。完成服务后，操作系统按调用关系的路径原路返回到__alltraps中。然后操作系统开始根据当前进程的中断帧内容做恢复执行现场操作。其实就是把trapframe的一部分内容保存到寄存器内容。恢复寄存器内容结束后，调整内核堆栈指针到中断帧的tf_eip处，这是内核栈的结构如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">/* below here defined by x86 hardware */</span><br><span class="line">    uintptr_t tf_eip;</span><br><span class="line">    uint16_t tf_cs;</span><br><span class="line">    uint16_t tf_padding3;</span><br><span class="line">    uint32_t tf_eflags;</span><br><span class="line">/* below here only when crossing rings */</span><br><span class="line">    uintptr_t tf_esp;</span><br><span class="line">    uint16_t tf_ss;</span><br><span class="line">    uint16_t tf_padding4;</span><br></pre></td></tr></table></figure></p>
+<p>这时执行<code>IRET</code>指令后，CPU根据内核栈的情况回复到用户态，并把EIP指向tf_eip的值，即<code>INT T_SYSCALL</code>后的那条指令。这样整个系统调用就执行完毕了。</p>
+<h2 id="读load-icode有感"><a href="#读load-icode有感" class="headerlink" title="读load_icode有感"></a>读load_icode有感</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br></pre></td><td class="code"><pre><span class="line">/* load_icode - load the content of binary program(ELF format) as the new content of current process</span><br><span class="line"> * @binary:  the memory addr of the content of binary program</span><br><span class="line"> * @size:  the size of the content of binary program</span><br><span class="line"> * 读取一个二进制elf文件并为其设置执行场景，并执行</span><br><span class="line"> */</span><br><span class="line">static int</span><br><span class="line">load_icode(unsigned char *binary, size_t size) &#123;</span><br><span class="line">    if (current-&gt;mm != NULL) &#123;</span><br><span class="line">        panic(&quot;load_icode: current-&gt;mm must be empty.\n&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    int ret = -E_NO_MEM;</span><br><span class="line">    struct mm_struct *mm;</span><br><span class="line">    //(1) create a new mm for current process</span><br><span class="line">    if ((mm = mm_create()) == NULL) &#123;</span><br><span class="line">        goto bad_mm;</span><br><span class="line">    &#125;</span><br><span class="line">    //(2) create a new PDT, and mm-&gt;pgdir= kernel virtual addr of PDT</span><br><span class="line">    if (setup_pgdir(mm) != 0) &#123;</span><br><span class="line">        goto bad_pgdir_cleanup_mm;</span><br><span class="line">    &#125;</span><br><span class="line">    //(3) copy TEXT/DATA section, build BSS parts in binary to memory space of process</span><br><span class="line">    struct Page *page;</span><br><span class="line">    //(3.1) get the file header of the bianry program (ELF format)</span><br><span class="line">    // 将二进制串转成描述elf的结构体</span><br><span class="line">    struct elfhdr *elf = (struct elfhdr *)binary;</span><br><span class="line">    //(3.2) get the entry of the program section headers of the bianry program (ELF format)</span><br><span class="line">    // 获取elf头的起始地址</span><br><span class="line">    struct proghdr *ph = (struct proghdr *)(binary + elf-&gt;e_phoff);</span><br><span class="line">    // 代码段的头</span><br><span class="line">    //(3.3) This program is valid?</span><br><span class="line">    // 第一个实验中说了elf的这个域是ELF_MAGIC</span><br><span class="line">    if (elf-&gt;e_magic != ELF_MAGIC) &#123;</span><br><span class="line">        ret = -E_INVAL_ELF;</span><br><span class="line">        goto bad_elf_cleanup_pgdir;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    uint32_t vm_flags, perm;</span><br><span class="line">    struct proghdr *ph_end = ph + elf-&gt;e_phnum;</span><br><span class="line">    for (; ph &lt; ph_end; ph ++) &#123;</span><br><span class="line">    //(3.4) find every program section headers</span><br><span class="line">    // 每一个程序段</span><br><span class="line">        if (ph-&gt;p_type != ELF_PT_LOAD) &#123;</span><br><span class="line">          //程序段头里的这个程序段的类型，如可加载的代码、数据、动态链接信息等</span><br><span class="line">            continue ;</span><br><span class="line">        &#125;</span><br><span class="line">        if (ph-&gt;p_filesz &gt; ph-&gt;p_memsz) &#123;</span><br><span class="line">            ret = -E_INVAL_ELF;</span><br><span class="line">            goto bad_cleanup_mmap;</span><br><span class="line">        &#125;</span><br><span class="line">        if (ph-&gt;p_filesz == 0) &#123;</span><br><span class="line">        // 这个段的大小</span><br><span class="line">            continue ;</span><br><span class="line">        &#125;</span><br><span class="line">    //(3.5) call mm_map fun to setup the new vma ( ph-&gt;p_va, ph-&gt;p_memsz)</span><br><span class="line">        vm_flags = 0, perm = PTE_U;</span><br><span class="line">        if (ph-&gt;p_flags &amp; ELF_PF_X) vm_flags |= VM_EXEC;</span><br><span class="line">        if (ph-&gt;p_flags &amp; ELF_PF_W) vm_flags |= VM_WRITE;</span><br><span class="line">        if (ph-&gt;p_flags &amp; ELF_PF_R) vm_flags |= VM_READ;</span><br><span class="line">        // 可读、可写、可执行？</span><br><span class="line"></span><br><span class="line">        if (vm_flags &amp; VM_WRITE) perm |= PTE_W;</span><br><span class="line">        if ((ret = mm_map(mm, ph-&gt;p_va, ph-&gt;p_memsz, vm_flags, NULL)) != 0) &#123;</span><br><span class="line">            goto bad_cleanup_mmap;</span><br><span class="line">        // 创建一个vma，并把这个vma加入到mm的list中</span><br><span class="line">        &#125;</span><br><span class="line">        unsigned char *from = binary + ph-&gt;p_offset;</span><br><span class="line">        size_t off, size;</span><br><span class="line">        uintptr_t start = ph-&gt;p_va, end, la = ROUNDDOWN(start, PGSIZE);</span><br><span class="line">        // </span><br><span class="line">        ret = -E_NO_MEM;</span><br><span class="line"></span><br><span class="line">     //(3.6) alloc memory, and  copy the contents of every program section (from, from+end) to process&apos;s memory</span><br><span class="line">(la, la+end)</span><br><span class="line">        end = ph-&gt;p_va + ph-&gt;p_filesz;</span><br><span class="line">     //(3.6.1) copy TEXT/DATA section of bianry program</span><br><span class="line">     // 分配页</span><br><span class="line">        while (start &lt; end) &#123;</span><br><span class="line">            if ((page = pgdir_alloc_page(mm-&gt;pgdir, la, perm)) == NULL) &#123;</span><br><span class="line">                goto bad_cleanup_mmap;</span><br><span class="line">            &#125;</span><br><span class="line">            off = start - la, size = PGSIZE - off, la += PGSIZE;</span><br><span class="line">            if (end &lt; la) &#123;</span><br><span class="line">                size -= la - end;</span><br><span class="line">            &#125;</span><br><span class="line">            memcpy(page2kva(page) + off, from, size);</span><br><span class="line">            start += size, from += size;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">      //(3.6.2) build BSS section of binary program</span><br><span class="line">        end =  ph-&gt;p_va + ph-&gt;p_memsz;</span><br><span class="line">        if (start &lt; la) &#123;</span><br><span class="line">            /* ph-&gt;p_memsz == ph-&gt;p_filesz */</span><br><span class="line">            if (start == end) &#123;</span><br><span class="line">                continue ;</span><br><span class="line">            &#125;</span><br><span class="line">            off = start + PGSIZE - la, size = PGSIZE - off;</span><br><span class="line">            if (end &lt; la) &#123;</span><br><span class="line">                size -= la - end;</span><br><span class="line">            &#125;</span><br><span class="line">            memset(page2kva(page) + off, 0, size);</span><br><span class="line">            start += size;</span><br><span class="line">            assert((end &lt; la &amp;&amp; start == end) || (end &gt;= la &amp;&amp; start == la));</span><br><span class="line">        &#125;</span><br><span class="line">        while (start &lt; end) &#123;</span><br><span class="line">            if ((page = pgdir_alloc_page(mm-&gt;pgdir, la, perm)) == NULL) &#123;</span><br><span class="line">                goto bad_cleanup_mmap;</span><br><span class="line">            &#125;</span><br><span class="line">            off = start - la, size = PGSIZE - off, la += PGSIZE;</span><br><span class="line">            if (end &lt; la) &#123;</span><br><span class="line">                size -= la - end;</span><br><span class="line">            &#125;</span><br><span class="line">            memset(page2kva(page) + off, 0, size);</span><br><span class="line">            start += size;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    //(4) build user stack memory</span><br><span class="line">    vm_flags = VM_READ | VM_WRITE | VM_STACK;</span><br><span class="line">    if ((ret = mm_map(mm, USTACKTOP - USTACKSIZE, USTACKSIZE, vm_flags, NULL)) != 0) &#123;</span><br><span class="line">        goto bad_cleanup_mmap;</span><br><span class="line">    &#125;</span><br><span class="line">    assert(pgdir_alloc_page(mm-&gt;pgdir, USTACKTOP-PGSIZE , PTE_USER) != NULL);</span><br><span class="line">    assert(pgdir_alloc_page(mm-&gt;pgdir, USTACKTOP-2*PGSIZE , PTE_USER) != NULL);</span><br><span class="line">    assert(pgdir_alloc_page(mm-&gt;pgdir, USTACKTOP-3*PGSIZE , PTE_USER) != NULL);</span><br><span class="line">    assert(pgdir_alloc_page(mm-&gt;pgdir, USTACKTOP-4*PGSIZE , PTE_USER) != NULL);</span><br><span class="line"></span><br><span class="line">    //(5) set current process&apos;s mm, sr3, and set CR3 reg = physical addr of Page Directory</span><br><span class="line">    mm_count_inc(mm); // mm的count加1，计算有多少进程同时使用这个mm</span><br><span class="line">    current-&gt;mm = mm; // 当前进程的mm是这个mm</span><br><span class="line">    current-&gt;cr3 = PADDR(mm-&gt;pgdir); // 虚拟地址转换成物理地址</span><br><span class="line">    lcr3(PADDR(mm-&gt;pgdir));</span><br><span class="line"></span><br><span class="line">    //(6) setup trapframe for user environment</span><br><span class="line">    struct trapframe *tf = current-&gt;tf;</span><br><span class="line">    memset(tf, 0, sizeof(struct trapframe));</span><br><span class="line">    /* LAB5:EXERCISE1 YOUR CODE</span><br><span class="line">     * should set tf_cs,tf_ds,tf_es,tf_ss,tf_esp,tf_eip,tf_eflags</span><br><span class="line">     * NOTICE: If we set trapframe correctly, then the user level process can return to USER MODE from kernel. S</span><br><span class="line">o</span><br><span class="line">     * tf_cs should be USER_CS segment (see memlayout.h)</span><br><span class="line">     * tf_ds=tf_es=tf_ss should be USER_DS segment        </span><br><span class="line">     * tf_esp should be the top addr of user stack (USTACKTOP)</span><br><span class="line">     * tf_eip should be the entry point of this binary program (elf-&gt;e_entry)</span><br><span class="line">     * tf_eflags should be set to enable computer to produce Interrupt</span><br><span class="line">     */</span><br><span class="line">    tf-&gt;tf_cs = USER_CS;</span><br><span class="line">    tf-&gt;tf_ds = tf-&gt;tf_es = tf-&gt;tf_ss = USER_DS;</span><br><span class="line">    tf-&gt;tf_esp = USTACKTOP;</span><br><span class="line">    tf-&gt;tf_eip = elf-&gt;e_entry;</span><br><span class="line">    tf-&gt;tf_eflags = 0x00000002 | FL_IF; // to enable interrupt</span><br><span class="line">    //网上这里有的是这么写的，不知道为啥，我觉得应该只要FL_IF就够了，可能是我考虑不周</span><br><span class="line">/*</span><br><span class="line">    #define FL_IF           0x00000200  // Interrupt Flag</span><br><span class="line">    tf-&gt;tf_eflags = FL_IF;</span><br><span class="line">*/</span><br><span class="line">    ret = 0;</span><br><span class="line">out:</span><br><span class="line">    return ret;</span><br><span class="line">bad_cleanup_mmap:</span><br><span class="line">    exit_mmap(mm);</span><br><span class="line">bad_elf_cleanup_pgdir:</span><br><span class="line">    put_pgdir(mm);</span><br><span class="line">bad_pgdir_cleanup_mm:</span><br><span class="line">    mm_destroy(mm);</span><br><span class="line">bad_mm:</span><br><span class="line">    goto out;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="练习1：加载应用程序并执行"><a href="#练习1：加载应用程序并执行" class="headerlink" title="练习1：加载应用程序并执行"></a>练习1：加载应用程序并执行</h2><p>do_execv函数调用了load_icode函数（位于kern/process/proc.c中）来加载并解析一个处于内存中的ELF执行文件格式的应用程序，并建立了相应的用户内存空间来存放应用程序的代码段、数据段 等，且要设置好proc_struct结构中的成员变量trapframe中的内容，确保在执行此进程后，能够从应用程序设定的起始执行地址开始执行。</p>
+<p>load_icode函数是由do_execve函数调用的，而该函数是exec系统调用的最终处理的函数，功能为将某一个指定的ELF可执行二进制文件加载到当前内存中来，然后当前进程执行这个可执行文件（先前执行的内容全部清空），而load_icode函数的功能则在于为执行新的程序初始化好内存空间，在调用该函数之前，do_execve中已经退出了当前进程的内存空间，改使用了内核的内存空间，这样使得对原先用户态的内存空间的操作成为可能；</p>
+<p>由于最终是在用户态下运行的，所以需要将段寄存器初始化为用户态的代码段、数据段、堆栈段；<br>esp应当指向先前的步骤中创建的用户栈的栈顶；<br>eip应当指向ELF可执行文件加载到内存之后的入口处；<br>eflags中应当初始化为中断使能，注意eflags的第1位是恒为1的；<br>设置ret为0，表示正常返回；<br>见上边的函数代码。</p>
+<p>首先在初始化IDT的时候，设置系统调用对应的中断描述符，使其能够在用户态下被调用，并且设置为trap类型。设置系统调用中断是用户态的。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">    extern uintptr_t __vectors[];</span><br><span class="line">    int i;</span><br><span class="line">    for (i = 0; i &lt; sizeof(idt) / sizeof(struct gatedesc); i ++) &#123;</span><br><span class="line">        SETGATE(idt[i], 0, GD_KTEXT, __vectors[i], DPL_KERNEL);</span><br><span class="line">    &#125;</span><br><span class="line">    SETGATE(idt[T_SYSCALL], 1, GD_KTEXT, __vectors[T_SYSCALL], DPL_USER);</span><br><span class="line">    lidt(&amp;idt_pd);</span><br><span class="line"></span><br><span class="line">/* *</span><br><span class="line"> * Set up a normal interrupt/trap gate descriptor</span><br><span class="line"> *   - istrap: 1 for a trap (= exception) gate, 0 for an interrupt gate</span><br><span class="line"> *   - sel: Code segment selector for interrupt/trap handler</span><br><span class="line"> *   - off: Offset in code segment for interrupt/trap handler</span><br><span class="line"> *   - dpl: Descriptor Privilege Level - the privilege level required</span><br><span class="line"> *          for software to invoke this interrupt/trap gate explicitly</span><br><span class="line"> *          using an int instruction.</span><br><span class="line"> * */</span><br><span class="line">#define SETGATE(gate, istrap, sel, off, dpl) &#123;               \</span><br><span class="line">        (gate).gd_off_15_0 = (uint32_t)(off) &amp; 0xffff;      \</span><br><span class="line">        (gate).gd_ss = (sel);                                \</span><br><span class="line">        (gate).gd_args = 0;                                 \</span><br><span class="line">        (gate).gd_rsv1 = 0;                                 \</span><br><span class="line">        (gate).gd_type = (istrap) ? STS_TG32 : STS_IG32;    \</span><br><span class="line">        (gate).gd_s = 0;                                    \</span><br><span class="line">        (gate).gd_dpl = (dpl);                              \</span><br><span class="line">        (gate).gd_p = 1;                                    \</span><br><span class="line">        (gate).gd_off_31_16 = (uint32_t)(off) &gt;&gt; 16;        \</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p>同样是在trap.c里，设置当计时器到点之后，也就是100个时钟周期之后，这个进程就是可以被重新调度的了，实现多线程的并发执行。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">    case IRQ_OFFSET + IRQ_TIMER:</span><br><span class="line">        ticks++;</span><br><span class="line">        if(ticks&gt;=TICK_NUM)&#123;</span><br><span class="line">            assert(current != NULL);</span><br><span class="line">            current-&gt;need_resched = 1;</span><br><span class="line">            //print_ticks();</span><br><span class="line">            ticks=0;</span><br><span class="line">        &#125;</span><br><span class="line">        /* LAB5 YOUR CODE */</span><br><span class="line">        /* you should upate you lab1 code (just add ONE or TWO lines of code):</span><br><span class="line">         *    Every TICK_NUM cycle, you should set current process&apos;s current-&gt;need_resched = 1</span><br><span class="line">         */</span><br><span class="line">-</span><br></pre></td></tr></table></figure></p>
+<p>在proc_alloc函数中，额外对进程控制块中新增加的wait_state, cptr, yptr, optr成员变量进行初始化；<br>在alloc_proc(void)函数中，对新增的几个变量初始化<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"> //LAB5 YOUR CODE : (update LAB4 steps)</span><br><span class="line">/*</span><br><span class="line"> * below fields(add in LAB5) in proc_struct need to be initialized</span><br><span class="line"> *       uint32_t wait_state;                        // waiting state</span><br><span class="line"> *       struct proc_struct *cptr, *yptr, *optr;     // relations between processes</span><br><span class="line">     */</span><br><span class="line">    proc-&gt;wait_state = 0;</span><br><span class="line">    proc-&gt;cptr = proc-&gt;optr = proc-&gt;yptr = NULL;</span><br></pre></td></tr></table></figure></p>
+<p>在do_fork函数中，使用set_links函数来完成将fork的线程添加到线程链表中的过程，值得注意的是，该函数中就包括了将其加入list和对进程总数加1这一操作，因此需要将原先的这个操作给删除掉；<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line">// set_links - set the relation links of process</span><br><span class="line">static void</span><br><span class="line">set_links(struct proc_struct *proc) &#123;</span><br><span class="line">    list_add(&amp;proc_list, &amp;(proc-&gt;list_link));</span><br><span class="line">    proc-&gt;yptr = NULL;</span><br><span class="line">    if ((proc-&gt;optr = proc-&gt;parent-&gt;cptr) != NULL) &#123;</span><br><span class="line">        proc-&gt;optr-&gt;yptr = proc;</span><br><span class="line">    &#125;</span><br><span class="line">    proc-&gt;parent-&gt;cptr = proc;</span><br><span class="line">    nr_process ++;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//LAB5 YOUR CODE : (update LAB4 steps)</span><br><span class="line">/* Some Functions</span><br><span class="line"> *    set_links:  set the relation links of process.  ALSO SEE: remove_links:  lean the relation links of process</span><br><span class="line"> *    -------------------</span><br><span class="line"> *    update step 1: set child proc&apos;s parent to current process, make sure current process&apos;s wait_state is 0</span><br><span class="line"> *    update step 5: insert proc_struct into hash_list &amp;&amp; proc_list, set the relation links of process</span><br><span class="line"> */</span><br><span class="line">// 1. call alloc_proc to allocate a proc_struct</span><br><span class="line">    proc = alloc_proc();</span><br><span class="line">    if(proc == NULL)</span><br><span class="line">        goto fork_out;</span><br><span class="line">// 2. call setup_kstack to allocate a kernel stack for child process</span><br><span class="line">    proc-&gt;parent = current;</span><br><span class="line">    assert(current-&gt;wait_state == 0);</span><br><span class="line"></span><br><span class="line">    int status = setup_kstack(proc);</span><br><span class="line">    if(status != 0)</span><br><span class="line">        goto bad_fork_cleanup_kstack;</span><br><span class="line">// 3. call copy_mm to dup OR share mm according clone_flag</span><br><span class="line">    status = copy_mm(clone_flags, proc);</span><br><span class="line">    if(status != 0)</span><br><span class="line">        goto bad_fork_cleanup_proc;</span><br><span class="line">// 4. call copy_thread to setup tf &amp; context in proc_struct</span><br><span class="line">    copy_thread(proc, stack, tf);</span><br><span class="line">// 5. insert proc_struct into hash_list &amp;&amp; proc_list</span><br><span class="line">    proc-&gt;pid = get_pid();</span><br><span class="line">    hash_proc(proc);</span><br><span class="line">    set_links(proc);</span><br><span class="line"></span><br><span class="line">// delete thses two lines !!!</span><br><span class="line">    //nr_process ++;</span><br><span class="line">    //list_add(&amp;proc_list, &amp;proc-&gt;list_link);</span><br><span class="line">// delete thses two lines !!!</span><br><span class="line"></span><br><span class="line">// 6. call wakeup_proc to make the new child process RUNNABLE</span><br><span class="line">    wakeup_proc(proc);</span><br><span class="line">// 7. set ret vaule using child proc&apos;s pid</span><br><span class="line">    ret = proc-&gt;pid;</span><br></pre></td></tr></table></figure></p>
+<p>请在实验报告中描述当创建一个用户态进程并加载了应用程序后，CPU是如何让这个应用程序最终在用户态执行起来的。即这个用户态进程被ucore选择占用CPU执行（RUNNING态） 到具体执行应用程序第一条指令的整个经过。</p>
+<ul>
+<li>在经过调度器占用了CPU的资源之后，用户态进程调用了exec系统调用，从而转入到了系统调用的处理例程；</li>
+<li>调用中断处理例程之后，最终控制权转移到了syscall.c中的syscall函数，然后根据系统调用号转移给了sys_exec函数，在该函数中调用了上文中提及的do_execve函数来完成指定应用程序的加载；</li>
+<li>在do_execve中进行了若干设置，包括退出当前进程的页表，换用kernel的PDT之后，使用load_icode函数，完成了对整个用户线程内存空间的初始化，包括堆栈的设置以及将ELF可执行文件的加载，之后通过current-&gt;tf指针修改了当前系统调用的trapframe，使得最终中断返回的时候能够切换到用户态，并且同时可以正确地将控制权转移到应用程序的入口处；</li>
+<li>在完成了do_exec函数之后，进行正常的中断返回的流程，由于中断处理例程的栈上面的eip已经被修改成了应用程序的入口处，而cs上的CPL是用户态，因此iret进行中断返回的时候会将堆栈切换到用户的栈，并且完成特权级的切换，并且跳转到要求的应用程序的入口处；</li>
+<li>接下来开始具体执行应用程序的第一条指令；</li>
+</ul>
+<blockquote>
+<p>本问题参考：<a href="https://www.jianshu.com/p/8c852af5b403" target="_blank" rel="noopener">https://www.jianshu.com/p/8c852af5b403</a></p>
+</blockquote>
+<h2 id="练习2：父进程复制自己的内存空间给子进程"><a href="#练习2：父进程复制自己的内存空间给子进程" class="headerlink" title="练习2：父进程复制自己的内存空间给子进程"></a>练习2：父进程复制自己的内存空间给子进程</h2><p>创建子进程的函数do_fork在执行中将拷贝当前进程（即父进程）的用户内存地址空间中的合法内容到新进程中（子进程），完成内存资源的复制。具体是通过copy_range函数（位于 kern/mm/pmm.c中）实现的，请补充copy_range的实现，确保能够正确执行。</p>
+<ul>
+<li>父进程调用fork()，进入中断处理机制，最终交由syscall函数进行处理；</li>
+<li>在syscall，根据系统调用号，交由sys_fork函数处理；</li>
+<li>进一步调用do_fork函数，这个函数创建了子进程、并且将父进程的内存空间复制给子进程；</li>
+<li>在do_fork函数中，调用copy_mm进行内存空间的复制，在该函数中，进一步调用了dup_mmap。dup_mmap中遍历父进程的所有合法虚拟内存空间，并且将这些空间的内容复制到子进程的内存空间中去；</li>
+<li>在copy_range函数中，对需要复制的内存空间按照页为单位从父进程的内存空间复制到子进程的内存空间中去；</li>
+</ul>
+<p>遍历父进程指定的某一段内存空间中的每一个虚拟页，如果这个虚拟页存在，为子进程对应的同一个地址（但是页目录表是不一样的，因此不是一个内存空间）也申请分配一个物理页，然后将前者中的所有内容复制到后者中去，然后为子进程的这个物理页和对应的虚拟地址（事实上是线性地址）建立映射关系；而在本练习中需要完成的内容就是内存的复制和映射的建立，具体流程如下：</p>
+<ul>
+<li>找到父进程指定的某一物理页对应的内核虚拟地址；</li>
+<li>找到需要拷贝过去的子进程的对应物理页对应的内核虚拟地址；</li>
+<li>将前者的内容拷贝到后者中去；</li>
+<li>为子进程当前分配这一物理页映射上对应的在子进程虚拟地址空间里的一个虚拟页；</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line">/* copy_range - copy content of memory (start, end) of one process A to another process B</span><br><span class="line"> * @to:    the addr of process B&apos;s Page Directory</span><br><span class="line"> * @from:  the addr of process A&apos;s Page Directory</span><br><span class="line"> * @share: flags to indicate to dup OR share. We just use dup method, so it didn&apos;t be used.</span><br><span class="line"> *</span><br><span class="line"> * CALL GRAPH: copy_mm--&gt;dup_mmap--&gt;copy_range</span><br><span class="line"> */</span><br><span class="line">int</span><br><span class="line">copy_range(pde_t *to, pde_t *from, uintptr_t start, uintptr_t end, bool share) &#123;</span><br><span class="line">    assert(start % PGSIZE == 0 &amp;&amp; end % PGSIZE == 0);</span><br><span class="line">    assert(USER_ACCESS(start, end));</span><br><span class="line">    // copy content by page unit.</span><br><span class="line">    do &#123;</span><br><span class="line">        //call get_pte to find process A&apos;s pte according to the addr start</span><br><span class="line">        pte_t *ptep = get_pte(from, start, 0), *nptep;</span><br><span class="line">        if (ptep == NULL) &#123;</span><br><span class="line">            start = ROUNDDOWN(start + PTSIZE, PTSIZE);</span><br><span class="line">            continue ;</span><br><span class="line">        &#125;</span><br><span class="line">        //call get_pte to find process B&apos;s pte according to the addr start. If pte is NULL, just alloc a PT</span><br><span class="line">        if (*ptep &amp; PTE_P) &#123;</span><br><span class="line">            if ((nptep = get_pte(to, start, 1)) == NULL) &#123;</span><br><span class="line">                return -E_NO_MEM;</span><br><span class="line">            &#125;</span><br><span class="line">        uint32_t perm = (*ptep &amp; PTE_USER);</span><br><span class="line">        //get page from ptep</span><br><span class="line">        struct Page *page = pte2page(*ptep);</span><br><span class="line">        // alloc a page for process B</span><br><span class="line">        struct Page *npage=alloc_page();</span><br><span class="line">        assert(page!=NULL);</span><br><span class="line">        assert(npage!=NULL);</span><br><span class="line">        int ret=0;</span><br><span class="line">        /* LAB5:EXERCISE2 YOUR CODE</span><br><span class="line">         * replicate content of page to npage, build the map of phy addr of nage with the linear addr start</span><br><span class="line">         *</span><br><span class="line">         * Some Useful MACROs and DEFINEs, you can use them in below implementation.</span><br><span class="line">         * MACROs or Functions:</span><br><span class="line">         *    page2kva(struct Page *page): return the kernel vritual addr of memory which page managed (SEE pmm.</span><br><span class="line">h)</span><br><span class="line">         *    page_insert: build the map of phy addr of an Page with the linear addr la</span><br><span class="line">         *    memcpy: typical memory copy function</span><br><span class="line">         *</span><br><span class="line">         * (1) find src_kvaddr: the kernel virtual address of page</span><br><span class="line">         * (2) find dst_kvaddr: the kernel virtual address of npage</span><br><span class="line">         * (3) memory copy from src_kvaddr to dst_kvaddr, size is PGSIZE</span><br><span class="line">         * (4) build the map of phy addr of  nage with the linear addr start</span><br><span class="line">         */</span><br><span class="line">         char *src_kvaddr = page2kva(page); </span><br><span class="line">         //找到父进程需要复制的物理页在内核地址空间中的虚拟地址，这是由于这个函数执行的时候使用的时内核的地址空间</span><br><span class="line">         char *dst_kvaddr = page2kva(npage); </span><br><span class="line">         // 找到子进程需要被填充的物理页的内核虚拟地址</span><br><span class="line">        memcpy(dst_kvaddr, src_kvaddr, PGSIZE); </span><br><span class="line">        // 将父进程的物理页的内容复制到子进程中去</span><br><span class="line">        page_insert(to, npage, start, perm); </span><br><span class="line">        // 建立子进程的物理页与虚拟页的映射关系</span><br><span class="line">        assert(ret == 0);</span><br><span class="line">        &#125;</span><br><span class="line">        start += PGSIZE;</span><br><span class="line">    &#125; while (start != 0 &amp;&amp; start &lt; end);</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="练习3：阅读分析源代码，理解进程执行-fork-exec-wait-exit-的实现，以及系统调用的实现（不需要编码）"><a href="#练习3：阅读分析源代码，理解进程执行-fork-exec-wait-exit-的实现，以及系统调用的实现（不需要编码）" class="headerlink" title="练习3：阅读分析源代码，理解进程执行 fork/exec/wait/exit 的实现，以及系统调用的实现（不需要编码）"></a>练习3：阅读分析源代码，理解进程执行 fork/exec/wait/exit 的实现，以及系统调用的实现（不需要编码）</h2><ol>
+<li><p>fork：在执行了fork系统调用之后，会执行正常的中断处理流程，到中断向量表里查系统调用入口，最终将控制权转移给syscall，之后根据系统调用号执行sys_fork函数，进一步执行了上文中的do_fork函数，新进程的进程控制块进行初始化、设置、以及调用copy_mm将父进程内存中的内容到子进程的内存的复制工作，然后调用wakeup_proc将新创建的进程放入可执行队列（runnable），之后由调度器对子进程进行调度。</p>
+</li>
+<li><p>exec：在执行了exec系统调用之后，会执行正常的中断处理流程，到中断向量表里查系统调用入口，最终将控制权转移给syscall，之后根据系统调用号执行sys_exec函数，进一步执行了上文中的do_execve函数。在该函数中，会对内存空间进行清空，然后调用load_icode将将要执行的程序加载到内存中，然后调用lcr3(boot_cr4)设置好中断帧，使得最终中断返回之后可以跳转到指定的应用程序的入口处，就可以正确执行了。</p>
+</li>
+<li><p>wait：在执行了wait系统调用之后，会执行正常的中断处理流程，到中断向量表里查系统调用入口，最终将控制权转移给syscall，之后根据系统调用号执行sys_wait函数，进一步执行了的do_wait函数，在这个函数中，找一个当前进程的处于ZOMBIE状态的子进程，如果有的话直接将其占用的资源释放掉即可；如果找不到，则将我这个进程的状态改成SLEEPING态，并且标记为等待ZOMBIE态的子进程，然后调用schedule函数将其当前线程从CPU占用中切换出去，直到有对应的子进程结束来唤醒这个进程为止。</p>
+</li>
+<li><p>exit：在执行了exit系统调用之后，会执行正常的中断处理流程，到中断向量表里查系统调用入口，最终将控制权转移给syscall，之后根据系统调用号执行sys_exit函数，进一步执行了的do_exit函数，首先将释放当前进程的大多数资源，然后将其标记为ZOMBIE态，然后调用wakeup_proc函数将其父进程唤醒（如果父进程执行了wait进入SLEEPING态的话），然后调用schedule函数，让出CPU资源，等待父进程进一步完成其所有资源的回收；</p>
+</li>
+</ol>
+<p>问题回答</p>
+<p>请分析fork/exec/wait/exit在实现中是如何影响进程的执行状态的？</p>
+<p>fork不会影响当前进程的执行状态，但是会将子进程的状态标记为RUNNALB，使得可以在后续的调度中运行起来；<br>exec不会影响当前进程的执行状态，但是会修改当前进程中执行的程序；<br>wait系统调用取决于是否存在可以释放资源（ZOMBIE）的子进程，如果有的话不会发生状态的改变，如果没有的话会将当前进程置为SLEEPING态，等待执行了exit的子进程将其唤醒；<br>exit会将当前进程的状态修改为ZOMBIE态，并且会将父进程唤醒（修改为RUNNABLE），然后主动让出CPU使用权；</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/操作系统/" rel="tag"># 操作系统</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/29/清华大学操作系统课程实验三/" rel="next" title="清华大学操作系统课程实验三">
+                <i class="fa fa-chevron-left"></i> 清华大学操作系统课程实验三
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/29/清华大学操作系统课程笔记四/" rel="prev" title="清华大学操作系统课程笔记四">
+                清华大学操作系统课程笔记四 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">200</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/test.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#实验五：用户进程管理"><span class="nav-number">1.</span> <span class="nav-text">实验五：用户进程管理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#实验目的"><span class="nav-number">1.1.</span> <span class="nav-text">实验目的</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实验内容"><span class="nav-number">1.2.</span> <span class="nav-text">实验内容</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#预备知识"><span class="nav-number">1.3.</span> <span class="nav-text">预备知识</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#实验执行流程概述"><span class="nav-number">1.3.1.</span> <span class="nav-text">实验执行流程概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#创建用户进程"><span class="nav-number">1.3.2.</span> <span class="nav-text">创建用户进程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#应用程序的组成和编译"><span class="nav-number">1.3.2.1.</span> <span class="nav-text">应用程序的组成和编译</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#用户进程的虚拟地址空间"><span class="nav-number">1.3.2.2.</span> <span class="nav-text">用户进程的虚拟地址空间</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#创建并执行用户进程"><span class="nav-number">1.3.2.3.</span> <span class="nav-text">创建并执行用户进程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#进程退出和等待进程"><span class="nav-number">1.3.2.4.</span> <span class="nav-text">进程退出和等待进程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#系统调用实现"><span class="nav-number">1.3.2.5.</span> <span class="nav-text">系统调用实现</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#初始化系统调用对应的中断描述符"><span class="nav-number">1.3.2.5.1.</span> <span class="nav-text">初始化系统调用对应的中断描述符</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#建立系统调用的用户库准备"><span class="nav-number">1.3.2.5.2.</span> <span class="nav-text">建立系统调用的用户库准备</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#与用户进程相关的系统调用"><span class="nav-number">1.3.2.5.3.</span> <span class="nav-text">与用户进程相关的系统调用</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#系统调用的执行过程"><span class="nav-number">1.3.2.5.4.</span> <span class="nav-text">系统调用的执行过程</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#读load-icode有感"><span class="nav-number">1.4.</span> <span class="nav-text">读load_icode有感</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#练习1：加载应用程序并执行"><span class="nav-number">1.5.</span> <span class="nav-text">练习1：加载应用程序并执行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#练习2：父进程复制自己的内存空间给子进程"><span class="nav-number">1.6.</span> <span class="nav-text">练习2：父进程复制自己的内存空间给子进程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#练习3：阅读分析源代码，理解进程执行-fork-exec-wait-exit-的实现，以及系统调用的实现（不需要编码）"><span class="nav-number">1.7.</span> <span class="nav-text">练习3：阅读分析源代码，理解进程执行 fork/exec/wait/exit 的实现，以及系统调用的实现（不需要编码）</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
