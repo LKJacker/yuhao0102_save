@@ -94,7 +94,7 @@
 <meta property="og:site_name" content="Hao Yu&#39;s blog">
 <meta property="og:description" content="Lab4 内核线程管理 实验报告实验目的了解内核线程创建/执行的管理过程了解内核线程的切换和基本调度过程 实验内容当一个程序加载到内存中运行时，首先通过ucore OS的内存管理子系统分配合适的空间，然后就需要考虑如何分时使用CPU来“并发”执行多个程序，让每个运行的程序（这里用线程或进程表示）“感到”它们各自拥有“自己”的CPU。 内核线程是一种特殊的进程，内核线程与用户进程的区别有两个：  内">
 <meta property="og:locale" content="zn-ch">
-<meta property="og:updated_time" content="2019-06-29T16:00:11.698Z">
+<meta property="og:updated_time" content="2019-06-29T16:06:24.220Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="清华大学操作系统课程实验四">
 <meta name="twitter:description" content="Lab4 内核线程管理 实验报告实验目的了解内核线程创建/执行的管理过程了解内核线程的切换和基本调度过程 实验内容当一个程序加载到内存中运行时，首先通过ucore OS的内存管理子系统分配合适的空间，然后就需要考虑如何分时使用CPU来“并发”执行多个程序，让每个运行的程序（这里用线程或进程表示）“感到”它们各自拥有“自己”的CPU。 内核线程是一种特殊的进程，内核线程与用户进程的区别有两个：  内">
@@ -400,7 +400,7 @@
 <li>list_entry_t proc_list：所有进程控制块的双向线性列表，proc_struct中的成员变量list_link将链接入这个链表中。</li>
 </ul>
 <h3 id="创建并执行内核线程"><a href="#创建并执行内核线程" class="headerlink" title="创建并执行内核线程"></a>创建并执行内核线程</h3><p>ucore实现了一个简单的进程/线程机制，进程包含独立的地址空间，至少一个线程、内核数据、进程状态、文件等。ucore需要高效地管理所有细节。在ucore，一个线程看成一个特殊的进程（process）。</p>
-<p>进程状态|意义|原因<br>|PROC_UNINIT|uninitialized|alloc_proc|<br>|—-|—-|—-|<br>|PROC_SLEEPING|sleeping|try_free_pages, do_wait, do_sleep|<br>|PROC_RUNNABLE|runnable(maybe running)|proc_init, wakeup_proc,|<br>|PROC_ZOMBIE|almost dead|do_exit|</p>
+<p>进程状态|意义|原因<br>|PROC_UNINIT|uninitialized|alloc_proc|<br>—-|—-|—<br>|PROC_SLEEPING|sleeping|try_free_pages, do_wait, do_sleep|<br>|PROC_RUNNABLE|runnable(maybe running)|proc_init, wakeup_proc,|<br>|PROC_ZOMBIE|almost dead|do_exit|</p>
 <p>进程之间的关系：<br>parent:           proc-&gt;parent  (proc is children)<br>children:         proc-&gt;cptr    (proc is parent)<br>older sibling:    proc-&gt;optr    (proc is younger sibling)<br>younger sibling:  proc-&gt;yptr    (proc is older sibling)</p>
 <p>建立进程控制块（proc.c中的alloc_proc函数）。首先，考虑最简单的内核线程，它通常只是内核中的一小段代码或者函数，没有自己的“专属”空间。这是由于在uCore OS启动后，已经对整个内核内存空间进行了管理，通过设置页表建立了内核虚拟空间（即boot_cr3指向的二级页表描述的空间）。所以uCore OS内核中的所有线程都不需要再建立各自的页表，只需共享这个内核虚拟空间就可以访问整个物理内存了。从这个角度看，内核线程被uCore OS内核这个大“内核进程”所管理。</p>
 <h3 id="创建第-0-个内核线程-idleproc"><a href="#创建第-0-个内核线程-idleproc" class="headerlink" title="创建第 0 个内核线程 idleproc"></a>创建第 0 个内核线程 idleproc</h3><p>在init.c中的kern_init函数调用了proc.c中的proc_init函数。proc_init函数启动了创建内核线程的步骤。</p>
@@ -555,8 +555,8 @@ return proc;
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/06/29/清华大学操作系统课程笔记一/" rel="next" title="清华大学操作系统课程笔记一">
-                <i class="fa fa-chevron-left"></i> 清华大学操作系统课程笔记一
+              <a href="/2019/06/29/清华大学操作系统课程实验七/" rel="next" title="清华大学操作系统课程实验七">
+                <i class="fa fa-chevron-left"></i> 清华大学操作系统课程实验七
               </a>
             
           </div>
@@ -565,8 +565,8 @@ return proc;
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2019/06/29/清华大学操作系统课程笔记三/" rel="prev" title="清华大学操作系统课程笔记三">
-                清华大学操作系统课程笔记三 <i class="fa fa-chevron-right"></i>
+              <a href="/2019/06/29/清华大学操作系统课程实验三/" rel="prev" title="清华大学操作系统课程实验三">
+                清华大学操作系统课程实验三 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
