@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="golang,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="提示：interface{}可用于向函数传递任意类型的变量，但对于函数内部，该变量仍然为interface{}类型（空接口类型）， Go的并发模式约束约束是一种确保了信息只能从一个并发过程中获取到的简单且强大的方法，特定约束是指通过公约实现约束，词法约束涉及使用词法作用域仅公开用于多个并发进程的正确数据和并发原语。 for-select循环123456for &amp;#123;	// 要不就无限循环，要">
+<meta name="keywords" content="golang">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go语言并发之道第4章笔记">
+<meta property="og:url" content="http://yoursite.com/2019/07/02/Go并发之道4/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="提示：interface{}可用于向函数传递任意类型的变量，但对于函数内部，该变量仍然为interface{}类型（空接口类型）， Go的并发模式约束约束是一种确保了信息只能从一个并发过程中获取到的简单且强大的方法，特定约束是指通过公约实现约束，词法约束涉及使用词法作用域仅公开用于多个并发进程的正确数据和并发原语。 for-select循环123456for &amp;#123;	// 要不就无限循环，要">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2019-07-07T02:28:56.431Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Go语言并发之道第4章笔记">
+<meta name="twitter:description" content="提示：interface{}可用于向函数传递任意类型的变量，但对于函数内部，该变量仍然为interface{}类型（空接口类型）， Go的并发模式约束约束是一种确保了信息只能从一个并发过程中获取到的简单且强大的方法，特定约束是指通过公约实现约束，词法约束涉及使用词法作用域仅公开用于多个并发进程的正确数据和并发原语。 for-select循环123456for &amp;#123;	// 要不就无限循环，要">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/07/02/Go并发之道4/">
+
+
+
+
+
+  <title>Go语言并发之道第4章笔记 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/02/Go并发之道4/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Go语言并发之道第4章笔记</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-02T20:28:00+08:00">
+                2019-07-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>提示：interface{}可用于向函数传递任意类型的变量，但对于函数内部，该变量仍然为interface{}类型（空接口类型），</p>
+<h1 id="Go的并发模式"><a href="#Go的并发模式" class="headerlink" title="Go的并发模式"></a>Go的并发模式</h1><h2 id="约束"><a href="#约束" class="headerlink" title="约束"></a>约束</h2><p>约束是一种确保了信息只能从一个并发过程中获取到的简单且强大的方法，特定约束是指通过公约实现约束，词法约束涉及使用词法作用域仅公开用于多个并发进程的正确数据和并发原语。</p>
+<h2 id="for-select循环"><a href="#for-select循环" class="headerlink" title="for-select循环"></a>for-select循环</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">for &#123;</span><br><span class="line">	// 要不就无限循环，要不就使用range循环</span><br><span class="line">	select &#123;</span><br><span class="line">		//使用channel作业</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="向channel发送迭代变量"><a href="#向channel发送迭代变量" class="headerlink" title="向channel发送迭代变量"></a>向channel发送迭代变量</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">for _, s := range []string&#123;&quot;a&quot;, &quot;b&quot;, &quot;c&quot;&#125; &#123;</span><br><span class="line">	select &#123;</span><br><span class="line">		case &lt;- done:</span><br><span class="line">			return</span><br><span class="line">		case stringStream &lt;- s: </span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="循环等待停止"><a href="#循环等待停止" class="headerlink" title="循环等待停止"></a>循环等待停止</h3><p>创建循环，无限直至停止。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">for &#123;</span><br><span class="line">	select &#123;</span><br><span class="line">		case &lt;- done:</span><br><span class="line">			return</span><br><span class="line">		default:</span><br><span class="line">	&#125;</span><br><span class="line">	// 非抢占式任务</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="防止goroutine泄露"><a href="#防止goroutine泄露" class="headerlink" title="防止goroutine泄露"></a>防止goroutine泄露</h2><p>main goroutine可能会在其生命周期内将其他的goroutine设置为自旋，导致内存利用率下降。减轻这种情况的方法是在父goroutine和子goroutine之间建立一个信号，让父goroutine向其子goroutine发出信号通知。父goroutine将该channel发送给子goroutine，然后在想要取消子goroutine时关闭该channel。</p>
+<p>确保：如果goroutine负责创建goroutine，那么它也负责确保可以停止goroutine。</p>
+<h2 id="or-channel"><a href="#or-channel" class="headerlink" title="or-channel"></a>or-channel</h2><p>使用or-channel模式将多个channel组合起来。通过递归和goroutine创建一个符合done channel</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">    var or func(channels ...&lt;-chan interface&#123;&#125;) &lt;-chan interface&#123;&#125;</span><br><span class="line">    or = func(channels ...&lt;-chan interface&#123;&#125;) &lt;-chan interface&#123;&#125; &#123;</span><br><span class="line">        switch len(channels) &#123;</span><br><span class="line">            case 0:</span><br><span class="line">                return nil</span><br><span class="line">            case 1:</span><br><span class="line">                return channels[0]</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        orDone := make(chan interface&#123;&#125;)</span><br><span class="line">        go func() &#123;</span><br><span class="line">            defer close()</span><br><span class="line">            switch len(channels):</span><br><span class="line">                case 2:</span><br><span class="line">                    select&#123;</span><br><span class="line">                        case &lt;-channels[0]:</span><br><span class="line">                        case &lt;-channels[1]:</span><br><span class="line">                        case &lt;-channels[1]:</span><br><span class="line">                        case &lt;-channels[2]:</span><br><span class="line">                    &#125;</span><br><span class="line">        &#125;()</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="错误处理"><a href="#错误处理" class="headerlink" title="错误处理"></a>错误处理</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">type Result struct &#123;</span><br><span class="line">    Error error</span><br><span class="line">    Response *http.Response</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line"></span><br><span class="line">    checkStatus := func(</span><br><span class="line">        done &lt;-chan interface&#123;&#125;,</span><br><span class="line">        urls ...string,</span><br><span class="line">    ) &lt;-chan Result &#123;</span><br><span class="line">        results := make(chan Result)</span><br><span class="line">        go func()&#123;</span><br><span class="line">            defer close(results)</span><br><span class="line">            for _, url := range urls &#123;</span><br><span class="line">                var result Result</span><br><span class="line">                resp, err := http.Get(url)</span><br><span class="line">                result = Result&#123;Error: err, Response: resp&#125;</span><br><span class="line">                select &#123;</span><br><span class="line">                    case &lt;-done:</span><br><span class="line">                        return</span><br><span class="line">                    case results &lt;-result:</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;()</span><br><span class="line">        return results</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    done := make(chan interface&#123;&#125;)</span><br><span class="line">    defer close(done)</span><br><span class="line">    urls := []string&#123;&quot;https://www.baidu.com&quot;, &quot;https://badhost&quot;&#125;</span><br><span class="line">    for result := range checkStatus(done, urls...)&#123;</span><br><span class="line">        if result.Error != nil &#123;</span><br><span class="line">            fmt.Printf(&quot;Error: %v.\n&quot;, result.Error)</span><br><span class="line">            continue</span><br><span class="line">        &#125;</span><br><span class="line">        fmt.Printf(&quot;Response: %v.\n&quot;, result.Response.Status)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="pipeline"><a href="#pipeline" class="headerlink" title="pipeline"></a>pipeline</h2><p>一个stage是将数据输入，对其进行转换并将数据发回。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">multiply := func(values []int, len(values)) []int &#123;&#125;</span><br><span class="line">add := func(values []int, additive int) []int &#123;&#125;</span><br><span class="line"></span><br><span class="line">ints := []int&#123;1, 2, 3, 4&#125;</span><br><span class="line">for _, v := range add(multiply(ints, 2), 1) &#123;</span><br><span class="line">    fmt.Println(v)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在range子句中结合加法和乘法，这样构建了一个具有pipeline stage的属性，组合形成pipeline。</p>
+<p>pipeline stage的属性是：</p>
+<ul>
+<li>一个stage消耗并返回相同的类型；</li>
+<li>一个stage必须用语言来表达，以便可以被传递；</li>
+</ul>
+<p>channel适合在Go中构建pipeline，可以接受和产生值，且可以安全的使用。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line">func main() &#123;</span><br><span class="line">    generator := func(done &lt;-chan interface&#123;&#125;, integers ...int) &lt;-chan int &#123;</span><br><span class="line">        intStream := make(chan int)</span><br><span class="line">        go func() &#123;</span><br><span class="line">            defer close(intStream)</span><br><span class="line">            for _, i := range integers &#123;</span><br><span class="line">                select &#123;</span><br><span class="line">                case &lt;-done:</span><br><span class="line">                    return</span><br><span class="line">                case intStream &lt;- i:</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;()</span><br><span class="line">        return intStream</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    multiply := func(done &lt;-chan interface&#123;&#125;, intStream &lt;-chan int, multiplier int) &lt;-chan int &#123;</span><br><span class="line">        multipliedStream := make(chan int)</span><br><span class="line">        go func() &#123;</span><br><span class="line">            defer close(multipliedStream)</span><br><span class="line">            for i := range intStream &#123;</span><br><span class="line">                select &#123;</span><br><span class="line">                case &lt;-done:</span><br><span class="line">                    return</span><br><span class="line">                case multipliedStream &lt;- i * multiplier:</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;()</span><br><span class="line">        return multipliedStream</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    add := func(done &lt;-chan interface&#123;&#125;, intStream &lt;-chan int, additive int) &lt;-chan int &#123;</span><br><span class="line"></span><br><span class="line">        addedStream := make(chan int)</span><br><span class="line">        go func() &#123;</span><br><span class="line">            defer close(addedStream)</span><br><span class="line">            for i := range intStream &#123;</span><br><span class="line">                select &#123;</span><br><span class="line">                case &lt;-done:</span><br><span class="line">                    return</span><br><span class="line">                case addedStream &lt;- i + additive:</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;()</span><br><span class="line">        return addedStream</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    done := make(chan interface&#123;&#125;)</span><br><span class="line">    defer close(done)</span><br><span class="line"></span><br><span class="line">    intStream := generator(done, 1, 2, 3, 4)</span><br><span class="line">    pipeline := multiply(done, add(done, multiply(done, intStream, 2), 1), 2)</span><br><span class="line"></span><br><span class="line">    for v := range pipeline &#123;</span><br><span class="line">        fmt.Println(v)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>挺有意思的，显示了流水线的操作。</p>
+<p>generator接受一个可变的整数切片，构造一个缓存长度等于输入片段的整数channel，启动goroutine并返回构造的channel，将一组离散值转化成一个channel上的数据流。</p>
+<h2 id="扇入扇出"><a href="#扇入扇出" class="headerlink" title="扇入扇出"></a>扇入扇出</h2><p>扇出是描述启动多个goroutine以处理来自pipeline的输入的过程；扇入是描述将多个结果组合到一个channel的过程中。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">primeStream := primeFinder(done, randIntStream)</span><br><span class="line"></span><br><span class="line">numFinders := runtime.NumCPU()</span><br><span class="line">finders := make([]&lt;-chan int, numFinders)</span><br><span class="line">for i := 0; i &lt; numFinders; i ++ &#123;</span><br><span class="line">	finders[i] = primeFinder(done, randIntStream)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里启动了stage的多个副本，有n个goroutine从随机数发生器中拉出并试图确定数字是否为素数。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br></pre></td><td class="code"><pre><span class="line">package pips</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">    &quot;sync&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">type PrimePip struct &#123;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func NewPrimePip() *PrimePip &#123;</span><br><span class="line">    primePip := &amp;PrimePip&#123;&#125;</span><br><span class="line">    return primePip</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (primePip *PrimePip) RepeatFn(</span><br><span class="line">    done &lt;-chan interface&#123;&#125;,</span><br><span class="line">    fn func() interface&#123;&#125;,</span><br><span class="line">) &lt;-chan interface&#123;&#125; &#123;</span><br><span class="line">    valueStream := make(chan interface&#123;&#125;)</span><br><span class="line">    go func() &#123;</span><br><span class="line">        defer close(valueStream)</span><br><span class="line">        for &#123;</span><br><span class="line">            select &#123;</span><br><span class="line">            case &lt;-done:</span><br><span class="line">                return</span><br><span class="line">            case valueStream &lt;- fn():</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;()</span><br><span class="line">    return valueStream</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (primePip *PrimePip) Take(</span><br><span class="line">    done &lt;-chan interface&#123;&#125;,</span><br><span class="line">    valueStream &lt;-chan interface&#123;&#125;,</span><br><span class="line">    num int,</span><br><span class="line">) &lt;-chan interface&#123;&#125; &#123;</span><br><span class="line">    takeStream := make(chan interface&#123;&#125;)</span><br><span class="line">    go func() &#123;</span><br><span class="line">        defer close(takeStream)</span><br><span class="line">        for i := 0; i &lt; num; i++ &#123;</span><br><span class="line">            select &#123;</span><br><span class="line">            case &lt;-done:</span><br><span class="line">                return</span><br><span class="line">            case takeStream &lt;- &lt;-valueStream:</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;()</span><br><span class="line">    return takeStream</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (primePip *PrimePip) ToInt(</span><br><span class="line">    done &lt;-chan interface&#123;&#125;,</span><br><span class="line">    valueStream &lt;-chan interface&#123;&#125;,</span><br><span class="line">) &lt;-chan int &#123;</span><br><span class="line">    intStream := make(chan int)</span><br><span class="line">    go func() &#123;</span><br><span class="line">        defer close(intStream)</span><br><span class="line">        for v := range valueStream &#123;</span><br><span class="line">            select &#123;</span><br><span class="line">            case &lt;-done:</span><br><span class="line">                return</span><br><span class="line">            case intStream &lt;- v.(int):</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;()</span><br><span class="line">    return intStream</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (primePip *PrimePip) PrimeFinder(</span><br><span class="line">    done &lt;-chan interface&#123;&#125;,</span><br><span class="line">    intStream &lt;-chan int,</span><br><span class="line">) &lt;-chan interface&#123;&#125; &#123;</span><br><span class="line">    primeStream := make(chan interface&#123;&#125;)</span><br><span class="line">    go func() &#123;</span><br><span class="line">        defer close(primeStream)</span><br><span class="line">        for integer := range intStream &#123;</span><br><span class="line">            integer -= 1</span><br><span class="line">            prime := true</span><br><span class="line">            for divisor := integer - 1; divisor &gt; 1; divisor-- &#123;</span><br><span class="line">                if integer%divisor == 0 &#123;</span><br><span class="line">                    prime = false</span><br><span class="line">                    break</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            if prime &#123;</span><br><span class="line">                select &#123;</span><br><span class="line">                case &lt;-done:</span><br><span class="line">                    return</span><br><span class="line">                case primeStream &lt;- integer:</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;()</span><br><span class="line">    return primeStream</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (primePip *PrimePip) FanIn(</span><br><span class="line">    done &lt;-chan interface&#123;&#125;,</span><br><span class="line">    channels ...&lt;-chan interface&#123;&#125;,</span><br><span class="line">) &lt;-chan interface&#123;&#125; &#123;</span><br><span class="line">    var wg sync.WaitGroup</span><br><span class="line">    multiplexedStream := make(chan interface&#123;&#125;)</span><br><span class="line"></span><br><span class="line">    multiplexed := func(c &lt;-chan interface&#123;&#125;) &#123;</span><br><span class="line">        defer wg.Done()</span><br><span class="line">        for i := range c &#123;</span><br><span class="line">            select &#123;</span><br><span class="line">            case &lt;-done:</span><br><span class="line">                return</span><br><span class="line">            case multiplexedStream &lt;- i:</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    wg.Add(len(channels))</span><br><span class="line">    for _, c := range channels &#123;</span><br><span class="line">        go multiplexed(c)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    go func() &#123;</span><br><span class="line">        wg.Wait()</span><br><span class="line">        close(multiplexedStream)</span><br><span class="line">    &#125;()</span><br><span class="line"></span><br><span class="line">    return multiplexedStream</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="or-done-channel"><a href="#or-done-channel" class="headerlink" title="or-done-channel"></a>or-done-channel</h2><p>用于处理来自系统各个分散部分的channel，需要用channel中的select语句来包装我们的读操作，并从已完成的channel中进行选择。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">orDone := func(done, c &lt;-chan interface&#123;&#125;) &lt;-chan interface&#123;&#125; &#123;</span><br><span class="line">	valStream := make(chan interface&#123;&#125;)</span><br><span class="line">	go func() &#123;</span><br><span class="line">		defer close(valStream)</span><br><span class="line">		for &#123;</span><br><span class="line">			select &#123;</span><br><span class="line">				case &lt;-done:</span><br><span class="line">					return </span><br><span class="line">				case v, ok := &lt;-c:</span><br><span class="line">				if ok == false&#123;</span><br><span class="line">					return</span><br><span class="line">				&#125;</span><br><span class="line">				select &#123;</span><br><span class="line">					case valStream &lt;- v:</span><br><span class="line">					case &lt;-done:</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125; ()</span><br><span class="line">	return valStream</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="tee-channel"><a href="#tee-channel" class="headerlink" title="tee-channel"></a>tee-channel</h2><p>分割一个来自channel的值，以便将他们发送到代码的两个独立区域。</p>
+<h2 id="队列排队"><a href="#队列排队" class="headerlink" title="队列排队"></a>队列排队</h2><p>在队列尚未准备好的时候开始接受请求，只要stage完成了工作，就会把结果存放在一个稍后其他stage可以获取到的临时位置。</p>
+<ul>
+<li>在一个stage批处理请求节省时间</li>
+<li>如果stage中的延迟产生反馈回路进入系统。</li>
+</ul>
+<h2 id="context包"><a href="#context包" class="headerlink" title="context包"></a>context包</h2><p>主要包括：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">var Canceled = errors.New(&quot;context canceled&quot;)</span><br><span class="line">var DeadlineExceeded error = deadlineExceededError&#123;&#125;</span><br><span class="line"></span><br><span class="line">type CancelFunc</span><br><span class="line">type Context</span><br><span class="line"></span><br><span class="line">func Background() Context</span><br><span class="line">func TODO() Context</span><br><span class="line">func WithCancel(parent Context) (ctx Context, cancel CancelFunc)</span><br><span class="line">func WithDeadline(parent Context, deadline time.Time) (Context, CancelFunc)</span><br><span class="line">func WithTimeout(parent Context, timeout time.Duration) (Context, CancelFunc)</span><br><span class="line">func WithValue(parent Context, key, val interface&#123;&#125;) Context</span><br></pre></td></tr></table></figure></p>
+<p>上下文包有两个目的：</p>
+<ul>
+<li>提供可以取消调用图中分支的API</li>
+<li>提供用于通过呼叫传输请求范围数据的数据包</li>
+</ul>
+<p>context类型将是函数的第一个参数，此外，接收context的函数并不能取消它，这保护了调用堆栈上的函数被子函数取消上下文的情况。</p>
+<p>上述context包中的函数都接收一个Context参数，并返回一个Context。WithCancel返回新Context，它在调用返回的cancel函数时关闭其done channel。WithDeadline返回一个新的Context，当机器的时钟超过给定的最后期限时，它关闭完成的channel。WithTimeout返回一个新的Context，它在给定的超时时间后关闭完成的channel。</p>
+<p>如果函数以某种方式在调用图中取消它后面的函数，它将调用其中一个函数并传递给它的上下文，然后将返回的上下文传递给它的子元素，如果函数不需要修改取消行为，则只传递给定的上下文。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br></pre></td><td class="code"><pre><span class="line">func main() &#123;</span><br><span class="line">    var wg sync.WaitGroup</span><br><span class="line">    ctx, cancel := context.WithCancel(context.Background())</span><br><span class="line">    defer cancel() </span><br><span class="line">    wg.Add(1)</span><br><span class="line">    </span><br><span class="line">    go func() &#123;</span><br><span class="line">        defer wg.Done()</span><br><span class="line">        if err := printGreeting(ctx); err != nil &#123;</span><br><span class="line">            fmt.Printf(&quot;cannot print greeting: %v\n&quot;, err)</span><br><span class="line">            cancel()</span><br><span class="line">        &#125;   </span><br><span class="line">    &#125;() </span><br><span class="line">    </span><br><span class="line">    wg.Add(1)</span><br><span class="line">    go func() &#123;</span><br><span class="line">        defer wg.Done()</span><br><span class="line">        if err := printFarewell(ctx); err != nil &#123;</span><br><span class="line">            fmt.Printf(&quot;cannot print greeting: %v\n&quot;, err)</span><br><span class="line">            cancel()</span><br><span class="line">        &#125;   </span><br><span class="line">    &#125;() </span><br><span class="line">    wg.Wait()</span><br><span class="line">&#125;   </span><br><span class="line"></span><br><span class="line">func printGreeting(ctx context.Context) error &#123;</span><br><span class="line">    greeting, err := genGreeting(ctx)</span><br><span class="line">    if err != nil &#123;</span><br><span class="line">        return err</span><br><span class="line">    &#125;</span><br><span class="line">    fmt.Printf(&quot;%s world!\n&quot;, greeting)</span><br><span class="line">    return nil</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func printFarewell(ctx context.Context) error &#123;</span><br><span class="line">    farewell, err := genFarewell(ctx)</span><br><span class="line">    if err != nil &#123;</span><br><span class="line">        return err</span><br><span class="line">    &#125;</span><br><span class="line">    fmt.Printf(&quot;%s world!\n&quot;, farewell)</span><br><span class="line">    return nil</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func genGreeting(ctx context.Context) (string, error) &#123;</span><br><span class="line">    ctx, cancel := context.WithTimeout(ctx, 1*time.Second)</span><br><span class="line">    defer cancel()</span><br><span class="line">    switch locale, err := locale(ctx); &#123;</span><br><span class="line">    case err != nil:</span><br><span class="line">        return &quot;&quot;, err</span><br><span class="line">    case locale == &quot;EN/US&quot;:</span><br><span class="line">        return &quot;hello&quot;, nil</span><br><span class="line">    &#125;</span><br><span class="line">    return &quot;&quot;, fmt.Errorf(&quot;unsupported locale&quot;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func genFarewell(ctx context.Context) (string, error) &#123;</span><br><span class="line">    switch locale, err := locale(ctx); &#123;</span><br><span class="line">    case err != nil:</span><br><span class="line">        return &quot;&quot;, err</span><br><span class="line">    case locale == &quot;EN/US&quot;:</span><br><span class="line">        return &quot;godbye&quot;, nil</span><br><span class="line">    &#125;</span><br><span class="line">    return &quot;&quot;, fmt.Errorf(&quot;unsupported locale&quot;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func locale(ctx context.Context) (string, error) &#123;</span><br><span class="line">    if deadline, ok := ctx.Deadline(); ok &#123;</span><br><span class="line">        if deadline.Sub(time.Now().Add(1*time.Minute)) &lt;= 0 &#123;</span><br><span class="line">            return &quot;&quot;, context.DeadlineExceeded</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    select &#123;</span><br><span class="line">    case &lt;-ctx.Done():</span><br><span class="line">        return &quot;&quot;, ctx.Err()</span><br><span class="line">    case &lt;-time.After(1 * time.Minute):</span><br><span class="line">    &#125;</span><br><span class="line">    return &quot;EN/US&quot;, nil</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>上述程序允许locale函数快速失败，不必实际等待超时发生。</p>
+<p>context包的另一个功能是用于存储和检索请求范围数据的Context数据包。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">func ProcessRequest(userID, authToken string) &#123;</span><br><span class="line">    ctx := context.WithValue(context.Background(), &quot;userID&quot;, userID)</span><br><span class="line">    ctx = context.WithValue(ctx, &quot;authToken&quot;, authToken)</span><br><span class="line"></span><br><span class="line">    HandleResponse(ctx)</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func HandleResponse(ctx context.Context) &#123;</span><br><span class="line">    fmt.Printf(&quot;handling response for %v (%v)\n&quot;, ctx.Value(&quot;userID&quot;), ctx.Value(&quot;authToken&quot;))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li>我们使用的键值必须满足Go的可比性概念，即==和!=在使用时需要返回正确的结果。</li>
+<li>返回值必须安全，才能从多个goroutine访问</li>
+</ul>
+<p>由于context的键和值都被定义为interface{}，所以当试图检索值时，我们会失去Go的类型安全性，key可以是不同的类型，或者与我们提供的key略有不同。建议在软件包里定义一个自定义键类型：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">type foo int</span><br><span class="line">type bar int</span><br><span class="line"></span><br><span class="line">m := make(map[interface&#123;&#125;] int)</span><br><span class="line">m[foo(1)] = 1</span><br><span class="line">m[bar(1)] = 1</span><br><span class="line"></span><br><span class="line">fmt.Printf(&quot;%v&quot;, m)</span><br></pre></td></tr></table></figure></p>
+<p>输出为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">map[1:1, 2:2]</span><br></pre></td></tr></table></figure></p>
+<p>虽然基础值是相同的，但是科通通过不同的类型信息在map中区分它们。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/golang/" rel="tag"># golang</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/30/Go并发之道1-3/" rel="next" title="Go语言并发之道1-3章笔记">
+                <i class="fa fa-chevron-left"></i> Go语言并发之道1-3章笔记
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">203</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/test.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Go的并发模式"><span class="nav-number">1.</span> <span class="nav-text">Go的并发模式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#约束"><span class="nav-number">1.1.</span> <span class="nav-text">约束</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#for-select循环"><span class="nav-number">1.2.</span> <span class="nav-text">for-select循环</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#向channel发送迭代变量"><span class="nav-number">1.2.1.</span> <span class="nav-text">向channel发送迭代变量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#循环等待停止"><span class="nav-number">1.2.2.</span> <span class="nav-text">循环等待停止</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#防止goroutine泄露"><span class="nav-number">1.3.</span> <span class="nav-text">防止goroutine泄露</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#or-channel"><span class="nav-number">1.4.</span> <span class="nav-text">or-channel</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#错误处理"><span class="nav-number">1.5.</span> <span class="nav-text">错误处理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#pipeline"><span class="nav-number">1.6.</span> <span class="nav-text">pipeline</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#扇入扇出"><span class="nav-number">1.7.</span> <span class="nav-text">扇入扇出</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#or-done-channel"><span class="nav-number">1.8.</span> <span class="nav-text">or-done-channel</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#tee-channel"><span class="nav-number">1.9.</span> <span class="nav-text">tee-channel</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#队列排队"><span class="nav-number">1.10.</span> <span class="nav-text">队列排队</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#context包"><span class="nav-number">1.11.</span> <span class="nav-text">context包</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
