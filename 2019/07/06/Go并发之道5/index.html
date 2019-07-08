@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="golang,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="异常传递我们需要对传入的异常信息进行传递和处理，如：123456789func PostReport(id string) error &amp;#123;	result, err := lowlevel.DoWork()	if err != nil&amp;#123;		if _, ok := err.(lowlevel.Error); ok &amp;#123;			err = WrapErr(err, &amp;quot;">
+<meta name="keywords" content="golang">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go语言并发之道第5章笔记">
+<meta property="og:url" content="http://yoursite.com/2019/07/06/Go并发之道5/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="异常传递我们需要对传入的异常信息进行传递和处理，如：123456789func PostReport(id string) error &amp;#123;	result, err := lowlevel.DoWork()	if err != nil&amp;#123;		if _, ok := err.(lowlevel.Error); ok &amp;#123;			err = WrapErr(err, &amp;quot;">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2019-07-07T14:58:50.306Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Go语言并发之道第5章笔记">
+<meta name="twitter:description" content="异常传递我们需要对传入的异常信息进行传递和处理，如：123456789func PostReport(id string) error &amp;#123;	result, err := lowlevel.DoWork()	if err != nil&amp;#123;		if _, ok := err.(lowlevel.Error); ok &amp;#123;			err = WrapErr(err, &amp;quot;">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/07/06/Go并发之道5/">
+
+
+
+
+
+  <title>Go语言并发之道第5章笔记 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/06/Go并发之道5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Go语言并发之道第5章笔记</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-06T17:43:00+08:00">
+                2019-07-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="异常传递"><a href="#异常传递" class="headerlink" title="异常传递"></a>异常传递</h1><p>我们需要对传入的异常信息进行传递和处理，如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">func PostReport(id string) error &#123;</span><br><span class="line">	result, err := lowlevel.DoWork()</span><br><span class="line">	if err != nil&#123;</span><br><span class="line">		if _, ok := err.(lowlevel.Error); ok &#123;</span><br><span class="line">			err = WrapErr(err, &quot;cannot post report with id %q&quot;, id)</span><br><span class="line">		&#125;</span><br><span class="line">		return err</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在这里检查接收到的异常信息，确保结构良好，使用一个假设的函数将传入的异常和模块相关信息封装起来，并赋予一个新类型。</p>
+<p>创建一个异常类型：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line">type MyError struct &#123;</span><br><span class="line">    Inner      error</span><br><span class="line">    Message    string</span><br><span class="line">    StackTrace string</span><br><span class="line">    Misc       map[string]interface&#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func wrapError(err error, messagef string, msgArgs ...interface&#123;&#125;) MyError &#123;</span><br><span class="line">    return MyError&#123;</span><br><span class="line">        Inner:      err,</span><br><span class="line">        Message:    fmt.Sprintf(messagef, msgArgs...),</span><br><span class="line">        StackTrace: &quot;stack!!!&quot;,</span><br><span class="line">        Misc:       make(map[string]interface&#123;&#125;),</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (err MyError) Error() string &#123;</span><br><span class="line">    return err.Message</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">type LowLevelErr struct &#123;</span><br><span class="line">    error</span><br><span class="line">&#125;</span><br><span class="line">func isGloballyExec(path string) (bool, error) &#123;</span><br><span class="line">    info, err := os.Stat(path)</span><br><span class="line">    if err != nil &#123;</span><br><span class="line">        return false, LowLevelErr&#123;(wrapError(err, err.Error()))&#125;</span><br><span class="line">    &#125;</span><br><span class="line">    return info.Mode().Perm()&amp;0100 == 0100, nil</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">type IntermediateErr struct &#123;</span><br><span class="line">    error</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func runJob(id string) error &#123;</span><br><span class="line">    const jobBinPath = &quot;/bad/job/binary&quot;</span><br><span class="line">    isExecutable, err := isGloballyExec(jobBinPath)</span><br><span class="line"></span><br><span class="line">    if err != nil &#123;</span><br><span class="line">        return IntermediateErr&#123;wrapError(err, &quot;cannot run job %q: requisite binaries not available&quot;, id)&#125;</span><br><span class="line">    &#125; else if isExecutable == false &#123;</span><br><span class="line">        return wrapError(nil, &quot;job binary is not executable&quot;, id)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    return exec.Command(jobBinPath, &quot;--id=&quot;+id).Run()</span><br><span class="line">&#125;</span><br><span class="line">func handleError(key int, err error, message string) &#123;</span><br><span class="line">    log.SetPrefix(fmt.Sprintf(&quot;[logID: %v]: &quot;, key))</span><br><span class="line">    log.Printf(&quot;%#v&quot;, err)</span><br><span class="line">    fmt.Printf(&quot;[%v] %v&quot;, key, message)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">    log.SetOutput(os.Stdout)</span><br><span class="line">    log.SetFlags(log.Ltime | log.LUTC)</span><br><span class="line">    err := runJob(&quot;1&quot;)</span><br><span class="line"></span><br><span class="line">    if err != nil &#123;</span><br><span class="line">        msg := &quot;There was an unexpected issue; please report this as a bug.&quot;</span><br><span class="line">        if _, ok := err.(IntermediateErr); ok &#123;</span><br><span class="line">            msg = err.Error()</span><br><span class="line">        &#125;</span><br><span class="line">        handleError(1, err, msg)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="超时和取消"><a href="#超时和取消" class="headerlink" title="超时和取消"></a>超时和取消</h1><p>有几个原因使我们需要支持超时：</p>
+<ol>
+<li>系统饱和：希望超出的请求返回超时，而不是花很长时间等待响应。请求在超时时不太可能重复，或没有资源来存储请求，或者对系统响应或请求发送数据有时效性的要求时，需要超时操作。</li>
+<li>陈旧的数据：数据通常有窗口期，如果并发进程处理数据需要的时间比这个窗口期长，则会想返回超时并取消并发进程。可以使用context.WithDeadline或者context.WithTimeout创建的context.Context传递给并发进程。</li>
+<li>试图防止死锁：为了防止死锁，建议在所有并发操作中增加超时操作。</li>
+</ol>
+<h1 id="心跳"><a href="#心跳" class="headerlink" title="心跳"></a>心跳</h1><p>有两种不同的心跳：</p>
+<ul>
+<li>一段时间间隔内发出的心跳</li>
+<li>在工作单元开始时发出的心跳</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br></pre></td><td class="code"><pre><span class="line">func main() &#123;</span><br><span class="line">    doWork := func(</span><br><span class="line">        done &lt;-chan interface&#123;&#125;,</span><br><span class="line">        pulseInterval time.Duration,</span><br><span class="line">    ) (&lt;-chan interface&#123;&#125;, &lt;-chan time.Time) &#123;</span><br><span class="line"></span><br><span class="line">// 建立一个发送心跳的channel，返回给doWork</span><br><span class="line"></span><br><span class="line">        heartbeat := make(chan interface&#123;&#125;)</span><br><span class="line">        results := make(chan time.Time)</span><br><span class="line">        go func() &#123;</span><br><span class="line">            defer close(heartbeat)</span><br><span class="line">            defer close(results)</span><br><span class="line"></span><br><span class="line">            pulse := time.Tick(pulseInterval)</span><br><span class="line">            workGen := time.Tick(2 * pulseInterval)</span><br><span class="line">// 设定心跳间隔</span><br><span class="line">            sendPulse := func() &#123;</span><br><span class="line">                select &#123;</span><br><span class="line">                case heartbeat &lt;- struct&#123;&#125;&#123;&#125;:</span><br><span class="line">                default:</span><br><span class="line">                // 可能没有人接收心跳，所以加一个default</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            sendResult := func(r time.Time) &#123;</span><br><span class="line">                for &#123;</span><br><span class="line">                    select &#123;</span><br><span class="line">                    case &lt;-done:</span><br><span class="line">                        return</span><br><span class="line">                    case &lt;-pulse:</span><br><span class="line">                        sendPulse()</span><br><span class="line">                    case results &lt;- r:</span><br><span class="line">                        return</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            for &#123;</span><br><span class="line">                select &#123;</span><br><span class="line">                case &lt;-done:</span><br><span class="line">                    return</span><br><span class="line">                case &lt;-pulse:</span><br><span class="line">                    sendPulse()</span><br><span class="line">                case r := &lt;-workGen:</span><br><span class="line">                    sendResult(r)</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;()</span><br><span class="line">        return heartbeat, results</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    done := make(chan interface&#123;&#125;)</span><br><span class="line">    time.AfterFunc(10*time.Second, func() &#123; close(done) &#125;)</span><br><span class="line"></span><br><span class="line">    const timeout = 2 * time.Second</span><br><span class="line">    // 设置了超时时间</span><br><span class="line">    heartbeat, results := doWork(done, timeout/2)</span><br><span class="line">    // timeout/2 使我们的心跳有额外的响应时间</span><br><span class="line"></span><br><span class="line">    for &#123;</span><br><span class="line">        select &#123;</span><br><span class="line">        // 处理心跳，如果没有消息时，至少timeout/2后会从心跳channel发出一条消息</span><br><span class="line">        case _, ok := &lt;-heartbeat:</span><br><span class="line">            if ok == false &#123;</span><br><span class="line">                return</span><br><span class="line">            &#125;</span><br><span class="line">            fmt.Println(&quot;pulse&quot;)</span><br><span class="line">        case r, ok := &lt;-results:</span><br><span class="line">            if ok == false &#123;</span><br><span class="line">                return</span><br><span class="line">            &#125;</span><br><span class="line">            fmt.Printf(&quot;result %v\n&quot;, r.Second())</span><br><span class="line">        case &lt;-time.After(timeout):</span><br><span class="line">            return</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>以下是每个工作单元开始之前发出的心跳<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line">func main() &#123;</span><br><span class="line">    doWork := func(</span><br><span class="line">        done &lt;-chan interface&#123;&#125;,</span><br><span class="line">    ) (&lt;-chan interface&#123;&#125;, &lt;-chan int) &#123;</span><br><span class="line">        heartbeatStream := make(chan interface&#123;&#125;, 1)</span><br><span class="line">// 创建一个缓冲区大小为1的heartbeat channel，确保了即使没有及时接收发送消息也能发出一个心跳</span><br><span class="line"></span><br><span class="line">        workStream := make(chan int)</span><br><span class="line">        go func() &#123;</span><br><span class="line">            defer close(heartbeatStream)</span><br><span class="line">            defer close(workStream)</span><br><span class="line"></span><br><span class="line">            for i := 0; i &lt; 10; i++ &#123;</span><br><span class="line">                select &#123;</span><br><span class="line">                case heartbeatStream &lt;- struct&#123;&#125;&#123;&#125;:</span><br><span class="line">                default:</span><br><span class="line">                &#125;</span><br><span class="line">                select &#123;</span><br><span class="line">                case &lt;-done:</span><br><span class="line">                    return</span><br><span class="line">                case workStream &lt;- rand.Intn(10):</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">// 这里为心跳设置了单独的select块，将发送result和发送心跳分开，如果接收者没有准备好接受结果，作为替代它将收到一个心跳，而代表当前结果的值将会丢失。</span><br><span class="line">// 为了防止没人接收心跳，增加了default，因为我们的heart channel创建时有一个缓冲区，所以如果有人正在监听暗示没有及时收到第一个心跳，接收者也可以收到心跳。     </span><br><span class="line">        &#125;()</span><br><span class="line"></span><br><span class="line">        return heartbeatStream, workStream</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    done := make(chan interface&#123;&#125;)</span><br><span class="line">    defer close(done)</span><br><span class="line"></span><br><span class="line">    heartbeat, results := doWork(done)</span><br><span class="line"></span><br><span class="line">    for &#123;</span><br><span class="line">        select &#123;</span><br><span class="line">        case _, ok := &lt;-heartbeat:</span><br><span class="line">            if ok == false &#123;</span><br><span class="line">                return</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                fmt.Println(&quot;pulse&quot;)</span><br><span class="line">            &#125;</span><br><span class="line">        case r, ok := &lt;-results:</span><br><span class="line">            if ok == false &#123;</span><br><span class="line">                return</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                fmt.Printf(&quot;result %v\n&quot;, r)</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>一些外部因素会导致goroutine花费更长的时间来进行第一次迭代，无论goroutine在调度上是否是第一位执行的。使用goroutine来解决这个问题。</p>
+<h1 id="复制请求"><a href="#复制请求" class="headerlink" title="复制请求"></a>复制请求</h1><p>可以将请求分发到多个处理程序，其中一个将比其他处理程序返回更快，可以立即返回结果。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">func main() &#123;</span><br><span class="line">    doWork := func(</span><br><span class="line">        done &lt;-chan interface&#123;&#125;,</span><br><span class="line">        id int,</span><br><span class="line">        wg *sync.WaitGroup,</span><br><span class="line">        result chan&lt;- int,</span><br><span class="line">    ) &#123;</span><br><span class="line">        started := time.Now()</span><br><span class="line">        defer wg.Done()</span><br><span class="line"></span><br><span class="line">        simulatedLoadTime := time.Duration(1+rand.Intn(5)) * time.Second</span><br><span class="line">        select &#123;</span><br><span class="line">        case &lt;-done:</span><br><span class="line">        case &lt;-time.After(simulatedLoadTime):</span><br><span class="line">        &#125;</span><br><span class="line">        select &#123;</span><br><span class="line">        case &lt;-done:</span><br><span class="line">        case result &lt;- id:</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        took := time.Since(started)</span><br><span class="line">        if took &lt; simulatedLoadTime &#123;</span><br><span class="line">            took = simulatedLoadTime</span><br><span class="line">        &#125;</span><br><span class="line">        fmt.Printf(&quot;%v took %v.\n&quot;, id, took)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    done := make(chan interface&#123;&#125;)</span><br><span class="line">    result := make(chan int)</span><br><span class="line"></span><br><span class="line">    var wg sync.WaitGroup</span><br><span class="line">    wg.Add(10)</span><br><span class="line"></span><br><span class="line">    for i := 0; i &lt; 10; i++ &#123;</span><br><span class="line">        go doWork(done, i, &amp;wg, result)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    firstReturned := &lt;-result</span><br><span class="line">    close(done)</span><br><span class="line"></span><br><span class="line">    wg.Wait()</span><br><span class="line"></span><br><span class="line">    fmt.Printf(&quot;Received an answer from #%v.\n&quot;, firstReturned)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在这里我们启动了10个处理程序来处理请求，并获得了第一个返回值，如果得到了第一个返回值，则取消其它的处理程序，以保证不会做多余的工作。</p>
+<h1 id="速率限制"><a href="#速率限制" class="headerlink" title="速率限制"></a>速率限制</h1><p>速率限制允许你将系统的性能和稳定性平衡在可控范围内。Go中大多数的限速是基于令牌算法的。</p>
+<p>如果要访问资源，必须拥有资源的访问令牌，没有令牌的请求会被拒绝。假设令牌存储在一个等待被检索使用的桶中，桶的深度是d，表示一个桶可以容纳d个访问令牌。</p>
+<p>每当需要访问资源时，都会在桶中删除一个令牌，请求必须排队等待直到有令牌可以用，或者被拒绝操作。将r定义为向桶中添加令牌的速率。只要用户拥有可用的令牌，集中的请求可能会使用户突破系统的可用范围。有些用户会间歇性访问系统，但是又想要尽可能快的获得结果，就会出现突发性的事件，只需要确保系统能同时处理所有用户的突发请求，或者在统计上不会有太多用户同时突发访问。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">func Open() *APIConnection &#123;</span><br><span class="line">    return &amp;APIConnection&#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">type APIConnection struct&#123;&#125;</span><br><span class="line"></span><br><span class="line">func (a *APIConnection) ReadFile(ctx context.Context) error &#123;</span><br><span class="line">    return nil</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (a *APIConnection) ResolveAddress(ctx context.Context) error &#123;</span><br><span class="line">    return nil</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">    defer log.Printf(&quot;Done.&quot;)</span><br><span class="line">    log.SetOutput(os.Stdout)</span><br><span class="line">    log.SetFlags(log.Ltime | log.LUTC)</span><br><span class="line"></span><br><span class="line">    apiConnection := Open()</span><br><span class="line">    var wg sync.WaitGroup</span><br><span class="line">    wg.Add(20)</span><br><span class="line"></span><br><span class="line">    for i := 0; i &lt; 10; i++ &#123;</span><br><span class="line">        go func() &#123;</span><br><span class="line">            defer wg.Done()</span><br><span class="line">            err := apiConnection.ReadFile(context.Background())</span><br><span class="line">            if err != nil &#123;</span><br><span class="line">                log.Printf(&quot;cannot ReadFile: %v&quot;, err)</span><br><span class="line">            &#125;</span><br><span class="line">            log.Printf(&quot;ReadFile&quot;)</span><br><span class="line">        &#125;()</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    for i := 0; i &lt; 10; i++ &#123;</span><br><span class="line">        go func() &#123;</span><br><span class="line">            defer wg.Done()</span><br><span class="line">            err := apiConnection.ResolveAddress(context.Background())</span><br><span class="line">            if err != nil &#123;</span><br><span class="line">                log.Printf(&quot;cannot ResolveAddress: %v&quot;, err)</span><br><span class="line">            &#125;</span><br><span class="line">            log.Printf(&quot;ResolveAddress&quot;)</span><br><span class="line">        &#125;()</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    wg.Wait()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>所有的API请求同时进行，没有进行限速，所以客户端可以自由访问系统，下面引入限速器，把限速器放在APIConnection中。这里用到了<code>golang.org/x/time/rate</code>包中的令牌桶限速器实现，具体安装如下：</p>
+<p><code>golang.org/x</code>包放到了<code>https://github.com/golang/time.git</code>中，下载时需要先在本地建立<code>golang.org/x</code>的目录后，再下载。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p golang.org/x</span><br><span class="line">git clone https://github.com/golang/time.git</span><br></pre></td></tr></table></figure></p>
+<p>我们使用了这个包的两个部分，分别是Limit类型和NewLimiter函数。Limit表示某个事件的最大频率，每秒事件数；NewLimiter返回一个新的Limit，允许事件速率为r，并允许最大为b的token。</p>
+<p>rate包也包含一个辅助方法Every，将时间间隔转换为Limit。针对每次操作的间隔时间进行测量：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">func Per(eventCount int, duration time.Duration) rate.Limit &#123;</span><br><span class="line">    return rate.Every(duration / time.Duration(eventCount))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>创建rate.Limiter后，使用它来阻塞我们的请求，直到获得访问令牌，使用Wait实现。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">func (lim *Limiter) Wait(ctx context.Context) </span><br><span class="line">// Wait是WaitN(ctx, 1)的缩写</span><br><span class="line">// WaitN会执行直到有n个事件发生，</span><br><span class="line">// 如果n超过Limiter的突发大小，ctx被取消，或者逾期等待时间超过context的deadline，会返回一个错误</span><br><span class="line"></span><br><span class="line">func (lim *Limiter) WaitN(ctx context.Context, n int) (err error)</span><br></pre></td></tr></table></figure></p>
+<p>修改后的APIConnection：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">func Open() *APIConnection &#123;</span><br><span class="line">    return &amp;APIConnection&#123;</span><br><span class="line">        rateLimiter: rate.NewLimiter(rate.Limit(1), 1),</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">type APIConnection struct &#123;</span><br><span class="line">    rateLimiter *rate.Limiter</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (a *APIConnection) ReadFile(ctx context.Context) error &#123;</span><br><span class="line">    if err := a.rateLimiter.Wait(ctx); err != nil &#123;</span><br><span class="line">        return err</span><br><span class="line">    &#125;</span><br><span class="line">    return nil</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (a *APIConnection) ResolveAddress(ctx context.Context) error &#123;</span><br><span class="line">    if err := a.rateLimiter.Wait(ctx); err != nil &#123;</span><br><span class="line">        return err</span><br><span class="line">    &#125;</span><br><span class="line">    return nil</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">    defer log.Printf(&quot;Done.&quot;)</span><br><span class="line">    log.SetOutput(os.Stdout)</span><br><span class="line">    log.SetFlags(log.Ltime | log.LUTC)</span><br><span class="line"></span><br><span class="line">    apiConnection := Open()</span><br><span class="line">    var wg sync.WaitGroup</span><br><span class="line">    wg.Add(20)</span><br><span class="line"></span><br><span class="line">    for i := 0; i &lt; 10; i++ &#123;</span><br><span class="line">        go func() &#123;</span><br><span class="line">            defer wg.Done()</span><br><span class="line">            err := apiConnection.ReadFile(context.Background())</span><br><span class="line">            if err != nil &#123;</span><br><span class="line">                log.Printf(&quot;cannot ReadFile: %v&quot;, err)</span><br><span class="line">            &#125;</span><br><span class="line">            log.Printf(&quot;ReadFile&quot;)</span><br><span class="line">        &#125;()</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    for i := 0; i &lt; 10; i++ &#123;</span><br><span class="line">        go func() &#123;</span><br><span class="line">            defer wg.Done()</span><br><span class="line">            err := apiConnection.ResolveAddress(context.Background())</span><br><span class="line">            if err != nil &#123;</span><br><span class="line">                log.Printf(&quot;cannot ResolveAddress: %v&quot;, err)</span><br><span class="line">            &#125;</span><br><span class="line">            log.Printf(&quot;ResolveAddress&quot;)</span><br><span class="line">        &#125;()</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    wg.Wait()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这样实现了所有API连接的速率限制为每秒一次。</p>
+<p>聚合限速器：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">type RateLimiter interface &#123;</span><br><span class="line">    Wait(context.Context) error</span><br><span class="line">    Limit() rate.Limit</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func MultiLimiter(limiters ...RateLimiter) *multiLimiter &#123;</span><br><span class="line">    byLimit := func(i, j int) bool &#123;</span><br><span class="line">        return limiters[i].Limit() &lt; limiters[j].Limit()</span><br><span class="line">    &#125;</span><br><span class="line">    sort.Slice(limiters, byLimit)</span><br><span class="line">    return &amp;multiLimiter&#123;limiters: limiters&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">type multiLimiter struct &#123;</span><br><span class="line">    limiters []RateLimiter</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (l *multiLimiter) Wait(ctx context.Context) error &#123;</span><br><span class="line">    for _, l := range l.limiters &#123;</span><br><span class="line">        if err := l.Wait(ctx); err != nil &#123;</span><br><span class="line">            return err</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    return nil</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (l *multiLimiter) Limit() rate.Limit &#123;</span><br><span class="line">    return l.limiters[0].Limit()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>定义了一个RateLimiter接口，使MultiLimiter可以递归定义其他的MultiLimiter实例，并且实现了一个优化，根据每个RateLimiter的Limit()排序，可以直接返回限制最多的限制器，这将是切片（slice）的第一个元素。</p>
+<p>Wait犯法会遍历所有的子限速器，并调用Wait。</p>
+<p>可以考虑增加对API请求的限制，对磁盘的限制：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">func Open() *APIConnection &#123;</span><br><span class="line">    return &amp;APIConnection&#123;</span><br><span class="line">        apiLimit: MultiLimiter(</span><br><span class="line">            rate.NewLimiter(Per(2, time.Second), 2)</span><br><span class="line">            rate.NewLimiter(Per(10, time.Minute), 10),</span><br><span class="line">            ),</span><br><span class="line">        diskLimit: MultiLimiter(</span><br><span class="line">            rate.NewLimiter(rate.Limit(1), 1)</span><br><span class="line">            ),</span><br><span class="line">        networkLimit: MultiLimiter(</span><br><span class="line">            rate.NewLimiter(Per(3, time.Second), 3),</span><br><span class="line">            ),</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (a *APIConnection) ReadFile(ctx context.Context) error &#123;</span><br><span class="line">    if err := MultiLimiter(a.apiLimit,a.diskLimit).Wait(ctx); err != nil &#123;</span><br><span class="line">        return err</span><br><span class="line">    &#125;</span><br><span class="line">    return nil</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (a *APIConnection) ResolveAddress(ctx context.Context) error &#123;</span><br><span class="line">    if err := MultiLimiter(a.apiLimit,a.diskLimit).Wait(ctx); err != nil &#123;</span><br><span class="line">        return err</span><br><span class="line">    &#125;</span><br><span class="line">    return nil</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>上面为API调用和磁盘读取设置了限速器。</p>
+<h1 id="治愈异常的goroutine"><a href="#治愈异常的goroutine" class="headerlink" title="治愈异常的goroutine"></a>治愈异常的goroutine</h1><p>建立一个机制来监控goroutine是否处于健康的状态，当它们变得异常时就可以尽快重启。需要使用心跳模式来检查正在监控的goroutine是否活跃，心跳的类型取决于想要监控的内容，如果goroutine有可能会产生活锁，需要确保心跳包含某些信息，表明goroutine正在工作而不是只是活着。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br></pre></td><td class="code"><pre><span class="line">type startGoroutineFn func(</span><br><span class="line">    done &lt;-chan interface&#123;&#125;,</span><br><span class="line">    pulseInterval time.Duration,</span><br><span class="line">) (heartbeat &lt;-chan interface&#123;&#125;)</span><br><span class="line">//定义一个可以监控和重启goroutine的信号。</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">    newSteward := func(</span><br><span class="line">        timeout time.Duration,</span><br><span class="line">        startGoroutine startGoroutineFn,</span><br><span class="line">    ) startGoroutineFn &#123;</span><br><span class="line">        return func(</span><br><span class="line">            done &lt;-chan interface,</span><br><span class="line">            pulseInterval time.Duration,</span><br><span class="line">// 监控goroutine需要timeout变量，一个函数startGoroutineFn表示管理员本身也是可监控的</span><br><span class="line"></span><br><span class="line">        ) (&lt;-chan interface&#123;&#125;) &#123; </span><br><span class="line">            heartbeat :=make(chan interface&#123;&#125;)</span><br><span class="line">            go func() &#123;</span><br><span class="line">                defer close(heartbeat)</span><br><span class="line">                var wardDone chan interface&#123;&#125;</span><br><span class="line">                var wardHeartbeat &lt;- chan interface&#123;&#125;</span><br><span class="line"></span><br><span class="line">                startWard := func() &#123;</span><br><span class="line">                    wardDone = make(chan interface&#123;&#125;)</span><br><span class="line">                    wardHeartbeat = startGoroutine(or(wardDone, done),timeout/2)</span><br><span class="line">                &#125;</span><br><span class="line">// 定义了一个闭包，实现了统一的方法来启动正在监视的goroutine</span><br><span class="line">// 创建一个新的channel，如果需要发出停止信号则使用它传入goroutine</span><br><span class="line">// 启动将要监控的goroutine，如果管理员被停止或者想要停止goroutine，希望这些信息能传给管理区的goroutine</span><br><span class="line">// 所以使用了逻辑或来包装。</span><br><span class="line"></span><br><span class="line">                startWard()</span><br><span class="line">                pulse := time.Tick(pulseInterval)</span><br><span class="line"></span><br><span class="line">            monitorLoop:</span><br><span class="line">                for &#123;</span><br><span class="line">                    timeoutSignal := time.After(timeout)</span><br><span class="line">                    for &#123;</span><br><span class="line">                        select &#123;</span><br><span class="line">                        case &lt;-pulse:</span><br><span class="line">                            select&#123;</span><br><span class="line">                            case heartbeat &lt;- struct&#123;&#125;&#123;&#125;:</span><br><span class="line">                            default:</span><br><span class="line">                            &#125;</span><br><span class="line">                        case &lt;-wardHeartbeat:</span><br><span class="line">                            continue monitorLoop</span><br><span class="line">                        case &lt;-timeoutSignal:</span><br><span class="line">                            log.Println(&quot;steward: ward unhealthy; restarting&quot;)</span><br><span class="line">                            close(wardDone)</span><br><span class="line">                            startWard()</span><br><span class="line">                            continue monitorLoop</span><br><span class="line">                        case &lt;-done:</span><br><span class="line">                            return</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;()</span><br><span class="line">            return heartbeat</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    log.SetOutput(os.Stdout)</span><br><span class="line">    log.SetFlags(log.Ltime | log.LUTC)</span><br><span class="line"></span><br><span class="line">    doWork := func(done &lt;-chan interface&#123;&#125;, _ time.Duration) &lt;-chan interface&#123;&#125; &#123;</span><br><span class="line">        log.Println(&quot;ward: hello, I&apos;m irresponsible!&quot;)</span><br><span class="line">        go func()&#123;</span><br><span class="line">            &lt;-done</span><br><span class="line">            log.Println(&quot;ward: I am halting&quot;)</span><br><span class="line">        &#125;()</span><br><span class="line">        retunr nil</span><br><span class="line">    &#125;</span><br><span class="line">    doWorkWithSteward := newSteward(4*time.Second, doWork)</span><br><span class="line">// 超时时间是4s</span><br><span class="line"></span><br><span class="line">    done := make(chan interface&#123;&#125;)</span><br><span class="line">    time.AfterFunc(9*time.Second, func()&#123;</span><br><span class="line">        log.Println(&quot;main: halting steward and ward.&quot;)</span><br><span class="line">        close(done)</span><br><span class="line">    &#125;)</span><br><span class="line">// 9s后停止管理员和goroutine</span><br><span class="line"></span><br><span class="line">    for range doWorkWithSteward(done, 4*time.Second) &#123;&#125;</span><br><span class="line">    log.Println(&quot;done&quot;)</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>管理区可以使用桥接channel模式向消费者提供公用的channel，避免中断，使用这些技术，管理区可以简单的通过组合各种模式变得任意复杂：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">log.SetOutput(os.Stdout)</span><br><span class="line">log.SetFlags(log.Ltime | log.LUTC)</span><br><span class="line"></span><br><span class="line">done := make(chan interface&#123;&#125;)</span><br><span class="line">defer close(done)</span><br><span class="line"></span><br><span class="line">doWork, intStream := doWorkFn(done, 1, 2, -1, 3, 4, 5)</span><br><span class="line">// 创建管理区函数，允许结束可变整数切片，返回用来返回的流</span><br><span class="line"></span><br><span class="line">doWorkWithSteward := newSteward(1*time.Millisecond, doWork)</span><br><span class="line">// 创建管理员，监听doWork    </span><br><span class="line"></span><br><span class="line">doWorkWithSteward(done, 1*time.Hour)</span><br><span class="line">// 启动管理区并开始监控</span><br><span class="line"></span><br><span class="line">for intVal := range take(done, intStream, 6) &#123;</span><br><span class="line">    fmt.Println(&quot;Received %v.\n&quot;, intVal)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/golang/" rel="tag"># golang</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/07/02/Go并发之道4/" rel="next" title="Go语言并发之道第4章笔记">
+                <i class="fa fa-chevron-left"></i> Go语言并发之道第4章笔记
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/07/08/Go并发之道6/" rel="prev" title="Go语言并发之道第6章笔记">
+                Go语言并发之道第6章笔记 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">206</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/test.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#异常传递"><span class="nav-number">1.</span> <span class="nav-text">异常传递</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#超时和取消"><span class="nav-number">2.</span> <span class="nav-text">超时和取消</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#心跳"><span class="nav-number">3.</span> <span class="nav-text">心跳</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#复制请求"><span class="nav-number">4.</span> <span class="nav-text">复制请求</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#速率限制"><span class="nav-number">5.</span> <span class="nav-text">速率限制</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#治愈异常的goroutine"><span class="nav-number">6.</span> <span class="nav-text">治愈异常的goroutine</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
