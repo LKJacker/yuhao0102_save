@@ -103,7 +103,7 @@
 <meta property="og:image" content="http://yoursite.com/img/2012040114063976.png">
 <meta property="og:image" content="http://yoursite.com/img/2012040114082156.png">
 <meta property="og:image" content="http://yoursite.com/img/2012040114105477.png">
-<meta property="og:updated_time" content="2019-08-12T13:34:34.540Z">
+<meta property="og:updated_time" content="2019-08-12T13:50:09.697Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="谈谈数据库的ACID">
 <meta name="twitter:description" content="原文：https://blog.csdn.net/shuaihj/article/details/14163713 事务定义：所谓事务，它是一个操作序列，这些操作要么都执行，要么都不执行，它是一个不可分割的工作单位。 准备工作：为了说明事务的ACID原理，我们使用银行账户及资金管理的案例进行分析。12345678910// 创建数据库create table account(   idint pr">
@@ -396,6 +396,77 @@
 <p>SQL SERVER通过write-ahead transaction log来保证持久性。write-ahead transaction log的意思是，事务中对数据库的改变在写入到数据库之前，首先写入到事务日志中。而事务日志是按照顺序排号的（LSN）。当数据库崩溃或者服务器断点时，重启动SQL SERVER，SQLSERVER首先会检查日志顺序号，将本应对数据库做更改而未做的部分持久化到数据库，从而保证了持久性。</p>
 <h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>事务的（ACID）特性是由关系数据库管理系统（RDBMS，数据库系统）来实现的。数据库管理系统采用日志来保证事务的原子性、一致性和持久性。日志记录了事务对数据库所做的更新，如果某个事务在执行过程中发生错误，就可以根据日志，撤销事务对数据库已做的更新，使数据库退回到执行事务前的初始状态。</p>
 <p>数据库管理系统采用锁机制来实现事务的隔离性。当多个事务同时更新数据库中相同的数据时，只允许持有锁的事务能更新该数据，其他事务必须等待，直到前一个事务释放了锁，其他事务才有机会更新该数据。</p>
+<h1 id="数据库查询优化"><a href="#数据库查询优化" class="headerlink" title="数据库查询优化"></a>数据库查询优化</h1><h2 id="使用索引"><a href="#使用索引" class="headerlink" title="使用索引"></a>使用索引</h2><p>应尽量避免全表扫描，首先应考虑在 where 及 order by ,group by 涉及的列上建立索引</p>
+<h2 id="优化-SQL-语句"><a href="#优化-SQL-语句" class="headerlink" title="优化 SQL 语句"></a>优化 SQL 语句</h2><ol>
+<li><p>通过 explain(查询优化神器)用来查看 SQL 语句的执行效果</p>
+<ul>
+<li>可以帮助选择更好的索引和优化查询语句， 写出更好的优化语句。 通常我们可以对比较复杂的尤其是涉及到多表的 SELECT 语句， 把关键字 EXPLAIN 加到前面， 查看执行计划。例如： explain select * from news;</li>
+</ul>
+</li>
+<li><p>任何地方都不要使用 <code>select * from t</code>。用具体的字段列表代替<code>*</code> ，不要返回用不到的任何字段。</p>
+<ul>
+<li>不需要的字段会增加数据传输的时间，即使mysql服务器和客户端是在同一台机器上，使用的协议还是tcp，通信也是需要额外的时间。</li>
+<li>要取的字段、索引的类型，和这两个也是有关系的。举个例子，对于user表，有name和phone的联合索引，select name from user where phone=12345678912 和 select * from user where phone=12345678912，前者要比后者的速度快，因为name可以在索引上直接拿到，不再需要读取这条记录了。</li>
+<li>大字段，例如很长的varchar，blob，text。准确来说，长度超过728字节的时候，会把超出的数据放到另外一个地方，因此读取这条记录会增加一次io操作。</li>
+</ul>
+</li>
+<li><p>索引列不能参与计算，保持列“干净”</p>
+<ul>
+<li>比如from_unixtime(create_time) = ’2014-05-29’就不能使用到索引，原因很简单，b+树中存的都是数据表中的字段值，但进行检索时，需要把所有元素都应用函数才能比较，显然成本太大。所以语句应该写成create_time = unix_timestamp(’2014-05-29’);</li>
+</ul>
+</li>
+<li><p>查询尽可能使用 limit 减少返回的行数， 减少数据传输时间和带宽浪费。</p>
+</li>
+</ol>
+<h2 id="优化数据库对象"><a href="#优化数据库对象" class="headerlink" title="优化数据库对象"></a>优化数据库对象</h2><ol>
+<li><p>优化表的数据类型</p>
+<ul>
+<li>使用 procedure analyse()函数对表进行分析， 该函数可以对表中列的数据类型提出优化建议。 能小就用小。 表数据类型第一个原则是： 使用能正确的表示和存储数据的最短类型。 这样可以减少对磁盘空间、 内存、 cpu 缓存的使用。</li>
+<li>使用方法： select * from 表名 procedure analyse();</li>
+</ul>
+</li>
+<li><p>对表进行拆分</p>
+<ul>
+<li>通过拆分表可以提高表的访问效率。 有 2 种拆分方法</li>
+<li>垂直拆分。把主键和一些列放在一个表中， 然后把主键和另外的列放在另一个表中。 如果一个表中某些列常用， 而另外一些不常用， 则可以采用垂直拆分。</li>
+<li>水平拆分。根据一列或者多列数据的值把数据行放到二个独立的表中。</li>
+</ul>
+</li>
+<li><p>使用中间表来提高查询速度</p>
+<ul>
+<li>创建中间表， 表结构和源表结构完全相同， 转移要统计的数据到中间表， 然后在中间表上进行统计， 得出想要的结果。</li>
+</ul>
+</li>
+</ol>
+<h2 id="硬件优化"><a href="#硬件优化" class="headerlink" title="硬件优化"></a>硬件优化</h2><ol>
+<li>CPU 的优化<ul>
+<li>选择多核和主频高的 CPU。</li>
+</ul>
+</li>
+<li>内存的优化<ul>
+<li>使用更大的内存。 将尽量多的内存分配给 MYSQL 做缓存。</li>
+</ul>
+</li>
+<li>磁盘 I/O 的优化<ul>
+<li>使用磁盘阵列。RAID 0 没有数据冗余， 没有数据校验的磁盘陈列。 实现 RAID 0至少需要两块以上的硬盘，它将两块以上的硬盘合并成一块， 数据连续地分割在每块盘上。</li>
+<li>RAID1 是将一个两块硬盘所构成 RAID 磁盘阵列， 其容量仅等于一块硬盘的容量， 因为另一块只是当作数据“镜像”。使用 RAID-0+1 磁盘阵列。 RAID 0+1 是 RAID 0 和 RAID 1 的组合形式。 它在提供与 RAID 1 一样的数据安全保障的同时， 也提供了与 RAID 0 近似的存储性能。</li>
+</ul>
+</li>
+<li>调整磁盘调度算法<ul>
+<li>选择合适的磁盘调度算法， 可以减少磁盘的寻道时间</li>
+</ul>
+</li>
+</ol>
+<h2 id="MySQL-自身的优化"><a href="#MySQL-自身的优化" class="headerlink" title="MySQL 自身的优化"></a>MySQL 自身的优化</h2><ol>
+<li>对 MySQL 自身的优化主要是对其配置文件 my.cnf 中的各项参数进行优化调整。 如指定 MySQL 查询缓冲区的大小， 指定 MySQL 允许的最大连接进程数等。</li>
+</ol>
+<h2 id="应用优化"><a href="#应用优化" class="headerlink" title="应用优化"></a>应用优化</h2><ol>
+<li>使用数据库连接池</li>
+<li>使用查询缓存<ul>
+<li>它的作用是存储 select 查询的文本及其相应结果。 如果随后收到一个相同的查询， 服务器会从查询缓存中直接得到查询结果。 查询缓存适用的对象是更新不频繁的表， 当表中数据更改后， 查询缓存中的相关条目就会被清空。</li>
+</ul>
+</li>
+</ol>
 <h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h1><h2 id="什么是存储过程？有哪些优缺点？"><a href="#什么是存储过程？有哪些优缺点？" class="headerlink" title="什么是存储过程？有哪些优缺点？"></a>什么是存储过程？有哪些优缺点？</h2><p>存储过程是一些预编译的SQL语句。</p>
 <p>更加直白的理解：存储过程可以说是一个记录集，它是由一些T-SQL语句组成的代码块，这些T-SQL语句代码像一个方法一样实现一些功能（对单表或多表的增删改查），然后再给这个代码块取一个名字，在用到这个功能的时候调用他就行了。</p>
 <p>存储过程是一个预编译的代码块，执行效率比较高<br>一个存储过程替代大量T_SQL语句 ，可以降低网络通信量，提高通信速率<br>可以一定程度上确保数据安全</p>
@@ -407,6 +478,41 @@
 <h2 id="数据库的乐观锁和悲观锁是什么？"><a href="#数据库的乐观锁和悲观锁是什么？" class="headerlink" title="数据库的乐观锁和悲观锁是什么？"></a>数据库的乐观锁和悲观锁是什么？</h2><p>数据库管理系统（DBMS）中的并发控制的任务是确保在多个事务同时存取数据库中同一数据时不破坏事务的隔离性和统一性以及数据库的统一性。</p>
 <p>乐观并发控制(乐观锁)和悲观并发控制（悲观锁）是并发控制主要采用的技术手段。</p>
 <p>悲观锁：假定会发生并发冲突，屏蔽一切可能违反数据完整性的操作<br>乐观锁：假设不会发生并发冲突，只在提交操作时检查是否违反数据完整性。</p>
+<h2 id="触发器的作用？"><a href="#触发器的作用？" class="headerlink" title="触发器的作用？"></a>触发器的作用？</h2><p>触发器是一中特殊的存储过程，主要是通过事件来触发而被执行的。它可以强化约束，来维护数据的完整性和一致性，可以跟踪数据库内的操作从而不允许未经许可的更新和变化。可以联级运算。如，某表上的触发器上包含对另一个表的数据操作，而该操作又会导致该表触发器被触发。</p>
+<h2 id="索引的作用？和它的优点缺点是什么？"><a href="#索引的作用？和它的优点缺点是什么？" class="headerlink" title="索引的作用？和它的优点缺点是什么？"></a>索引的作用？和它的优点缺点是什么？</h2><p>数据库索引，是数据库管理系统中一个排序的数据结构，以协助快速查询、更新数据库表中数据。索引的实现通常使用B树及其变种B+树。</p>
+<p>在数据之外，数据库系统还维护着满足特定查找算法的数据结构，这些数据结构以某种方式引用（指向）数据，这样就可以在这些数据结构上实现高级查找算法。这种数据结构，就是索引。</p>
+<p>为表设置索引要付出代价的：一是增加了数据库的存储空间，二是在插入和修改数据时要花费较多的时间(因为索引也要随之变动)。</p>
+<p>创建索引可以大大提高系统的性能（优点）：</p>
+<ul>
+<li>第一，通过创建唯一性索引，可以保证数据库表中每一行数据的唯一性。</li>
+<li>第二，可以大大加快数据的检索速度，这也是创建索引的最主要的原因。</li>
+<li>第三，可以加速表和表之间的连接，特别是在实现数据的参考完整性方面特别有意义。</li>
+<li>第四，在使用分组和排序子句进行数据检索时，同样可以显著减少查询中分组和排序的时间。</li>
+<li>第五，通过使用索引，可以在查询的过程中，使用优化隐藏器，提高系统的性能。</li>
+</ul>
+<p>也许会有人要问：增加索引有如此多的优点，为什么不对表中的每一个列创建一个索引呢？因为，增加索引也有许多不利的方面：</p>
+<ul>
+<li>第一，创建索引和维护索引要耗费时间，这种时间随着数据量的增加而增加。</li>
+<li>第二，索引需要占物理空间，除了数据表占数据空间之外，每一个索引还要占一定的物理空间，如果要建立聚簇索引，那么需要的空间就会更大。</li>
+<li>第三，当对表中的数据进行增加、删除和修改的时候，索引也要动态的维护，这样就降低了数据的维护速度。</li>
+</ul>
+<p>索引是建立在数据库表中的某些列的上面。在创建索引的时候，应该考虑在哪些列上可以创建索引，在哪些列上不能创建索引。</p>
+<p>一般来说，应该在这些列上创建索引：</p>
+<ul>
+<li>在经常需要搜索的列上，可以加快搜索的速度；</li>
+<li>在作为主键的列上，强制该列的唯一性和组织表中数据的排列结构；</li>
+<li>在经常用在连接的列上，这些列主要是一些外键，可以加快连接的速度；</li>
+<li>在经常需要根据范围进行搜索的列上创建索引，因为索引已经排序，其指定的范围是连续的；</li>
+<li>在经常需要排序的列上创建索引，因为索引已经排序，这样查询可以利用索引的排序，加快排序查询时间；</li>
+<li>在经常使用在WHERE子句中的列上面创建索引，加快条件的判断速度。</li>
+</ul>
+<p>同样，对于有些列不应该创建索引：</p>
+<ul>
+<li>第一，对于那些在查询中很少使用或者参考的列不应该创建索引。这是因为，既然这些列很少使用到，因此有索引或者无索引，并能提高查询速度。相反，由于增加了索引，反而降低了系统的维护速度和增大了空间需求。</li>
+<li>第二，对于那些只有很少数据值的列也不应该增加索引。这是因为，由于这些列的取值很少，例如人事表的性别列，在查询的结果中，结果集的数据行占了表中数据行的很大比例，即需要在表中搜索的数据行的比例很大。增加索引，并不能明显加快检索速度。</li>
+<li>第三，对于那些定义为text, image和bit数据类型的列不应该增加索引。这是因为，这些列的数据量要么相当大，要么取值很少。</li>
+<li>第四，当修改性能远远大于检索性能时，不应该创建索引。这是因为，修改性能和检索性能是互相矛盾的。当增加索引时，会提高检索性能，但是会降低修改性能。当减少索引时，会提高修改性能，降低检索性能。因此，当修改性能远远大于检索性能时，不应该创建索引。</li>
+</ul>
 <h2 id="使用索引查询一定能提高查询的性能吗？为什么"><a href="#使用索引查询一定能提高查询的性能吗？为什么" class="headerlink" title="使用索引查询一定能提高查询的性能吗？为什么"></a>使用索引查询一定能提高查询的性能吗？为什么</h2><p>通常,通过索引查询数据比全表扫描要快.但是我们也必须注意到它的代价.</p>
 <p>索引需要空间来存储,也需要定期维护, 每当有记录在表中增减或索引列被修改时,索引本身也会被修改. 这意味着每条记录的INSERT,DELETE,UPDATE将为此多付出4,5 次的磁盘I/O. 因为索引需要额外的存储空间和处理,那些不必要的索引反而会使查询反应时间变慢.使用索引查询不一定能提高查询性能,索引范围查询(INDEX RANGE SCAN)适用于两种情况:</p>
 <p>基于一个范围的检索,一般查询返回结果集小于表中记录数的30%<br>基于非唯一性索引的检索</p>
@@ -614,7 +720,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#事务"><span class="nav-number">1.</span> <span class="nav-text">事务</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ACID"><span class="nav-number">2.</span> <span class="nav-text">ACID</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#原子性"><span class="nav-number">3.</span> <span class="nav-text">原子性</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#案例"><span class="nav-number">3.1.</span> <span class="nav-text">案例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分析"><span class="nav-number">3.2.</span> <span class="nav-text">分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#解决方法"><span class="nav-number">3.3.</span> <span class="nav-text">解决方法</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#一致性"><span class="nav-number">4.</span> <span class="nav-text">一致性</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#案例-1"><span class="nav-number">4.1.</span> <span class="nav-text">案例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#解决方法-1"><span class="nav-number">4.2.</span> <span class="nav-text">解决方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#数据库机制层面"><span class="nav-number">4.2.1.</span> <span class="nav-text">数据库机制层面</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#业务层面"><span class="nav-number">4.2.2.</span> <span class="nav-text">业务层面</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#隔离性"><span class="nav-number">5.</span> <span class="nav-text">隔离性</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#事务之间的相互影响"><span class="nav-number">5.1.</span> <span class="nav-text">事务之间的相互影响</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#脏读"><span class="nav-number">5.1.1.</span> <span class="nav-text">脏读</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#不可重复读"><span class="nav-number">5.1.2.</span> <span class="nav-text">不可重复读</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#幻读（虚读）"><span class="nav-number">5.1.3.</span> <span class="nav-text">幻读（虚读）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#丢失更新"><span class="nav-number">5.1.4.</span> <span class="nav-text">丢失更新</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#理解SQL-SERVER中的隔离级别"><span class="nav-number">5.2.</span> <span class="nav-text">理解SQL SERVER中的隔离级别</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#持久性"><span class="nav-number">6.</span> <span class="nav-text">持久性</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">7.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#附录"><span class="nav-number">8.</span> <span class="nav-text">附录</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#什么是存储过程？有哪些优缺点？"><span class="nav-number">8.1.</span> <span class="nav-text">什么是存储过程？有哪些优缺点？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#索引是什么？有什么作用以及优缺点？"><span class="nav-number">8.2.</span> <span class="nav-text">索引是什么？有什么作用以及优缺点？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#什么是事务？"><span class="nav-number">8.3.</span> <span class="nav-text">什么是事务？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据库的乐观锁和悲观锁是什么？"><span class="nav-number">8.4.</span> <span class="nav-text">数据库的乐观锁和悲观锁是什么？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用索引查询一定能提高查询的性能吗？为什么"><span class="nav-number">8.5.</span> <span class="nav-text">使用索引查询一定能提高查询的性能吗？为什么</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#简单说一说drop、delete与truncate的区别"><span class="nav-number">8.6.</span> <span class="nav-text">简单说一说drop、delete与truncate的区别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#drop、delete与truncate分别在什么场景之下使用？"><span class="nav-number">8.7.</span> <span class="nav-text">drop、delete与truncate分别在什么场景之下使用？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#超键、候选键、主键、外键分别是什么？"><span class="nav-number">8.8.</span> <span class="nav-text">超键、候选键、主键、外键分别是什么？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#什么是视图？以及视图的使用场景有哪些？"><span class="nav-number">8.9.</span> <span class="nav-text">什么是视图？以及视图的使用场景有哪些？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#说一说三个范式。"><span class="nav-number">8.10.</span> <span class="nav-text">说一说三个范式。</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#事务"><span class="nav-number">1.</span> <span class="nav-text">事务</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ACID"><span class="nav-number">2.</span> <span class="nav-text">ACID</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#原子性"><span class="nav-number">3.</span> <span class="nav-text">原子性</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#案例"><span class="nav-number">3.1.</span> <span class="nav-text">案例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分析"><span class="nav-number">3.2.</span> <span class="nav-text">分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#解决方法"><span class="nav-number">3.3.</span> <span class="nav-text">解决方法</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#一致性"><span class="nav-number">4.</span> <span class="nav-text">一致性</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#案例-1"><span class="nav-number">4.1.</span> <span class="nav-text">案例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#解决方法-1"><span class="nav-number">4.2.</span> <span class="nav-text">解决方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#数据库机制层面"><span class="nav-number">4.2.1.</span> <span class="nav-text">数据库机制层面</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#业务层面"><span class="nav-number">4.2.2.</span> <span class="nav-text">业务层面</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#隔离性"><span class="nav-number">5.</span> <span class="nav-text">隔离性</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#事务之间的相互影响"><span class="nav-number">5.1.</span> <span class="nav-text">事务之间的相互影响</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#脏读"><span class="nav-number">5.1.1.</span> <span class="nav-text">脏读</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#不可重复读"><span class="nav-number">5.1.2.</span> <span class="nav-text">不可重复读</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#幻读（虚读）"><span class="nav-number">5.1.3.</span> <span class="nav-text">幻读（虚读）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#丢失更新"><span class="nav-number">5.1.4.</span> <span class="nav-text">丢失更新</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#理解SQL-SERVER中的隔离级别"><span class="nav-number">5.2.</span> <span class="nav-text">理解SQL SERVER中的隔离级别</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#持久性"><span class="nav-number">6.</span> <span class="nav-text">持久性</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">7.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#数据库查询优化"><span class="nav-number">8.</span> <span class="nav-text">数据库查询优化</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用索引"><span class="nav-number">8.1.</span> <span class="nav-text">使用索引</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#优化-SQL-语句"><span class="nav-number">8.2.</span> <span class="nav-text">优化 SQL 语句</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#优化数据库对象"><span class="nav-number">8.3.</span> <span class="nav-text">优化数据库对象</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#硬件优化"><span class="nav-number">8.4.</span> <span class="nav-text">硬件优化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MySQL-自身的优化"><span class="nav-number">8.5.</span> <span class="nav-text">MySQL 自身的优化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#应用优化"><span class="nav-number">8.6.</span> <span class="nav-text">应用优化</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#附录"><span class="nav-number">9.</span> <span class="nav-text">附录</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#什么是存储过程？有哪些优缺点？"><span class="nav-number">9.1.</span> <span class="nav-text">什么是存储过程？有哪些优缺点？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#索引是什么？有什么作用以及优缺点？"><span class="nav-number">9.2.</span> <span class="nav-text">索引是什么？有什么作用以及优缺点？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#什么是事务？"><span class="nav-number">9.3.</span> <span class="nav-text">什么是事务？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据库的乐观锁和悲观锁是什么？"><span class="nav-number">9.4.</span> <span class="nav-text">数据库的乐观锁和悲观锁是什么？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#触发器的作用？"><span class="nav-number">9.5.</span> <span class="nav-text">触发器的作用？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#索引的作用？和它的优点缺点是什么？"><span class="nav-number">9.6.</span> <span class="nav-text">索引的作用？和它的优点缺点是什么？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用索引查询一定能提高查询的性能吗？为什么"><span class="nav-number">9.7.</span> <span class="nav-text">使用索引查询一定能提高查询的性能吗？为什么</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#简单说一说drop、delete与truncate的区别"><span class="nav-number">9.8.</span> <span class="nav-text">简单说一说drop、delete与truncate的区别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#drop、delete与truncate分别在什么场景之下使用？"><span class="nav-number">9.9.</span> <span class="nav-text">drop、delete与truncate分别在什么场景之下使用？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#超键、候选键、主键、外键分别是什么？"><span class="nav-number">9.10.</span> <span class="nav-text">超键、候选键、主键、外键分别是什么？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#什么是视图？以及视图的使用场景有哪些？"><span class="nav-number">9.11.</span> <span class="nav-text">什么是视图？以及视图的使用场景有哪些？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#说一说三个范式。"><span class="nav-number">9.12.</span> <span class="nav-text">说一说三个范式。</span></a></li></ol></li></ol></div>
             
 
           </div>
