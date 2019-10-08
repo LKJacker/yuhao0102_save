@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="积累,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="我是mixi株式会社研究开发组的前坂徹。 上次的文章介绍了memcached是分布式的高速缓存服务器。 本次将介绍memcached的内部构造的实现方式，以及内存的管理方式。 另外，memcached的内部构造导致的弱点也将加以说明。 Slab Allocation机制：整理内存以便重复使用最近的memcached默认情况下采用了名为Slab Allocator的机制分配、管理内存。 在该机制出现">
+<meta name="keywords" content="积累">
+<meta property="og:type" content="article">
+<meta property="og:title" content="memcached全面剖析--2.理解memcached的内存存储">
+<meta property="og:url" content="http://yoursite.com/2019/10/08/memcached完全剖析2/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="我是mixi株式会社研究开发组的前坂徹。 上次的文章介绍了memcached是分布式的高速缓存服务器。 本次将介绍memcached的内部构造的实现方式，以及内存的管理方式。 另外，memcached的内部构造导致的弱点也将加以说明。 Slab Allocation机制：整理内存以便重复使用最近的memcached默认情况下采用了名为Slab Allocator的机制分配、管理内存。 在该机制出现">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/20191008003.png">
+<meta property="og:image" content="http://yoursite.com/img/20191008004.png">
+<meta property="og:image" content="http://yoursite.com/img/20191008005.png">
+<meta property="og:updated_time" content="2019-10-08T09:58:56.286Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="memcached全面剖析--2.理解memcached的内存存储">
+<meta name="twitter:description" content="我是mixi株式会社研究开发组的前坂徹。 上次的文章介绍了memcached是分布式的高速缓存服务器。 本次将介绍memcached的内部构造的实现方式，以及内存的管理方式。 另外，memcached的内部构造导致的弱点也将加以说明。 Slab Allocation机制：整理内存以便重复使用最近的memcached默认情况下采用了名为Slab Allocator的机制分配、管理内存。 在该机制出现">
+<meta name="twitter:image" content="http://yoursite.com/img/20191008003.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/10/08/memcached完全剖析2/">
+
+
+
+
+
+  <title>memcached全面剖析--2.理解memcached的内存存储 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/10/08/memcached完全剖析2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">memcached全面剖析--2.理解memcached的内存存储</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-10-08T17:02:01+08:00">
+                2019-10-08
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>我是mixi株式会社研究开发组的前坂徹。 上次的文章介绍了memcached是分布式的高速缓存服务器。 本次将介绍memcached的内部构造的实现方式，以及内存的管理方式。 另外，memcached的内部构造导致的弱点也将加以说明。</p>
+<h1 id="Slab-Allocation机制：整理内存以便重复使用"><a href="#Slab-Allocation机制：整理内存以便重复使用" class="headerlink" title="Slab Allocation机制：整理内存以便重复使用"></a>Slab Allocation机制：整理内存以便重复使用</h1><p>最近的memcached默认情况下采用了名为Slab Allocator的机制分配、管理内存。 在该机制出现以前，内存的分配是通过对所有记录简单地进行malloc和free来进行的。 但是，这种方式会导致内存碎片，加重操作系统内存管理器的负担，最坏的情况下， 会导致操作系统比memcached进程本身还慢。Slab Allocator就是为解决该问题而诞生的。</p>
+<p>下面来看看Slab Allocator的原理。下面是memcached文档中的slab allocator的目标：</p>
+<p>the primary goal of the slabs subsystem in memcached was to eliminate memory fragmentation issues totally by using fixed-size memory chunks coming from a few predetermined size classes.</p>
+<p>也就是说，Slab Allocator的基本原理是按照预先规定的大小，将分配的内存分割成特定长度的块， 以完全解决内存碎片问题。</p>
+<p>Slab Allocation的原理相当简单。 将分配的内存分割成各种尺寸的块（chunk）， 并把尺寸相同的块分成组（chunk的集合）（图1）。<br><img src="/img/20191008003.png" alt="图1 Slab Allocation的构造图"></p>
+<p>而且，slab allocator还有重复使用已分配的内存的目的。 也就是说，分配到的内存不会释放，而是重复利用。</p>
+<h2 id="Slab-Allocation的主要术语"><a href="#Slab-Allocation的主要术语" class="headerlink" title="Slab Allocation的主要术语"></a>Slab Allocation的主要术语</h2><p>###Page<br>分配给Slab的内存空间，默认是1MB。分配给Slab之后根据slab的大小切分成chunk。</p>
+<h3 id="Chunk"><a href="#Chunk" class="headerlink" title="Chunk"></a>Chunk</h3><p>用于缓存记录的内存空间。</p>
+<h3 id="Slab-Class"><a href="#Slab-Class" class="headerlink" title="Slab Class"></a>Slab Class</h3><p>特定大小的chunk的组。</p>
+<h1 id="在Slab中缓存记录的原理"><a href="#在Slab中缓存记录的原理" class="headerlink" title="在Slab中缓存记录的原理"></a>在Slab中缓存记录的原理</h1><p>下面说明memcached如何针对客户端发送的数据选择slab并缓存到chunk中。</p>
+<p>memcached根据收到的数据的大小，选择最适合数据大小的slab（图2）。 memcached中保存着slab内空闲chunk的列表，根据该列表选择chunk， 然后将数据缓存于其中。</p>
+<p><img src="/img/20191008004.png" alt="图2 选择存储记录的组的方法"></p>
+<p>实际上，Slab Allocator也是有利也有弊。下面介绍一下它的缺点。</p>
+<h1 id="Slab-Allocator的缺点"><a href="#Slab-Allocator的缺点" class="headerlink" title="Slab Allocator的缺点"></a>Slab Allocator的缺点</h1><p>Slab Allocator解决了当初的内存碎片问题，但新的机制也给memcached带来了新的问题。</p>
+<p>这个问题就是，由于分配的是特定长度的内存，因此无法有效利用分配的内存。 例如，将100字节的数据缓存到128字节的chunk中，剩余的28字节就浪费了（图3）。<br><img src="/img/20191008005.png" alt="图3 chunk空间的使用"></p>
+<p>对于该问题目前还没有完美的解决方案，但在文档中记载了比较有效的解决方案。</p>
+<p>The most efficient way to reduce the waste is to use a list of size classes that closely matches (if that’s at all possible) common sizes of objects that the clients of this particular installation of memcached are likely to store.</p>
+<p>就是说，如果预先知道客户端发送的数据的公用大小，或者仅缓存大小相同的数据的情况下， 只要使用适合数据大小的组的列表，就可以减少浪费。</p>
+<p>但是很遗憾，现在还不能进行任何调优，只能期待以后的版本了。 但是，我们可以调节slab class的大小的差别。 接下来说明growth factor选项。</p>
+<h1 id="使用Growth-Factor进行调优"><a href="#使用Growth-Factor进行调优" class="headerlink" title="使用Growth Factor进行调优"></a>使用Growth Factor进行调优</h1><p>memcached在启动时指定 Growth Factor因子（通过-f选项）， 就可以在某种程度上控制slab之间的差异。默认值为1.25。 但是，在该选项出现之前，这个因子曾经固定为2，称为“powers of 2”策略。</p>
+<p>让我们用以前的设置，以verbose模式启动memcached试试看：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ memcached -f 2 -vv</span><br></pre></td></tr></table></figure></p>
+<p>下面是启动后的verbose输出：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">slab class   1: chunk size    128 perslab  8192</span><br><span class="line">slab class   2: chunk size    256 perslab  4096</span><br><span class="line">slab class   3: chunk size    512 perslab  2048</span><br><span class="line">slab class   4: chunk size   1024 perslab  1024</span><br><span class="line">slab class   5: chunk size   2048 perslab   512</span><br><span class="line">slab class   6: chunk size   4096 perslab   256</span><br><span class="line">slab class   7: chunk size   8192 perslab   128</span><br><span class="line">slab class   8: chunk size  16384 perslab    64</span><br><span class="line">slab class   9: chunk size  32768 perslab    32</span><br><span class="line">slab class  10: chunk size  65536 perslab    16</span><br><span class="line">slab class  11: chunk size 131072 perslab     8</span><br><span class="line">slab class  12: chunk size 262144 perslab     4</span><br><span class="line">slab class  13: chunk size 524288 perslab     2</span><br></pre></td></tr></table></figure></p>
+<p>可见，从128字节的组开始，组的大小依次增大为原来的2倍。 这样设置的问题是，slab之间的差别比较大，有些情况下就相当浪费内存。 因此，为尽量减少内存浪费，两年前追加了growth factor这个选项。</p>
+<p>来看看现在的默认设置（f=1.25）时的输出（篇幅所限，这里只写到第10组）：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">slab class   1: chunk size     88 perslab 11915</span><br><span class="line">slab class   2: chunk size    112 perslab  9362</span><br><span class="line">slab class   3: chunk size    144 perslab  7281</span><br><span class="line">slab class   4: chunk size    184 perslab  5698</span><br><span class="line">slab class   5: chunk size    232 perslab  4519</span><br><span class="line">slab class   6: chunk size    296 perslab  3542</span><br><span class="line">slab class   7: chunk size    376 perslab  2788</span><br><span class="line">slab class   8: chunk size    472 perslab  2221</span><br><span class="line">slab class   9: chunk size    592 perslab  1771</span><br><span class="line">slab class  10: chunk size    744 perslab  1409</span><br></pre></td></tr></table></figure></p>
+<p>可见，组间差距比因子为2时小得多，更适合缓存几百字节的记录。 从上面的输出结果来看，可能会觉得有些计算误差， 这些误差是为了保持字节数的对齐而故意设置的。</p>
+<p>将memcached引入产品，或是直接使用默认值进行部署时， 最好是重新计算一下数据的预期平均长度，调整growth factor， 以获得最恰当的设置。内存是珍贵的资源，浪费就太可惜了。</p>
+<p>接下来介绍一下如何使用memcached的stats命令查看slabs的利用率等各种各样的信息。</p>
+<h1 id="查看memcached的内部状态"><a href="#查看memcached的内部状态" class="headerlink" title="查看memcached的内部状态"></a>查看memcached的内部状态</h1><p>memcached有个名为stats的命令，使用它可以获得各种各样的信息。 执行命令的方法很多，用telnet最为简单：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ telnet 主机名 端口号</span><br></pre></td></tr></table></figure></p>
+<p>连接到memcached之后，输入stats再按回车，即可获得包括资源利用率在内的各种信息。 此外，输入”stats slabs”或”stats items”还可以获得关于缓存记录的信息。 结束程序请输入quit。</p>
+<p>这些命令的详细信息可以参考memcached软件包内的protocol.txt文档。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">$ telnet localhost 11211</span><br><span class="line">Trying ::1...</span><br><span class="line">Connected to localhost.</span><br><span class="line">Escape character is &apos;^]&apos;.</span><br><span class="line">stats</span><br><span class="line">STAT pid 481</span><br><span class="line">STAT uptime 16574</span><br><span class="line">STAT time 1213687612</span><br><span class="line">STAT version 1.2.5</span><br><span class="line">STAT pointer_size 32</span><br><span class="line">STAT rusage_user 0.102297</span><br><span class="line">STAT rusage_system 0.214317</span><br><span class="line">STAT curr_items 0</span><br><span class="line">STAT total_items 0</span><br><span class="line">STAT bytes 0</span><br><span class="line">STAT curr_connections 6</span><br><span class="line">STAT total_connections 8</span><br><span class="line">STAT connection_structures 7</span><br><span class="line">STAT cmd_get 0</span><br><span class="line">STAT cmd_set 0</span><br><span class="line">STAT get_hits 0</span><br><span class="line">STAT get_misses 0</span><br><span class="line">STAT evictions 0</span><br><span class="line">STAT bytes_read 20</span><br><span class="line">STAT bytes_written 465</span><br><span class="line">STAT limit_maxbytes 67108864</span><br><span class="line">STAT threads 4</span><br><span class="line">END</span><br><span class="line">quit</span><br></pre></td></tr></table></figure></p>
+<p>另外，如果安装了libmemcached这个面向C/C++语言的客户端库，就会安装 memstat 这个命令。 使用方法很简单，可以用更少的步骤获得与telnet相同的信息，还能一次性从多台服务器获得信息。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ memstat --servers=server1,server2,server3,...</span><br></pre></td></tr></table></figure></p>
+<p>libmemcached可以从下面的地址获得：<a href="http://tangent.org/552/libmemcached.html" target="_blank" rel="noopener">http://tangent.org/552/libmemcached.html</a></p>
+<h1 id="查看slabs的使用状况"><a href="#查看slabs的使用状况" class="headerlink" title="查看slabs的使用状况"></a>查看slabs的使用状况</h1><p>使用memcached的创造者Brad写的名为memcached-tool的Perl脚本，可以方便地获得slab的使用情况 （它将memcached的返回值整理成容易阅读的格式）。可以从下面的地址获得脚本：</p>
+<p><a href="http://code.sixapart.com/svn/memcached/trunk/server/scripts/memcached-tool" target="_blank" rel="noopener">http://code.sixapart.com/svn/memcached/trunk/server/scripts/memcached-tool</a><br>使用方法也极其简单：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ memcached-tool 主机名:端口 选项</span><br></pre></td></tr></table></figure></p>
+<p>查看slabs使用状况时无需指定选项，因此用下面的命令即可：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ memcached-tool 主机名:端口</span><br></pre></td></tr></table></figure></p>
+<p>获得的信息如下所示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"> #  Item_Size   Max_age  1MB_pages Count   Full?</span><br><span class="line"> 1     104 B  1394292 s    1215 12249628    yes</span><br><span class="line"> 2     136 B  1456795 s      52  400919     yes</span><br><span class="line"> 3     176 B  1339587 s      33  196567     yes</span><br><span class="line"> 4     224 B  1360926 s     109  510221     yes</span><br><span class="line"> 5     280 B  1570071 s      49  183452     yes</span><br><span class="line"> 6     352 B  1592051 s      77  229197     yes</span><br><span class="line"> 7     440 B  1517732 s      66  157183     yes</span><br><span class="line"> 8     552 B  1460821 s      62  117697     yes</span><br><span class="line"> 9     696 B  1521917 s     143  215308     yes</span><br><span class="line">10     872 B  1695035 s     205  246162     yes</span><br><span class="line">11     1.1 kB 1681650 s     233  221968     yes</span><br><span class="line">12     1.3 kB 1603363 s     241  183621     yes</span><br><span class="line">13     1.7 kB 1634218 s      94   57197     yes</span><br><span class="line">14     2.1 kB 1695038 s      75   36488     yes</span><br><span class="line">15     2.6 kB 1747075 s      65   25203     yes</span><br><span class="line">16     3.3 kB 1760661 s      78   24167     yes</span><br></pre></td></tr></table></figure></p>
+<p>各列的含义为：</p>
+<p>列    含义<br>‘#’    slab class编号<br>Item_Size    Chunk大小<br>Max_age    LRU内最旧的记录的生存时间<br>1MB_pages    分配给Slab的页数<br>Count    Slab内的记录数<br>Full?    Slab内是否含有空闲chunk<br>从这个脚本获得的信息对于调优非常方便，强烈推荐使用。</p>
+<h1 id="内存存储的总结"><a href="#内存存储的总结" class="headerlink" title="内存存储的总结"></a>内存存储的总结</h1><p>本次简单说明了memcached的缓存机制和调优方法。 希望读者能理解memcached的内存管理原理及其优缺点。</p>
+<p>下次将继续说明LRU和Expire等原理，以及memcached的最新发展方向—— 可扩充体系（pluggable architecher））。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/积累/" rel="tag"># 积累</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/10/08/memcached完全剖析1/" rel="next" title="memcached完全剖析--1. memcached的基础">
+                <i class="fa fa-chevron-left"></i> memcached完全剖析--1. memcached的基础
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/10/08/memcached完全剖析3/" rel="prev" title="memcached全面剖析--3.memcached的删除机制和发展方向">
+                memcached全面剖析--3.memcached的删除机制和发展方向 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">262</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/test.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Slab-Allocation机制：整理内存以便重复使用"><span class="nav-number">1.</span> <span class="nav-text">Slab Allocation机制：整理内存以便重复使用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Slab-Allocation的主要术语"><span class="nav-number">1.1.</span> <span class="nav-text">Slab Allocation的主要术语</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Chunk"><span class="nav-number">1.1.1.</span> <span class="nav-text">Chunk</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Slab-Class"><span class="nav-number">1.1.2.</span> <span class="nav-text">Slab Class</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#在Slab中缓存记录的原理"><span class="nav-number">2.</span> <span class="nav-text">在Slab中缓存记录的原理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Slab-Allocator的缺点"><span class="nav-number">3.</span> <span class="nav-text">Slab Allocator的缺点</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#使用Growth-Factor进行调优"><span class="nav-number">4.</span> <span class="nav-text">使用Growth Factor进行调优</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#查看memcached的内部状态"><span class="nav-number">5.</span> <span class="nav-text">查看memcached的内部状态</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#查看slabs的使用状况"><span class="nav-number">6.</span> <span class="nav-text">查看slabs的使用状况</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#内存存储的总结"><span class="nav-number">7.</span> <span class="nav-text">内存存储的总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
