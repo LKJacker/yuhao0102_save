@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="C++,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="使用C++11让程序更简洁类型推导引入auto和decltype。 auto1234auto i = 10; // i是intauto pu = new auto(1); // pu是int*const auto *v = &amp;amp;i, u = 6; // v是const int*，u是const intauto s; //错误，无法推断 初始化不能使编译器推导产生二义性，如把u写成u=6.0则">
+<meta name="keywords" content="C++">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C++11特性笔记1——程序简化、改进性能">
+<meta property="og:url" content="http://yoursite.com/2020/01/28/cpp11_1/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="使用C++11让程序更简洁类型推导引入auto和decltype。 auto1234auto i = 10; // i是intauto pu = new auto(1); // pu是int*const auto *v = &amp;amp;i, u = 6; // v是const int*，u是const intauto s; //错误，无法推断 初始化不能使编译器推导产生二义性，如把u写成u=6.0则">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2020-02-02T03:45:12.386Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="C++11特性笔记1——程序简化、改进性能">
+<meta name="twitter:description" content="使用C++11让程序更简洁类型推导引入auto和decltype。 auto1234auto i = 10; // i是intauto pu = new auto(1); // pu是int*const auto *v = &amp;amp;i, u = 6; // v是const int*，u是const intauto s; //错误，无法推断 初始化不能使编译器推导产生二义性，如把u写成u=6.0则">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2020/01/28/cpp11_1/">
+
+
+
+
+
+  <title>C++11特性笔记1——程序简化、改进性能 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/01/28/cpp11_1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">C++11特性笔记1——程序简化、改进性能</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-01-28T20:13:00+08:00">
+                2020-01-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="使用C-11让程序更简洁"><a href="#使用C-11让程序更简洁" class="headerlink" title="使用C++11让程序更简洁"></a>使用C++11让程序更简洁</h1><h2 id="类型推导"><a href="#类型推导" class="headerlink" title="类型推导"></a>类型推导</h2><p>引入auto和decltype。</p>
+<h3 id="auto"><a href="#auto" class="headerlink" title="auto"></a>auto</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">auto i = 10; // i是int</span><br><span class="line">auto pu = new auto(1); // pu是int*</span><br><span class="line">const auto *v = &amp;i, u = 6; // v是const int*，u是const int</span><br><span class="line">auto s; //错误，无法推断</span><br></pre></td></tr></table></figure>
+<p>初始化不能使编译器推导产生二义性，如把u写成<code>u=6.0</code>则不予通过。<br>使用auto声明的变量必须马上初始化，以让编译器推断出类型并在编译时将auto替换为真正的类型。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">int x = 0;  //</span><br><span class="line">auto * a = &amp;x;  // a是int*，auto被推导为int</span><br><span class="line">auto b = &amp;x;  // b是int*，auto被推导为int*</span><br><span class="line">auto &amp; c = x;  // c是int&amp;，auto被推导为int</span><br><span class="line">auto d = c;  // d是int，auto被推导为int</span><br><span class="line"></span><br><span class="line">const auto e = x;  // e是const int</span><br><span class="line">auto f = e;  // f是int</span><br><span class="line">cosnt auto &amp; g = x;  // g是const int&amp;</span><br><span class="line">auto &amp; h = g;  // h是const int&amp;</span><br></pre></td></tr></table></figure>
+<p>a和c的类型推导结果很明显，auto在编译时被替换为int，b的推导结果表明auto不声明为指针，也可以推导出指针类型；d的推导结果表明当表达式是一个引用类型时，auto会把引用类型抛弃，直接推导成原始类型int。f的推导结果表明表达式带有const时，auto会把const属性抛弃掉，推导成non-const的int。规则如下：</p>
+<ul>
+<li>当不声明为指针或引用时，auto的推导结果和初始化表达式抛弃引用和cv限定符（const和volatile）后类型一致</li>
+<li>当声明为指针或引用时，auto的推导结果将保留初始化表达式的cv属性。</li>
+<li>auto不能用为函数参数。</li>
+<li>auto无法定义数组！</li>
+</ul>
+<p>auto的推导和函数模板参数的自动推导有相似之处。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">template &lt;typename T&gt; void func(T x) &#123;&#125; // T -&gt; auto</span><br><span class="line">template &lt;typename T&gt; void func(T *x)&#123;&#125; // T -&gt; auto*</span><br><span class="line">template &lt;typename T&gt; void func(T&amp; x)&#123;&#125; // T&amp;-&gt; auto&amp;</span><br><span class="line"></span><br><span class="line">template &lt;typename T&gt; void func(const T x) &#123;&#125; // const T -&gt; const auto</span><br><span class="line">template &lt;typename T&gt; void func(const T* x)&#123;&#125; // const T*-&gt; const auto *</span><br><span class="line">template &lt;typename T&gt; void func(const T&amp; x)&#123;&#125; // const T&amp;-&gt; const auto &amp;</span><br><span class="line">注意:auto是不能用于函数参数的。</span><br></pre></td></tr></table></figure></p>
+<p>何时使用auto？看一个例子，在一个unordered_multimap中查找一个范围,代码如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;map&gt;</span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">	std::unordered_multimap&lt;int, int&gt; resultMap;</span><br><span class="line">	std::pair&lt;std::unordered_multimap&lt;int, int&gt;::iterator, std::unordered_multimap&lt;int, int&gt;::iterator&gt; range = resultMap.equal_range(key);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这个 equal_ange返回的类型声明显得烦琐而冗长,而且实际上并不关心这里的具体类型（大概知道是一个std::pair就够了）。这时,通过auto就能极大的简化书写,省去推导具体类型的过程<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;map&gt;</span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">	std::unordered_multimap&lt;int, int&gt; map;</span><br><span class="line">	auto range_map.equal_range(key);</span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="decltype"><a href="#decltype" class="headerlink" title="decltype"></a>decltype</h3><p>auto所修饰的变量必须被初始化，C++11新增了decltype关键字，用来在编译时推导出一个表达式的类型。<code>decltype(exp)</code>，exp是一个表达式。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">int x = 0;</span><br><span class="line">decltype(x) y = 1; // y -&gt; int</span><br><span class="line">decltype(x + y) z = 0; // z -&gt; int</span><br><span class="line"></span><br><span class="line">const int&amp; i = x;</span><br><span class="line">decltype(i) j = y; // j -&gt; const int &amp;</span><br><span class="line"></span><br><span class="line">const decltype(z) * p = &amp;z; // *p -&gt; const int, p -&gt; const int *</span><br><span class="line">decltype(z) * pi = &amp;z; // * pi -&gt; int, pi -&gt; int*</span><br><span class="line">decltype(pi) * pp = &amp;pi; // *pp -&gt; int *, pp -&gt; int **</span><br></pre></td></tr></table></figure></p>
+<p>y和z的结果表明，decltype可以根据表达式直接推导出它的类型本身。这个功能和上节的auto很像,但又有所不同。auto只能根据变量的初始化表达式推导出变量应该具有的类型。若想要通过某个表达式得到类型,但不希望新变量和这个表达式具有同样的值,此时auto就显得不适用了。<br>j的结果表明decltype通过表达式得到的类型,可以保留住表达式的引用及const限定符。实际上，对于一般的标记符表达式(id-expression)，decltype将精确地推导出表达式定义本身的类型，不会像auto那样在某些情况下舍弃掉引用和cv限定符。p、pi的结果表明decltype可以像auto一样，加上引用和指针，以及cv限定符。</p>
+<p>pp的推导则表明,当表达式是一个指针的时候，decltype仍然推导出表达式的实际类型（指针类型），之后结合pp定义时的指针标记，得到的pp是一个二维指针类型。这也是和auto推导不同的一点。</p>
+<p>推导规则：</p>
+<ul>
+<li>exp是标识符、类访问表达式，decltype(type)和exp的类型一致；</li>
+<li>exp是函数调用，decltype(type)和函数返回值类型一致；</li>
+<li>若exp是一个左值，则decltype(type)是exp类型的左值引用，否则和exp类型一致。</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">struct Foo &#123;int x;&#125;;</span><br><span class="line">const Foo foo = Foo();</span><br><span class="line"></span><br><span class="line">decltype(foo.x) a = 0;   // a -&gt; int</span><br><span class="line">decltype((foo.x)) b = a; // b -&gt; const int &amp;</span><br></pre></td></tr></table></figure>
+<p>a的类型就是foo.x的类型，foo.x是一个左值，可知括号表达式也是一个左值，decltype的类型是一个左值引用。</p>
+<p>在泛型编程中，可能需要通过参数运算获得返回值类型：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">template &lt;typename R, typename T, typename U&gt;</span><br><span class="line">R add(T t, U u) &#123;</span><br><span class="line">	return t+u;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int a = 1;</span><br><span class="line">float b = 2.0;</span><br><span class="line">auto c = add&lt;decltype(a+b)&gt;(a, b);</span><br></pre></td></tr></table></figure></p>
+<p>改成：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">template &lt;typename T, typename U&gt;</span><br><span class="line">decltype(T()+U()) add(T t, U u) &#123;</span><br><span class="line">	return t+u;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>考虑到T、U可能是没有无参构造函数的类，可以如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">template &lt;typename T, typename U&gt;</span><br><span class="line">decltype((*(T*)0) + (*(U*)0)) add(T t, U u) &#123;</span><br><span class="line">	return t+u;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>返回类型后置语法通过auto和decltype结合使用，可以写成：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">template &lt;typename T, typename U&gt;</span><br><span class="line">auto add(T t, U u) -&gt; decltype(t + u) &#123;</span><br><span class="line">	return t+u;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>返回类型后置语法解决了返回值类型依赖于参数而导致难以确定返回值类型的问题。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">int&amp; foo(int&amp; i);</span><br><span class="line">float foo(float&amp; f);</span><br><span class="line"></span><br><span class="line">template &lt;typename T&gt;</span><br><span class="line">auto func(T&amp; val) -&gt; decltype(foo(val)) &#123;</span><br><span class="line">	return foo(val);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="模板的细节改进"><a href="#模板的细节改进" class="headerlink" title="模板的细节改进"></a>模板的细节改进</h2><h3 id="模板的右尖括号"><a href="#模板的右尖括号" class="headerlink" title="模板的右尖括号"></a>模板的右尖括号</h3><p>尽可能将多个右尖括号解析成模板参数结束符。</p>
+<h3 id="模板的别名"><a href="#模板的别名" class="headerlink" title="模板的别名"></a>模板的别名</h3><p>重定义一个模板<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">template &lt;typename Val&gt;</span><br><span class="line">using str_map_t = std::map&lt;std::string, Val&gt;;</span><br><span class="line"></span><br><span class="line">str_map_t&lt;int&gt; map1;</span><br></pre></td></tr></table></figure></p>
+<p>使用新的using别名语法定义了std::map的模板别名str_map_t。<br>实际上，using的别名语法覆盖了typedef的全部功能，两种使用方法等效。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">typedef unsigned int uint_t;</span><br><span class="line">using uint_t = unsigned int;</span><br><span class="line"></span><br><span class="line">typedef std::map&lt;std::string, int&gt; map_int_t;</span><br><span class="line">using map_int_t = std::map&lt;std::string, int&gt;;</span><br></pre></td></tr></table></figure></p>
+<p>using定义模板别名：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">template &lt;typename T&gt;</span><br><span class="line">using func_t = void(*)(T, T);</span><br><span class="line">func_t&lt;int&gt; xx_2;</span><br></pre></td></tr></table></figure></p>
+<h3 id="函数模板的默认模板参数"><a href="#函数模板的默认模板参数" class="headerlink" title="函数模板的默认模板参数"></a>函数模板的默认模板参数</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">template &lt;typename T = int&gt;</span><br><span class="line">void func(void) &#123; ... &#125;</span><br></pre></td></tr></table></figure>
+<p>当所有模板参数都有默认参数时，函数模板的调用如同一个普通参数，对于类模板而言，哪怕所有参数都有默认参数，在使用时也要在模板名后跟一个“&lt;&gt;”实例化。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">template &lt;typename R = int, typename U&gt;</span><br><span class="line">R func(U val) &#123;</span><br><span class="line">	val</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int main() &#123;</span><br><span class="line">	func(123);</span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在调用函数模板时，若显式指定模板参数，由于参数填充顺序是从左往右的，因此，像下面这个调用，<code>func&lt;long&gt;(123)</code>，func的返回值是long，而不是int。</p>
+<h2 id="列表初始化"><a href="#列表初始化" class="headerlink" title="列表初始化"></a>列表初始化</h2><p>在C++98/03中的对象初始化方法有多种。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">int i_arr[3] = &#123;1, 2, 3&#125;;</span><br><span class="line"></span><br><span class="line">struct A &#123;</span><br><span class="line">	int x;</span><br><span class="line">	struct B &#123;</span><br><span class="line">		int i;</span><br><span class="line">		int j;</span><br><span class="line">	&#125; b;</span><br><span class="line">&#125; a = &#123; 1, &#123;2, 3&#125; &#125;;</span><br><span class="line"></span><br><span class="line">int i = 0;</span><br><span class="line">class Foo &#123;</span><br><span class="line">public:</span><br><span class="line">	Foo(int) &#123;&#125;</span><br><span class="line">&#125; foo = 123;</span><br></pre></td></tr></table></figure></p>
+<p>C++11中提出了列表初始化的概念。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Foo a3 = &#123;123&#125;;</span><br><span class="line">Foo a4 &#123;123&#125;;</span><br><span class="line"></span><br><span class="line">int a5 = &#123;3&#125;;</span><br><span class="line">int s6 &#123;3&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>a3虽然使用了等于号，但是仍然是列表初始化，因此，私有的拷贝构造不会影响到它。<br>a4和a6的写法是C++98/03不具备的，可以直接在变量名后跟上初始化列表，来进行对象的初始化。</p>
+<p>new操作符等可以用圆括号初始化的地方可以使用初始化列表：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">int* a = new int &#123;123&#125;;</span><br><span class="line">double b = double &#123;123&#125;;</span><br><span class="line">int* arr = new int[3] &#123;1, 2, 3&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>聚合类型：</p>
+<ul>
+<li>类型是一个普通数组</li>
+<li>类型是一个类，且<ul>
+<li>无用户定义的构造函数</li>
+<li>无私有或保护的非静态数据成员</li>
+<li>无基类</li>
+<li>无虚函数</li>
+<li>不能有{}和=直接初始化的非静态数据成员</li>
+</ul>
+</li>
+</ul>
+<p>对数组而言，只要该类型是一个普通数组，哪怕数组的元素并非聚合类型，这个数组本身也是一个聚合类型：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">int x[] = &#123;1, 3, 5&#125;;</span><br><span class="line">float y[4][3] = &#123;</span><br><span class="line">	&#123;1, 3, 5&#125;,</span><br><span class="line">	&#123;2, 4, 6&#125;,</span><br><span class="line">	&#123;3, 5, 7&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>当类型是一个类时，首先是存在用户自定义构造函数时，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">struct Foo &#123;</span><br><span class="line">	int x;</span><br><span class="line">	double y;</span><br><span class="line">	int z;</span><br><span class="line">	Foo(int, int) &#123;&#125;</span><br><span class="line">&#125;;</span><br><span class="line">Foo foo&#123;1, 2.5, 1&#125;;  // ERROR!</span><br></pre></td></tr></table></figure></p>
+<p>这时无法将Foo看成一个聚合类型，必须以自定义构造函数构造对象。<br>如果受保护（protected）成员是一个static的，则可以不放在初始化列表里。<br>如果类定义里的成员变量已经有了赋值，则不可以使用初始化列表。</p>
+<p><strong>上述不可使用初始化列表的情况可以通过自定义构造函数实现使用初始化列表</strong></p>
+<h3 id="初始化列表"><a href="#初始化列表" class="headerlink" title="初始化列表"></a>初始化列表</h3><h4 id="任意长度初始化列表"><a href="#任意长度初始化列表" class="headerlink" title="任意长度初始化列表"></a>任意长度初始化列表</h4><p>C++11中的stl容器拥有和未显示指定长度的数组一样的初始化能力：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">int arr[] = &#123;1, 2, 3&#125;;</span><br><span class="line">std::map&lt;std::string, int&gt; mm = &#123; &#123;&quot;1&quot;, 1&#125;, &#123;&quot;2&quot;, 2&#125;, &#123;&quot;3&quot;, 3&#125; &#125;;</span><br><span class="line">std::set&lt;int&gt; ss = &#123;1, 2, 3&#125;;</span><br><span class="line">std::vector&lt;int&gt; arr = &#123;1, 2, 3, 4, 5&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>这里arr未显式指定长度，因此它的初始化列表可以是任意长度。<br>实际上stl中的容器是通过使用<code>std::initializer_list</code>这个类模板完成上述功能的，如果在类Foo中添加一个<code>std::initializer_list</code>构造函数，它也将拥有这种能力。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">class Foo &#123;</span><br><span class="line">	std::vector&lt;int&gt; content;</span><br><span class="line">public:</span><br><span class="line">	Foo(std::initializer_list&lt;int&gt; list) &#123;</span><br><span class="line">		for(auto it = list.begin(); it != list.end(); it ++)&#123;</span><br><span class="line">			content.push_back(*it);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class Foo1 &#123;</span><br><span class="line">	std::map&lt;int, int&gt; content;</span><br><span class="line">	using pair_t = std::map&lt;int, int&gt;::value_type;</span><br><span class="line">public:</span><br><span class="line">	Foo1(std::initializer_list&lt;int&gt; list) &#123;</span><br><span class="line">		for(auto it = list.begin(); it != list.end(); it ++)&#123;</span><br><span class="line">			content.insert(*it);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Foo foo = &#123;1, 2, 3, 4, 5, 6&#125;;</span><br><span class="line">Foo1 foo1 = &#123; &#123;1, 2&#125;, &#123;2, 3&#125;, &#123;3, 4&#125; &#125;;</span><br></pre></td></tr></table></figure></p>
+<p>用来传递同类型的数据集合：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">void func(std::initializer_list&lt;int&gt; list) &#123;</span><br><span class="line">	for(auto it = list.begin(); it != list.end(); it ++)&#123;</span><br><span class="line">		std::cout &lt;&lt; *it &lt;&lt; std::endl;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><code>std::initializer_list</code>的一些特点：</p>
+<ul>
+<li>轻量级容器类型，内部定义了iterator等；</li>
+<li>对于<code>std::initializer_list&lt;T&gt;</code>，可以接受任意长度的初始化列表，但要求必须时同种类型；</li>
+<li>有三个成员接口：<code>size()</code>、<code>begin()</code>、<code>end()</code>；</li>
+<li>只能被整体初始化或赋值。</li>
+<li>只能通过begin和end循环遍历，遍历时取得的迭代器是只读的，因此无法修改其中一个值。</li>
+<li>实际上，<code>std::initializer_list</code>非常高效，内部并不负责保存初始化列表中元素的拷贝，而是只储存列表中元素的引用而已。</li>
+</ul>
+<h3 id="防止类型收窄"><a href="#防止类型收窄" class="headerlink" title="防止类型收窄"></a>防止类型收窄</h3><p>类型收窄指导致数据内容发生变化或精度损失的隐式类型转换，包含以下几种：</p>
+<ul>
+<li>从浮点数隐式转换为整型；</li>
+<li>从高精度浮点数转换为低精度浮点数，如从long double转换为double或float；</li>
+<li>从整型数隐式转换为浮点数，并超过了浮点数表示范围；</li>
+<li>从整型数隐式转换为长度较短的整型数。</li>
+</ul>
+<p>初始化列表不会允许类型收窄的转换发生。</p>
+<h2 id="基于范围的for循环"><a href="#基于范围的for循环" class="headerlink" title="基于范围的for循环"></a>基于范围的for循环</h2><h3 id="for循环的新用法"><a href="#for循环的新用法" class="headerlink" title="for循环的新用法"></a>for循环的新用法</h3><p>在<code>&lt;algorithm&gt;</code>中有<code>for_each</code>可以用于遍历：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;algorithm&gt;</span><br><span class="line">#include &lt;iostream&gt;</span><br><span class="line">#include &lt;vector&gt;</span><br><span class="line"></span><br><span class="line">void do_cout(int n) &#123;</span><br><span class="line">	std::cout &lt;&lt; n &lt;&lt; std::endl;</span><br><span class="line">&#125;</span><br><span class="line">int main() &#123;</span><br><span class="line">	std::vector&lt;int&gt; arr;</span><br><span class="line">	std::for_each(arr.begin(), arr.end(), do_cout);</span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>可以改成：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;iostream&gt;</span><br><span class="line">#include &lt;vector&gt;</span><br><span class="line"></span><br><span class="line">int main() &#123;</span><br><span class="line">	std::vector&lt;int&gt; arr;</span><br><span class="line">	for(auto n : arr) &#123;</span><br><span class="line">		std::cout &lt;&lt; n &lt;&lt; std::endl;</span><br><span class="line">	&#125;</span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>n表示arr中的一个个元素，auto则是让编译器自动推导n的类型，在这里n的类型被自动推导为vector中的元素类型int。<br>基于范围的for循环对于冒号前边的局部变量声明只要求能支持容器类型的隐式转换。<br>如果需要在遍历时修改容器中的值，则需要使用引用：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">for(auto&amp; n : arr) &#123;</span><br><span class="line">	std::cout &lt;&lt; n++ &lt;&lt; std::endl;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="基于范围的for循环的细节"><a href="#基于范围的for循环的细节" class="headerlink" title="基于范围的for循环的细节"></a>基于范围的for循环的细节</h3><p>auto自动推导出的类型是容器中的value_type，而不是迭代器：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">std::map&lt;std::string, int&gt; mm = &#123; &#123;&quot;1&quot;, 1&#125;, &#123;&quot;2&quot;, 2&#125;, &#123;&quot;3&quot;, 3&#125; &#125;;</span><br><span class="line">for(auto ite = mm.begin(); ite != mm.end(); ite ++)</span><br><span class="line">	std::cout &lt;&lt; ite-&gt;first &lt;&lt; &quot;-&gt;&quot; &lt;&lt; ite-&gt;second &lt;&lt; std::endl;</span><br><span class="line">for(auto&amp; val : mm) </span><br><span class="line">	std::cout &lt;&lt; ite.first &lt;&lt; &quot;-&gt;&quot; &lt;&lt; ite.second &lt;&lt; std::endl;</span><br></pre></td></tr></table></figure></p>
+<p>从这里就可以看出，在基于范围的for循环中每次迭代时使用的类型和普通for循环有何不同。</p>
+<p><strong>对基于范围的for循环而言，冒号后边的表达式只会被执行一次</strong></p>
+<p><strong>基于范围的for循环倾向于在循环开始之前确定好迭代的范围，而不是在每次迭代之前都调用一次arr.end()</strong></p>
+<h3 id="让基于范围的for循环支持自定义类型"><a href="#让基于范围的for循环支持自定义类型" class="headerlink" title="让基于范围的for循环支持自定义类型"></a>让基于范围的for循环支持自定义类型</h3><p>基于范围的for循环将以以下方式查找容器的begin和end：</p>
+<ul>
+<li>若容器是一个普通的array对象，那么begin将为array的首地址；</li>
+<li>若容器是一个类对象，那么range-based for将试图通过查找类的begin()和end()方法来定位begin和end迭代器；</li>
+<li>否则range-based for将试图使用全局的begin和end函数定位begin和end；</li>
+</ul>
+<p>对于自定义类型来说，实现begin和end方法即可，通过定义一个range对象看看具体的实现方法。<br>首先需要一个迭代器实现范围取值：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">template &lt;typename T&gt;</span><br><span class="line">class iterator &#123;</span><br><span class="line">public:</span><br><span class="line">	using value_type = T;</span><br><span class="line">	using size_type = size_t;</span><br><span class="line"></span><br><span class="line">	iterator(size_type cur_start, value_type begin_val, value_type step_val);</span><br><span class="line">	value_type operator*() const;</span><br><span class="line">	bool operator!=(const iterator&amp; rhs);</span><br><span class="line">	iterator&amp; operator++(void);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>构造函数传递三个参数初始化，分别是开始的迭代次数，初始值和迭代步长。<code>operator*</code>用于取得迭代器中的值；<code>operator!=</code>用于和另一个迭代器比较；<code>operator++</code>用于对迭代器做正向迭代。</p>
+<p>迭代器类的实现：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">template &lt;typename T&gt;</span><br><span class="line">class iterator &#123;</span><br><span class="line">private:</span><br><span class="line">	size_type cursor_;</span><br><span class="line">	const value_type step_;</span><br><span class="line">	value_type value_;</span><br><span class="line">public:</span><br><span class="line">	using value_type = T;</span><br><span class="line">	using size_type = size_t;</span><br><span class="line"></span><br><span class="line">	iterator(size_type cur_start, value_type begin_val, value_type step_val):</span><br><span class="line">	cursor_(cur_start), step_(step_val), value_(begin_val) &#123;</span><br><span class="line">		value_ += (step_ * cursor_);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	value_type operator*() const &#123; return value_; &#125;</span><br><span class="line">	bool operator!=(const iterator&amp; rhs) const &#123; return (cursor_ != rhs.cursor_); &#125;</span><br><span class="line">	iterator&amp; operator++(void) &#123; </span><br><span class="line">		value_ += step_;</span><br><span class="line">		++ cursor_;</span><br><span class="line">		return (*this);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="std-function和bind绑定器"><a href="#std-function和bind绑定器" class="headerlink" title="std::function和bind绑定器"></a>std::function和bind绑定器</h2><h3 id="可调用对象"><a href="#可调用对象" class="headerlink" title="可调用对象"></a>可调用对象</h3><p>可调用对象有如下几种定义：</p>
+<ul>
+<li>是一个函数指针</li>
+<li>是一个具有operator()成员函数的类对象</li>
+<li>是一个可被转换为函数指针的类对象</li>
+<li>是一个类成员指针</li>
+</ul>
+<p>应用如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">void func(void) &#123; ... &#125;</span><br><span class="line"></span><br><span class="line">struct Foo &#123;</span><br><span class="line">	void operator()(void) &#123; ... &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">struct Bar &#123;</span><br><span class="line">	using fr_t = void(*)(void);</span><br><span class="line"></span><br><span class="line">	static void func(void) &#123; ... &#125;</span><br><span class="line">	operator fr_t(void) &#123; return func; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">struct A &#123;</span><br><span class="line">	int a_;</span><br><span class="line">	void mem_func(void) &#123; ... &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">int main()&#123;</span><br><span class="line">	void(* func_ptr)(void) = &amp;func; // 1.函数指针</span><br><span class="line">	func_ptr();</span><br><span class="line"></span><br><span class="line">	Foo foo;</span><br><span class="line">	foo();	// 2. 仿函数</span><br><span class="line"></span><br><span class="line">	Bar bar;</span><br><span class="line">	bar();	// 3. 可被转换为函数指针的类对象</span><br><span class="line"></span><br><span class="line">	void (A::*mem_func_ptr)(void) = &amp;A::mem_func;	// 4. 类成员函数指针</span><br><span class="line">	int A::*mem_obj_ptr = &amp;A::a_;	// 或是类成员指针</span><br><span class="line"></span><br><span class="line">	A aa;</span><br><span class="line">	(aa.*mem_func_ptr)();</span><br><span class="line">	aa.*mem_obj_ptr = 123;</span><br><span class="line"></span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="可调用对象包装器-std-function"><a href="#可调用对象包装器-std-function" class="headerlink" title="可调用对象包装器-std::function"></a>可调用对象包装器-std::function</h3><p>std::function是可调用对象包装器。它是一个类模板，可以容纳除了类成员指针之外的所有可调用对象。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;iostream&gt;</span><br><span class="line">#include &lt;functional&gt;</span><br><span class="line"></span><br><span class="line">void func(void) &#123;</span><br><span class="line">	std::cout &lt;&lt; __FUNCTION__ &lt;&lt; std::endl;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class Foo &#123;</span><br><span class="line">public:</span><br><span class="line">	static int foo_func(int a) &#123;</span><br><span class="line">		std::cout &lt;&lt; __FUNCTION__ &lt;&lt; &quot;(&quot; &lt;&lt; a &lt;&lt; &quot;) -&gt;: &quot;;</span><br><span class="line">		return a; </span><br><span class="line">	&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">class Bar &#123;</span><br><span class="line">public:</span><br><span class="line">	int operator()(int a) &#123;</span><br><span class="line">		std::cout &lt;&lt; __FUNCTION__ &lt;&lt; &quot;(&quot; &lt;&lt; a &lt;&lt; &quot;) -&gt;: &quot;;</span><br><span class="line">		return a; </span><br><span class="line">	&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">int main()&#123;</span><br><span class="line">	std::function&lt;void(void)&gt; fr1 = func;</span><br><span class="line">	fr1();</span><br><span class="line"></span><br><span class="line">	std::function&lt;int(int)&gt; fr2 = Foo::foo_func;</span><br><span class="line">	std::cout &lt;&lt; fr2(123) &lt;&lt; std::endl;</span><br><span class="line"></span><br><span class="line">	Bar bar;</span><br><span class="line">	fr2 = bar;</span><br><span class="line">	std::cout &lt;&lt; fr2(123) &lt;&lt; std::endl;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>结果是：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">func</span><br><span class="line">foo_func(123) -&gt;: 123</span><br><span class="line">operator()(123) -&gt;: 123</span><br></pre></td></tr></table></figure></p>
+<p>给std::function填入合适的函数名，它就变成一个可以容纳所有这一类调用方式的函数包装器。</p>
+<p>std::function作为函数入参：<code>void call(int x, std::function&lt;void(int)&gt;&amp; f)</code></p>
+<h2 id="std-bind绑定器"><a href="#std-bind绑定器" class="headerlink" title="std::bind绑定器"></a>std::bind绑定器</h2><p>std::bind绑定器用来将可调用对象与其参数一起进行绑定，绑定后的结果使用std::function保存，并延迟调用到任何我们需要的时候，用途为：</p>
+<ul>
+<li>将可调用对象与其参数一起绑定成为一个仿函数；</li>
+<li>将多元可调用对象转成一元或者(n-1)元可调用对象，即只绑定部分参数。</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">int main() &#123;</span><br><span class="line">	auto fr = std::bind(output, std::placeholders::_l);</span><br><span class="line">	for( int i = 0; i &lt; 10; i ++) &#123;</span><br><span class="line">		call_when_even(i, fr);</span><br><span class="line">	&#125;</span><br><span class="line">	std::cout &lt;&lt; std::endl;</span><br><span class="line"></span><br><span class="line">	auto fr2 = std::bind(output_2, std::placeholders::_l);</span><br><span class="line">	for( int i = 0; i &lt; 10; i ++) &#123;</span><br><span class="line">		call_when_even(i, fr);</span><br><span class="line">	&#125;</span><br><span class="line">	std::cout &lt;&lt; std::endl;</span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在这里，我们使用了std::bind，在函数外部通过绑定不同的函数，控制了最后的执行结果。我们使用<code>auto fr</code>保存<code>std::bind</code>的返回结果，是因为我们并不关心<code>std::bind</code>真正的返回类型（实际上<code>std::bind</code>的返回类型是一个stl内部定义的仿函数类型），只需要知道它是一个仿函数，可以直接赋值给一个std::function。当然，这里直接使用<code>std::function</code>类型来保存<code>std::bind</code>的返回值也是可以的。</p>
+<p><code>std::placeholders::_1</code>是一个占位符，代表这个位置将在函数调用时，被传入的第一个参数所替代。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;iostream&gt;</span><br><span class="line">#include &lt;functional&gt;</span><br><span class="line"></span><br><span class="line">void output(int x, int y) &#123;</span><br><span class="line">	std::cout &lt;&lt; x &lt;&lt; &quot; &quot; &lt;&lt; y &lt;&lt; std::endl;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int main() &#123;</span><br><span class="line">	std::bind(output, 1, 2)();</span><br><span class="line">	std::bind(output, std::placeholders::_1, 2)(1);</span><br><span class="line">	std::bind(output, 2, std::placeholders::_1)(1);</span><br><span class="line">	std::bind(output, 2, std::placeholders::_2)(1);</span><br><span class="line">	std::bind(output, 2, std::placeholders::_2)(1, 2);</span><br><span class="line">	std::bind(output, std::placeholders::_1, std::placeholders::_2)(1, 2);</span><br><span class="line">	std::bind(output, std::placeholders::_2, std::placeholders::_1)(1, 2);</span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="lambda表达式"><a href="#lambda表达式" class="headerlink" title="lambda表达式"></a>lambda表达式</h2><p>lambda表达式有如下优点：</p>
+<ul>
+<li>声明式编程风格：就地匿名定义目标函数或函数对象，不需要额外写一个命名函数或者函数对象。以更直接的方式去写程序，有更好的可读性和可维护性。</li>
+<li>简洁：不需要额外再写一个函数或者函数对象，避免了代码膨胀和功能分散，让开发者更加集中精力在手边的问题，同时也获取了更高的生产率。</li>
+<li>在需要的时间和地点实现功能闭包，使程序更灵活。</li>
+</ul>
+<h3 id="lambda表达式的概念和基本用法"><a href="#lambda表达式的概念和基本用法" class="headerlink" title="lambda表达式的概念和基本用法"></a>lambda表达式的概念和基本用法</h3><p>lambda表达式定义了一个匿名函数，并且可以捕获一定范围内的变量。 lambda表达式的语法形式可简单归纳如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[capture] (params) opt -&gt; ret &#123; body; &#125;</span><br></pre></td></tr></table></figure></p>
+<p>其中：capture是捕获列表； params是参数表；opt是函数选项；ret是返回值类型；body是函数体。一个完整的lambda表达式看起来像这样：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">auto f = [](int a)-&gt; int &#123; return a + 1; &#125;;</span><br><span class="line">std::cout &lt;&lt; f(1) &lt;&lt; std::endl;</span><br></pre></td></tr></table></figure></p>
+<p>输出：<code>2</code>。可以看到，上面通过一行代码定义了一个小小的功能闭包，用来将输入加1并返回。</p>
+<p>在C++11中，lambda表达式的返回值是通过前面介绍的返回值后置语法来定义的。其实很多时候，lambda表达式的返回值是非常明显的，比如上例。因此，C++中允许省略lambda表达式的返回值定义：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">auto f= [] (int a) return a + 1; &#125;;</span><br></pre></td></tr></table></figure></p>
+<p>这样编译器就会根据 return语句自动推导出返回值类型。</p>
+<p>另外，lambda表达式在没有参数列表时，参数列表是可以省略的。因此像下面的写法都是正确的：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">auto fl =[]()&#123; return 1; &#125;;</span><br><span class="line">auto f2 = []&#123; return 1; &#125;;</span><br><span class="line">//省略空参数表</span><br></pre></td></tr></table></figure></p>
+<p>lambda表达式可以通过捕获列表捕获一定范围内的变量：</p>
+<ul>
+<li>[]不捕获任何变量。</li>
+<li>[&amp;]捕获外部作用域中所有变量，并作为引用在函数体中使用（按引用捕获）。</li>
+<li>[=]捕获外部作用域中所有变量，并作为副本在函数体中使用（按值捕获）。</li>
+<li>[=, &amp;foo]按值捕获外部作用域中所有变量，并按引用捕获foo变量。</li>
+<li>[bar]按值捕获bar变量，同时不捕获其他变量。</li>
+<li>[this]捕获当前类中的this指针，让lambda表达式拥有和当前类成员函数同样的访问权限。如果已经使用了&amp;或=，就默认添加此选项。捕获this的目的是可以在lamda中使用当前类的成员函数和成员变量。</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">class A &#123;</span><br><span class="line">public:</span><br><span class="line">	int i_ = 0;</span><br><span class="line"></span><br><span class="line">	void func(int x, int y) &#123;</span><br><span class="line">		auto x1 = []&#123; return i_; &#125;;          // error，没有捕获外部变量</span><br><span class="line">		auto x2 = [=]&#123; return i_ + x + y; &#125;; // ok，捕获所有外部变量</span><br><span class="line">		auto x3 = [&amp;]&#123; return i_ + x + y; &#125;; // ok，捕获所有外部变量</span><br><span class="line">		auto x4 = [this]&#123; return i_; &#125;;      // ok，捕获this指针</span><br><span class="line">		auto x5 = [this]&#123; return i_ + x + y; &#125;; // error，没有捕获x、y</span><br><span class="line">		auto x6 = [this, x, y]&#123; return i_ + x + y; &#125;; // ok，捕获this指针、x、y</span><br><span class="line">		auto x7 = [this]&#123; return i_ ++; &#125;; 	 // ok，捕获this指针，并修改成员变量。</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int a =0, b=1;</span><br><span class="line">auto fl = [] &#123; return a; &#125;; // error，没有捕获外部变量</span><br><span class="line">auto f2 = [&amp;]&#123; return a++; &#125;; // OK，捕获所有外部变量，并对a执行自加运算</span><br><span class="line">auto f3 = [=]&#123; return a;&#125;; //OK，捕获所有外部变量，并返回a</span><br><span class="line">auto f4 = [=]&#123; return a++;&#125;; //error，a是以复制方式捕获的，无法修改</span><br><span class="line">auto f5 = [a]&#123; return a + b;&#125;; //error，没有捕获变量b</span><br><span class="line">auto f6=[a，&amp;b]&#123; return a+(b++);&#125;; //OK，捕获a和b的引用，并对b做自加运算</span><br><span class="line">auto f7=[=，&amp;b]&#123; return a+(b++);&#125;; //OK，捕获所有外部变量和b的引用，并对b做自加运算</span><br></pre></td></tr></table></figure>
+<p>一个容易出错的细节是，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">int a = 0;</span><br><span class="line">auto f = [=] &#123;return a;&#125;;</span><br><span class="line"></span><br><span class="line">a += 1;</span><br><span class="line"></span><br><span class="line">std::cout &lt;&lt; f() &lt;&lt; std::endl;</span><br></pre></td></tr></table></figure></p>
+<p>在这个例子中，lambda表达式按值捕获了所有外部变量，在捕获的一瞬间a的值就被复制到f中了，之后a被修改，但此时f中存储的a的值仍然是捕获时候的值，因此，最终输出结果是0。希望修改这些变量的话，我们需使用引用方式捕获。</p>
+<p>按值捕获得到的外部变量值是在lambda表达式定义时的值。此时所有外部变量均被复制了一份存储在lambda表达式变量中。此时虽然修改 lambda表达式中的这些外部变量并不会真正影响到外部，我们却仍然无法修改它们。那么如果希望去修改按值捕获的外部变量应当怎么办呢?这时，需要显式指明lambda表达式为 mutable：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">int a = 0;</span><br><span class="line">auto f1 = [=] &#123; return a++; &#125;; // error，修改按值捕获的外部变量</span><br><span class="line">auto f2 = [=]() mutable &#123; return a++; &#125;; // ok</span><br></pre></td></tr></table></figure></p>
+<p>被mutable修饰的lambda表达式就算没有参数也要写明参数列表。</p>
+<p>lambda表达式的类型在C++11中被称为“闭包类型”。它是一个特殊的匿名的非nunion的类类型。因此，我们可以认为它是一个带有 operator()的类，即仿函数。因此，我们可以使用std::function和std::bind来存储和操作lambda表达式。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">std::function&lt;int(int)&gt; f1 = [](int a) &#123; return a; &#125;;</span><br><span class="line">std: function&lt;int(void)&gt;f2 = std::bind([](int a) &#123; return a;&#125;, 123);</span><br></pre></td></tr></table></figure></p>
+<p>另外，对于没有捕获任何变量的lambda表达式，还可以被转换成一个普通的函数指针：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">using func_t= int(*)(int);</span><br><span class="line">func_t f = [](int a)&#123; return a; &#125;;</span><br><span class="line">f(123);</span><br></pre></td></tr></table></figure></p>
+<p>lambda表达式可以说是就地定义仿函数闭包的“语法糖”。它的捕获列表捕获住的任何外部变量，最终均会变为闭包类型的成员变量。而一个使用了成员变量的类的 operator()，如果能直接被转换为普通的函数指针，那么lambda表达式本身的this指针就丢失掉了。而没有捕获任何外部变量的 lambda表达式则不存在这个问题。</p>
+<p>这里也可以很自然地解释为何按值捕获无法修改捕获的外部变量。因为按照C++标准，lambda表达式的operator默认是const的。一个const成员函数是无法修改成员变量的值的。而mutable的作用，就在于取消operator()的const。需要注意的是，没有捕获变量的lambda表达式可以直接转换为函数指针，而捕获变量的lambda表达式则不能转换为函数指针。看看下面的代码：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">typedef void(*Ptr)(int*);</span><br><span class="line">//正确，没有捕获的lambda表达式可以直接转换为函数指针</span><br><span class="line">Ptr p = [](int* p) &#123;delete p;&#125;;</span><br><span class="line">Ptr pl = [&amp;](int* p) &#123;delete p;&#125;;</span><br><span class="line">∥错误，有状态的1 ambda不能直接转换为函数指针</span><br></pre></td></tr></table></figure></p>
+<p>上面第二行代码能编译通过，而第三行代码不能编译通过，因为第三行的代码捕获了变量，不能直接转换为函数指针</p>
+<h2 id="tuple元组"><a href="#tuple元组" class="headerlink" title="tuple元组"></a>tuple元组</h2><p>tuple元组是一个固定大小的不同类型值的集合。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tuple&lt;const char*, int&gt; tp = make_tuple(sendPack, nSendSize);</span><br></pre></td></tr></table></figure></p>
+<p>等价于一个结构体：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">struct A &#123;</span><br><span class="line">	char* p;</span><br><span class="line">	int len;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>还有一种方法也可创建元组：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">int x = 1;</span><br><span class="line">int y = 2;</span><br><span class="line">string s = &quot;aa&quot;;</span><br><span class="line">auto tp = std::tie(x, s, y);</span><br></pre></td></tr></table></figure></p>
+<p>tp的类型是<code>std::tuple&lt;int&amp;, string&amp;, int&amp;&gt;</code></p>
+<p>再看看如何获取元组的值：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">//获取第一个值</span><br><span class="line">const char* data = tp.get&lt;0&gt;();</span><br><span class="line">//获取第二个值</span><br><span class="line">int len = tp.get&lt;1&gt;();</span><br></pre></td></tr></table></figure></p>
+<p>还有一种方法也可以获取元组的值，通过std::tie解包tuple<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">int x, y;</span><br><span class="line">string a;</span><br><span class="line">std::tie(x, a, y) = tp;</span><br></pre></td></tr></table></figure></p>
+<p>通过tie解包后，tp中3个值会自动赋值给3个变量。解包时，如果只想解某个位置值时，可以用std::ignore占位符来表示不解某个位置的值。比如我们只想解第3个值：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">std::tie(std::ignore, std::ignore, y) = tp;</span><br></pre></td></tr></table></figure></p>
+<p>还有一个创建右值的引用元组方法： <code>forward_as_tuple</code><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">std::map&lt;int, std::string&gt; m;</span><br><span class="line">m.emplace(std::piecewise_construct, std::forward_as_tuple(10), std::forward_as_tuple (20, &apos;a));</span><br></pre></td></tr></table></figure></p>
+<p>它实际上创建了一个类似于<code>std::tuple&lt;int&amp;&amp;，std::string&amp;&amp;&gt;</code>类型的tuple。</p>
+<p>我们还可以通过tuple_cat连接多个tuple，代码如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">int main() &#123;</span><br><span class="line">	std::tuple&lt;int, std::string, float&gt; t1(10, &quot;Test&quot;, 3.14);</span><br><span class="line">	int n = 7;</span><br><span class="line">	auto t2 = std::tuple_cat(t1, std::make_pair(&quot;Foo&quot;, &quot;bar&quot;), t1, std::tie(n));</span><br><span class="line">	n = 10;</span><br><span class="line">	print(t2);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>结果是：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(10, Test, 3.14, Foo, bar, 10, Test, 3.14, 10)</span><br></pre></td></tr></table></figure></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本章主要介绍了通过一些C++11的特性简化代码，使代码更方便、简洁和优雅。首先讨论了自动类型推断的两个关键字auto和decltype，通过这两个关键字可以化繁为简，使我们不仅能方便地声明变量，还能获取复杂表达式的类型，将二者和返回值后置组合起来能解决函数的返回值难以推断的难题。</p>
+<p>模板别名和模板默认参数可以使我们更方便地定义模板，将复杂的模板定义用一个简短更可读的名称来表示，既减少了烦琐的编码又提高了代码的可读性。</p>
+<p>range-based for循环可以用更简洁的方式去遍历数组和容器，它还可以支持自定义的类型，只要自定义类型满足3个条件即可。</p>
+<p>初始化列表和统一的初始化使得初始化对象的方式变得更加简单、直接和统一。</p>
+<p>std::function不仅是一个函数语义的包装器，还能绑定任意参数，可以更灵活地实现函数的延迟执行。</p>
+<p>lambda表达式能更方便地使用STL算法，就地定义的匿名函数免除了维护一大堆函数对象的烦琐，也提高了程序的可读性。</p>
+<p>tuple元组可以作为一个灵活的轻量级的小结构体，可以用来替代简单的结构体，它有一个很好的特点就是能容纳任意类型和任意数量的元素，比普通的容器更灵活，功能也更强大。但是它也有复杂的一面， tuple的解析和应用往往需要模板元的一些技巧，对使用者有一定的要求。</p>
+<h1 id="使用C-11改进程序性能"><a href="#使用C-11改进程序性能" class="headerlink" title="使用C++11改进程序性能"></a>使用C++11改进程序性能</h1><h2 id="右值引用"><a href="#右值引用" class="headerlink" title="右值引用"></a>右值引用</h2><p>右值引用标记为<code>T &amp;&amp;</code>。</p>
+<p>左值是指表达式结束后仍然存在的持久对象，右值是指表达式结束后就不再存在的临时对象。所有的具名变量或对象都是左值，而右值不具名。在C++11中，右值由两个概念构成，一个是将亡值，另一个则是纯右值。比如，非引用返回的临时变量、运算表达式产生的临时变量、原始字面量和lambda表达式等都是纯右值。而将亡值是C++1l新增的、与右值引用相关的表达式，如将要被移动的对象、T&amp;&amp;函数返回值，std::move返回值。</p>
+<p>C+11中所有的值必属于左值、将亡值、纯右值三者之一，将亡值和纯右值都属于右值。区分表达式的左右值属性有一个简便方法：若可对表达式用<code>&amp;</code>符取址，则为左值，否则为右值。比如，简单的赋值语句<code>int i = 0</code>，在这条语句中，i是左值，0是字面量，就是右值。在上面的代码中，i可以被引用，0就不可以了。字面量都是右值。</p>
+<h2 id="amp-amp-的特性"><a href="#amp-amp-的特性" class="headerlink" title="&amp;&amp;的特性"></a><code>&amp;&amp;</code>的特性</h2><p>右值引用就是对一个右值进行引用的类型。因为右值不具名，所以我们只能通过引用的方式找到它。<br>无论声明左值引用还是右值引用都必须立即进行初始化，因为引用类型本身并不拥有所绑定对象的内存，只是该对象的一个别名。通过右值引用的声明，该右值又“重获新生”，其生命周期与右值引用类型变量的生命周期一样，只要该变量还活着，该右值临时量将会直存活下去。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;iostream&gt;</span><br><span class="line">using namespace std;</span><br><span class="line"></span><br><span class="line">int g_constructCount = 0;</span><br><span class="line">int g_copyConstructCount = 0;</span><br><span class="line">int g_destructCount = 0;</span><br><span class="line">struct A &#123;</span><br><span class="line">	A() &#123;</span><br><span class="line">		cout &lt;&lt; &quot;construct: &quot; &lt;&lt; ++g_constructCount &lt;&lt; endl;</span><br><span class="line">	&#125;</span><br><span class="line">	A(const A&amp; a) &#123;</span><br><span class="line">		cout &lt;&lt; &quot;copy construct: &quot; &lt;&lt; ++g_copyConstructCount &lt;&lt; endl;</span><br><span class="line">	&#125;</span><br><span class="line">	~A() &#123;</span><br><span class="line">		cout &lt;&lt; &quot;destruct: &quot; &lt;&lt; ++g_destructCount &lt;&lt; endl;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;;</span><br><span class="line">A getA() &#123;</span><br><span class="line">	return A();</span><br><span class="line">&#125;</span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">	A a = getA();</span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">g++ -fno-elide-constructors -std=c++0x -O0 1.cpp -o 1</span><br><span class="line"></span><br><span class="line">construct: 1</span><br><span class="line">copy construct: 1</span><br><span class="line">destruct: 1</span><br><span class="line">copy construct: 2</span><br><span class="line">destruct: 2</span><br><span class="line">destruct: 3</span><br></pre></td></tr></table></figure>
+<p>在没有返回值优化的情况下，拷贝构造函数调用了两次，一次是getA()函数内部创建的对象返回后构造一个临时对象产生的，一次是在main构造a对象产生的。得如此的destruct是因为临时对象在构造a对象之后就销毁了。修改程序：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">	A&amp;&amp; a = getA();</span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>输出为:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">construct: 1</span><br><span class="line">copy construct: 1</span><br><span class="line">destruct: 1</span><br><span class="line">destruct: 2</span><br></pre></td></tr></table></figure></p>
+<p>通过右值引用，少了一次拷贝构造和一次析构，原因在于右值引用绑定了右值，让临时右值的生命周期延长了。避免临时对象的拷贝构造和析构，事实上，在C++98/03中，也通过常量左值引用来做性能优化。</p>
+<p>实际上<code>T&amp;&amp;</code>并不是一定表示右值，它绑定的类型是未定的，既可能是左值又可能是右值。看看这个例子：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">template&lt;typename T&gt;</span><br><span class="line">void f(T&amp;&amp; param);</span><br><span class="line"></span><br><span class="line">f(10);</span><br><span class="line">// 10是右值</span><br><span class="line"></span><br><span class="line">int x = 10;</span><br><span class="line">f(x);</span><br><span class="line">//x是左值</span><br></pre></td></tr></table></figure></p>
+<p>从这个例子可以看出， param有时是左值，有时是右值，因为在上面的例子中有&amp;&amp;，这表示param实际上是一个未定的引用类型。这个未定的引用类型称为 universal references（可以认为它是一种未定的引用类型），它必须被初始化，它是左值还是右值引用取决于它的初始化，如果&amp;&amp;被一个左值初始化，它就是一个左值；如果它被一个右值初始化，它就是个右值。</p>
+<p>需要注意的是，只有当发生自动类型推断时（如函数模板的类型自动推导，或auto关键字），&amp;&amp;才是一个<br>universal references。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">template &lt;typename T&gt;</span><br><span class="line">void f(T&amp;&amp; param);</span><br><span class="line">//这里T的类型需要推导，所以&amp;&amp;是一个 universal references</span><br><span class="line"></span><br><span class="line">template&lt;typename T&gt;</span><br><span class="line">class Test &#123;</span><br><span class="line">	Test(Test&amp;&amp; rhs); // 已经定义了一个特定的类型，没有类型推断</span><br><span class="line">					  // &amp;&amp;是一个右值引用</span><br><span class="line">&#125;;</span><br><span class="line">void f(Test&amp;&amp; param);</span><br><span class="line">// 已经定义了一个确定的类型，没有类型推断，&amp;&amp;是一个右值引用</span><br></pre></td></tr></table></figure></p>
+<p>由于存在T&amp;&amp;这种未定的引用类型，当它作为参数时，有可能被一个左值引用或右值引用的参数初始化，这时经过类型推导的T&amp;&amp;类型，相比右值引用（&amp;&amp;）会发生类型的变化，这种变化被称为引用折叠：</p>
+<ul>
+<li>所有的右值引用叠加到右值引用上还是一个右值引用；</li>
+<li>所有的其他引用类型之间的叠加都将变成左值引用。</li>
+</ul>
+<p>编译器会将已命名的右值引用视为左值，而将未命名的右值引用视作右值。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">void PrintValue(int&amp; i) &#123;</span><br><span class="line">	std::cout &lt;&lt; &quot;lvalue: &quot; &lt;&lt; i &lt;&lt; std::endl;</span><br><span class="line">&#125;</span><br><span class="line">void PrintValue(int&amp;&amp; i) &#123;</span><br><span class="line">	std::cout &lt;&lt; &quot;rvalue: &quot; &lt;&lt; i &lt;&lt; std::endl;</span><br><span class="line">&#125;</span><br><span class="line">void Forward(int&amp;&amp; i) &#123;</span><br><span class="line">	PrintValue(i);</span><br><span class="line">&#125;</span><br><span class="line">int main() &#123;</span><br><span class="line">	int i = 0;</span><br><span class="line">	PrintValue(i);</span><br><span class="line">	PrintValue(1);</span><br><span class="line">	Forward(2);</span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>输出：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">lvalue: 0</span><br><span class="line">rvalue: 1</span><br><span class="line">lvalue: 2</span><br></pre></td></tr></table></figure></p>
+<p>Forward函数接收的是一个右值，但是在转发给PrintValue时，因为右值i变成一个命名对象，所以变成了左值。</p>
+<p>&amp;&amp;的总结如下：</p>
+<ul>
+<li>左值和右值是独立于它们的类型的，右值引用类型可能是左值也可能是右值。</li>
+<li>auto&amp;&amp;或函数参数类型自动推导的T&amp;&amp;是一个未定的引用类型，被称为universal references，它可能是左值引用也可能是右值引用类型，取决于初始化的值类型。</li>
+<li>所有的右值引用叠加到右值引用上仍然是一个右值引用，其他引用折叠都为左值引用，当T&amp;&amp;为模板参数时，输入左值，它会变成左值引用；输入右值时变为具名的右值引用。</li>
+<li>编译器会将已命名的右值引用视为左值，将未命名的右值引用视为右值。</li>
+</ul>
+<p>在编写拷贝函数时，应该提供深拷贝的拷贝构造函数：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">class A &#123;</span><br><span class="line">public:</span><br><span class="line">	A() : m_ptr(new int(0)) &#123;</span><br><span class="line">		cout &lt;&lt; &quot;construct&quot; &lt;&lt; endl;</span><br><span class="line">	&#125;</span><br><span class="line">	A(const A&amp; a) : m_ptr(new int(*a.m_ptr)) &#123;</span><br><span class="line">		cout &lt;&lt; &quot;copy construct&quot; &lt;&lt; endl;</span><br><span class="line">	&#125;</span><br><span class="line">	~A() &#123;</span><br><span class="line">		cout &lt;&lt; &quot;destruct&quot; &lt;&lt; endl;</span><br><span class="line">		delete m_ptr;</span><br><span class="line">	&#125;</span><br><span class="line">public:</span><br><span class="line">	int* m_ptr;</span><br><span class="line">&#125;;</span><br><span class="line">A get(bool flag) &#123;</span><br><span class="line">	A a;</span><br><span class="line">	A b;</span><br><span class="line">	if (flag)</span><br><span class="line">		return a;</span><br><span class="line">	else</span><br><span class="line">		return b;</span><br><span class="line">&#125;</span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">	A a = get(false);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>输出：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">construct</span><br><span class="line">construct</span><br><span class="line">copy construct</span><br><span class="line">destruct</span><br><span class="line">destruct</span><br><span class="line">destruct</span><br></pre></td></tr></table></figure></p>
+<p>这样可以保证拷贝的安全性。但这样的开销很大，get函数返回临时变量，然后通过这个临时变量拷贝构造了新的对象b，临时变量在拷贝完之后就销毁了，可以避免这种性能损耗：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">class A &#123;</span><br><span class="line">public:</span><br><span class="line">	A() : m_ptr(new int(0)) &#123;</span><br><span class="line">		cout &lt;&lt; &quot;construct&quot; &lt;&lt; endl;</span><br><span class="line">	&#125;</span><br><span class="line">	A(const A&amp; a) : m_ptr(new int(*a.m_ptr)) &#123;</span><br><span class="line">		cout &lt;&lt; &quot;copy construct&quot; &lt;&lt; endl;</span><br><span class="line">	&#125;</span><br><span class="line">	A(A&amp;&amp; a) : : m_ptr(a.m_ptr) &#123;</span><br><span class="line">		a.m_ptr = nullptr;</span><br><span class="line">		cout &lt;&lt; &quot;move construct: &quot;&lt;&lt; endl;</span><br><span class="line">	&#125;</span><br><span class="line">	~A() &#123;</span><br><span class="line">		cout &lt;&lt; &quot;destruct&quot; &lt;&lt; endl;</span><br><span class="line">		delete m_ptr;</span><br><span class="line">	&#125;</span><br><span class="line">public:</span><br><span class="line">	int* m_ptr;</span><br><span class="line">&#125;;</span><br><span class="line">A get(bool flag) &#123;</span><br><span class="line">	A a;</span><br><span class="line">	A b;</span><br><span class="line">	if (flag)</span><br><span class="line">		return a;</span><br><span class="line">	else</span><br><span class="line">		return b;</span><br><span class="line">&#125;</span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">	A a = get(false);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>输出：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">construct</span><br><span class="line">construct</span><br><span class="line">move construct</span><br><span class="line">destruct</span><br><span class="line">destruct</span><br><span class="line">destruct</span><br></pre></td></tr></table></figure></p>
+<p>上面的代码中没有了拷贝构造，取而代之的是移动构造（ Move Construct）。从移动构造函数的实现中可以看到，它的参数是一个右值引用类型的参数<code>A&amp;&amp;</code>，这里没有深拷贝，只有浅拷贝，这样就避免了对临时对象的深拷贝，提高了性能。这里的<code>A&amp;&amp;</code>用来根据参数是左值还是右值来建立分支，如果是临时值，则会选择移动构造函数。移动构造函数只是将临时对象的资源做了浅拷贝，不需要对其进行深拷贝，从而避免了额外的拷贝，提高性能。也就是所谓的移动语义（move语义），右值引用的一个重要目的是用来支持移动语义的。</p>
+<p>移动语义可以将资源（堆、系统对象等）通过浅拷贝方式从一个对象转移到另一个对象，这样能够减少不必要的临时对象的创建、拷贝以及销毁，可以大幅度提高C++应用程序的性能，消除临时对象的维护（创建和销毁）对性能的影响。<br>以代码清单22所示为示例，实现拷贝构造函数和拷贝赋值操作符。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">struct Element &#123;</span><br><span class="line">	Element() &#123;&#125;</span><br><span class="line">	Element(Element&amp;&amp; other) : m_children(std::move(other.m_children)) &#123;&#125;</span><br><span class="line">	Element(const Element&amp; other) : m_children(other.m_children) &#123;&#125;</span><br><span class="line">private:</span><br><span class="line">	vector&lt;ptree&gt; m_children;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void Test() &#123;</span><br><span class="line">	Element t1 = Init();</span><br><span class="line">	vector&lt;Element&gt; v;</span><br><span class="line">	v.push_back(t1);</span><br><span class="line">	v.push_back(std::move(t1));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>先构造了一个临时对象t1，这个对象中存放了很多对象，数量可能很多，如果直接将这个t1用 push_back插入到vector中，没有右值版本的构造函数时，会引起大量的拷贝，这种拷贝会造成额外的严重的性能损耗。通过定义右值版本的构造函数以及std::move(t1)就可以避免这种额外的拷贝，从而大幅提高性能。</p>
+<p>有了右值引用和移动语义，在设计和实现类时，对于需要动态申请大量资源的类，应该设计右值引用的拷贝构造函数和赋值函数，以提高应用程序的效率。需要注意的是，我们般在提供右值引用的构造函数的同时，也会提供常量左值引用的拷贝构造函数，以保证移动不成还可以使用拷贝构造。</p>
+<h3 id="关于左值和右值的定义"><a href="#关于左值和右值的定义" class="headerlink" title="关于左值和右值的定义"></a>关于左值和右值的定义</h3><p>左值和右值在C中就存在，不过存在感不高，在C++尤其是C++11中这两个概念比较重要，左值就是有名字的变量（对象），可以被赋值，可以在多条语句中使用，而右值呢，就是临时变量（对象），没有名字，只能在一条语句中出现，不能被赋值。</p>
+<p>在 C++11 之前，右值是不能被引用的，最大限度就是用常量引用绑定一个右值，如 :<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">const int&amp; i = 3;</span><br></pre></td></tr></table></figure></p>
+<p>在这种情况下，右值不能被修改的。但是实际上右值是可以被修改的，如 :<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">T().set().get();</span><br></pre></td></tr></table></figure></p>
+<p>T 是一个类，set 是一个函数为 T 中的一个变量赋值，get 用来取出这个变量的值。在这句中，T() 生成一个临时对象，就是右值，set() 修改了变量的值，也就修改了这个右值。<br>既然右值可以被修改，那么就可以实现右值引用。右值引用能够方便地解决实际工程中的问题，实现非常有吸引力的解决方案。</p>
+<h3 id="右值引用-1"><a href="#右值引用-1" class="headerlink" title="右值引用"></a>右值引用</h3><p>左值的声明符号为”&amp;”， 为了和左值区分，右值的声明符号为”&amp;&amp;”。</p>
+<p>给出一个实例程序如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;iostream&gt;</span><br><span class="line"></span><br><span class="line">void process_value(int&amp; i) </span><br><span class="line">&#123; </span><br><span class="line">	std::cout &lt;&lt; &quot;LValue processed: &quot; &lt;&lt; i &lt;&lt; std::endl; </span><br><span class="line">&#125; </span><br><span class="line"></span><br><span class="line">void process_value(int&amp;&amp; i) </span><br><span class="line">&#123; </span><br><span class="line">	std::cout &lt;&lt; &quot;RValue processed: &quot; &lt;&lt; i &lt;&lt; std::endl; </span><br><span class="line">&#125; </span><br><span class="line"></span><br><span class="line">int main() </span><br><span class="line">&#123; </span><br><span class="line">	int a = 0; </span><br><span class="line">	process_value(a);</span><br><span class="line">	process_value(1); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>结果如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">wxl@dev:~$ g++ -std=c++11  test.cpp</span><br><span class="line">wxl@dev:~$ ./a.out </span><br><span class="line">LValue processed: 0</span><br><span class="line">RValue processed: 1</span><br></pre></td></tr></table></figure></p>
+<p>Process_value 函数被重载，分别接受左值和右值。由输出结果可以看出，临时对象是作为右值处理的。</p>
+<p>下面涉及到一个问题：<br>x的类型是右值引用，指向一个右值，但x本身是左值还是右值呢？C++11对此做出了区分：</p>
+<p>Things that are declared as rvalue reference can be lvalues or rvalues. The distinguishing criterion is: if it has a name, then it is an lvalue. Otherwise, it is an rvalue.</p>
+<p>对上面的程序稍作修改就可以印证这个说法<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;iostream&gt;</span><br><span class="line"></span><br><span class="line">void process_value(int&amp; i) </span><br><span class="line">&#123; </span><br><span class="line">	std::cout &lt;&lt; &quot;LValue processed: &quot; &lt;&lt; i &lt;&lt; std::endl; </span><br><span class="line">&#125; </span><br><span class="line"></span><br><span class="line">void process_value(int&amp;&amp; i) </span><br><span class="line">&#123; </span><br><span class="line">	std::cout &lt;&lt; &quot;RValue processed: &quot;  &lt;&lt; std::endl; </span><br><span class="line">&#125; </span><br><span class="line"></span><br><span class="line">int main() </span><br><span class="line">&#123; </span><br><span class="line">	int a = 0; </span><br><span class="line">	process_value(a);</span><br><span class="line">	int&amp;&amp; x = 3;</span><br><span class="line">	process_value(x); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">wxl@dev:~$ g++ -std=c++11  test.cpp</span><br><span class="line">wxl@dev:~$ ./a.out </span><br><span class="line">LValue processed: 0</span><br><span class="line">LValue processed: 3</span><br></pre></td></tr></table></figure>
+<p>x 是一个右值引用，指向一个右值3，但是由于x是有名字的，所以x在这里被视为一个左值，所以在函数重载的时候选择为第一个函数。</p>
+<h3 id="右值引用的意义"><a href="#右值引用的意义" class="headerlink" title="右值引用的意义"></a>右值引用的意义</h3><p>直观意义：为临时变量续命，也就是为右值续命，因为右值在表达式结束后就消亡了，如果想继续使用右值，那就会动用昂贵的拷贝构造函数。（关于这部分，推荐一本书《深入理解C++11》）<br>右值引用是用来支持转移语义的。转移语义可以将资源 ( 堆，系统对象等 ) 从一个对象转移到另一个对象，这样能够减少不必要的临时对象的创建、拷贝以及销毁，能够大幅度提高 C++ 应用程序的性能。临时对象的维护 ( 创建和销毁 ) 对性能有严重影响。<br>转移语义是和拷贝语义相对的，可以类比文件的剪切与拷贝，当我们将文件从一个目录拷贝到另一个目录时，速度比剪切慢很多。<br>通过转移语义，临时对象中的资源能够转移其它的对象里。<br>在现有的 C++ 机制中，我们可以定义拷贝构造函数和赋值函数。要实现转移语义，需要定义转移构造函数，还可以定义转移赋值操作符。对于右值的拷贝和赋值会调用转移构造函数和转移赋值操作符。如果转移构造函数和转移拷贝操作符没有定义，那么就遵循现有的机制，拷贝构造函数和赋值操作符会被调用。<br>普通的函数和操作符也可以利用右值引用操作符实现转移语义。</p>
+<p>转移语义以及转移构造函数和转移复制运算符<br>以一个简单的 string 类为示例，实现拷贝构造函数和拷贝赋值操作符。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">class MyString &#123; </span><br><span class="line">private: </span><br><span class="line">	char* _data; </span><br><span class="line">	size_t   _len; </span><br><span class="line">	void _init_data(const char *s) &#123; </span><br><span class="line">	  _data = new char[_len+1]; </span><br><span class="line">	  memcpy(_data, s, _len); </span><br><span class="line">	  _data[_len] = &apos;\0&apos;; </span><br><span class="line">	&#125; </span><br><span class="line">public: </span><br><span class="line">	MyString() &#123; </span><br><span class="line">		_data = NULL; </span><br><span class="line">		_len = 0; </span><br><span class="line">	&#125; </span><br><span class="line"></span><br><span class="line">	MyString(const char* p) &#123; </span><br><span class="line">		_len = strlen (p); </span><br><span class="line">		_init_data(p); </span><br><span class="line">	&#125; </span><br><span class="line"></span><br><span class="line">	MyString(const MyString&amp; str) &#123; </span><br><span class="line">		_len = str._len; </span><br><span class="line">		_init_data(str._data); </span><br><span class="line">		std::cout &lt;&lt; &quot;Copy Constructor is called! source: &quot; &lt;&lt; str._data &lt;&lt; std::endl; </span><br><span class="line">	&#125; </span><br><span class="line"></span><br><span class="line">	MyString&amp; operator=(const MyString&amp; str) &#123; </span><br><span class="line">		if (this != &amp;str) &#123; </span><br><span class="line">		 	_len = str._len; </span><br><span class="line">			_init_data(str._data); </span><br><span class="line">		&#125; </span><br><span class="line">		std::cout &lt;&lt; &quot;Copy Assignment is called! source: &quot; &lt;&lt; str._data &lt;&lt; std::endl; </span><br><span class="line">		return *this; </span><br><span class="line">	&#125; </span><br><span class="line"></span><br><span class="line">virtual ~MyString() &#123; </span><br><span class="line">	if (_data) </span><br><span class="line">		free(_data); </span><br><span class="line">	&#125; </span><br><span class="line">&#125;; </span><br><span class="line"></span><br><span class="line">int main() &#123; </span><br><span class="line">	MyString a; </span><br><span class="line">	a = MyString(&quot;Hello&quot;); </span><br><span class="line">	std::vector&lt;MyString&gt; vec; </span><br><span class="line">	vec.push_back(MyString(&quot;World&quot;)); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Copy Assignment is called! source: Hello </span><br><span class="line">Copy Constructor is called! source: World</span><br></pre></td></tr></table></figure>
+<p>这个 string 类已经基本满足我们演示的需要。在 main 函数中，实现了调用拷贝构造函数的操作和拷贝赋值操作符的操作。MyString(“Hello”) 和 MyString(“World”) 都是临时对象，也就是右值。虽然它们是临时的，但程序仍然调用了拷贝构造和拷贝赋值，造成了没有意义的资源申请和释放的操作。如果能够直接使用临时对象已经申请的资源，既能节省资源，有能节省资源申请和释放的时间。这正是定义转移语义的目的。</p>
+<p>我们先定义转移构造函数。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"> MyString(MyString&amp;&amp; str) &#123; </span><br><span class="line">   std::cout &lt;&lt; &quot;Move Constructor is called! source: &quot; &lt;&lt; str._data &lt;&lt; std::endl; </span><br><span class="line">   _len = str._len; </span><br><span class="line">   _data = str._data; </span><br><span class="line">   str._len = 0; </span><br><span class="line">   str._data = NULL; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>有下面几点需要对照代码注意：</p>
+<ol>
+<li>参数（右值）的符号必须是右值引用符号，即“&amp;&amp;”。</li>
+<li>参数（右值）不可以是常量，因为我们需要修改右值。</li>
+<li>参数（右值）的资源链接和标记必须修改。否则，右值的析构函数就会释放资源。转移到新对象的资源也就无效了。</li>
+</ol>
+<p>现在我们定义转移赋值操作符。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"> MyString&amp; operator=(MyString&amp;&amp; str) &#123; </span><br><span class="line">   std::cout &lt;&lt; &quot;Move Assignment is called! source: &quot; &lt;&lt; str._data &lt;&lt; std::endl; </span><br><span class="line">   if (this != &amp;str) &#123; </span><br><span class="line">     _len = str._len; </span><br><span class="line">     _data = str._data; </span><br><span class="line">     str._len = 0; </span><br><span class="line">     str._data = NULL; </span><br><span class="line">   &#125; </span><br><span class="line">   return *this; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这里需要注意的问题和转移构造函数是一样的。<br>增加了转移构造函数和转移复制操作符后，我们的程序运行结果为 :</p>
+<p>由此看出，编译器区分了左值和右值，对右值调用了转移构造函数和转移赋值操作符。节省了资源，提高了程序运行的效率。<br>有了右值引用和转移语义，我们在设计和实现类时，对于需要动态申请大量资源的类，应该设计转移构造函数和转移赋值函数，以提高应用程序的效率。</p>
+<p>但是这几点总结的不错</p>
+<ul>
+<li>std::move执行一个无条件的转化到右值。它本身并不移动任何东西；</li>
+<li>std::forward把其参数转换为右值，仅仅在那个参数被绑定到一个右值时；</li>
+<li>std::move和std::forward在运行时（runtime）都不做任何事。</li>
+</ul>
+<h2 id="move语义"><a href="#move语义" class="headerlink" title="move语义"></a>move语义</h2><p>std::move将左值转换为右值，从而方便应用移动语义。move是将对象的状态或者所有权从一个对象转移到另一个对象，只是转移没有拷贝。</p>
+<p>move实际上并不移动任何东西，它唯一的功能是将一个左值强制转换为一个右值引用，是我们可以通过右值引用使用该值，以用于移动语义。</p>
+<p>仅仅转移资源的所有者，将资源的拥有者改为被赋值者。假设一个临时容器很大，赋值给另一个容器：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">std::list&lt;std::string&gt; tokens;</span><br><span class="line">std::list&lt;std::string&gt; t = tokens;</span><br><span class="line"></span><br><span class="line">std::list&lt;std::string&gt; tokens;</span><br><span class="line">std::list&lt;std::string&gt; t = std::move(tokens);</span><br></pre></td></tr></table></figure></p>
+<p>如果不用std::move，拷贝的代价很大，性能较低，使用move几乎没有任何代价，只是转换了资源的所有权，实际上是将左值转换为右值引用，然后应用move语义调用构造函数，就避免了拷贝。</p>
+<h2 id="forward和完美转发"><a href="#forward和完美转发" class="headerlink" title="forward和完美转发"></a>forward和完美转发</h2><p>需要一种方法能按照参数原来的类型转发到另一个函数，这种转发被称作<strong>完美转发</strong>，即在函数模板中，完全依照模板的参数的类型（保持参数的左右值特征），将参数传递给函数模板中调用的另一个函数。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">void PrintT(int&amp; t) &#123;</span><br><span class="line">	cout &lt;&lt; &quot;lvalue&quot; &lt;&lt; endl;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void PrintT(int&amp;&amp; t) &#123;</span><br><span class="line">	cout &lt;&lt; &quot;rvalue&quot; &lt;&lt; endl;</span><br><span class="line">&#125;</span><br><span class="line">template&lt;typename T&gt;</span><br><span class="line">void TestForward(T &amp;&amp; t) &#123;</span><br><span class="line">	PrintT(t);</span><br><span class="line">	PrintT(std::forward&lt;T&gt;(t));</span><br><span class="line">	PrintT(std::move(t));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int main() &#123;</span><br><span class="line">	TestForward(1);</span><br><span class="line">	int x = 1;</span><br><span class="line">	TestForward(x);</span><br><span class="line">	TestForward(std::forward&lt;int&gt;(x));</span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>输出：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">lvalue</span><br><span class="line">rvalue</span><br><span class="line">rvalue</span><br><span class="line">lvalue</span><br><span class="line">lvalue</span><br><span class="line">rvalue</span><br><span class="line">lvalue</span><br><span class="line">rvalue</span><br><span class="line">rvalue</span><br></pre></td></tr></table></figure></p>
+<p>TestForward(1)时，1是右值，所以未定义的引用类型<code>T&amp;&amp; t</code>被一个右值初始化后变成一个右值引用。但是在TestForward中调用PrintT(t)时，t变成一个左值。调用<code>PrintT(std::forward&lt;T&gt;(t))</code>时，<code>std::forward</code>会按照原来的参数类型转发，所以它还是一个右值。</p>
+<p>TestForward(x)未定的引用类型<code>T&amp;&amp; t</code>被一个左值初始化后变成一个左值引用，因此，在调用<code>PrintT(std::forward&lt;T&gt;(t))</code>时它会被转发到<code>PrintT(T&amp; t)</code></p>
+<h2 id="emplace-back减少内存拷贝和移动"><a href="#emplace-back减少内存拷贝和移动" class="headerlink" title="emplace_back减少内存拷贝和移动"></a>emplace_back减少内存拷贝和移动</h2><p>emplace_back能就地通过参数构造对象，不需要拷贝或者移动内存，相比push_back能更好地避免内存的拷贝与移动，使容器插入元素的性能得到进一步提升。在大多数情况下应该优先使用emplace_back来代替push_back。</p>
+<p>所有的标准库容器（array除外，因为它的长度不可改变，不能插入元素）都增加了类似的方法： emplace、 emplace_hint、 emplace_front、emplace_after和emplace_back。</p>
+<p>vector的emplace_back的基本用法如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;vector&gt;</span><br><span class="line">#include &lt;iostream&gt;</span><br><span class="line">using namespace std;</span><br><span class="line"></span><br><span class="line">struct A &#123;</span><br><span class="line">	int x;</span><br><span class="line">	double y;</span><br><span class="line">	A(int a, double b): x(a), y(b);</span><br><span class="line">&#125;;</span><br><span class="line">int main() &#123;</span><br><span class="line">	vector&lt;A&gt; v;</span><br><span class="line">	v.emplace_back(1, 2);</span><br><span class="line">	cout&lt;&lt;v.size()&lt;&lt;endl;</span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>可以看出， emplace_back的用法比较简单，直接通过构造函数的参数就可以构造对象。因此，也要求对象有对应的构造函数，如果没有对应的构造函数，编译器会报错。</p>
+<p>其他容器相应的 emplace方法也是类似的。<br>相对 push_back而言， emplace_back更具性能优势。</p>
+<p>在引入右值引用，转移构造函数，转移复制运算符之前，通常使用push_back()向容器中加入一个右值元素（临时对象）的时候，首先会调用构造函数构造这个临时对象，然后需要调用拷贝构造函数将这个临时对象放入容器中。原来的临时变量释放。这样造成的问题是临时变量申请的资源就浪费。<br>引入了右值引用，转移构造函数（请看这里）后，push_back()右值时就会调用构造函数和转移构造函数。</p>
+<h2 id="unordered-container无序容器"><a href="#unordered-container无序容器" class="headerlink" title="unordered container无序容器"></a>unordered container无序容器</h2><p>C++11增加了无序容器 unordered_map/unordered_multimap和unordered_set/unordered_multiset，由于这些容器中的元素是不排序的，因此，比有序容器 map/multimap和set/multiset效率更高。</p>
+<p>map和set内部是红黑树，在插入元素时会自动排序，而无序容器内部是散列表（ Hash Table），通过哈希（Hash），而不是排序来快速操作元素，使得效率更高。由于无序容器内部是散列表，因此无序容器的key需要提供hash_value函数，其他用法和map/set的用法是一样的。不过对于自定义的key，需要提供Hash函数和比较函数。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;unordered_map&gt;</span><br><span class="line">#include &lt;vector&gt;</span><br><span class="line">#include &lt;bitset&gt;</span><br><span class="line">#include &lt;string&gt;</span><br><span class="line">#include &lt;utility&gt;</span><br><span class="line"></span><br><span class="line">struct Key &#123;</span><br><span class="line">	std::string first;</span><br><span class="line">	std::string second;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">struct KeyHash &#123;</span><br><span class="line">	std::size_t operator()(const Key&amp; k) const &#123;</span><br><span class="line">		return std::hash&lt;std::string&gt;()(k.first)^(std::hash&lt;std::string&gt;()(k.second) &lt;&lt; 1);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;;</span><br><span class="line">struct keyEqual &#123;</span><br><span class="line">	bool operator()(const Key&amp; lhs, const Key&amp; rhs) const &#123;</span><br><span class="line">		return lhs.first == rhs.first &amp;&amp; lhs.second == rhs.second;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">int main() &#123;</span><br><span class="line">	std::unordered_map&lt;std::string, std::string&gt; m1;</span><br><span class="line"></span><br><span class="line">	std::unordered_map&lt;int, std::string&gt; m2 = &#123;</span><br><span class="line">		&#123;1, &quot;foo&quot;&#125;,</span><br><span class="line">		&#123;2, &quot;bar&quot;&#125;,</span><br><span class="line">		&#123;3, &quot;baz&quot;&#125;,</span><br><span class="line">	&#125;;</span><br><span class="line"></span><br><span class="line">	std::unordered_map&lt;int, std::string&gt; m3 = m2;</span><br><span class="line">	std::unordered_map&lt;int, std::string&gt; m4 = std::move(m2);</span><br><span class="line"></span><br><span class="line">	std::vector&lt;std::pair&lt;std::bitset&lt;8&gt;, int&gt;&gt; v = &#123; &#123;0x12, 1&#125;, &#123;0x01, -1&#125; &#125;;</span><br><span class="line">	std::unordered_map&lt;std::bitset&lt;8&gt;, double&gt; m5(v.begin(), v.end());</span><br><span class="line"></span><br><span class="line">	// constructor for a custom type</span><br><span class="line">	std::unordered_map&lt;Key, std::string, KeyHash, KeyEqual&gt; m6 = &#123;</span><br><span class="line">		&#123; &#123;&quot;john&quot;, &quot;doe&quot;&#125;, &quot;example&quot;&#125;,</span><br><span class="line">		&#123; &#123;&quot;mary&quot;, &quot;Sue&quot;&#125;, &quot;another&quot;&#125;,</span><br><span class="line">	&#125;;</span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/C/" rel="tag"># C++</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/01/13/effective_cpp/" rel="next" title="Effective C++笔记">
+                <i class="fa fa-chevron-left"></i> Effective C++笔记
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/01/30/cpp11_2/" rel="prev" title="C++11特性笔记2——模板、内存泄漏">
+                C++11特性笔记2——模板、内存泄漏 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">272</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/test.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#使用C-11让程序更简洁"><span class="nav-number">1.</span> <span class="nav-text">使用C++11让程序更简洁</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#类型推导"><span class="nav-number">1.1.</span> <span class="nav-text">类型推导</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#auto"><span class="nav-number">1.1.1.</span> <span class="nav-text">auto</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#decltype"><span class="nav-number">1.1.2.</span> <span class="nav-text">decltype</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#模板的细节改进"><span class="nav-number">1.2.</span> <span class="nav-text">模板的细节改进</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#模板的右尖括号"><span class="nav-number">1.2.1.</span> <span class="nav-text">模板的右尖括号</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#模板的别名"><span class="nav-number">1.2.2.</span> <span class="nav-text">模板的别名</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#函数模板的默认模板参数"><span class="nav-number">1.2.3.</span> <span class="nav-text">函数模板的默认模板参数</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#列表初始化"><span class="nav-number">1.3.</span> <span class="nav-text">列表初始化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#初始化列表"><span class="nav-number">1.3.1.</span> <span class="nav-text">初始化列表</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#任意长度初始化列表"><span class="nav-number">1.3.1.1.</span> <span class="nav-text">任意长度初始化列表</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#防止类型收窄"><span class="nav-number">1.3.2.</span> <span class="nav-text">防止类型收窄</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基于范围的for循环"><span class="nav-number">1.4.</span> <span class="nav-text">基于范围的for循环</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#for循环的新用法"><span class="nav-number">1.4.1.</span> <span class="nav-text">for循环的新用法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#基于范围的for循环的细节"><span class="nav-number">1.4.2.</span> <span class="nav-text">基于范围的for循环的细节</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#让基于范围的for循环支持自定义类型"><span class="nav-number">1.4.3.</span> <span class="nav-text">让基于范围的for循环支持自定义类型</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#std-function和bind绑定器"><span class="nav-number">1.5.</span> <span class="nav-text">std::function和bind绑定器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#可调用对象"><span class="nav-number">1.5.1.</span> <span class="nav-text">可调用对象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#可调用对象包装器-std-function"><span class="nav-number">1.5.2.</span> <span class="nav-text">可调用对象包装器-std::function</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#std-bind绑定器"><span class="nav-number">1.6.</span> <span class="nav-text">std::bind绑定器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#lambda表达式"><span class="nav-number">1.7.</span> <span class="nav-text">lambda表达式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#lambda表达式的概念和基本用法"><span class="nav-number">1.7.1.</span> <span class="nav-text">lambda表达式的概念和基本用法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#tuple元组"><span class="nav-number">1.8.</span> <span class="nav-text">tuple元组</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">1.9.</span> <span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#使用C-11改进程序性能"><span class="nav-number">2.</span> <span class="nav-text">使用C++11改进程序性能</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#右值引用"><span class="nav-number">2.1.</span> <span class="nav-text">右值引用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#amp-amp-的特性"><span class="nav-number">2.2.</span> <span class="nav-text">&amp;&amp;的特性</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#关于左值和右值的定义"><span class="nav-number">2.2.1.</span> <span class="nav-text">关于左值和右值的定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#右值引用-1"><span class="nav-number">2.2.2.</span> <span class="nav-text">右值引用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#右值引用的意义"><span class="nav-number">2.2.3.</span> <span class="nav-text">右值引用的意义</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#move语义"><span class="nav-number">2.3.</span> <span class="nav-text">move语义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#forward和完美转发"><span class="nav-number">2.4.</span> <span class="nav-text">forward和完美转发</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#emplace-back减少内存拷贝和移动"><span class="nav-number">2.5.</span> <span class="nav-text">emplace_back减少内存拷贝和移动</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#unordered-container无序容器"><span class="nav-number">2.6.</span> <span class="nav-text">unordered container无序容器</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
