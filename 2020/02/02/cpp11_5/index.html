@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="C++,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="C++11改进我们的模式改进单例模式单例模式保证一个类仅有一个实例，并提供一个访问它的全局访问点。在c++11之前，我们写单例模式的时候会遇到一个问题，就是多种类型的单例可能需要创建多个类型的单例，主要是因为创建单例对象的构造函数无法统一，各个类型的形参不尽相同，导致我们不容易做一个所有类型都通用的单例。现在c+11帮助我们解决了这个问题，解决这个问题靠的是c++11的可变模板参数。 将原有的多个">
+<meta name="keywords" content="C++">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C++11特性笔记4——c++11改进我们的模式">
+<meta property="og:url" content="http://yoursite.com/2020/02/02/cpp11_5/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="C++11改进我们的模式改进单例模式单例模式保证一个类仅有一个实例，并提供一个访问它的全局访问点。在c++11之前，我们写单例模式的时候会遇到一个问题，就是多种类型的单例可能需要创建多个类型的单例，主要是因为创建单例对象的构造函数无法统一，各个类型的形参不尽相同，导致我们不容易做一个所有类型都通用的单例。现在c+11帮助我们解决了这个问题，解决这个问题靠的是c++11的可变模板参数。 将原有的多个">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2020-02-02T11:59:36.611Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="C++11特性笔记4——c++11改进我们的模式">
+<meta name="twitter:description" content="C++11改进我们的模式改进单例模式单例模式保证一个类仅有一个实例，并提供一个访问它的全局访问点。在c++11之前，我们写单例模式的时候会遇到一个问题，就是多种类型的单例可能需要创建多个类型的单例，主要是因为创建单例对象的构造函数无法统一，各个类型的形参不尽相同，导致我们不容易做一个所有类型都通用的单例。现在c+11帮助我们解决了这个问题，解决这个问题靠的是c++11的可变模板参数。 将原有的多个">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2020/02/02/cpp11_5/">
+
+
+
+
+
+  <title>C++11特性笔记4——c++11改进我们的模式 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/02/cpp11_5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">C++11特性笔记4——c++11改进我们的模式</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-02-02T20:13:00+08:00">
+                2020-02-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="C-11改进我们的模式"><a href="#C-11改进我们的模式" class="headerlink" title="C++11改进我们的模式"></a>C++11改进我们的模式</h1><h2 id="改进单例模式"><a href="#改进单例模式" class="headerlink" title="改进单例模式"></a>改进单例模式</h2><p>单例模式保证一个类仅有一个实例，并提供一个访问它的全局访问点。在c++11之前，我们写单例模式的时候会遇到一个问题，就是多种类型的单例可能需要创建多个类型的单例，主要是因为创建单例对象的构造函数无法统一，各个类型的形参不尽相同，导致我们不容易做一个所有类型都通用的单例。现在c+11帮助我们解决了这个问题，解决这个问题靠的是c++11的可变模板参数。</p>
+<p>将原有的多个构造函数合并：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">template &lt;typename T0, typename T1, typename T2, typename T3, typename T4, typename T5&gt;</span><br><span class="line">static T* Instance(T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5) &#123;</span><br><span class="line">	if (m_pInstance == nullptr)</span><br><span class="line">		m_pInstance = new T(arg0, arg1, arg2, arg3, arg4, arg5);</span><br><span class="line">	return m_pInstance;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>改为<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">template &lt;typename T&gt;</span><br><span class="line">class Singleton</span><br><span class="line">&#123;</span><br><span class="line">public:</span><br><span class="line">	template&lt;typename... Args&gt;</span><br><span class="line">　　static T* Instance(Args&amp;&amp;... args)</span><br><span class="line">　　&#123;</span><br><span class="line">		if(m_pInstance==nullptr)</span><br><span class="line">			m_pInstance = new T(std::forward&lt;Args&gt;(args)...);</span><br><span class="line">		return m_pInstance;</span><br><span class="line">	&#125;</span><br><span class="line">　　static T* GetInstance() &#123;</span><br><span class="line">　　　　if (m_pInstance == nullptr)</span><br><span class="line">　　　　　　throw std::logic_error(&quot;the instance is not init, please initialize the instance first&quot;);</span><br><span class="line">　　　　return m_pInstance;</span><br><span class="line">　　&#125;</span><br><span class="line">	static void DestroyInstance()</span><br><span class="line">	&#123;</span><br><span class="line">		delete m_pInstance;</span><br><span class="line">		m_pInstance = nullptr;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">private:</span><br><span class="line">		Singleton(void);</span><br><span class="line">		virtual ~Singleton(void);</span><br><span class="line">		Singleton(const Singleton&amp;);</span><br><span class="line">		Singleton&amp; operator = (const Singleton&amp;);</span><br><span class="line">private:</span><br><span class="line">	static T* m_pInstance;</span><br><span class="line">&#125;;</span><br><span class="line">	</span><br><span class="line">template &lt;class T&gt; T*  Singleton&lt;T&gt;::m_pInstance = nullptr;</span><br></pre></td></tr></table></figure></p>
+<p>/<strong><strong>***</strong></strong>更新说明<strong><strong><strong><em>**</em></strong></strong></strong>/</p>
+<p>由于原来的接口中，单例对象的初始化和取值都是一个接口，可能会遭到误用，更新之后，初始化和取值分为两个接口，单例的用法为：先初始化，后面取值，如果中途销毁单例的话，需要重新取值。如果没有初始化就取值则会抛出一个异常。</p>
+<p>增加Multiton的实现<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;map&gt;</span><br><span class="line">#include &lt;string&gt;</span><br><span class="line">#include &lt;memory&gt;</span><br><span class="line">using namespace std;</span><br><span class="line"></span><br><span class="line">template &lt; typename T, typename K = string&gt;</span><br><span class="line">class Multiton</span><br><span class="line">&#123;</span><br><span class="line">public:</span><br><span class="line">	template&lt;typename... Args&gt;</span><br><span class="line">	static std::shared_ptr&lt;T&gt; Instance(const K&amp; key, Args&amp;&amp;... args)</span><br><span class="line">	&#123;</span><br><span class="line">		return GetInstance(key, std::forward&lt;Args&gt;(args)...);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	template&lt;typename... Args&gt;</span><br><span class="line">	static std::shared_ptr&lt;T&gt; Instance(K&amp;&amp; key, Args&amp;&amp;... args)</span><br><span class="line">	&#123;</span><br><span class="line">		return GetInstance(key, std::forward&lt;Args&gt;(args)...);</span><br><span class="line">	&#125;</span><br><span class="line">private:</span><br><span class="line">	template&lt;typename Key, typename... Args&gt;</span><br><span class="line">	static std::shared_ptr&lt;T&gt; GetInstance(Key&amp;&amp; key, Args&amp;&amp;...args)</span><br><span class="line">	&#123;</span><br><span class="line">		std::shared_ptr&lt;T&gt; instance = nullptr;</span><br><span class="line">		auto it = m_map.find(key);</span><br><span class="line">		if (it == m_map.end())</span><br><span class="line">		&#123;</span><br><span class="line">			instance = std::make_shared&lt;T&gt;(std::forward&lt;Args&gt;(args)...);</span><br><span class="line">			m_map.emplace(key, instance);</span><br><span class="line">		&#125;</span><br><span class="line">		else</span><br><span class="line">		&#123;</span><br><span class="line">			instance = it-&gt;second;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		return instance;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">private:</span><br><span class="line">	Multiton(void);</span><br><span class="line">	virtual ~Multiton(void);</span><br><span class="line">	Multiton(const Multiton&amp;);</span><br><span class="line">	Multiton&amp; operator = (const Multiton&amp;);</span><br><span class="line">private:</span><br><span class="line">	static map&lt;K, std::shared_ptr&lt;T&gt;&gt; m_map;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">template &lt;typename T, typename K&gt;</span><br><span class="line">map&lt;K, std::shared_ptr&lt;T&gt;&gt; Multiton&lt;T, K&gt;::m_map;</span><br></pre></td></tr></table></figure></p>
+<h2 id="改进观察者模式"><a href="#改进观察者模式" class="headerlink" title="改进观察者模式"></a>改进观察者模式</h2><p>观察者模式定义对象间一种一对多关系，当一个对象的状态发生改变时，所有依赖于它的对象都得到通知并被自动更新。和单例模式面临的是同样的问题，主题更新的接口难以统一，很难做出一个通用的观察者模式，还是用到可变模板参数解决这个问题，其次还用到了右值引用，避免多余的内存移动。c++11版本的观察者模式支持注册的观察者为函数、函数对象和lamda表达式，也避免了虚函数调用，更简洁更通用。</p>
+<p>主要改进的地方有两个：通过被通知接口参数化和<code>std::function</code>来代替继承，通过可变参数模板和完美转发来消除接口变化产生的影响。直接看代码。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br></pre></td><td class="code"><pre><span class="line">class NonCopyable &#123;</span><br><span class="line">protected:</span><br><span class="line">	NonCopyable() = default;</span><br><span class="line">	~NonCopyable() = default;</span><br><span class="line">	NonCopyable(const NonCopyable&amp;) = delete;</span><br><span class="line">	NonCopyable&amp; operator = (const NonCopyable&amp;) = delete;</span><br><span class="line">	// 禁用复制构造和赋值构造</span><br><span class="line">&#125;；</span><br><span class="line"></span><br><span class="line">template&lt;typename Func&gt;</span><br><span class="line">class Events : NonCopyable</span><br><span class="line">&#123;</span><br><span class="line">public:</span><br><span class="line">	Events() &#123;&#125;</span><br><span class="line">	~Events()&#123;&#125;</span><br><span class="line">	</span><br><span class="line">	int Connect(Func&amp;&amp; f) &#123;</span><br><span class="line">		return Assgin(std::forward&lt;Func&gt;(f));</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	int Connect(const Func&amp; f) &#123;</span><br><span class="line">		return Assgin(f);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	void Disconnect(int key) &#123;</span><br><span class="line">		m_connections.erase(key);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	template&lt;typename... Args&gt;</span><br><span class="line">	void Notify(Args&amp;&amp;... args) &#123;</span><br><span class="line">		for (auto&amp; it : m_connections) &#123;</span><br><span class="line">			it.second(std::forward&lt;Args&gt;(args)...);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	int operator += (Func&amp;&amp; f) &#123;</span><br><span class="line">		return Connect(std::forward&lt;Func&gt;(f));</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	int operator += (Func&amp; f) &#123;</span><br><span class="line">		return Connect(f);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	template&lt;typename... Args&gt;</span><br><span class="line">	void operator()(Args&amp;&amp;... args) &#123;</span><br><span class="line">		Notify(std::forward&lt;Args&gt;(args)...);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	Events&amp; operator -= (int key) &#123;</span><br><span class="line">		Disconnect(key);</span><br><span class="line">		return *this;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	void Clear() &#123;</span><br><span class="line">		m_connections.clear();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">private:</span><br><span class="line"></span><br><span class="line">	template&lt;typename F&gt;</span><br><span class="line">	int Assgin(F&amp;&amp; f) &#123;</span><br><span class="line">		int index = m_nextKey++;</span><br><span class="line">		m_connections.emplace(index, std::forward&lt;F&gt;f);</span><br><span class="line">		return index;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	int m_nextKey;</span><br><span class="line">	std::map&lt;int, Func&gt; m_connections;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>增加了+=和-=运算符，使用法更接近c#，这里+=会返回一个key，这个key用来-=删除委托时用到，这种做法不太好，只是一个简单的处理。如果内部用vector的话，-=时，根据function去删除指定的委托的话，用法就和c#完全一致了，不过，这里遇到的问题是function不支持比较操作，导致将function存入容器后，后面再根据function去删除时就找不到对应的function了。</p>
+<h2 id="改进访问者模式"><a href="#改进访问者模式" class="headerlink" title="改进访问者模式"></a>改进访问者模式</h2><p>访问者表示一个作用于某对象结构中的各元素的操作，可用于不改变各元素的类的前提下定义作用于这些元素的新操作。</p>
+<p>访问者模式需要注意定义对象结构的类很少改变，但经常需要在此结构上定义新的操作。改变对象结构类需要重定义对所有访问者的接口，这可能需要很大的代价。定义一个稳定的访问者接口层，即不会因为增加新的被访问者而修改接口层。通过可变参数模板实现一个稳定的接口层，利用可变参数模板可以支持任意个数的参数的特点，可以让访问者接口层访问任意个数的被访问者。</p>
+<p>访问者模式是GOF23个设计模式中比较复杂的模式之一，但是它的功能也很强大，非常适合稳定的继承层次中对象的访问，可以在不修改被访问对象的情况下，动态添加职责，这正是访问者模式强大的地方，但是它的实现又造成了两个继承层次的强烈耦合，这也是被人诟病的地方，可以说是让人爱又让人恨的模式。c++11实现的访问者模式将会解决这个问题。我们将在c++11版本的访问者模式中看到，定义新的访问者是很容易的，扩展性很好，被访问者的继承层次也不用做任何修改。具体代码：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">template&lt;typename... Types&gt;</span><br><span class="line">struct Visitor;</span><br><span class="line"> </span><br><span class="line">template&lt;typename T, typename... Types&gt;</span><br><span class="line">struct Visitor&lt;T, Types...&gt; : Visitor&lt;Types...&gt;</span><br><span class="line">&#123;</span><br><span class="line">    using Visitor&lt;Types...&gt;::Visit;</span><br><span class="line">    virtual void Visit(const T&amp;) = 0;</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line">template&lt;typename T&gt;</span><br><span class="line">struct Visitor&lt;T&gt;</span><br><span class="line">&#123;</span><br><span class="line">    virtual void Visit(const T&amp;) = 0;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>上面的代码为每个类型都定义了一个纯虚函数Visit。</p>
+<p>下面看看被访问的继承体系如何使用Visitor访问该继承体系的对象。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">struct stA;</span><br><span class="line">struct stB; </span><br><span class="line"> </span><br><span class="line">struct Base</span><br><span class="line">&#123;    </span><br><span class="line">    typedef Visitor&lt;stA, stB&gt; MytVisitor;     </span><br><span class="line">    virtual void Accept(MytVisitor&amp;) = 0;</span><br><span class="line">&#125;; </span><br><span class="line"> </span><br><span class="line">struct stA: Base</span><br><span class="line">&#123;    </span><br><span class="line">    double val;     </span><br><span class="line">    void Accept(Base::MytVisitor&amp; v)    </span><br><span class="line">    &#123;        </span><br><span class="line">        v.Visit(*this);    </span><br><span class="line">    &#125;</span><br><span class="line">&#125;; </span><br><span class="line"> </span><br><span class="line">struct stB: Base</span><br><span class="line">&#123;    </span><br><span class="line">    int val;    </span><br><span class="line">    void Accept(Base::MytVisitor&amp; v)    </span><br><span class="line">    &#123;        </span><br><span class="line">        v.Visit(*this);    </span><br><span class="line">    &#125;</span><br><span class="line">&#125;; </span><br><span class="line"> </span><br><span class="line">struct PrintVisitor: Base::MytVisitor</span><br><span class="line">&#123;    </span><br><span class="line">    void Visit(const stA&amp; a)    </span><br><span class="line">    &#123;        </span><br><span class="line">        std::cout &lt;&lt; &quot;from stA: &quot; &lt;&lt; a.val &lt;&lt; std::endl;    </span><br><span class="line">    &#125;     </span><br><span class="line">    void Visit(const stB&amp; b)    </span><br><span class="line">    &#123;        </span><br><span class="line">        std::cout &lt;&lt; &quot;from stB: &quot; &lt;&lt; b.val &lt;&lt; std::endl;    </span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>测试代码：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">void TestVisitor()</span><br><span class="line">&#123;</span><br><span class="line">    PrintVisitor vis;    </span><br><span class="line">    stA a;    </span><br><span class="line">    a.val = 8.97;    </span><br><span class="line">    stB b;    </span><br><span class="line">    b.val = 8;     </span><br><span class="line">    Base* base = &amp;a;    </span><br><span class="line">    base-&gt;Accept(vis);    </span><br><span class="line">    base = &amp;b;    </span><br><span class="line">    base-&gt;Accept(vis);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>　测试结果：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">from stA: 8.97</span><br><span class="line">from stB: 8</span><br></pre></td></tr></table></figure></p>
+<p><code>typedef Visitor&lt;stA, stB&gt; MytVisitor;</code>会自动生成stA和stB的visit虚函数：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">struct Visitor&lt;stA, stB&gt; &#123;</span><br><span class="line">	virtual void Visit(const stA &amp;) = 0;</span><br><span class="line">	virtual void Visit(const stB &amp;) = 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>当被访者需要增加stC、stD时，增加就行：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">`typedef Visitor&lt;stA, stB, stC, stD&gt; MytVisitor;</span><br></pre></td></tr></table></figure></p>
+<p>类型自动生成接口：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">struct Visitor&lt;stA, stB, stC, stD&gt; &#123;</span><br><span class="line">	virtual void Visit(const stA &amp;) = 0;</span><br><span class="line">	virtual void Visit(const stB &amp;) = 0;</span><br><span class="line">	virtual void Visit(const stC &amp;) = 0;</span><br><span class="line">	virtual void Visit(const stD &amp;) = 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="改进命令模式"><a href="#改进命令模式" class="headerlink" title="改进命令模式"></a>改进命令模式</h2><p>命令模式的作用是将请求封装为一个对象，将请求的发起者和执行者解耦，支持对请求排队以及撤销和重做。将请求封装成一个个命令对象，使得我们可以集中处理或延迟处理这些命令请求，而且不同的客户对象可以共享命令，控制请求的优先级、排队、支持请求命令撤销和重做。</p>
+<p>命令模式的这些好处是显而易见的，但是，在实际使用过程中它的问题也暴露出来了。随着请求的增多，请求的封装类–命令类也会越来越多，尤其是GUI应用中，请求是非常多的。越来越多的命令类会导致类爆炸，难以管理。关于类爆炸这个问题，GOF很早就意识到了，他们提出了一个解决方法：对于简单的不能取消和不需要参数的命令，可以用一个命令类模板来参数化该命令的接收者，用接收者类型来参数化命令类，并维护一个接收者对象和一个动作之间的绑定，而这一动作是用指向同一个成员函数的指针存储的。具体代码是这样的：<br>简单命令类的定义：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">template &lt;class Receiver&gt;</span><br><span class="line">class SimpleCommand: public Command &#123;</span><br><span class="line">public :</span><br><span class="line">	typedef void (Receiver:: *Action) ();</span><br><span class="line">	SimpleCormnand(Receiver* r, Action a) : _receiver (r) , _action (a) &#123; &#125;</span><br><span class="line">	virtual void Execute ();</span><br><span class="line">private :</span><br><span class="line">	Action _action;</span><br><span class="line">	Receiver* _receiver ;</span><br><span class="line">&#125;;</span><br><span class="line">template &lt;class Receiver&gt;</span><br><span class="line">void SimpleCommand&lt;Receiver&gt;::Execute() &#123;</span><br><span class="line">	(_receiver-&gt;*_action)();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>测试代码如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">class MyClass &#123;</span><br><span class="line">public:</span><br><span class="line">	void Action();</span><br><span class="line">&#125;</span><br><span class="line">void dummy() &#123;</span><br><span class="line">	MyClass* receiver = new MyClass;</span><br><span class="line">	Command* aCommand = new SimpleCommand&lt;MyClass&gt;(receiver, &amp;MyClass::Action);</span><br><span class="line">	aCommand-&gt;Execute();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>通过一个泛型的简单命令类来避免不断创建新的命令类，是一个不错的办法，但是，这个办法不完美，即它只能是简单的命令类，不能对复杂的，甚至所有的命令类泛化，这是它的缺陷，所以，它只是部分的解决了问题。我想我可以改进这个办法缺陷，完美的解决类爆炸的问题。在c++11之前我不知道有没有人解决过这个问题，至少我没看到过。现在可以通过c++11来完美的解决这个问题了。</p>
+<p>要完美的解决命令模式类爆炸问题的关键是如何定义个通用的泛化的命令类，这个命令类可以泛化所有的命令，而不是GOF提到的简单命令。我们再回过头来看看GOF中那个简单的命令类的定义，它只是泛化了没有参数和返回值的命令类，命令类内部引用了一个接收者和接收者的函数指针，如果接收者的行为函数指针有参数就不能通用了，所以我们要解决的关键问题是如何让命令类能接受所有的成员函数指针或者函数对象。</p>
+<p>我们需要一个函数包装器，它可以接受所有的函数对象、fucntion和lamda表达式等。接受function、函数对象、lamda和普通函数的包装器：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">template&lt; class F, class... Args, class = typename std::enable_if&lt;!std::is_member_function_pointer&lt;F&gt;::value&gt;::type&gt;</span><br><span class="line">void Wrap(F &amp;&amp; f, Args &amp;&amp; ... args)</span><br><span class="line">&#123;</span><br><span class="line">	return f(std::forward&lt;Args&gt;(args)...); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>接受成员函数的包装器：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">template&lt;class R, class C, class... DArgs, class P, class... Args&gt;</span><br><span class="line">void Wrap(R(C::*f)(DArgs...), P &amp;&amp; p, Args &amp;&amp; ... args)</span><br><span class="line">&#123;</span><br><span class="line">	return (*p.*f)(std::forward&lt;Args&gt;(args)...); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>通过重载的Wrap让它能接收成员函数。这样一个真正意义上的万能的函数包装器就完成了。现在再来看，它是如何应用到命令模式中，完美的解决类爆炸的问题。</p>
+<p>一个通用的泛化的命令类：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;functional&gt;</span><br><span class="line">#include &lt;type_traits&gt;</span><br><span class="line">template&lt;typename R=void&gt;</span><br><span class="line">struct CommCommand</span><br><span class="line">&#123;</span><br><span class="line">private:</span><br><span class="line">	std::function &lt; R()&gt; m_f;</span><br><span class="line">public:</span><br><span class="line">	template&lt; class F, class... Args, class = typename std::enable_if&lt;!std::is_member_function_pointer&lt;F&gt;::value&gt;::type&gt;</span><br><span class="line">	void Wrap(F &amp;&amp; f, Args &amp;&amp; ... args)</span><br><span class="line">	&#123;</span><br><span class="line">		m_f = [&amp;]&#123;return f(args...); &#125;;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	template&lt;class C, class... DArgs, class P, class... Args&gt;</span><br><span class="line">	void Wrap(R(C::*f)(DArgs...) const, P &amp;&amp; p, Args &amp;&amp; ... args)</span><br><span class="line">	&#123;</span><br><span class="line">		m_f = [&amp;, f]&#123;return (*p.*f)( args...); &#125;;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	// non-const member function </span><br><span class="line">	template&lt;class C, class... DArgs, class P, class... Args&gt;</span><br><span class="line">	void Wrap(R(C::*f)(DArgs...), P &amp;&amp; p, Args &amp;&amp; ... args)</span><br><span class="line">	&#123;</span><br><span class="line">		m_f = [&amp;, f]&#123;return (*p.*f)( args...); &#125;;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	R Excecute()</span><br><span class="line">	&#123;</span><br><span class="line">		return m_f();</span><br><span class="line">	&#125;</span><br><span class="line">	&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>测试代码：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">struct STA</span><br><span class="line">&#123;</span><br><span class="line">int m_a;</span><br><span class="line">int operator()()&#123; return m_a; &#125;</span><br><span class="line">int operator()(int n)&#123; return m_a + n; &#125;</span><br><span class="line">int triple0()&#123; return m_a * 3; &#125;</span><br><span class="line">int triple(int a)&#123; return m_a * 3 + a; &#125;</span><br><span class="line">int triple1() const &#123; return m_a * 3; &#125;</span><br><span class="line">const int triple2(int a) const &#123; return m_a * 3+a; &#125;</span><br><span class="line"></span><br><span class="line">void triple3()&#123; cout &lt;&lt; &quot;&quot; &lt;&lt;endl; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">int add_one(int n)</span><br><span class="line">&#123;</span><br><span class="line">	return n + 1;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void TestWrap()</span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">	CommCommand&lt;int&gt; cmd;</span><br><span class="line">	// free function </span><br><span class="line">	cmd.Wrap(add_one, 0);</span><br><span class="line">	</span><br><span class="line">	// lambda function</span><br><span class="line">	cmd.Wrap([](int n)&#123;return n + 1; &#125;, 1);</span><br><span class="line">	</span><br><span class="line">	// functor </span><br><span class="line">	cmd.Wrap(bloop);</span><br><span class="line">	cmd.Wrap(bloop, 4);</span><br><span class="line">	</span><br><span class="line">	STA t = &#123; 10 &#125;;</span><br><span class="line">	int x = 3;</span><br><span class="line">	// member function </span><br><span class="line">	cmd.Wrap(&amp;STA::triple0, &amp;t);</span><br><span class="line">	cmd.Wrap(&amp;STA::triple, &amp;t, x);</span><br><span class="line">	cmd.Wrap(&amp;STA::triple, &amp;t, 3);</span><br><span class="line">	</span><br><span class="line">	cmd.Wrap(&amp;STA::triple2, &amp;t, 3);</span><br><span class="line">	auto r = cmd.Excecute();</span><br><span class="line">	</span><br><span class="line">	CommCommand&lt;&gt; cmd1;</span><br><span class="line">	cmd1.Wrap(&amp;Bloop::triple3, &amp;t);</span><br><span class="line">	cmd1.Excecute();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>我们在通用的命令类内部定义了一个万能的函数包装器，使得我们可以封装所有的命令，增加新的请求都不需要重新定义命令了，完美的解决了命令类爆炸的问题。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/C/" rel="tag"># C++</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/02/01/cpp11_4/" rel="next" title="C++11特性笔记4——便利工具和其他特性">
+                <i class="fa fa-chevron-left"></i> C++11特性笔记4——便利工具和其他特性
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">273</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/test.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#C-11改进我们的模式"><span class="nav-number">1.</span> <span class="nav-text">C++11改进我们的模式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#改进单例模式"><span class="nav-number">1.1.</span> <span class="nav-text">改进单例模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#改进观察者模式"><span class="nav-number">1.2.</span> <span class="nav-text">改进观察者模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#改进访问者模式"><span class="nav-number">1.3.</span> <span class="nav-text">改进访问者模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#改进命令模式"><span class="nav-number">1.4.</span> <span class="nav-text">改进命令模式</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
