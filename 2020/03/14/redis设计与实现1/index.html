@@ -96,7 +96,15 @@
 <meta property="og:locale" content="zn-ch">
 <meta property="og:image" content="http://yoursite.com/img/2015-09-13_55f50d7faffa3.png">
 <meta property="og:image" content="http://yoursite.com/img/2015-09-13_55f50fb39b6cb.png">
-<meta property="og:updated_time" content="2020-03-14T10:17:56.166Z">
+<meta property="og:image" content="http://yoursite.com/img/2015-09-13_55f511fc9428c.png">
+<meta property="og:image" content="http://yoursite.com/img/2015-09-13_55f51205335f9.png">
+<meta property="og:image" content="http://yoursite.com/img/2015-09-13_55f5120772706.png">
+<meta property="og:image" content="http://yoursite.com/img/2015-09-13_55f512c4d7f99.png">
+<meta property="og:image" content="http://yoursite.com/img/2015-09-13_55f5130162f2d.png">
+<meta property="og:image" content="http://yoursite.com/img/2015-09-13_55f51302b6785.png">
+<meta property="og:image" content="http://yoursite.com/img/2015-09-13_55f51309b4775.png">
+<meta property="og:image" content="http://yoursite.com/img/2015-09-13_55f5130b2ec57.png">
+<meta property="og:updated_time" content="2020-03-14T10:52:16.801Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="redis设计与实现笔记1——数据结构与对象">
 <meta name="twitter:description" content="Redis数据库中的每个键值对都是由对象组成的：  数据库键总是一个字符串对象； 数据库键的值可以是字符串对象、列表对象、哈希对象、集合对象、有序集合对象这五种对象中的一种。  数据结构与对象简单动态字符串Redis自己构建了一种名叫“简单动态字符串”（SDS）的类型，当Redis需要的不仅仅是一个字符串字面量，而是一个可以被修改的字符串值时，使用SDS用作默认字符串表示。如果执行了：12redi">
@@ -325,7 +333,7 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-03-14T18:17:56+08:00">
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-03-14T18:52:16+08:00">
                 2020-03-14
               </time>
             
@@ -374,7 +382,7 @@
 <li>键值对的键是一个字符串对象，对象底层实现是一个保存着字符串的SDS</li>
 <li>键值对的值也是一个字符串对象，对象的底层实现也是一个保存着字符串的SDS</li>
 </ul>
-<h3 id="sds的定义"><a href="#sds的定义" class="headerlink" title="sds的定义"></a>sds的定义</h3><p>每个 sds.h/sdshdr 结构表示一个 SDS 值：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">struct sdshdr &#123;</span><br><span class="line"></span><br><span class="line">    // 记录 buf 数组中已使用字节的数量</span><br><span class="line">    // 等于 SDS 所保存字符串的长度</span><br><span class="line">    int len;</span><br><span class="line"></span><br><span class="line">    // 记录 buf 数组中未使用字节的数量</span><br><span class="line">    int free;</span><br><span class="line"></span><br><span class="line">    // 字节数组，用于保存字符串</span><br><span class="line">    char buf[];</span><br><span class="line"></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<h3 id="sds的定义"><a href="#sds的定义" class="headerlink" title="sds的定义"></a>sds的定义</h3><p>每个 sds.h/sdshdr 结构表示一个 SDS 值：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">struct sdshdr &#123;</span><br><span class="line">    // 记录 buf 数组中已使用字节的数量</span><br><span class="line">    // 等于 SDS 所保存字符串的长度</span><br><span class="line">    int len;</span><br><span class="line"></span><br><span class="line">    // 记录 buf 数组中未使用字节的数量</span><br><span class="line">    int free;</span><br><span class="line"></span><br><span class="line">    // 字节数组，用于保存字符串</span><br><span class="line">    char buf[];</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
 <p><img src="/img/2015-09-13_55f50d7faffa3.png" alt></p>
 <p>free属性的值为0，表示这个SDS没有分配任何未使用空间。<br>len属性的值为5，表示这个SDS保存了一个五字节长的字符串。<br>buf属性是一个char类型的数组，数组的前五个字节分别保存了’R’、’e’、’d’、’i’、’s’五个字符，而最后一个字节则保存了空字符’\0’。</p>
 <p>SDS遵循C字符串以空字符结尾的惯例，保存空字符的1字节空间不计算在SDS的len属性里面，并且为空字符分配额外的1字节空间，以及添加空字符到字符串末尾等操作都是由SDS函数自动完成的，所以这个空字符对于SDS的使用者来说是完全透明的。</p>
@@ -386,16 +394,16 @@
 <li><strong>减少内存分配次数</strong>，因为C字符串的长度和底层数组的长度之间存在着这种关联性，所以每次增长或者缩短一个C字符串，程序都总要对保存这个C字符串的数组进行一次内存重分配操作：<ul>
 <li>如果程序执行的是增长字符串的操作，那么在执行这个操作之前，程序需要先通过内存重分配来扩展底层数组的空间大小——如果忘了这一步就会产生缓冲区溢出。</li>
 <li>如果程序执行的是缩短字符串的操作，那么在执行这个操作之后，程序需要通过内存重分配来释放字符串不再使用的那部分空间——如果忘了这一步就会产生内存泄漏。</li>
-<li>为了避免C字符串的这种缺陷，SDS通过未使用空间解除了字符串长度和底层数组长度之间的关联：在SDS中，buf数组的长度不一定就是字符数量加一，数组里面可以包含未使用的字节，而这些字节的数量就由SDS的free属性记录。通过未使用空间，SDS实现了空间预分配和惰性空间释放两种优化策略。</li>
-<li><strong>空间预分配</strong>：空间预分配用于优化SDS的字符串增长操作：当SDS的API对一个SDS进行修改，并且需要对SDS进行空间扩展的时候，程序不仅会为SDS分配修改所必须要的空间，还会为SDS分配额外的未使用空间。其中，额外分配的未使用空间数量由以下公式决定：<ul>
+<li>为了避免C字符串的这种缺陷，<strong>SDS通过未使用空间解除了字符串长度和底层数组长度之间的关联</strong>：在SDS中，buf数组的长度不一定就是字符数量加一，数组里面可以包含未使用的字节，而这些字节的数量就由SDS的free属性记录。通过未使用空间，SDS实现了空间预分配和惰性空间释放两种优化策略。</li>
+<li><strong>空间预分配</strong>：空间预分配用于<strong>优化SDS的字符串增长操作</strong>：当SDS的API对一个SDS进行修改，并且需要对SDS进行空间扩展的时候，程序不仅会为SDS分配修改所必须要的空间，还会为SDS分配额外的未使用空间。其中，额外分配的未使用空间数量由以下公式决定：<ul>
 <li>如果对SDS进行修改之后，SDS的长度（也即是len属性的值）将小于1MB，那么程序分配和len属性同样大小的未使用空间，这时SDSlen属性的值将和free属性的值相同。</li>
 <li>如果对SDS进行修改之后，SDS的长度将大于等于1MB，那么程序会分配1MB的未使用空间。举个例子，如果进行修改之后，SDS的len将变成30MB，那么程序会分配1MB的未使用空间，SDS的buf数组的实际长度将为30MB+1MB+1byte。</li>
 </ul>
 </li>
-<li><strong>惰性空间释放</strong>：惰性空间释放用于优化SDS的字符串缩短操作：当SDS的API需要缩短SDS保存的字符串时，程序并不立即使用内存重分配来回收缩短后多出来的字节，而是使用free属性将这些字节的数量记录起来，并等待将来使用。通过惰性空间释放策略，SDS避免了缩短字符串时所需的内存重分配操作，并为将来可能有的增长操作提供了优化。</li>
+<li><strong>惰性空间释放</strong>：惰性空间释放用于<strong>优化SDS的字符串缩短操作</strong>：当SDS的API需要缩短SDS保存的字符串时，程序并不立即使用内存重分配来回收缩短后多出来的字节，而是使用free属性将这些字节的数量记录起来，并等待将来使用。通过惰性空间释放策略，SDS避免了缩短字符串时所需的内存重分配操作，并为将来可能有的增长操作提供了优化。</li>
 </ul>
 </li>
-<li><strong>二进制安全</strong>：虽然数据库一般用于保存文本数据，但使用数据库来保存二进制数据的场景也不少见，因此，为了确保Redis可以适用于各种不同的使用场景，SDS的API都是二进制安全的（binary-safe）：所有SDSAPI都会以处理二进制的方式来处理SDS存放在buf数组里的数据，程序不会对其中的数据做任何限制、过滤、或者假设。</li>
+<li><strong>二进制安全</strong>：虽然数据库一般用于保存文本数据，但使用数据库来保存二进制数据的场景也不少见，因此，为了确保Redis可以适用于各种不同的使用场景，SDS的API都是二进制安全的（binary-safe）：<strong>所有SDS API都会以处理二进制的方式来处理SDS存放在buf数组里的数据</strong>，程序不会对其中的数据做任何限制、过滤、或者假设。</li>
 <li><strong>兼容部分C字符串函数</strong>：虽然SDS的API都是二进制安全的，但它们一样遵循C字符串以空字符结尾的惯例：这些API总会将SDS保存的数据的末尾设置为空字符，并且总会在为buf数组分配空间时多分配一个字节来容纳这个空字符，这是为了让那些保存文本数据的SDS可以重用一部分<code>&lt;string.h&gt;</code>库定义的函数。</li>
 </ul>
 <h3 id="SDS-API"><a href="#SDS-API" class="headerlink" title="SDS API"></a>SDS API</h3><table>
@@ -470,9 +478,7 @@
 <tr>
 <td>sdstrim</td>
 <td>接受一个 SDS 和一个 C 字符串作为参数， 从 SDS 左右两端分别移除所有在 C 字符串中出现过的字符。</td>
-<td>O(M*N) ， M 为 SDS 的长度， N 为给定</td>
-<td>C</td>
-<td>字符串的长度。</td>
+<td>O(M*N) ， M 为 SDS 的长度， N 为给定C字符串的长度。</td>
 </tr>
 <tr>
 <td>sdscmp</td>
@@ -481,8 +487,8 @@
 </tr>
 </tbody>
 </table>
-<h2 id="链表"><a href="#链表" class="headerlink" title="链表"></a>链表</h2><p>链表提供了高效的节点重排能力， 以及顺序性的节点访问方式， 并且可以通过增删节点来灵活地调整链表的长度。<br>每个链表节点使用一个 adlist.h/listNode 结构来表示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">typedef struct listNode &#123;</span><br><span class="line"></span><br><span class="line">    // 前置节点</span><br><span class="line">    struct listNode *prev;</span><br><span class="line"></span><br><span class="line">    // 后置节点</span><br><span class="line">    struct listNode *next;</span><br><span class="line"></span><br><span class="line">    // 节点的值</span><br><span class="line">    void *value;</span><br><span class="line"></span><br><span class="line">&#125; listNode;</span><br></pre></td></tr></table></figure></p>
-<p><img src="/img/2015-09-13_55f50fb39b6cb.png" alt><br>多个 listNode 可以通过 prev 和 next 指针组成双端链表。虽然仅仅使用多个 listNode 结构就可以组成链表， 但使用 adlist.h/list 来持有链表的话， 操作起来会更方便：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">typedef struct list &#123;</span><br><span class="line"></span><br><span class="line">    // 表头节点</span><br><span class="line">    listNode *head;</span><br><span class="line"></span><br><span class="line">    // 表尾节点</span><br><span class="line">    listNode *tail;</span><br><span class="line"></span><br><span class="line">    // 链表所包含的节点数量</span><br><span class="line">    unsigned long len;</span><br><span class="line"></span><br><span class="line">    // 节点值复制函数</span><br><span class="line">    void *(*dup)(void *ptr);</span><br><span class="line"></span><br><span class="line">    // 节点值释放函数</span><br><span class="line">    void (*free)(void *ptr);</span><br><span class="line"></span><br><span class="line">    // 节点值对比函数</span><br><span class="line">    int (*match)(void *ptr, void *key);</span><br><span class="line"></span><br><span class="line">&#125; list;</span><br></pre></td></tr></table></figure></p>
+<h2 id="链表"><a href="#链表" class="headerlink" title="链表"></a>链表</h2><p>链表提供了高效的节点重排能力， 以及顺序性的节点访问方式， 并且可以通过增删节点来灵活地调整链表的长度。<br>每个链表节点使用一个 adlist.h/listNode 结构来表示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">typedef struct listNode &#123;</span><br><span class="line">    // 前置节点</span><br><span class="line">    struct listNode *prev;</span><br><span class="line"></span><br><span class="line">    // 后置节点</span><br><span class="line">    struct listNode *next;</span><br><span class="line"></span><br><span class="line">    // 节点的值</span><br><span class="line">    void *value;</span><br><span class="line">&#125; listNode;</span><br></pre></td></tr></table></figure></p>
+<p><img src="/img/2015-09-13_55f50fb39b6cb.png" alt><br>多个 listNode 可以通过 prev 和 next 指针组成双端链表。虽然仅仅使用多个 listNode 结构就可以组成链表， 但使用 adlist.h/list 来持有链表的话， 操作起来会更方便：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">typedef struct list &#123;</span><br><span class="line">    // 表头节点</span><br><span class="line">    listNode *head;</span><br><span class="line"></span><br><span class="line">    // 表尾节点</span><br><span class="line">    listNode *tail;</span><br><span class="line"></span><br><span class="line">    // 链表所包含的节点数量</span><br><span class="line">    unsigned long len;</span><br><span class="line"></span><br><span class="line">    // 节点值复制函数</span><br><span class="line">    void *(*dup)(void *ptr);</span><br><span class="line"></span><br><span class="line">    // 节点值释放函数</span><br><span class="line">    void (*free)(void *ptr);</span><br><span class="line"></span><br><span class="line">    // 节点值对比函数</span><br><span class="line">    int (*match)(void *ptr, void *key);</span><br><span class="line">&#125; list;</span><br></pre></td></tr></table></figure></p>
 <p>list结构为链表提供了表头指针head、表尾指针tail，以及链表长度计数器len，而dup、free和match成员则是用于实现多态链表所需的类型特定函数：</p>
 <ul>
 <li>dup函数用于复制链表节点所保存的值；</li>
@@ -618,7 +624,129 @@
 </tr>
 </tbody>
 </table>
-<h2 id="字典"><a href="#字典" class="headerlink" title="字典"></a>字典</h2>
+<h2 id="字典"><a href="#字典" class="headerlink" title="字典"></a>字典</h2><p>字典， 又称符号表（symbol table）、关联数组（associative array）或者映射（map）， 是一种用于<strong>保存键值对</strong>（key-value pair）的抽象数据结构。</p>
+<p>在字典中， 一个键（key）可以和一个值（value）进行关联（或者说将键映射为值）， 这些关联的键和值就被称为键值对。</p>
+<p>字典中的每个键都是独一无二的， 程序可以在字典中根据键查找与之关联的值， 或者通过键来更新值， 又或者根据键来删除整个键值对， 等等。</p>
+<p>字典经常作为一种数据结构内置在很多高级编程语言里面， 但 Redis 所使用的 C 语言并没有内置这种数据结构， 因此 Redis 构建了自己的字典实现。</p>
+<p>字典在 Redis 中的应用相当广泛， 比如 Redis 的数据库就是使用字典来作为底层实现的， 对数据库的增、删、查、改操作也是构建在对字典的操作之上的。</p>
+<h3 id="Redis-字典的实现"><a href="#Redis-字典的实现" class="headerlink" title="Redis 字典的实现"></a>Redis 字典的实现</h3><p>Redis 的字典使用哈希表作为底层实现， 一个哈希表里面可以有多个哈希表节点， 而每个哈希表节点就保存了字典中的一个键值对。</p>
+<h4 id="哈希表"><a href="#哈希表" class="headerlink" title="哈希表"></a>哈希表</h4><p>Redis 字典所使用的哈希表由 dict.h/dictht 结构定义：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">typedef struct dictht &#123;</span><br><span class="line">    // 哈希表数组</span><br><span class="line">    dictEntry **table;</span><br><span class="line"></span><br><span class="line">    // 哈希表大小</span><br><span class="line">    unsigned long size;</span><br><span class="line"></span><br><span class="line">    // 哈希表大小掩码，用于计算索引值</span><br><span class="line">    // 总是等于 size - 1</span><br><span class="line">    unsigned long sizemask;</span><br><span class="line"></span><br><span class="line">    // 该哈希表已有节点的数量</span><br><span class="line">    unsigned long used;</span><br><span class="line">&#125; dictht;</span><br></pre></td></tr></table></figure></p>
+<p>解释如下：</p>
+<ul>
+<li>table 属性是一个数组， 数组中的每个元素都是一个指向 dict.h/dictEntry 结构的指针， 每个 dictEntry 结构保存着一个键值对。</li>
+<li>size 属性记录了哈希表的大小， 也即是 table 数组的大小， 而 used 属性则记录了哈希表目前已有节点（键值对）的数量。</li>
+<li>sizemask 属性的值总是等于 size - 1 ， 这个属性和哈希值一起决定一个键应该被放到 table 数组的哪个索引上面。</li>
+</ul>
+<p><img src="/img/2015-09-13_55f511fc9428c.png" alt></p>
+<h4 id="哈希表节点"><a href="#哈希表节点" class="headerlink" title="哈希表节点"></a>哈希表节点</h4><p>哈希表节点使用 dictEntry 结构表示， 每个 dictEntry 结构都保存着一个键值对：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">typedef struct dictEntry &#123;</span><br><span class="line">    // 键</span><br><span class="line">    void *key;</span><br><span class="line"></span><br><span class="line">    // 值</span><br><span class="line">    union &#123;</span><br><span class="line">        void *val;</span><br><span class="line">        uint64_t u64;</span><br><span class="line">        int64_t s64;</span><br><span class="line">    &#125; v;</span><br><span class="line"></span><br><span class="line">    // 指向下个哈希表节点，形成链表</span><br><span class="line">    struct dictEntry *next;</span><br><span class="line">&#125; dictEntry;</span><br></pre></td></tr></table></figure></p>
+<p>解释：</p>
+<ul>
+<li>key 属性保存着键值对中的键， 而 v 属性则保存着键值对中的值， 其中键值对的值可以是一个指针， 或者是一个 uint64_t 整数， 又或者是一个 int64_t 整数。</li>
+<li>next 属性是指向另一个哈希表节点的指针， 这个指针可以将多个哈希值相同的键值对连接在一次， 以此来解决键冲突（collision）的问题。</li>
+</ul>
+<p><img src="/img/2015-09-13_55f51205335f9.png" alt></p>
+<h4 id="字典-1"><a href="#字典-1" class="headerlink" title="字典"></a>字典</h4><p>Redis 中的字典由 dict.h/dict 结构表示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">typedef struct dict &#123;</span><br><span class="line">    // 类型特定函数</span><br><span class="line">    dictType *type;</span><br><span class="line"></span><br><span class="line">    // 私有数据</span><br><span class="line">    void *privdata;</span><br><span class="line"></span><br><span class="line">    // 哈希表</span><br><span class="line">    dictht ht[2];</span><br><span class="line"></span><br><span class="line">    // rehash 索引</span><br><span class="line">    // 当 rehash 不在进行时，值为 -1</span><br><span class="line">    int rehashidx; /* rehashing not in progress if rehashidx == -1 */</span><br><span class="line">&#125; dict;</span><br></pre></td></tr></table></figure></p>
+<p>type 属性和 privdata 属性是针对不同类型的键值对， 为创建多态字典而设置的：</p>
+<ul>
+<li>type 属性是一个指向 dictType 结构的指针， 每个 dictType 结构保存了一簇用于操作特定类型键值对的函数， Redis 会为用途不同的字典设置不同的类型特定函数。</li>
+<li>privdata 属性则保存了需要传给那些类型特定函数的可选参数。</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">typedef struct dictType &#123;</span><br><span class="line">    // 计算哈希值的函数</span><br><span class="line">    unsigned int (*hashFunction)(const void *key);</span><br><span class="line"></span><br><span class="line">    // 复制键的函数</span><br><span class="line">    void *(*keyDup)(void *privdata, const void *key);</span><br><span class="line"></span><br><span class="line">    // 复制值的函数</span><br><span class="line">    void *(*valDup)(void *privdata, const void *obj);</span><br><span class="line"></span><br><span class="line">    // 对比键的函数</span><br><span class="line">    int (*keyCompare)(void *privdata, const void *key1, const void *key2);</span><br><span class="line"></span><br><span class="line">    // 销毁键的函数</span><br><span class="line">    void (*keyDestructor)(void *privdata, void *key);</span><br><span class="line"></span><br><span class="line">    // 销毁值的函数</span><br><span class="line">    void (*valDestructor)(void *privdata, void *obj);</span><br><span class="line">&#125; dictType;</span><br></pre></td></tr></table></figure>
+<p>解释：</p>
+<ul>
+<li>ht 属性是一个包含两个项的数组， 数组中的每个项都是一个 dictht 哈希表， 一般情况下， 字典只使用 ht[0] 哈希表， ht[1] 哈希表只会在对 ht[0] 哈希表进行 rehash 时使用。</li>
+<li>另一个和 rehash 有关的属性就是 rehashidx ： 它记录了 rehash 目前的进度， 如果目前没有在进行 rehash ， 那么它的值为 -1 。</li>
+</ul>
+<p><img src="/img/2015-09-13_55f5120772706.png" alt></p>
+<h3 id="Redis-哈希算法"><a href="#Redis-哈希算法" class="headerlink" title="Redis 哈希算法"></a>Redis 哈希算法</h3><p>当要将一个新的键值对添加到字典里面时， 程序需要先根据键值对的键计算出哈希值和索引值， 然后再根据索引值， 将包含新键值对的哈希表节点放到哈希表数组的指定索引上面。</p>
+<p>Redis 计算哈希值和索引值的方法如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># 使用字典设置的哈希函数，计算键 key 的哈希值</span><br><span class="line">hash = dict-&gt;type-&gt;hashFunction(key);</span><br><span class="line"></span><br><span class="line"># 使用哈希表的 sizemask 属性和哈希值，计算出索引值</span><br><span class="line"># 根据情况不同， ht[x] 可以是 ht[0] 或者 ht[1]</span><br><span class="line">index = hash &amp; dict-&gt;ht[x].sizemask;</span><br></pre></td></tr></table></figure></p>
+<p>如果我们要将一个键值对 k0 和 v0 添加到字典里面， 那么程序会先使用语句：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hash = dict-&gt;type-&gt;hashFunction(k0);</span><br></pre></td></tr></table></figure></p>
+<p>计算键 k0 的哈希值。假设计算得出的哈希值为 8 ， 那么程序会继续使用语句：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">index = hash &amp; dict-&gt;ht[0].sizemask = 8 &amp; 3 = 0;</span><br></pre></td></tr></table></figure></p>
+<p>计算出键 k0 的索引值 0 ， 这表示包含键值对 k0 和 v0 的节点应该被放置到哈希表数组的索引 0 位置上</p>
+<h3 id="Redis-解决键冲突"><a href="#Redis-解决键冲突" class="headerlink" title="Redis 解决键冲突"></a>Redis 解决键冲突</h3><p>当有两个或以上数量的键被分配到了哈希表数组的同一个索引上面时， 我们称这些键发生了冲突（collision）。</p>
+<p>Redis 的哈希表使用链地址法（separate chaining）来解决键冲突： 每个哈希表节点都有一个 next 指针， 多个哈希表节点可以用 next 指针构成一个单向链表， 被分配到同一个索引上的多个节点可以用这个单向链表连接起来， 这就解决了键冲突的问题。</p>
+<p>举个例子， 假设程序要将键值对 k2 和 v2 添加到图 4-6 所示的哈希表里面， 并且计算得出 k2 的索引值为 2 ， 那么键 k1 和 k2 将产生冲突， 而解决冲突的办法就是使用 next 指针将键 k2 和 k1 所在的节点连接起来。</p>
+<p><img src="/img/2015-09-13_55f512c4d7f99.png" alt></p>
+<h3 id="Redis-rehash"><a href="#Redis-rehash" class="headerlink" title="Redis rehash"></a>Redis rehash</h3><p>为了让哈希表的负载因子（load factor）维持在一个合理的范围之内， 当哈希表保存的键值对数量太多或者太少时， 程序需要对哈希表的大小进行相应的扩展或者收缩。</p>
+<p>扩展和收缩哈希表的工作可以通过执行 rehash （重新散列）操作来完成， Redis 对字典的哈希表执行 rehash 的步骤如下：</p>
+<ul>
+<li>为字典的 ht[1] 哈希表分配空间， 这个哈希表的空间大小取决于要执行的操作， 以及 ht[0] 当前包含的键值对数量 （也即是ht[0].used 属性的值）：<ul>
+<li>如果执行的是扩展操作， 那么 ht[1] 的大小为第一个大于等于 ht[0].used * 2 的 2^n （2 的 n 次方幂）；</li>
+<li>如果执行的是收缩操作， 那么 ht[1] 的大小为第一个大于等于 ht[0].used 的 2^n 。</li>
+</ul>
+</li>
+<li>将保存在 ht[0] 中的所有键值对 rehash 到 ht[1] 上面： rehash 指的是重新计算键的哈希值和索引值， 然后将键值对放置到 ht[1] 哈希表的指定位置上。</li>
+<li>当 ht[0] 包含的所有键值对都迁移到了 ht[1] 之后 （ht[0] 变为空表）， 释放 ht[0] ， 将 ht[1] 设置为 ht[0] ， 并在 ht[1] 新创建一个空白哈希表， 为下一次 rehash 做准备。</li>
+</ul>
+<p>举个例子， 假设程序要对图 4-8 所示字典的 ht[0] 进行扩展操作， 那么程序将执行以下步骤：</p>
+<ul>
+<li>ht[0].used 当前的值为 4 ， 4 * 2 = 8 ， 而 8 （2^3）恰好是第一个大于等于 4 的 2 的 n 次方， 所以程序会将 ht[1] 哈希表的大小设置为 8 。 图 4-9 展示了 ht[1] 在分配空间之后， 字典的样子。</li>
+<li>将 ht[0] 包含的四个键值对都 rehash 到 ht[1] ， 如图 4-10 所示。</li>
+<li>释放 ht[0] ，并将 ht[1] 设置为 ht[0] ，然后为 ht[1] 分配一个空白哈希表，如图 4-11 所示。</li>
+<li>至此， 对哈希表的扩展操作执行完毕， 程序成功将哈希表的大小从原来的 4 改为了现在的 8 。</li>
+</ul>
+<p><img src="/img/2015-09-13_55f5130162f2d.png" alt><br><img src="/img/2015-09-13_55f51302b6785.png" alt><br><img src="/img/2015-09-13_55f51309b4775.png" alt><br><img src="/img/2015-09-13_55f5130b2ec57.png" alt></p>
+<p>当以下条件中的任意一个被满足时， 程序会自动开始对哈希表执行扩展操作：</p>
+<p>服务器目前没有在执行 BGSAVE 命令或者 BGREWRITEAOF 命令， 并且哈希表的负载因子大于等于 1 ；<br>服务器目前正在执行 BGSAVE 命令或者 BGREWRITEAOF 命令， 并且哈希表的负载因子大于等于 5 ；<br>其中哈希表的负载因子可以通过公式：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># 负载因子 = 哈希表已保存节点数量 / 哈希表大小</span><br><span class="line">load_factor = ht[0].used / ht[0].size</span><br></pre></td></tr></table></figure></p>
+<p>根据 BGSAVE 命令或 BGREWRITEAOF 命令是否正在执行， 服务器执行扩展操作所需的负载因子并不相同， 这是因为在执行 BGSAVE 命令或BGREWRITEAOF 命令的过程中， Redis 需要创建当前服务器进程的子进程， 而大多数操作系统都采用写时复制（copy-on-write）技术来优化子进程的使用效率， 所以在子进程存在期间， 服务器会提高执行扩展操作所需的负载因子， 从而尽可能地避免在子进程存在期间进行哈希表扩展操作， 这可以避免不必要的内存写入操作， 最大限度地节约内存。</p>
+<h3 id="Redis-渐进式-rehash"><a href="#Redis-渐进式-rehash" class="headerlink" title="Redis 渐进式 rehash"></a>Redis 渐进式 rehash</h3><p>扩展或收缩哈希表需要将 ht[0] 里面的所有键值对 rehash 到 ht[1] 里面， 但是， 这个 rehash 动作并不是一次性、集中式地完成的， 而是分多次、渐进式地完成的。这样避免了 rehash 对服务器性能造成影响。服务器不是一次性将 ht[0] 里面的所有键值对全部 rehash 到 ht[1] ， 而是分多次、渐进式地将 ht[0] 里面的键值对慢慢地 rehash 到 ht[1] 。</p>
+<p>以下是哈希表渐进式 rehash 的详细步骤：</p>
+<ul>
+<li>为 ht[1] 分配空间， 让字典同时持有 ht[0] 和 ht[1] 两个哈希表。</li>
+<li>在字典中维持一个索引计数器变量 rehashidx ， 并将它的值设置为 0 ， 表示 rehash 工作正式开始。</li>
+<li>在 rehash 进行期间， 每次对字典执行添加、删除、查找或者更新操作时， 程序除了执行指定的操作以外， 还会顺带将 ht[0] 哈希表在 rehashidx 索引上的所有键值对 rehash 到 ht[1] ， 当 rehash 工作完成之后， 程序将 rehashidx 属性的值增一。</li>
+<li>随着字典操作的不断执行， 最终在某个时间点上， ht[0] 的所有键值对都会被 rehash 至 ht[1] ， 这时程序将 rehashidx 属性的值设为 -1 ， 表示 rehash 操作已完成。</li>
+</ul>
+<p>渐进式 rehash 的好处在于它采取分而治之的方式， 将 rehash 键值对所需的计算工作均滩到对字典的每个添加、删除、查找和更新操作上， 从而避免了集中式 rehash 而带来的庞大计算量。</p>
+<p>因为在进行渐进式 rehash 的过程中， 字典会同时使用 ht[0] 和 ht[1] 两个哈希表， 所以在渐进式 rehash 进行期间， 字典的删除（delete）、查找（find）、更新（update）等操作会在两个哈希表上进行： 比如说， 要在字典里面查找一个键的话， 程序会先在 ht[0] 里面进行查找， 如果没找到的话， 就会继续到 ht[1] 里面进行查找， 诸如此类。</p>
+<p>另外， 在渐进式 rehash 执行期间， 新添加到字典的键值对一律会被保存到 ht[1] 里面， 而 ht[0] 则不再进行任何添加操作： 这一措施保证了 ht[0] 包含的键值对数量会只减不增， 并随着 rehash 操作的执行而最终变成空表。</p>
+<h3 id="Redis-字典-API"><a href="#Redis-字典-API" class="headerlink" title="Redis 字典 API"></a>Redis 字典 API</h3><table>
+<thead>
+<tr>
+<th>函数</th>
+<th>作用</th>
+<th>时间复杂度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dictCreate</td>
+<td>创建一个新的字典。</td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td>dictAdd</td>
+<td>将给定的键值对添加到字典里面。</td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td>dictReplace</td>
+<td>将给定的键值对添加到字典里面， 如果键已经存在于字典，那么用新值取代原有的值。</td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td>dictFetchValue</td>
+<td>返回给定键的值。</td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td>dictGetRandomKey</td>
+<td>从字典中随机返回一个键值对。</td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td>dictDelete</td>
+<td>从字典中删除给定键所对应的键值对。</td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td>dictRelease</td>
+<td>释放给定字典，以及字典中包含的所有键值对。</td>
+<td>O(N) ， N 为字典包含的键值对数量。</td>
+</tr>
+</tbody>
+</table>
+
       
     </div>
     
@@ -797,7 +925,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#数据结构与对象"><span class="nav-number">1.</span> <span class="nav-text">数据结构与对象</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#简单动态字符串"><span class="nav-number">1.1.</span> <span class="nav-text">简单动态字符串</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#sds的定义"><span class="nav-number">1.1.1.</span> <span class="nav-text">sds的定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SDS与C字符串的区别"><span class="nav-number">1.1.2.</span> <span class="nav-text">SDS与C字符串的区别</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SDS-API"><span class="nav-number">1.1.3.</span> <span class="nav-text">SDS API</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#链表"><span class="nav-number">1.2.</span> <span class="nav-text">链表</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-链表和链表节点的-API"><span class="nav-number">1.2.1.</span> <span class="nav-text">Redis 链表和链表节点的 API</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#字典"><span class="nav-number">1.3.</span> <span class="nav-text">字典</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#数据结构与对象"><span class="nav-number">1.</span> <span class="nav-text">数据结构与对象</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#简单动态字符串"><span class="nav-number">1.1.</span> <span class="nav-text">简单动态字符串</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#sds的定义"><span class="nav-number">1.1.1.</span> <span class="nav-text">sds的定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SDS与C字符串的区别"><span class="nav-number">1.1.2.</span> <span class="nav-text">SDS与C字符串的区别</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SDS-API"><span class="nav-number">1.1.3.</span> <span class="nav-text">SDS API</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#链表"><span class="nav-number">1.2.</span> <span class="nav-text">链表</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-链表和链表节点的-API"><span class="nav-number">1.2.1.</span> <span class="nav-text">Redis 链表和链表节点的 API</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#字典"><span class="nav-number">1.3.</span> <span class="nav-text">字典</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-字典的实现"><span class="nav-number">1.3.1.</span> <span class="nav-text">Redis 字典的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#哈希表"><span class="nav-number">1.3.1.1.</span> <span class="nav-text">哈希表</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#哈希表节点"><span class="nav-number">1.3.1.2.</span> <span class="nav-text">哈希表节点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#字典-1"><span class="nav-number">1.3.1.3.</span> <span class="nav-text">字典</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-哈希算法"><span class="nav-number">1.3.2.</span> <span class="nav-text">Redis 哈希算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-解决键冲突"><span class="nav-number">1.3.3.</span> <span class="nav-text">Redis 解决键冲突</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-rehash"><span class="nav-number">1.3.4.</span> <span class="nav-text">Redis rehash</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-渐进式-rehash"><span class="nav-number">1.3.5.</span> <span class="nav-text">Redis 渐进式 rehash</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-字典-API"><span class="nav-number">1.3.6.</span> <span class="nav-text">Redis 字典 API</span></a></li></ol></li></ol></li></ol></div>
             
 
           </div>
