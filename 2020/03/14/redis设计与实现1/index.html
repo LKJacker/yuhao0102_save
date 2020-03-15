@@ -109,7 +109,24 @@
 <meta property="og:image" content="http://yoursite.com/img/2015-09-13_55f5147c824b8.png">
 <meta property="og:image" content="http://yoursite.com/img/202003150001.png">
 <meta property="og:image" content="http://yoursite.com/img/202003150002.png">
-<meta property="og:updated_time" content="2020-03-15T10:07:52.996Z">
+<meta property="og:image" content="http://yoursite.com/img/1501656384153255.png">
+<meta property="og:image" content="http://yoursite.com/img/2015-09-13_55f51ab6dbe72.png">
+<meta property="og:image" content="http://yoursite.com/img/2015-09-13_55f51abfde71b.png">
+<meta property="og:image" content="http://yoursite.com/img/2015-09-13_55f51ac25b6a0.png">
+<meta property="og:image" content="http://yoursite.com/img/2015-09-13_55f51ac353bfa.png">
+<meta property="og:image" content="http://yoursite.com/img/2015-09-13_55f51ac466154.png">
+<meta property="og:image" content="http://yoursite.com/img/2015-09-13_55f51acae92db.png">
+<meta property="og:image" content="http://yoursite.com/img/2015-09-13_55f51bfccbd83.png">
+<meta property="og:image" content="http://yoursite.com/img/2015-09-13_55f51bfe2547f.png">
+<meta property="og:image" content="http://yoursite.com/img/">
+<meta property="og:image" content="http://yoursite.com/img/">
+<meta property="og:image" content="http://yoursite.com/img/">
+<meta property="og:image" content="http://yoursite.com/img/">
+<meta property="og:image" content="http://yoursite.com/img/">
+<meta property="og:image" content="http://yoursite.com/img/">
+<meta property="og:image" content="http://yoursite.com/img/">
+<meta property="og:image" content="http://yoursite.com/img/">
+<meta property="og:updated_time" content="2020-03-15T12:52:11.310Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="redis设计与实现笔记1——数据结构与对象">
 <meta name="twitter:description" content="Redis数据库中的每个键值对都是由对象组成的：  数据库键总是一个字符串对象； 数据库键的值可以是字符串对象、列表对象、哈希对象、集合对象、有序集合对象这五种对象中的一种。  数据结构与对象简单动态字符串Redis自己构建了一种名叫“简单动态字符串”（SDS）的类型，当Redis需要的不仅仅是一个字符串字面量，而是一个可以被修改的字符串值时，使用SDS用作默认字符串表示。如果执行了：12redi">
@@ -789,6 +806,299 @@
 <p>通过一个zskiplist结构来持有节点，可以更方便的进行处理。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">typedef struct zskiplist &#123;</span><br><span class="line">    // 表头节点和表尾节点</span><br><span class="line">    struct zskiplistNode *header, *tailer;</span><br><span class="line">    // 表中节点的数量</span><br><span class="line">    unsigned long length;</span><br><span class="line">    // 表中层数最大的节点的层数</span><br><span class="line">    ine level;</span><br><span class="line">&#125; zskiplist;</span><br></pre></td></tr></table></figure></p>
 <p><img src="/img/202003150001.png" alt></p>
 <p><img src="/img/202003150002.png" alt></p>
+<h3 id="Redis-跳跃表-API"><a href="#Redis-跳跃表-API" class="headerlink" title="Redis 跳跃表 API"></a>Redis 跳跃表 API</h3><table>
+<thead>
+<tr>
+<th>函数</th>
+<th>作用</th>
+<th>时间复杂度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>zslCreate</td>
+<td>创建一个新的跳跃表。</td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td>zslFree</td>
+<td>释放给定跳跃表，以及表中包含的所有节点。</td>
+<td>O(N) ， N 为跳跃表的长度。</td>
+</tr>
+<tr>
+<td>zslInsert</td>
+<td>将包含给定成员和分值的新节点添加到跳跃表中。</td>
+<td>平均 O(N) ， N 为跳跃表长度。</td>
+</tr>
+<tr>
+<td>zslDelete</td>
+<td>删除跳跃表中包含给定成员和分值的节点。</td>
+<td>平均 O(N) ， N 为跳跃表长度。</td>
+</tr>
+<tr>
+<td>zslGetRank</td>
+<td>返回包含给定成员和分值的节点在跳跃表中的排位。</td>
+<td>平均 O(N) ， N 为跳跃表长度。</td>
+</tr>
+<tr>
+<td>zslGetElementByRank</td>
+<td>返回跳跃表在给定排位上的节点。</td>
+<td>平均 O(N) ， N 为跳跃表长度。</td>
+</tr>
+<tr>
+<td>zslIsInRange</td>
+<td>给定一个分值范围（range）， 比如 0 到 15 ， 20 到 28，诸如此类， 如果给定的分值范围包含在跳跃表的分值范围之内， 那么返回 1 ，否则返回 0 。</td>
+<td>通过跳跃表的表头节点和表尾节点， 这个检测可以用 O(1) 复杂度完成。</td>
+</tr>
+<tr>
+<td>zslFirstInRange</td>
+<td>给定一个分值范围， 返回跳跃表中第一个符合这个范围的节点。</td>
+<td>平均 O(N) 。 N 为跳跃表长度。</td>
+</tr>
+<tr>
+<td>zslLastInRange</td>
+<td>给定一个分值范围， 返回跳跃表中最后一个符合这个范围的节点。</td>
+<td>平均 O(N) 。 N 为跳跃表长度。</td>
+</tr>
+<tr>
+<td>zslDeleteRangeByScore</td>
+<td>给定一个分值范围， 删除跳跃表中所有在这个范围之内的节点。</td>
+<td>O(N) ， N 为被删除节点数量。</td>
+</tr>
+<tr>
+<td>zslDeleteRangeByRank</td>
+<td>给定一个排位范围， 删除跳跃表中所有在这个范围之内的节点。</td>
+<td>O(N) ， N 为被删除节点数量。</td>
+</tr>
+</tbody>
+</table>
+<h2 id="整数集合"><a href="#整数集合" class="headerlink" title="整数集合"></a>整数集合</h2><p>整数集合（intset）是集合键的底层实现之一： 当一个集合只包含整数值元素， 并且这个集合的元素数量不多时， Redis 就会使用整数集合作为集合键的底层实现。</p>
+<p>举个例子， 如果我们创建一个只包含五个元素的集合键， 并且集合中的所有元素都是整数值， 那么这个集合键的底层实现就会是整数集合：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">redis&gt; SADD numbers 1 3 5 7 9</span><br><span class="line">(integer) 5</span><br><span class="line"></span><br><span class="line">redis&gt; OBJECT ENCODING numbers</span><br><span class="line">&quot;intset&quot;</span><br></pre></td></tr></table></figure></p>
+<h3 id="Redis-整数集合的实现"><a href="#Redis-整数集合的实现" class="headerlink" title="Redis 整数集合的实现"></a>Redis 整数集合的实现</h3><p>整数集合（intset）是 Redis 用于保存整数值的集合抽象数据结构， 它可以保存类型为 int16_t 、 int32_t 或者 int64_t 的整数值， 并且保证集合中不会出现重复元素。每个 intset.h/intset 结构表示一个整数集合：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">typedef struct intset &#123;</span><br><span class="line">    // 编码方式</span><br><span class="line">    uint32_t encoding;</span><br><span class="line"></span><br><span class="line">    // 集合包含的元素数量</span><br><span class="line">    uint32_t length;</span><br><span class="line"></span><br><span class="line">    // 保存元素的数组</span><br><span class="line">    int8_t contents[];</span><br><span class="line">&#125; intset;</span><br></pre></td></tr></table></figure></p>
+<p>解释：</p>
+<ul>
+<li>contents 数组是整数集合的底层实现： 整数集合的每个元素都是 contents 数组的一个数组项（item）， 各个项在数组中按值的大小从小到大有序地排列， 并且数组中不包含任何重复项。</li>
+<li>length 属性记录了整数集合包含的元素数量， 也即是 contents 数组的长度。</li>
+</ul>
+<p>虽然 intset 结构将 contents 属性声明为 int8_t 类型的数组， 但实际上 contents 数组并不保存任何 int8_t 类型的值 —— contents 数组的真正类型取决于 encoding 属性的值：</p>
+<ul>
+<li>encoding = INTSET_ENC_INT16 ， contents 是 int16_t 类型的数组（最小值为 -32,768 ，最大值为 32,767 ）。</li>
+<li>encoding = INTSET_ENC_INT32 ， contents 是 int32_t 类型的数组（最小值为 -2,147,483,648 ，最大值为 2,147,483,647 ）。</li>
+<li>encoding = INTSET_ENC_INT64 ， contents 是 int64_t 类型的数组（最小值为 -9,223,372,036,854,775,808 ，最大值为 9,223,372,036,854,775,807 ）。</li>
+</ul>
+<h3 id="Redis升级"><a href="#Redis升级" class="headerlink" title="Redis升级"></a>Redis升级</h3><p>每当我们要将一个新元素添加到整数集合里面， 并且新元素的类型比整数集合现有所有元素的类型都要长时， 整数集合需要先进行升级（upgrade）， 然后才能将新元素添加到整数集合里面。</p>
+<p>升级整数集合并添加新元素共分为三步进行：</p>
+<ul>
+<li>根据新元素的类型， 扩展整数集合底层数组的空间大小， 并为新元素分配空间。</li>
+<li>将底层数组现有的所有元素都转换成与新元素相同的类型， 并将类型转换后的元素放置到正确的位上， 而且在放置元素的过程中， 需要继续维持底层数组的有序性质不变。</li>
+<li><p>将新元素添加到底层数组里面。</p>
+<p>假设现在有一个 INTSET_ENC_INT16 编码的整数集合， 集合中包含三个 int16_t 类型的元素， 如图 6-3 所示。<br><img src="/img/1501656384153255.png" alt></p>
+</li>
+</ul>
+<p>因为每个元素都占用 16 位空间， 所以整数集合底层数组的大小为 3 * 16 = 48 位， 图 6-4 展示了整数集合的三个元素在这 48 位里的位置。<br><img src="/img/2015-09-13_55f51ab6dbe72.png" alt></p>
+<p>现在， 假设我们要将类型为 int32_t 的整数值 65535 添加到整数集合里面， 因为 65535 的类型 int32_t 比整数集合当前所有元素的类型都要长， 所以在将 65535 添加到整数集合之前， 程序需要先对整数集合进行升级。升级首先要做的是， 根据新类型的长度， 以及集合元素的数量（包括要添加的新元素在内）， 对底层数组进行空间重分配。整数集合目前有三个元素， 再加上新元素 65535 ， 整数集合需要分配四个元素的空间， 因为每个 int32_t 整数值需要占用 32 位空间， 所以在空间重分配之后， 底层数组的大小将是 32 * 4 = 128 位， 如图 6-5 所示。<br><img src="/img/2015-09-13_55f51abfde71b.png" alt></p>
+<p>虽然程序对底层数组进行了空间重分配， 但数组原有的三个元素 1 、 2 、 3 仍然是 int16_t 类型， 这些元素还保存在数组的前 48 位里面， 所以程序接下来要做的就是将这三个元素转换成 int32_t 类型， 并将转换后的元素放置到正确的位上面， 而且在放置元素的过程中， 需要维持底层数组的有序性质不变。</p>
+<p>首先， 因为元素 3 在 1 、 2 、 3 、 65535 四个元素中排名第三， 所以它将被移动到 contents 数组的索引 2 位置上， 也即是数组 64 位至 95 位的空间内， 如图 6-6 所示。<br><img src="/img/2015-09-13_55f51ac25b6a0.png" alt></p>
+<p>接着， 因为元素 2 在 1 、 2 、 3 、 65535 四个元素中排名第二， 所以它将被移动到 contents 数组的索引 1 位置上， 也即是数组的 32位至 63 位的空间内， 如图 6-7 所示。<br><img src="/img/2015-09-13_55f51ac353bfa.png" alt></p>
+<p>之后， 因为元素 1 在 1 、 2 、 3 、 65535 四个元素中排名第一， 所以它将被移动到 contents 数组的索引 0 位置上， 也即是数组的 0 位至 31 位的空间内， 如图 6-8 所示。<br><img src="/img/2015-09-13_55f51ac466154.png" alt></p>
+<p>然后， 因为元素 65535 在 1 、 2 、 3 、 65535 四个元素中排名第四， 所以它将被添加到 contents 数组的索引 3 位置上， 也即是数组的96 位至 127 位的空间内， 如图 6-9 所示。<br><img src="/img/2015-09-13_55f51acae92db.png" alt></p>
+<p>最后， 程序将整数集合 encoding 属性的值从 INTSET_ENC_INT16 改为 INTSET_ENC_INT32 ， 并将 length 属性的值从 3 改为 4 ，因为每次向整数集合添加新元素都可能会引起升级， 而每次升级都需要对底层数组中已有的所有元素进行类型转换， 所以向整数集合添加新元素的时间复杂度为 O(N) 。</p>
+<p>其他类型的升级操作， 比如从 INTSET_ENC_INT16 编码升级为 INTSET_ENC_INT64 编码， 或者从 INTSET_ENC_INT32 编码升级为 INTSET_ENC_INT64 编码， 升级的过程都和上面展示的升级过程类似。</p>
+<p>因为引发升级的新元素的长度总是比整数集合现有所有元素的长度都大， 所以这个新元素的值要么就大于所有现有元素， 要么就小于所有现有元素：</p>
+<ul>
+<li>在新元素小于所有现有元素的情况下， 新元素会被放置在底层数组的最开头（索引 0 ）；</li>
+<li>在新元素大于所有现有元素的情况下， 新元素会被放置在底层数组的最末尾（索引 length-1 ）。</li>
+</ul>
+<h3 id="Redis-升级的好处"><a href="#Redis-升级的好处" class="headerlink" title="Redis 升级的好处"></a>Redis 升级的好处</h3><p>整数集合的升级策略有两个好处， 一个是提升整数集合的灵活性， 另一个是尽可能地节约内存。</p>
+<ul>
+<li>提升灵活性：通常不会将两种不同类型的值放在同一个数据结构里面。但是， 因为整数集合可以通过自动升级底层数组来适应新元素， 所以我们可以随意地将 int16_t 、 int32_t 或者 int64_t 类型的整数添加到集合中， 而不必担心出现类型错误， 这种做法非常灵活。</li>
+<li>节约内存：当然， 要让一个数组可以同时保存 int16_t 、 int32_t 、 int64_t 三种类型的值， 最简单的做法就是直接使用 int64_t 类型的数组作为整数集合的底层实现。但是会出现浪费内存的情况。而整数集合现在的做法既可以让集合能同时保存三种不同类型的值， 又可以确保升级操作只会在有需要的时候进行， 这可以尽量节省内存。</li>
+</ul>
+<h3 id="Redis-降级"><a href="#Redis-降级" class="headerlink" title="Redis 降级"></a>Redis 降级</h3><p>整数集合不支持降级操作， 一旦对数组进行了升级， 编码就会一直保持升级后的状态。</p>
+<p>举个例子， 对于一个整数集合来说， 即使我们将集合里唯一一个真正需要使用 int64_t 类型来保存的元素 4294967295 删除了， 整数集合的编码仍然会维持 INTSET_ENC_INT64 ， 底层数组也仍然会是 int64_t 类型的。</p>
+<h3 id="Redis-整数集合-API"><a href="#Redis-整数集合-API" class="headerlink" title="Redis 整数集合 API"></a>Redis 整数集合 API</h3><table>
+<thead>
+<tr>
+<th>函数</th>
+<th>作用</th>
+<th>时间复杂度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>intsetNew</td>
+<td>创建一个新的整数集合。</td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td>intsetAdd</td>
+<td>将给定元素添加到整数集合里面。</td>
+<td>O(N)</td>
+</tr>
+<tr>
+<td>intsetRemove</td>
+<td>从整数集合中移除给定元素。</td>
+<td>O(N)</td>
+</tr>
+<tr>
+<td>intsetFind</td>
+<td>检查给定值是否存在于集合。</td>
+<td>因为底层数组有序，查找可以通过二分查找法来进行， 所以复杂度为 O(\log N) 。</td>
+</tr>
+<tr>
+<td>intsetRandom</td>
+<td>从整数集合中随机返回一个元素。</td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td>intsetGet</td>
+<td>取出底层数组在给定索引上的元素。</td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td>intsetLen</td>
+<td>返回整数集合包含的元素个数。</td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td>intsetBlobLen</td>
+<td>返回整数集合占用的内存字节数。</td>
+<td>O(1)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="压缩列表"><a href="#压缩列表" class="headerlink" title="压缩列表"></a>压缩列表</h2><p>压缩列表（ziplist）是列表键和哈希键的底层实现之一。当一个列表键只包含少量列表项， 并且每个列表项要么就是小整数值， 要么就是长度比较短的字符串， 那么 Redis 就会使用压缩列表来做列表键的底层实现。</p>
+<p>比如说， 执行以下命令将创建一个压缩列表实现的列表键：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">redis&gt; RPUSH lst 1 3 5 10086 &quot;hello&quot; &quot;world&quot;</span><br><span class="line">(integer) 6</span><br><span class="line"></span><br><span class="line">redis&gt; OBJECT ENCODING lst</span><br><span class="line">&quot;ziplist&quot;</span><br></pre></td></tr></table></figure></p>
+<p>因为列表键里面包含的都是 1 、 3 、 5 、 10086 这样的小整数值， 以及 “hello” 、 “world” 这样的短字符串。</p>
+<p>另外， 当一个哈希键只包含少量键值对， 并且每个键值对的键和值要么就是小整数值， 要么就是长度比较短的字符串， 那么 Redis 就会使用压缩列表来做哈希键的底层实现。</p>
+<p>举个例子， 执行以下命令将创建一个压缩列表实现的哈希键：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">redis&gt; HMSET profile &quot;name&quot; &quot;Jack&quot; &quot;age&quot; 28 &quot;job&quot; &quot;Programmer&quot;</span><br><span class="line">OK</span><br><span class="line"></span><br><span class="line">redis&gt; OBJECT ENCODING profile</span><br><span class="line">&quot;ziplist&quot;</span><br></pre></td></tr></table></figure></p>
+<p>因为哈希键里面包含的所有键和值都是小整数值或者短字符串。</p>
+<h3 id="Redis-压缩列表的构成"><a href="#Redis-压缩列表的构成" class="headerlink" title="Redis 压缩列表的构成"></a>Redis 压缩列表的构成</h3><p>压缩列表是 Redis 为了节约内存而开发的， 由一系列特殊编码的连续内存块组成的顺序型（sequential）数据结构。一个压缩列表可以包含任意多个节点（entry）， 每个节点可以保存一个字节数组或者一个整数值。图 7-1 展示了压缩列表的各个组成部分， 表 7-1 则记录了各个组成部分的类型、长度、以及用途。<br><img src="/img/2015-09-13_55f51bfccbd83.png" alt></p>
+<p> 压缩列表各个组成部分的详细说明</p>
+<p>|属性|类型|长度|用途|<br>|zlbytes|uint32_t|4 字节|记录整个压缩列表占用的内存字节数：在对压缩列表进行内存重分配， 或者计算 zlend 的位置时使用。|<br>|zltail|uint32_t|4 字节|记录压缩列表表尾节点距离压缩列表的起始地址有多少字节： 通过这个偏移量，程序无须遍历整个压缩列表就可以确定表尾节点的地址。|<br>|zllen|uint16_t|2 字节|记录了压缩列表包含的节点数量： 当这个属性的值小于 UINT16_MAX （65535）时， 这个属性的值就是压缩列表包含节点的数量； 当这个值等于 UINT16_MAX 时， 节点的真实数量需要遍历整个压缩列表才能计算得出。|<br>|entryX|列表节点|不定|压缩列表包含的各个节点，节点的长度由节点保存的内容决定。|<br>|zlend|uint8_t|1 字节|特殊值 0xFF （十进制 255 ），用于标记压缩列表的末端。|</p>
+<p>图 7-2 展示了一个压缩列表示例：</p>
+<ul>
+<li>列表 zlbytes 属性的值为 0x50 （十进制 80）， 表示压缩列表的总长为 80 字节。</li>
+<li>列表 zltail 属性的值为 0x3c （十进制 60）， 这表示如果我们有一个指向压缩列表起始地址的指针 p ， 那么只要用指针 p 加上- 偏移量 60 ， 就可以计算出表尾节点 entry3 的地址。</li>
+<li>列表 zllen 属性的值为 0x3 （十进制 3）， 表示压缩列表包含三个节点。</li>
+</ul>
+<p><img src="/img/2015-09-13_55f51bfe2547f.png" alt></p>
+<h3 id="Redis-压缩列表节点的构成"><a href="#Redis-压缩列表节点的构成" class="headerlink" title="Redis 压缩列表节点的构成"></a>Redis 压缩列表节点的构成</h3><p>每个压缩列表节点可以保存一个字节数组或者一个整数值， 其中， 字节数组可以是以下三种长度的其中一种：</p>
+<ul>
+<li>长度小于等于 63 （2^{6}-1）字节的字节数组；</li>
+<li>长度小于等于 16383 （2^{14}-1） 字节的字节数组；</li>
+<li>长度小于等于 4294967295 （2^{32}-1）字节的字节数组；</li>
+</ul>
+<p>而整数值则可以是以下六种长度的其中一种：</p>
+<ul>
+<li>4 位长，介于 0 至 12 之间的无符号整数；</li>
+<li>1 字节长的有符号整数；</li>
+<li>3 字节长的有符号整数；</li>
+<li>int16_t 类型整数；</li>
+<li>int32_t 类型整数；</li>
+<li>int64_t 类型整数。</li>
+</ul>
+<p>每个压缩列表节点都由 previous_entry_length 、 encoding 、 content 三个部分组成。</p>
+<p>previous_entry_length：节点的 previous_entry_length 属性以字节为单位， 记录了压缩列表中前一个节点的长度。<br>previous_entry_length 属性的长度可以是 1 字节或者 5 字节；如果前一节点的长度小于 254 字节， 那么 previous_entry_length 属性的长度为 1 字节；前一节点的长度就保存在这一个字节里面。<br>如果前一节点的长度大于等于 254 字节， 那么 previous_entry_length 属性的长度为 5 字节： 其中属性的第一字节会被设置为 0xFE（十进制值 254）， 而之后的四个字节则用于保存前一节点的长度。</p>
+<p>压缩列表的从表尾向表头遍历操作就是使用这一原理实现的： 只要我们拥有了一个指向某个节点起始地址的指针， 那么通过这个指针以及这个节点的 previous_entry_length 属性， 程序就可以一直向前一个节点回溯， 最终到达压缩列表的表头节点。</p>
+<p>一个从表尾节点向表头节点进行遍历的完整过程：</p>
+<ul>
+<li>首先，我们拥有指向压缩列表表尾节点 entry4 起始地址的指针 p1 （指向表尾节点的指针可以通过指向压缩列表起始地址的指针加上zltail 属性的值得出）；</li>
+<li>通过用 p1 减去 entry4 节点 previous_entry_length 属性的值， 我们得到一个指向 entry4 前一节点 entry3 起始地址的指针 p2 ；</li>
+<li>通过用 p2 减去 entry3 节点 previous_entry_length 属性的值， 我们得到一个指向 entry3 前一节点 entry2 起始地址的指针 p3 ；</li>
+<li>通过用 p3 减去 entry2 节点 previous_entry_length 属性的值， 我们得到一个指向 entry2 前一节点 entry1 起始地址的指针 p4 ， entry1为压缩列表的表头节点；</li>
+<li>最终， 我们从表尾节点向表头节点遍历了整个列表。</li>
+</ul>
+<p>encoding：节点的 encoding 属性记录了节点的 content 属性所保存数据的类型以及长度：</p>
+<ul>
+<li>一字节、两字节或者五字节长， 值的最高位为 00 、 01 或者 10 的是字节数组编码： 这种编码表示节点的 content 属性保存着字节数组， 数组的长度由编码除去最高两位之后的其他位记录；</li>
+<li>一字节长， 值的最高位以 11 开头的是整数编码： 这种编码表示节点的 content 属性保存着整数值， 整数值的类型和长度由编码除去最高两位之后的其他位记录；</li>
+</ul>
+<p>content：节点的 content 属性负责保存节点的值， 节点值可以是一个字节数组或者整数， 值的类型和长度由节点的 encoding 属性决定。</p>
+<h3 id="Redis-连锁更新"><a href="#Redis-连锁更新" class="headerlink" title="Redis 连锁更新"></a>Redis 连锁更新</h3><p>Redis 将在特殊情况下产生的连续多次空间扩展操作称之为“连锁更新”（cascade update）</p>
+<p>除了添加新节点可能会引发连锁更新之外， 删除节点也可能会引发连锁更新。</p>
+<p>如果 e1 至 eN 都是大小介于 250 字节至 253 字节的节点， big 节点的长度大于等于 254 字节（需要 5 字节的 previous_entry_length 来保存）， 而 small 节点的长度小于 254 字节（只需要 1 字节的 previous_entry_length 来保存）， 那么当我们将 small 节点从压缩列表中删除之后， 为了让 e1 的 previous_entry_length 属性可以记录 big 节点的长度， 程序将扩展 e1 的空间， 并由此引发之后的连锁更新。</p>
+<p>因为连锁更新在最坏情况下需要对压缩列表执行 N 次空间重分配操作， 而每次空间重分配的最坏复杂度为 O(N^2) 。</p>
+<p>要注意的是， 尽管连锁更新的复杂度较高， 但它真正造成性能问题的几率是很低的：</p>
+<ul>
+<li>首先， 压缩列表里要恰好有多个连续的、长度介于 250 字节至 253 字节之间的节点， 连锁更新才有可能被引发， 在实际中， 这种情况并不多见；</li>
+<li>其次， 即使出现连锁更新， 但只要被更新的节点数量不多， 就不会对性能造成任何影响： 比如说， 对三五个节点进行连锁更新是绝对不会影响性能的；</li>
+</ul>
+<p>因为以上原因， ziplistPush 等命令的平均复杂度仅为 O(N) ， 在实际中， 我们可以放心地使用这些函数， 而不必担心连锁更新会影响压缩列表的性能。</p>
+<h3 id="Redis-压缩列表-API"><a href="#Redis-压缩列表-API" class="headerlink" title="Redis 压缩列表 API"></a>Redis 压缩列表 API</h3><table>
+<thead>
+<tr>
+<th>函数    作用</th>
+<th>算法复杂度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ziplistNew</td>
+<td>创建一个新的压缩列表。</td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td>ziplistPush</td>
+<td>创建一个包含给定值的新节点， 并将这个新节点添加到压缩列表的表头或者表尾。</td>
+<td>平均 O(N^2) 。</td>
+</tr>
+<tr>
+<td>ziplistInsert</td>
+<td>将包含给定值的新节点插入到给定节点之后。</td>
+<td>平均 O(N^2) 。</td>
+</tr>
+<tr>
+<td>ziplistIndex</td>
+<td>返回压缩列表给定索引上的节点。</td>
+<td>O(N)</td>
+</tr>
+<tr>
+<td>ziplistFind</td>
+<td>在压缩列表中查找并返回包含了给定值的节点。因为节点的值可能是一个字节数组， 所以检查节点值和给定值是否相同的复杂度为 O(N^2) 。</td>
+</tr>
+<tr>
+<td>ziplistNext</td>
+<td>返回给定节点的下一个节点。</td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td>ziplistPrev</td>
+<td>返回给定节点的前一个节点。</td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td>ziplistGet</td>
+<td>获取给定节点所保存的值。</td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td>ziplistDelete</td>
+<td>从压缩列表中删除给定的节点。</td>
+<td>平均 O(N^2) 。</td>
+</tr>
+<tr>
+<td>ziplistDeleteRange</td>
+<td>删除压缩列表在给定索引上的连续多个节点。</td>
+<td>平均 O(N^2) 。</td>
+</tr>
+<tr>
+<td>ziplistBlobLen</td>
+<td>返回压缩列表目前占用的内存字节数。</td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td>ziplistLen</td>
+<td>返回压缩列表目前包含的节点数量。</td>
+<td>节点数量小于 65535 时 O(N) 。</td>
+</tr>
+</tbody>
+</table>
+<p>因为 ziplistPush 、 ziplistInsert 、 ziplistDelete 和 ziplistDeleteRange 四个函数都有可能会引发连锁更新， 所以它们的最坏复杂度都是 O(N^2) 。</p>
+<p><img src="/img/" alt><br><img src="/img/" alt></p>
+<p><img src="/img/" alt><br><img src="/img/" alt></p>
+<p><img src="/img/" alt><br><img src="/img/" alt><br><img src="/img/" alt></p>
+<p><img src="/img/" alt></p>
 
       
     </div>
@@ -972,7 +1282,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#数据结构与对象"><span class="nav-number">1.</span> <span class="nav-text">数据结构与对象</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#简单动态字符串"><span class="nav-number">1.1.</span> <span class="nav-text">简单动态字符串</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#sds的定义"><span class="nav-number">1.1.1.</span> <span class="nav-text">sds的定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SDS与C字符串的区别"><span class="nav-number">1.1.2.</span> <span class="nav-text">SDS与C字符串的区别</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SDS-API"><span class="nav-number">1.1.3.</span> <span class="nav-text">SDS API</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#链表"><span class="nav-number">1.2.</span> <span class="nav-text">链表</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-链表和链表节点的-API"><span class="nav-number">1.2.1.</span> <span class="nav-text">Redis 链表和链表节点的 API</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#字典"><span class="nav-number">1.3.</span> <span class="nav-text">字典</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-字典的实现"><span class="nav-number">1.3.1.</span> <span class="nav-text">Redis 字典的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#哈希表"><span class="nav-number">1.3.1.1.</span> <span class="nav-text">哈希表</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#哈希表节点"><span class="nav-number">1.3.1.2.</span> <span class="nav-text">哈希表节点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#字典-1"><span class="nav-number">1.3.1.3.</span> <span class="nav-text">字典</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-哈希算法"><span class="nav-number">1.3.2.</span> <span class="nav-text">Redis 哈希算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-解决键冲突"><span class="nav-number">1.3.3.</span> <span class="nav-text">Redis 解决键冲突</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-rehash"><span class="nav-number">1.3.4.</span> <span class="nav-text">Redis rehash</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-渐进式-rehash"><span class="nav-number">1.3.5.</span> <span class="nav-text">Redis 渐进式 rehash</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-字典-API"><span class="nav-number">1.3.6.</span> <span class="nav-text">Redis 字典 API</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#跳跃表"><span class="nav-number">1.4.</span> <span class="nav-text">跳跃表</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#跳跃表的实现"><span class="nav-number">1.4.1.</span> <span class="nav-text">跳跃表的实现</span></a></li></ol></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#数据结构与对象"><span class="nav-number">1.</span> <span class="nav-text">数据结构与对象</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#简单动态字符串"><span class="nav-number">1.1.</span> <span class="nav-text">简单动态字符串</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#sds的定义"><span class="nav-number">1.1.1.</span> <span class="nav-text">sds的定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SDS与C字符串的区别"><span class="nav-number">1.1.2.</span> <span class="nav-text">SDS与C字符串的区别</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SDS-API"><span class="nav-number">1.1.3.</span> <span class="nav-text">SDS API</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#链表"><span class="nav-number">1.2.</span> <span class="nav-text">链表</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-链表和链表节点的-API"><span class="nav-number">1.2.1.</span> <span class="nav-text">Redis 链表和链表节点的 API</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#字典"><span class="nav-number">1.3.</span> <span class="nav-text">字典</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-字典的实现"><span class="nav-number">1.3.1.</span> <span class="nav-text">Redis 字典的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#哈希表"><span class="nav-number">1.3.1.1.</span> <span class="nav-text">哈希表</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#哈希表节点"><span class="nav-number">1.3.1.2.</span> <span class="nav-text">哈希表节点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#字典-1"><span class="nav-number">1.3.1.3.</span> <span class="nav-text">字典</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-哈希算法"><span class="nav-number">1.3.2.</span> <span class="nav-text">Redis 哈希算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-解决键冲突"><span class="nav-number">1.3.3.</span> <span class="nav-text">Redis 解决键冲突</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-rehash"><span class="nav-number">1.3.4.</span> <span class="nav-text">Redis rehash</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-渐进式-rehash"><span class="nav-number">1.3.5.</span> <span class="nav-text">Redis 渐进式 rehash</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-字典-API"><span class="nav-number">1.3.6.</span> <span class="nav-text">Redis 字典 API</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#跳跃表"><span class="nav-number">1.4.</span> <span class="nav-text">跳跃表</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#跳跃表的实现"><span class="nav-number">1.4.1.</span> <span class="nav-text">跳跃表的实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-跳跃表-API"><span class="nav-number">1.4.2.</span> <span class="nav-text">Redis 跳跃表 API</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#整数集合"><span class="nav-number">1.5.</span> <span class="nav-text">整数集合</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-整数集合的实现"><span class="nav-number">1.5.1.</span> <span class="nav-text">Redis 整数集合的实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis升级"><span class="nav-number">1.5.2.</span> <span class="nav-text">Redis升级</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-升级的好处"><span class="nav-number">1.5.3.</span> <span class="nav-text">Redis 升级的好处</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-降级"><span class="nav-number">1.5.4.</span> <span class="nav-text">Redis 降级</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-整数集合-API"><span class="nav-number">1.5.5.</span> <span class="nav-text">Redis 整数集合 API</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#压缩列表"><span class="nav-number">1.6.</span> <span class="nav-text">压缩列表</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-压缩列表的构成"><span class="nav-number">1.6.1.</span> <span class="nav-text">Redis 压缩列表的构成</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-压缩列表节点的构成"><span class="nav-number">1.6.2.</span> <span class="nav-text">Redis 压缩列表节点的构成</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-连锁更新"><span class="nav-number">1.6.3.</span> <span class="nav-text">Redis 连锁更新</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-压缩列表-API"><span class="nav-number">1.6.4.</span> <span class="nav-text">Redis 压缩列表 API</span></a></li></ol></li></ol></li></ol></div>
             
 
           </div>
