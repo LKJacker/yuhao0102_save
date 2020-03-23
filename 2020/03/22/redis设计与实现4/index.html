@@ -1,0 +1,1610 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="数据库,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="发布与订阅Redis的发布与订阅功能由PUBLISH、SUBSCRIBE、PSUBSCRIBE等命令组成。通过执行SUBSCRIBE命令，客户端可以订阅一个或多个频道，从而成为这些频道的订阅者（subscriber）：每当有其他客户端使用PUBLISH命令向被订阅的频道发送消息（message）时，频道的所有订阅者都会收到这条消息 客户端还可以通过执行PSUBSCRIBE命令订阅一个或多个模式，从">
+<meta name="keywords" content="数据库">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis设计与实现——独立功能的实现">
+<meta property="og:url" content="http://yoursite.com/2020/03/22/redis设计与实现4/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="发布与订阅Redis的发布与订阅功能由PUBLISH、SUBSCRIBE、PSUBSCRIBE等命令组成。通过执行SUBSCRIBE命令，客户端可以订阅一个或多个频道，从而成为这些频道的订阅者（subscriber）：每当有其他客户端使用PUBLISH命令向被订阅的频道发送消息（message）时，频道的所有订阅者都会收到这条消息 客户端还可以通过执行PSUBSCRIBE命令订阅一个或多个模式，从">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/20191209202036232.png">
+<meta property="og:image" content="http://yoursite.com/img/20191209202320957.png">
+<meta property="og:image" content="http://yoursite.com/img/20191209202524127.png">
+<meta property="og:image" content="http://yoursite.com/img/20191209202621423.png">
+<meta property="og:image" content="http://yoursite.com/img/20191209204318920.png">
+<meta property="og:image" content="http://yoursite.com/img/20191210110237891.png">
+<meta property="og:image" content="http://yoursite.com/img/20191210112228807.png">
+<meta property="og:image" content="http://yoursite.com/img/20191210200326404.png">
+<meta property="og:image" content="http://yoursite.com/img/2019121020033043.png">
+<meta property="og:image" content="http://yoursite.com/img/20191210200507298.png">
+<meta property="og:image" content="http://yoursite.com/img/20191210201037138.png">
+<meta property="og:image" content="http://yoursite.com/img/20191210203529149.png">
+<meta property="og:image" content="http://yoursite.com/img/20191211195135447.png">
+<meta property="og:image" content="http://yoursite.com/img/20191211195144421.png">
+<meta property="og:image" content="http://yoursite.com/img/20191211195151533.png">
+<meta property="og:image" content="http://yoursite.com/img/20191211195205277.png">
+<meta property="og:image" content="http://yoursite.com/img/2019121120094735.png">
+<meta property="og:image" content="http://yoursite.com/img/20191211201300556.png">
+<meta property="og:image" content="http://yoursite.com/img/2019121120141150.png">
+<meta property="og:image" content="http://yoursite.com/img/20191211201900254.png">
+<meta property="og:image" content="http://yoursite.com/img/20191211202040496.png">
+<meta property="og:image" content="http://yoursite.com/img/20191211202110185.png">
+<meta property="og:image" content="http://yoursite.com/img/20191211202122716.png">
+<meta property="og:image" content="http://yoursite.com/img/2019121120260186.png">
+<meta property="og:image" content="http://yoursite.com/img/20191211203353801.png">
+<meta property="og:image" content="http://yoursite.com/img/2019121120464239.png">
+<meta property="og:image" content="http://yoursite.com/img/20191214143233252.png">
+<meta property="og:image" content="http://yoursite.com/img/20191214143331694.png">
+<meta property="og:image" content="http://yoursite.com/img/2019121415081648.png">
+<meta property="og:image" content="http://yoursite.com/img/20191214150925199.png">
+<meta property="og:image" content="http://yoursite.com/img/20191214151613490.png">
+<meta property="og:image" content="http://yoursite.com/img/20191214151613490.png">
+<meta property="og:image" content="http://yoursite.com/img/2019121415213220.png">
+<meta property="og:image" content="http://yoursite.com/img/20191214152136589.png">
+<meta property="og:image" content="http://yoursite.com/img/20191214153831312.png">
+<meta property="og:image" content="http://yoursite.com/img/20191214153833386.png">
+<meta property="og:image" content="http://yoursite.com/img/20191214153840429.png">
+<meta property="og:image" content="http://yoursite.com/img/20191214153848131.png">
+<meta property="og:image" content="http://yoursite.com/img/20191214153852689.png">
+<meta property="og:image" content="http://yoursite.com/img/20191214152654458.png">
+<meta property="og:image" content="http://yoursite.com/img/20191214152724686.png">
+<meta property="og:image" content="http://yoursite.com/img/20191212224114584.png">
+<meta property="og:image" content="http://yoursite.com/img/20191212224752543.png">
+<meta property="og:image" content="http://yoursite.com/img/20191212224855213.png">
+<meta property="og:image" content="http://yoursite.com/img/20191211232027371.png">
+<meta property="og:image" content="http://yoursite.com/img/20191211232033759.png">
+<meta property="og:image" content="http://yoursite.com/img/20191211232308597.png">
+<meta property="og:image" content="http://yoursite.com/img/20191211232359823.png">
+<meta property="og:image" content="http://yoursite.com/img/">
+<meta property="og:image" content="http://yoursite.com/img/">
+<meta property="og:image" content="http://yoursite.com/img/">
+<meta property="og:image" content="http://yoursite.com/img/">
+<meta property="og:image" content="http://yoursite.com/img/">
+<meta property="og:image" content="http://yoursite.com/img/">
+<meta property="og:updated_time" content="2020-03-23T06:41:09.147Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Redis设计与实现——独立功能的实现">
+<meta name="twitter:description" content="发布与订阅Redis的发布与订阅功能由PUBLISH、SUBSCRIBE、PSUBSCRIBE等命令组成。通过执行SUBSCRIBE命令，客户端可以订阅一个或多个频道，从而成为这些频道的订阅者（subscriber）：每当有其他客户端使用PUBLISH命令向被订阅的频道发送消息（message）时，频道的所有订阅者都会收到这条消息 客户端还可以通过执行PSUBSCRIBE命令订阅一个或多个模式，从">
+<meta name="twitter:image" content="http://yoursite.com/img/20191209202036232.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2020/03/22/redis设计与实现4/">
+
+
+
+
+
+  <title>Redis设计与实现——独立功能的实现 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-mybetterhalf">
+          <a href="/mybetterhalf/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            mybetterhalf
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/03/22/redis设计与实现4/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Redis设计与实现——独立功能的实现</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-03-22T22:52:00+08:00">
+                2020-03-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="发布与订阅"><a href="#发布与订阅" class="headerlink" title="发布与订阅"></a>发布与订阅</h2><p>Redis的发布与订阅功能由PUBLISH、SUBSCRIBE、PSUBSCRIBE等命令组成。通过执行SUBSCRIBE命令，客户端可以订阅一个或多个频道，从而成为这些频道的订阅者（subscriber）：<strong>每当有其他客户端使用PUBLISH命令向被订阅的频道发送消息（message）时，频道的所有订阅者都会收到这条消息</strong><br><img src="/img/20191209202036232.png" alt></p>
+<p>客户端还可以通过执行PSUBSCRIBE命令订阅一个或多个模式，从 而成为这些模式的订阅者：每当有其他客户端向某个频道发送消息时，消息不仅会被发送给 这个频道的所有订阅者，它还会被发送给所有与这个频道相匹配的模式的订阅者。</p>
+<p>举个例子，假设如下图所示：<br>客户端A正在订阅频道<code>news.it</code>。<br>客户端B正在订阅频道<code>news.et</code>。<br>客户端C和客户端D正在订阅与”news.it”频道和”news.et”频道相匹配的模式<code>news.[ie]t</code><br><img src="/img/20191209202320957.png" alt></p>
+<p>如果这时某个客户端执行PUBLISH命令，向”news.it”频道发送消息”hello”，那么不仅正在订阅”news.it”频道的客户端A会收到消息，客户端C和客户端D也同样会收到消息，因为这两个客户端正在订阅匹配”news.it”频道 的<code>news.[ie]t</code>模式，如下图所示：<br><code>PUBLISH &quot;news.it&quot; &quot;hello&quot;</code><br><img src="/img/20191209202524127.png" alt></p>
+<p>与此类似，如果某个客户端执行下面的命令，向”news.et”频道发送消息”world”，那么不仅正在订阅”news.et”频道的客户端B会收到消 息，客户端C和客户端D也同样会收到消息，因为这两个客户端正在订阅匹配”news.et”频道 的”news.[ie]t”模式，如下图所示：<br><code>PUBLISH &quot;news.et&quot; &quot;world&quot;</code><br><img src="/img/20191209202621423.png" alt></p>
+<h4 id="频道的订阅与退订"><a href="#频道的订阅与退订" class="headerlink" title="频道的订阅与退订"></a>频道的订阅与退订</h4><p>Redis将所有频道的订阅关系都保存在服务器状态的pubsub_channels字典里面，这个字典的键是某个被订阅的频道，而键的值则是一个链表，链表里面记录了所有订阅这个频道的客户端：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">struct redisServer &#123;</span><br><span class="line">    // ...</span><br><span class="line">    //保存所有频道的订阅关系</span><br><span class="line">    dict *pubsub_channels;</span><br><span class="line">    // ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>通过执行SUBSCRIBE命令，客户端可以订阅一个或多个频道，从而成为这些频道的订阅者（subscriber）：每当有其他客户端使用PUBLISH命令向被订阅的频道发送消息（message）时，频道的所有订阅者都会收到这条消息。根据频道是否已经有其他订阅者，关联操作分为两种情况执行：</p>
+<ul>
+<li>如果频道已经有其他订阅者，那么它在pubsub_channels字典中必然有相应的订阅者链 表，程序唯一要做的就是将客户端添加到订阅者链表的末尾</li>
+<li>如果频道还未有任何订阅者，那么它必然不存在于pubsub_channels字典，程序首先要在 pubsub_channels字典中为频道创建一个键，并将这个键的值设置为空链表，然后再将客户端 添加到链表，成为链表的第一个元素</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">def subscribe(*all_input_channels):</span><br><span class="line">    # 遍历输入的所有频道</span><br><span class="line">    for channel in all_input_channels:</span><br><span class="line">        # 如果channel 不存在于pubsub_channels 字典（没有任何订阅者）</span><br><span class="line">        # 那么在字典中添加channel 键，并设置它的值为空链表</span><br><span class="line">        if channel not in server.pubsub_channels:</span><br><span class="line">            server.pubsub_channels[channel] = []</span><br><span class="line">        # 将订阅者添加到频道所对应的链表的末尾</span><br><span class="line">        server.pubsub_channels[channel].append(client)</span><br></pre></td></tr></table></figure>
+<h4 id="频道的退订（UNSUBSCRIBE命令）"><a href="#频道的退订（UNSUBSCRIBE命令）" class="headerlink" title="频道的退订（UNSUBSCRIBE命令）"></a>频道的退订（UNSUBSCRIBE命令）</h4><p>UNSUBSCRIBE命令的行为和SUBSCRIBE命令的行为正好相反，当一个客户端退订某个或某些频道的时候，服务器将从pubsub_channels中解除客户端与被退订频道之间的关联：</p>
+<ul>
+<li>程序会根据被退订频道的名字，在pubsub_channels字典中找到频道对应的订阅者链表， 然后从订阅者链表中删除退订客户端的信息</li>
+<li>如果删除退订客户端之后，频道的订阅者链表变成了空链表，那么说明这个频道已经没有任何订阅者了，程序将从pubsub_channels字典中删除频道对应的键</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">def unsubscribe(*all_input_channels):</span><br><span class="line">    #遍历要退订的所有频道</span><br><span class="line">    for channel in all_input_channels:</span><br><span class="line">        # 在订阅者链表中删除退订的客户端</span><br><span class="line">        server.pubsub_channels[channel].remove(client)</span><br><span class="line"> </span><br><span class="line">        # 如果频道已经没有任何订阅者了（订阅者链表为空）</span><br><span class="line">        # 那么将频道从字典中删除</span><br><span class="line">        if(len(server.pubsub_channels[channel])==0:</span><br><span class="line">            server.pubsub_channels.remove(channel)</span><br></pre></td></tr></table></figure>
+<h3 id="模式的订阅与退订"><a href="#模式的订阅与退订" class="headerlink" title="模式的订阅与退订"></a>模式的订阅与退订</h3><p>服务器将所有频道的订阅关系都保存在服务器状态的<code>pubsub_channels</code>属性里面，与此类似，服务器也将所有模式的订阅关系都保存在服务器状态的<code>pubsub_patterns</code>属性里面：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">struct redisServer &#123;</span><br><span class="line">    // ...</span><br><span class="line">    //保存所有模式订阅关系</span><br><span class="line">    list *pubsub_patterns;</span><br><span class="line">    // ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>pubsub_patterns属性是一个链表，链表中的每个节点都包含着一个<code>pubsubPattern</code>结构， 这个结构的pattern属性记录了被订阅的模式，而client属性则记录了订阅模式的客户端：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">typedef struct pubsubPattern &#123;</span><br><span class="line">    //订阅模式的客户端</span><br><span class="line">    redisClient *client;</span><br><span class="line"> </span><br><span class="line">    //被订阅的模式</span><br><span class="line">    robj *pattern;</span><br><span class="line">&#125; pubsubPattern;</span><br></pre></td></tr></table></figure></p>
+<p>下图展示了一个pubsub_patterns链表示例，这个链表记录了以下信息：</p>
+<ul>
+<li>客户端client-7正在订阅模式”music.*”</li>
+<li>客户端client-8正在订阅模式”book.*”</li>
+<li>客户端client-9正在订阅模式”news.*”</li>
+</ul>
+<p><img src="/img/20191209204318920.png" alt></p>
+<h4 id="订阅模式"><a href="#订阅模式" class="headerlink" title="订阅模式"></a>订阅模式</h4><p>每当客户端执行PSUBSCRIBE命令订阅某个或某些模式的时候，服务器会对每个被订阅的模式执行以下两个操作：</p>
+<ol>
+<li>新建一个pubsubPattern结构，将结构的pattern属性设置为被订阅的模式，client属性设置为订阅模式的客户端</li>
+<li>将pubsubPattern结构添加到pubsub_patterns链表的表尾</li>
+</ol>
+<p>PSUBSCRIBE命令的实现原理可以用以下伪代码来描述：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">def psubscribe(*all_input_patterns):</span><br><span class="line">    # 遍历输入的所有模式</span><br><span class="line">    for pattern in all_input_patterns:</span><br><span class="line">        # 创建新的pubsubPattern 结构</span><br><span class="line">        # 记录被订阅的模式，以及订阅模式的客户端</span><br><span class="line">        pubsubPattern = create_new_pubsubPattern()</span><br><span class="line">        pubsubPattern.client = client</span><br><span class="line">        pubsubPattern.pattern = pattern</span><br><span class="line">        </span><br><span class="line">        # 将新的pubsubPattern追加到pubsub_patterns 链表末尾</span><br><span class="line">        server.pubsub_patterns.append(pubsubPattern)</span><br></pre></td></tr></table></figure></p>
+<h4 id="模式的退订"><a href="#模式的退订" class="headerlink" title="模式的退订"></a>模式的退订</h4><p>模式的退订命令PUNSUBSCRIBE是PSUBSCRIBE命令的反操作：当一个客户端退订某个或某些模式的时候，服务器将在pubsub_patterns链表中查找并删除那些pattern属性为被退订模式，并且client属性为执行退订命令的客户端的pubsubPattern结构。PUNSUBSCRIBE命令的实现原理可以用以下伪代码来描述：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">def punsubscribe(*all_input_patterns):</span><br><span class="line">        # 遍历所有要退订的模式</span><br><span class="line">        for pattern in all_input_patterns:</span><br><span class="line">            # 遍历pubsub_patterns 链表中的所有pubsubPattern 结构</span><br><span class="line">            for pubsubPattern in server.pubsub_patterns:</span><br><span class="line">                #如果当前客户端和pubsubPattern 记录的客户端相同</span><br><span class="line">                # 并且要退订的模式也和pubsubPattern 记录的模式相同</span><br><span class="line">                if client == pubsubPattern.client and \</span><br><span class="line">                        pattern == pubsubPattern.pattern:</span><br><span class="line">                    # 那么将这个pubsubPattern 从链表中删除</span><br><span class="line">                    server.pubsub_patterns.remove(pubsubPattern)</span><br></pre></td></tr></table></figure></p>
+<h3 id="消息的发送"><a href="#消息的发送" class="headerlink" title="消息的发送"></a>消息的发送</h3><p>命令格式如下：<code>PUBLISH &lt;channel&gt; &lt;message&gt;</code>。当一个客户端执行PUBLISH命令的时候，会将消息message发送给频道channel。服务器执行以下两个动作：</p>
+<ul>
+<li>将消息message发送给channel频道的所有订阅者</li>
+<li>如果有一个或多个模式pattern与频道channel相匹配，那么将消息message发送给 pattern模式的订阅者</li>
+</ul>
+<h4 id="将消息发送给频道订阅者"><a href="#将消息发送给频道订阅者" class="headerlink" title="将消息发送给频道订阅者"></a>将消息发送给频道订阅者</h4><p>PUBLISH命令要做的就是在pubsub_channels字典里找到频道channel的订阅者名单（一个链表），然后将消息发送给名单上的所有客户端。PUBLISH命令将消息发送给频道订阅者的方法可以用以下伪代码来描述：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">def channel_publish(channel, message):</span><br><span class="line">    # 如果channel键不存在于pubsub_channels 字典中</span><br><span class="line">    # 那么说明channel 频道没有任何订阅者</span><br><span class="line">    # 程序不做发送动作，直接返回</span><br><span class="line">    if channel not in server.pubsub_channels:</span><br><span class="line">        return</span><br><span class="line">    # 运行到这里，说明channel 频道至少有一个订阅者</span><br><span class="line">    # 程序遍历channel 频道的订阅者链表</span><br><span class="line">    # 将消息发送给所有订阅者</span><br><span class="line">    for subscriber in server.pubsub_channels[channel]:</span><br><span class="line">        send_message(subscriber, message)</span><br></pre></td></tr></table></figure></p>
+<h4 id="将消息发送给模式订阅者"><a href="#将消息发送给模式订阅者" class="headerlink" title="将消息发送给模式订阅者"></a>将消息发送给模式订阅者</h4><p>为了将消息发送给所有与channel频道相匹配的模式的订阅者，PUBLISH命令要做的就是遍历整个pubsub_patterns链表，查找那些与channel频道相匹配的模式，并将消息发送给订阅了这些模式的客户端。PUBLISH命令将消息发送给模式订阅者的方法可以用以下伪代码来描述：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">def pattern_publish(channel, message):</span><br><span class="line">    # 遍历所有模式订阅消息</span><br><span class="line">    for pubsubPattern in server.pubsub_patterns:</span><br><span class="line">        # 如果频道和模式相匹配</span><br><span class="line">        if match(channel, pubsubPattern.pattern):</span><br><span class="line">            # 那么将消息发送给订阅该模式的客户端</span><br><span class="line">            send_message(pubsubPattern.client, message)</span><br></pre></td></tr></table></figure></p>
+<h3 id="查看订阅信息"><a href="#查看订阅信息" class="headerlink" title="查看订阅信息"></a>查看订阅信息</h3><p>PUBSUB命令是Redis 2.8新增加的命令之一，客户端可以通过这个命令来查看频道或者模式的相关信息，比如某个频道目前有多少订阅者，又或者某个模式目前有多少订阅者。</p>
+<h4 id="PUBSUB-CHANNELS命令"><a href="#PUBSUB-CHANNELS命令" class="headerlink" title="PUBSUB CHANNELS命令"></a>PUBSUB CHANNELS命令</h4><p>功能：用于返回服务器当前被订阅的频道<br>命令格式如下：<code>PUBSUB CHANNELS [pattern]</code></p>
+<ul>
+<li>其中pattern参数是可选的：<ul>
+<li>如果不给定pattern参数，那么命令返回服务器当前被订阅的所有频道</li>
+<li>如果给定pattern参数，那么命令返回服务器当前被订阅的频道中那些与pattern模式相匹配的频道</li>
+</ul>
+</li>
+</ul>
+<p>这个子命令是通过遍历服务器pubsub_channels字典的所有键（每个键都是一个被订阅的频道），然后记录并返回所有符合条件的频道来实现的。这个过程可以用以下伪代码来描述：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">def pubsub_channels(pattern=None):</span><br><span class="line">    # 一个列表，用于记录所有符合条件的频道</span><br><span class="line">    channel_list = []</span><br><span class="line"> </span><br><span class="line">    # 遍历服务器中的所有频道</span><br><span class="line">    # （也即是pubsub_channels 字典的所有键）</span><br><span class="line">    for channel in server.pubsub_channels:</span><br><span class="line">        # 当以下两个条件的任意一个满足时，将频道添加到链表里面：</span><br><span class="line">        #1 ）用户没有指定pattern 参数</span><br><span class="line">        #2 ）用户指定了pattern 参数，并且channel 和pattern 匹配</span><br><span class="line">        if (pattern is None) or match(channel, pattern):</span><br><span class="line">            channel_list.append(channel)</span><br><span class="line">    #向客户端返回频道列表</span><br><span class="line">    return channel_list</span><br></pre></td></tr></table></figure></p>
+<h4 id="PUBSUB-NUMSUB命令"><a href="#PUBSUB-NUMSUB命令" class="headerlink" title="PUBSUB NUMSUB命令"></a>PUBSUB NUMSUB命令</h4><p>功能：接受任意多个频道作为输入参数，并返回这些频道的订阅者数量，命令格式如下：<code>PUBSUB NUMSUB [channel-1 channel-2...channel-n]</code></p>
+<p>这个子命令是通过在pubsub_channels字典中找到频道对应的订阅者链表，然后返回订阅 者链表的长度来实现的（订阅者链表的长度就是频道订阅者的数量）<br>这个过程可以用以下 伪代码来描述：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">def pubsub_numsub(*all_input_channels):</span><br><span class="line">    # 遍历输入的所有频道</span><br><span class="line">    for channel in all_input_channels:</span><br><span class="line">        # 如果pubsub_channels 字典中没有channel 这个键</span><br><span class="line">        # 那么说明channel 频道没有任何订阅者</span><br><span class="line">        if channel not in server.pubsub_channels:</span><br><span class="line">            # 返回频道名</span><br><span class="line">            reply_channel_name(channel)</span><br><span class="line">            # 订阅者数量为0</span><br><span class="line">            reply_subscribe_count(0)</span><br><span class="line">        # 如果pubsub_channels 字典中存在channel 键</span><br><span class="line">        # 那么说明channel 频道至少有一个订阅者</span><br><span class="line">        else:</span><br><span class="line">            # 返回频道名</span><br><span class="line">            reply_channel_name(channel)</span><br><span class="line">            # 订阅者链表的长度就是订阅者数量</span><br><span class="line">            reply_subscribe_count(len(server.pubsub_channels[channel])</span><br></pre></td></tr></table></figure></p>
+<h4 id="PUBSUB-NUMPAT命令"><a href="#PUBSUB-NUMPAT命令" class="headerlink" title="PUBSUB NUMPAT命令"></a>PUBSUB NUMPAT命令</h4><p>功能：用于返回服务器当前被订阅模式的数量。命令格式如下：<code>PUBSUB NUMPAT</code></p>
+<p>这个子命令是通过返回pubsub_patterns链表的长度来实现的，因为这个链表的长度就是 服务器被订阅模式的数量。这个过程可以用以下伪代码来描述：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">def pubsub_numpat():</span><br><span class="line">    # pubsub_patterns 链表的长度就是被订阅模式的数量</span><br><span class="line">    reply_pattern_count(len(server.pubsub_patterns))</span><br></pre></td></tr></table></figure></p>
+<h2 id="事务"><a href="#事务" class="headerlink" title="事务"></a>事务</h2><p>Redis通过<strong>MULTI</strong>、<strong>EXEC</strong>、<strong>WATCH</strong>等命令来实现事务（transaction）功能。事务提供了<strong>一种将多个命令请求打包</strong>，然后<strong>一次性</strong>、<strong>按顺序地执行多个命令</strong>的机制，并且在事务执行期间，<strong>服务器不会中断事务而改去执行其他客户端的命令请求</strong>，它会将事务中的所有命令都执行完毕，然后才去处理其他客户端的命令请求。</p>
+<p>Redis事务<strong>不支持回滚机制</strong>，如果事务中的命令是在执行期间出现了错误，事务的后续命令也会继续执行下去，并且之前执行的命令也不会有任何影响<br>事务因为命令入队出错而被服务器拒绝执行，事务中的所有命令都不会被执行。</p>
+<p>以下是一个事务执行的过程，该事务首先以一个MULTI命令为开始，接着将多个命令放入事务当中，最后由EXEC命令将这个事务提交（commit）给服务器执行：<br><img src="/img/20191210110237891.png" alt></p>
+<h3 id="事务的实现"><a href="#事务的实现" class="headerlink" title="事务的实现"></a>事务的实现</h3><p>三个阶段：</p>
+<ul>
+<li>事务开始</li>
+<li>命令入队</li>
+<li>事务执行</li>
+</ul>
+<h4 id="事务开始（MULTI命令）"><a href="#事务开始（MULTI命令）" class="headerlink" title="事务开始（MULTI命令）"></a>事务开始（MULTI命令）</h4><p>MULTI命令的执行标志着<strong>事务的开始</strong>。MULTI命令可以将执行该命令的客户端<strong>从非事务状态切换至事务状态</strong>，这一切换是通过在客户端状态的flags属性中打开REDIS_MULTI标识来完成的，MULTI命令的实现可以用以 下伪代码来表示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">def MULTI():</span><br><span class="line">    # 打开事务标识</span><br><span class="line">    client.flags |= REDIS_MULTI</span><br><span class="line">    # 返回OK 回复</span><br><span class="line">    replyOK()</span><br></pre></td></tr></table></figure></p>
+<h4 id="命令入队"><a href="#命令入队" class="headerlink" title="命令入队"></a>命令入队</h4><p>当一个客户端处于非事务状态时，这个客户端发送的命令会立即被服务器执行。当一个客户端切换到事务状态之后，服务器会<strong>根据这个客户端发来的不同命令执行不同的操作</strong>：</p>
+<ul>
+<li>如果客户端发送的命令为EXEC、DISCARD、WATCH、MULTI四个命令的其中一个， 那么服务器立即执行这个命令</li>
+<li>与此相反，如果客户端发送的命令是EXEC、DISCARD、WATCH、MULTI四个命令以外的其他命令，那么服务器并不立即执行这个命令，而是将这个命令放入一个事务队列里面，然后向客户端返回QUEUED回复</li>
+</ul>
+<h4 id="事务队列（mstate属性）"><a href="#事务队列（mstate属性）" class="headerlink" title="事务队列（mstate属性）"></a>事务队列（mstate属性）</h4><p>每个Redis客户端都有自己的<strong>事务状态</strong>，这个事务状态保存在客户端状态的mstate属性里面：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">typedef struct redisClient &#123;</span><br><span class="line">    // ...</span><br><span class="line">    //事务状态</span><br><span class="line">    multiState mstate; /* MULTI/EXEC state */</span><br><span class="line">    // ...</span><br><span class="line">&#125; redisClient;</span><br></pre></td></tr></table></figure></p>
+<p>事务状态包含一个事务队列，以及一个已入队命令的计数器（也可以说是事务队列的长度）：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">typedef struct multiState &#123;</span><br><span class="line">    //事务队列，FIFO 顺序</span><br><span class="line">    multiCmd *commands;</span><br><span class="line"> </span><br><span class="line">    //已入队命令计数</span><br><span class="line">    int count;</span><br><span class="line">&#125; multiState;</span><br></pre></td></tr></table></figure></p>
+<p>事务队列是一个multiCmd类型的数组，数组中的每个multiCmd结构都保存了一个已入队命令的相关信息，包括指向命令实现函数的指针、命令的参数，以及参数的数量：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">typedef struct multiCmd &#123;</span><br><span class="line">    //参数</span><br><span class="line">    robj **argv;</span><br><span class="line"> </span><br><span class="line">    //参数数量</span><br><span class="line">    int argc;</span><br><span class="line"> </span><br><span class="line">    //命令指针</span><br><span class="line">    struct redisCommand *cmd;</span><br><span class="line">&#125; multiCmd;</span><br></pre></td></tr></table></figure></p>
+<p>事务队列以先进先出（FIFO）的方式保存入队的命令，较先入队的命令会被放到数组的 前面，而较后入队的命令则会被放到数组的后面</p>
+<h4 id="执行事务"><a href="#执行事务" class="headerlink" title="执行事务"></a>执行事务</h4><p>当一个处于事务状态的客户端向服务器发送EXEC命令时，这个EXEC命令将立即被服务器执行。服务器会遍历这个客户端的事务队列，执行队列中保存的所有命令，最后将执行命令所得的结果全部返回给客户端。EXEC命令的实现原理可以用以下伪代码来描述：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">def EXEC():</span><br><span class="line">    # 创建空白的回复队列</span><br><span class="line">    reply_queue = []</span><br><span class="line"> </span><br><span class="line">    # 遍历事务队列中的每个项</span><br><span class="line">    # 读取命令的参数，参数的个数，以及要执行的命令</span><br><span class="line">    for argv, argc, cmd in client.mstate.commands:</span><br><span class="line">        # 执行命令，并取得命令的返回值</span><br><span class="line">        reply = execute_command(cmd, argv, argc)</span><br><span class="line"> </span><br><span class="line">        # 将返回值追加到回复队列末尾</span><br><span class="line">        reply_queue.append(reply)</span><br><span class="line"> </span><br><span class="line">    # 移除REDIS_MULTI 标识，让客户端回到非事务状态</span><br><span class="line">    client.flags &amp; = ~REDIS_MULTI</span><br><span class="line"> </span><br><span class="line">    # 清空客户端的事务状态，包括：</span><br><span class="line">    #1 ）清零入队命令计数器</span><br><span class="line">    #2 ）释放事务队列</span><br><span class="line">    client.mstate.count = 0</span><br><span class="line">    release_transaction_queue(client.mstate.commands)</span><br><span class="line">    # 将事务的执行结果返回给客户端</span><br><span class="line">    send_reply_to_client(client, reply_queue)</span><br></pre></td></tr></table></figure></p>
+<h3 id="WATCH命令"><a href="#WATCH命令" class="headerlink" title="WATCH命令"></a>WATCH命令</h3><p>WATCH命令是一个<strong>乐观锁</strong>（optimistic locking），它可以<strong>在EXEC命令执行之前，监视任意数量的数据库键</strong>，<strong>并在EXEC命令执行时，检查被监视的键是否至少有一个已经被修改过了</strong>，如果是的话，服务器将拒绝执行事务，并向客户端返回代表事务执行失败的空回复。</p>
+<h4 id="使用WATCH命令监视数据库键（watched-keys字典）"><a href="#使用WATCH命令监视数据库键（watched-keys字典）" class="headerlink" title="使用WATCH命令监视数据库键（watched_keys字典）"></a>使用WATCH命令监视数据库键（watched_keys字典）</h4><p>每个Redis数据库都保存着一个watched_keys字典，字典的键是某个被WATCH命令监视的数据库键，字典的值则是一个链表，链表中记录了所有监视相应数据库键的客户端：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">typedef struct redisDb &#123;</span><br><span class="line">    // ...</span><br><span class="line">    //正在被WATCH 命令监视的键</span><br><span class="line">    dict *watched_keys;</span><br><span class="line">    // ...</span><br><span class="line">&#125; redisDb;</span><br></pre></td></tr></table></figure></p>
+<p>通过watched_keys字典，服务器可以清楚地知道哪些数据库键正在被监视，以及哪些客户端正在监视这些数据库键。</p>
+<h4 id="监视机制的触发（touchWatchKey函数、REDIS-DIRTY-CAS标识）"><a href="#监视机制的触发（touchWatchKey函数、REDIS-DIRTY-CAS标识）" class="headerlink" title="监视机制的触发（touchWatchKey函数、REDIS_DIRTY_CAS标识）"></a>监视机制的触发（touchWatchKey函数、REDIS_DIRTY_CAS标识）</h4><p>所有对数据库进行修改的命令，比如SET、LPUSH、SADD、ZREM、DEL、FLUSHDB等等，在执行之后都会调用<code>multi.c/touchWatchKey</code>函数对watched_keys字典进行检查，查看是否有客户端正在监视刚刚被命令修改过的数据库键，如果有的话，那么touchWatchKey函数会将监视被修改键的客户端的<code>REDIS_DIRTY_CAS</code>标识打开，表示该客户端的事务安全性已经被破坏。</p>
+<p>touchWatchKey函数的定义可以用以下伪代码来描述：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">def touchWatchKey(db, key):</span><br><span class="line">    # 如果键key 存在于数据库的watched_keys 字典中</span><br><span class="line">    # 那么说明至少有一个客户端在监视这个key</span><br><span class="line">    if key in db.watched_keys:</span><br><span class="line">        # 遍历所有监视键key 的客户端</span><br><span class="line">        for client in db.watched_keys[key]:</span><br><span class="line">            # 打开标识</span><br><span class="line">            client.flags |= REDIS_DIRTY_CAS</span><br></pre></td></tr></table></figure></p>
+<p>举个例子，对于下图所示的watched_keys字典来说：</p>
+<ul>
+<li>如果键”name”被修改，那么c1、c2、c10086三个客户端的REDIS_DIRTY_CAS标识将被打开</li>
+<li>如果键”age”被修改，那么c3和c10086两个客户端的REDIS_DIRTY_CAS标识将被打开</li>
+<li>如果键”address”被修改，那么c2和c4两个客户端的REDIS_DIRTY_CAS标识将被打开</li>
+</ul>
+<p><img src="/img/20191210112228807.png" alt></p>
+<h4 id="判断事务是否安全"><a href="#判断事务是否安全" class="headerlink" title="判断事务是否安全"></a>判断事务是否安全</h4><p>当服务器接收到一个客户端发来的EXEC命令时，服务器会根据这个客户端是否打开了REDIS_DIRTY_CAS标识来决定是否执行事务：</p>
+<ul>
+<li>如果REDIS_DIRTY_CAS打开，那么说明客户端所监视的键当中，至少有一个键已经被修改过了，服务器会拒绝执行客户端提交的事务</li>
+<li>如果REDIS_DIRTY_CAS没有打开，那么说明客户端监视的所有键都没有被修改过，事务仍然是安全的，服务器将执行客户端提交的这个事务</li>
+</ul>
+<h3 id="事务的ACID性质"><a href="#事务的ACID性质" class="headerlink" title="事务的ACID性质"></a>事务的ACID性质</h3><p>在传统的关系式数据库中，常常用<strong>ACID</strong>性质来检验事务功能的可靠性和安全性。在Redis中，事务总是具有以下的特性：</p>
+<ul>
+<li>原子性（Atomicity）</li>
+<li>一致性（Consistency）</li>
+<li>隔离性 （Isolation）</li>
+<li>当Redis运行在某种特定的持久化模式下时，事务也具有耐久性 （Durability）</li>
+</ul>
+<h4 id="原子性"><a href="#原子性" class="headerlink" title="原子性"></a>原子性</h4><p>事务具有原子性指的是，<strong>数据库将事务中的多个操作当作一个整体来执行</strong>，服务器要么就执行事务中的所有操作，要么就一个操作也不执行。对于Redis的事务功能来说，事务队列中的命令要么就全部都执行，要么就一个都不执行，因此，Redis的事务是具有原子性的</p>
+<p>Redis不支持事务回滚机制 （rollback），即使事务队列中的某个命令在执行期间出现了错误，整个事务也会继续执行下去，直到将事务队列中的所有命令都执行完毕为止。</p>
+<h4 id="一致性"><a href="#一致性" class="headerlink" title="一致性"></a>一致性</h4><p>事务具有一致性指的是，<strong>如果数据库在执行事务之前是一致的，那么在事务执行之后， 无论事务是否执行成功，数据库也应该仍然是一致的</strong>。“一致”指的是数据符合数据库本身的定义和要求，没有包含非法或者无效的错误数据。</p>
+<p>Redis通过谨慎的错误检测和简单的设计来保证事务的一致性，下面将分别介绍三个Redis事务可能出错的地方，并说明Redis是如何妥善地处理这些错误，从而确保事务的一致性的。</p>
+<ul>
+<li>入队错误：如果一个事务在入队命令的过程中，出现了命令不存在，或者命令的格式不正确等情况，那么Redis将拒绝执行这个事务</li>
+<li>执行错误：事务还可能在执行的过程中发生错误，关于这种错误有两个需要说明的地方：<ul>
+<li>执行过程中发生的错误都是一些不能在入队时被服务器发现的错误，这些错误只会在命令实际执行时被触发</li>
+<li>即使在事务的执行过程中发生了错误，服务器也不会中断事务的执行，它会继续执行事务中余下的其他命令，并且已执行的命令（包括执行命令所产生的结果）不会被出错的命令影响</li>
+</ul>
+</li>
+<li>服务器停机：如果Redis服务器在执行事务的过程中停机，那么根据服务器所使用的持久化模式，可能有以下情况出现：<ul>
+<li>如果服务器运行在无持久化的内存模式下，那么重启之后的数据库将是空白的，因此数据总是一致的</li>
+<li>如果服务器运行在RDB模式下，那么<strong>在事务中途停机不会导致不一致性</strong>，因为服务器可以<strong>根据现有的RDB文件来恢复数据</strong>，从而将数据库还原到一个一致的状态。如果找不到可供使用的RDB文件，那么重启之后的数据库将是空白的，而空白数据库总是一致的</li>
+<li>如果服务器运行在AOF模式下，那么<strong>在事务中途停机不会导致不一致性</strong>，因为服务器可以<strong>根据现有的AOF文件来恢复数据</strong>，从而将数据库还原到一个一致的状态。如果找不到可供使用的AOF文件，那么重启之后的数据库将是空白的，而空白数据库总是一致的</li>
+</ul>
+</li>
+</ul>
+<h4 id="隔离性"><a href="#隔离性" class="headerlink" title="隔离性"></a>隔离性</h4><p>事务的隔离性指的是，即使数据库中有多个事务并发地执行，<strong>各个事务之间也不会互相影响</strong>，并且在并发状态下执行的事务和串行执行的事务产生的结果完全相同。因为Redis使用单线程的方式来执行事务（以及事务队列中的命令），并且服务器保证， 在执行事务期间不会对事务进行中断，因此，Redis的事务总是以串行的方式运行的，并且事务也总是具有隔离性的</p>
+<h4 id="耐久性（持久性）"><a href="#耐久性（持久性）" class="headerlink" title="耐久性（持久性）"></a>耐久性（持久性）</h4><p>事务的耐久性指的是，当一个事务执行完毕时，<strong>执行这个事务所得的结果已经被保存到永久性存储介质（比如硬盘）里面了</strong>，即使服务器在事务执行完毕之后停机，执行事务所得的结果也不会丢失。因为Redis的事务不过是简单地用队列包裹起了一组Redis命令，Redis并没有为事务提供任何额外的持久化功能，所以Redis事务的耐久性由Redis所使用的持久化模式决定。</p>
+<h2 id="Lua脚本"><a href="#Lua脚本" class="headerlink" title="Lua脚本"></a>Lua脚本</h2><h3 id="创建并修改Lua环境"><a href="#创建并修改Lua环境" class="headerlink" title="创建并修改Lua环境"></a>创建并修改Lua环境</h3><p>为了在Redis服务器中执行Lua脚本，Redis在服务器<strong>内嵌了一个Lua环境</strong>，并对这个Lua环境进行了一系列修改，从而确保这个Lua环境可以满足Redis服务器的需要。Redis服务器创建并修改Lua环境的整个过程由以下步骤组成：</p>
+<ul>
+<li>创建一个基础的Lua环境，之后的所有修改都是针对这个环境进行的。服务器首先调用Lua的C API函数lua_open，创建一个新的Lua环境。</li>
+<li>载入多个函数库到Lua环境里面，让Lua脚本可以使用这些函数库来进行数据操作<ul>
+<li>基础库（base library）：这个库包含Lua的核心（core）函数；</li>
+<li>表格库（table library）：这个库包含用于处理表格的通用函数；</li>
+<li>字符串库（string library）：这个库包含用于处理字符串的通用函数；</li>
+<li>数学库（math library）：这个库是标准C语言数学库的接口；</li>
+<li>调试库（debug library）：这个库提供了对程序进行调试所需的函数；</li>
+<li>Lua CJSON库：这个库用于处理UTF-8编码的JSON格式；</li>
+<li>Struct库：这个库用于在Lua值和C结构 （struct）之间进行转换；</li>
+<li>Lua cmsgpack库：这个库用于处理 MessagePack格式的数据；</li>
+</ul>
+</li>
+<li>创建全局表格redis，并将它设为全局变量。这个表格包含了对Redis进行操作的函数，比如用于在Lua脚本中 执行Redis命令的redis.call函数</li>
+<li>使用Redis自制的随机函数来替换Lua原有的带有副作用的随机函数，从而避免在脚本中引入副作用</li>
+<li>创建排序辅助函数<code>__redis__compare_helper</code>，Lua环境使用这个辅佐函数来对一部分Redis命令的结果进行排序，从而消除这些命令的不确定性</li>
+<li>创建redis.pcall函数的错误报告辅助函数，这个函数可以提供更详细的出错信息</li>
+<li>对Lua环境中的全局环境进行保护，防止用户在执行Lua脚本的过程中，将额外的全 局变量添加到Lua环境中</li>
+<li>将完成修改的Lua环境保存到服务器状态的lua属性中，等待执行服务器传来的Lua脚本</li>
+</ul>
+<h3 id="Lua环境协作组件"><a href="#Lua环境协作组件" class="headerlink" title="Lua环境协作组件"></a>Lua环境协作组件</h3><h4 id="伪客户端"><a href="#伪客户端" class="headerlink" title="伪客户端"></a>伪客户端</h4><p>因为执行Redis命令必须有相应的客户端状态，所以为了执行Lua脚本中包含的Redis命令，Redis服务器<strong>专门为Lua环境创建了一个伪客户端</strong>，并由这个伪客户端负责处理Lua脚本中包含的所有Redis命令。Lua脚本使用redis.call函数或者redis.pcall函数执行一个Redis命令，需要完成以下步骤：</p>
+<ol>
+<li>Lua环境将redis.call函数或者redis.pcall函数想要执行的命令传给伪客户端</li>
+<li>伪客户端将脚本想要执行的命令传给命令执行器</li>
+<li>命令执行器执行伪客户端传给它的命令，并将命令的执行结果返回给伪客户端</li>
+<li>伪客户端接收命令执行器返回的命令结果，并将这个命令结果返回给Lua环境</li>
+<li>Lua环境在接收到命令结果之后，将该结果返回给redis.call函数或者redis.pcall函数</li>
+<li>接收到结果的redis.call函数或者redis.pcall函数会将命令结果作为函数返回值返回给 脚本中的调用者</li>
+</ol>
+<h4 id="lua-scripts字典"><a href="#lua-scripts字典" class="headerlink" title="lua_scripts字典"></a>lua_scripts字典</h4><p>除了伪客户端之外，Redis服务器为Lua环境创建的另一个协作组件是lua_scripts字典：字典的键为<strong>某个Lua脚本的SHA1校验和</strong>（checksum），字典的值则是<strong>SHA1校验和对应的Lua脚本</strong><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">struct redisServer &#123;</span><br><span class="line">    // ...</span><br><span class="line">    dict *lua_scripts;</span><br><span class="line">    // ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>Redis服务器会将所有被EVAL命令执行过的Lua脚本，以及所有被SCRIPT LOAD命令载入过的Lua脚本都保存到lua_scripts字典里面，lua_scripts字典有两个作用：一个是实现SCRIPT EXISTS命令，另一个是实现脚本复制功能。</p>
+<h3 id="EVAL命令的实现"><a href="#EVAL命令的实现" class="headerlink" title="EVAL命令的实现"></a>EVAL命令的实现</h3><p>EVAL命令可以直接执行Lua脚本，执行过程可以分为以下三个步骤：</p>
+<ul>
+<li>根据客户端给定的Lua脚本，在Lua环境中定义一个Lua函数</li>
+<li>将客户端给定的脚本保存到lua_scripts字典，等待将来进一步使用</li>
+<li>执行刚刚在Lua环境中定义的函数，以此来执行客户端给定的Lua脚本</li>
+</ul>
+<h4 id="定义脚本函数"><a href="#定义脚本函数" class="headerlink" title="定义脚本函数"></a>定义脚本函数</h4><p>当客户端向服务器发送EVAL命令，要求执行某个Lua脚本的时候，服务器首先要做的就是在Lua环境中，<strong>为传入的脚本定义一个与这个脚本相对应的Lua函数</strong>，其中：</p>
+<ul>
+<li>Lua函数的名字由f_前缀加上脚本的SHA1校验和（四十个字符长）组成</li>
+<li>函数的体（body）则是脚本本身</li>
+</ul>
+<p>使用函数来保存客户端传入的脚本有以下好处：</p>
+<ul>
+<li>执行脚本的步骤非常简单，只要调用与脚本相对应的函数即可</li>
+<li>通过函数的局部性来让Lua环境保持清洁，减少了垃圾回收的工作量，并且避免了使用全局变量</li>
+<li>如果某个脚本所对应的函数在Lua环境中被定义过至少一次，那么只要记得这个脚本的SHA1校验和，服务器就可以在不知道脚本本身的情况下，直接通过调用Lua函数来执行脚本</li>
+</ul>
+<h4 id="将脚本保存到lua-scripts字典"><a href="#将脚本保存到lua-scripts字典" class="headerlink" title="将脚本保存到lua_scripts字典"></a>将脚本保存到lua_scripts字典</h4><p>EVAL命令要做的第二件事是将客户端传入的脚本保存到服务器的lua_scripts字典里面</p>
+<h4 id="执行脚本函数"><a href="#执行脚本函数" class="headerlink" title="执行脚本函数"></a>执行脚本函数</h4><p>在<strong>为脚本定义函数</strong>，并且<strong>将脚本保存到lua_scripts字典</strong>之后，服务器还需要进行一些<strong>设置钩子</strong>、<strong>传入参数</strong>之类的准备动作，才能正式开始执行脚本。整个准备和执行脚本的过程如下：</p>
+<ul>
+<li>将EVAL命令中传入的键名（key name）参数和脚本参数分别保存到KEYS数组和ARGV数组，然后将这两个数组作为全局变量传入到Lua环境里面</li>
+<li>为Lua环境装载超时处理钩子（hook），这个钩子可以在脚本出现超时运行情况时， 让客户端通过SCRIPT KILL命令停止脚本，或者通过SHUTDOWN命令直接关闭服务器</li>
+<li>执行脚本函数</li>
+<li>移除之前装载的超时钩子</li>
+<li>将执行脚本函数所得的结果保存到客户端状态的输出缓冲区里面，等待服务器将结果返回给客户端</li>
+<li>对Lua环境执行垃圾回收操作</li>
+</ul>
+<h3 id="EVALSHA命令"><a href="#EVALSHA命令" class="headerlink" title="EVALSHA命令"></a>EVALSHA命令</h3><p>使用EVALSHA命令则可以根据脚本的SHA1校验和来对脚本进行求值，但这个命令要求校验和对应的脚本必须至少被EVAL命令执行过一次，或者这个校验和对应的脚本曾经被SCRIPT LOAD命令载入过。</p>
+<p>EVALSHA命令的实现：每个被EVAL命令成功执行过的Lua脚本，在Lua环境里面都有一个与这个脚本相对应的Lua函数，函数的名字由f_前缀加上40个字符长的 SHA1校验和组成，例如f_5332031c6b470dc5a0dd9b4bf2030dea6d65de91。<strong>只要脚本对应的函数曾经在Lua环境里面定义过，那么即使不知道脚本的内容本身，客户端也可以根据脚本的SHA1校验和来调用脚本对应的函数</strong>，从而达到执行脚本的目的，这就是EVALSHA命令的实现原理。可以用伪代码来描述这一原理：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">def EVALSHA(sha1):</span><br><span class="line">    # 拼接出函数的名字</span><br><span class="line">    # 例如：f_5332031c6b470dc5a0dd9b4bf2030dea6d65de91</span><br><span class="line">    func_name = &quot;f_&quot; + sha1</span><br><span class="line"> </span><br><span class="line">    # 查看这个函数在Lua 环境中是否存在</span><br><span class="line">    if function_exists_in_lua_env(func_name):</span><br><span class="line">        # 如果函数存在，那么执行它</span><br><span class="line">        execute_lua_function(func_name)</span><br><span class="line">    else:</span><br><span class="line">        # 如果函数不存在，那么返回一个错误</span><br><span class="line">        send_script_error(&quot;SCRIPT NOT FOUND&quot;)</span><br></pre></td></tr></table></figure></p>
+<h3 id="脚本管理命令"><a href="#脚本管理命令" class="headerlink" title="脚本管理命令"></a>脚本管理命令</h3><h4 id="SCRIPT-FLUSH"><a href="#SCRIPT-FLUSH" class="headerlink" title="SCRIPT FLUSH"></a>SCRIPT FLUSH</h4><p>SCRIPT FLUSH命令用于清除服务器中所有和Lua脚本有关的信息，这个命令会释放并重建lua_scripts字典，关闭现有的Lua环境并重新创建一个新的Lua环境。以下为SCRIPT FLUSH命令的实现伪代码：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">def SCRIPT_FLUSH():</span><br><span class="line">    # 释放脚本字典</span><br><span class="line">    dictRelease(server.lua_scripts)</span><br><span class="line">    # 重建脚本字典</span><br><span class="line">    server.lua_scripts = dictCreate(...)</span><br><span class="line">    # 关闭Lua 环境</span><br><span class="line">    lua_close(server.lua)</span><br><span class="line">    # 初始化一个新的Lua 环境</span><br><span class="line">    server.lua = init_lua_env()</span><br></pre></td></tr></table></figure></p>
+<h4 id="SCRIPT-EXISTS"><a href="#SCRIPT-EXISTS" class="headerlink" title="SCRIPT EXISTS"></a>SCRIPT EXISTS</h4><p>SCRIPT EXISTS命令根据输入的SHA1校验和，检查校验和对应的脚本是否存在于服务器中，SCRIPT EXISTS命令是通过检查给定的校验和是否存在于lua_scripts字典来实现的。以下是该命令的实现伪代码：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">def SCRIPT_EXISTS(*sha1_list):</span><br><span class="line">    # 结果列表</span><br><span class="line">    result_list = []</span><br><span class="line">    #遍历输入的所有SHA1 校验和</span><br><span class="line">    for sha1 in sha1_list:</span><br><span class="line">        # 检查校验和是否为lua_scripts 字典的键</span><br><span class="line">        # 如果是的话，那么表示校验和对应的脚本存在</span><br><span class="line">        # 否则的话，脚本就不存在</span><br><span class="line">        if sha1 in server.lua_scripts:</span><br><span class="line">            # 存在用1 表示</span><br><span class="line">            result_list.append(1)</span><br><span class="line">        else:</span><br><span class="line">            # 不存在用0 表示</span><br><span class="line">            result_list.append(0)</span><br><span class="line">    # 向客户端返回结果列表</span><br><span class="line">    send_list_reply(result_list)</span><br></pre></td></tr></table></figure></p>
+<h4 id="SCRIPT-LOAD"><a href="#SCRIPT-LOAD" class="headerlink" title="SCRIPT LOAD"></a>SCRIPT LOAD</h4><p>SCRIPT LOAD命令只加载/保存脚本，但是不执行脚本。命令首先在Lua环境中为脚本创建相对应的函数，然后再将脚本对应的键值对保存到lua_scripts字典里面。举个例子，如果我们执行以下命令：<br><img src="/img/20191210200326404.png" alt></p>
+<p>那么服务器将在Lua环境中创建以下函数：<br><img src="/img/2019121020033043.png" alt></p>
+<p>并将键为”2f31ba2bb6d6a0f42cc159d2e2dad55440778de3”，值为”return’hi’”的键值对添加 到服务器的lua_scripts字典里面。</p>
+<h4 id="SCRIPT-KILL"><a href="#SCRIPT-KILL" class="headerlink" title="SCRIPT KILL"></a>SCRIPT KILL</h4><p>如果服务器设置了<code>lua-time-limit</code>配置选项，那么在每次执行Lua脚本之前，服务器都会<strong>在Lua环境里面设置一个超时处理钩子</strong>（hook）。超时处理钩子在脚本运行期间，会定期检查脚本已经运行了多长时间，一旦钩子发现脚本的运行时间已经<strong>超过了lua-time-limit选项设置的时长</strong>，钩子将定期在脚本运行的间隙中， 查看是否有SCRIPT KILL命令或者SHUTDOWN命令到达服务器。<br>下图展示了带有超时处理钩子的脚本的运行过程：<br><img src="/img/20191210200507298.png" alt></p>
+<p>如果超时运行的脚本未执行过任何写入操作，那么客户端可以通过SCRIPT KILL命令来指示服务器停止执行这个脚本，并向执行该脚本的客户端发送一个错误回复。处理完SCRIPT KILL命令之后，服务器可以继续运行。如果脚本已经执行过写入操作，那么客户端只能用<code>SHUTDOWN nosave</code>命令来停止服务器，从而防止不合法的数据被写入数据库中。</p>
+<h3 id="脚本的复制"><a href="#脚本的复制" class="headerlink" title="脚本的复制"></a>脚本的复制</h3><p>与其他普通Redis命令一样，当服务器运行在复制模式之下时，具有写性质的脚本命令也会被复制到从服务器，这些命令包括EVAL命令、EVALSHA命令、SCRIPT FLUSH命令，以 及SCRIPT LOAD命令。</p>
+<h4 id="复制EVAL命令、SCRIPT-FLUSH命令、SCRIPT-LOAD命令"><a href="#复制EVAL命令、SCRIPT-FLUSH命令、SCRIPT-LOAD命令" class="headerlink" title="复制EVAL命令、SCRIPT FLUSH命令、SCRIPT LOAD命令"></a>复制EVAL命令、SCRIPT FLUSH命令、SCRIPT LOAD命令</h4><p>Redis复制EVAL、SCRIPT FLUSH、SCRIPT LOAD三个命令的方法和复制其他普通Redis 命令的方法一样，当主服务器执行完以上三个命令的其中一个时，主服务器会直接将被执行的命令<strong>传播</strong>（propagate）给所有从服务器，如下图所示：<br><img src="/img/20191210201037138.png" alt></p>
+<h4 id="复制EVALSHA命令"><a href="#复制EVALSHA命令" class="headerlink" title="复制EVALSHA命令"></a>复制EVALSHA命令</h4><p>EVALSHA命令是所有与Lua脚本有关的命令中，复制操作最复杂的一个。对于一个在主服务器被成功执行的EVALSHA命令来说，相同的EVALSHA命令在从服务器执行时却可能会出现脚本未找到（not found）错误。</p>
+<p>Redis要求主服务器在传播EVALSHA命令的时候，<strong>必须确保EVALSHA命令要执行的脚本已经被所有从服务器载入过</strong>，如果不能确保这一点的话， 主服务器会<strong>将EVALSHA命令转换成一个等价的EVAL命令，然后通过传播EVAL命令来代替EVALSHA命令</strong>。传播EVALSHA命令，或者将EVALSHA命令转换成EVAL命令，都需要用到服务器状态的lua_scripts字典和repl_scriptcache_dict字典，接下来的小节将分别介绍这两个字典的作用， 并最终说明Redis复制EVALSHA命令的方法。</p>
+<p>①判断传播EVALSHA命令是否安全的方法（repl_scriptcache_dict字典）：主服务器使用服务器状态的<code>repl_scriptcache_dict</code>字典记录自己已经将哪些脚本传播给了所有从服务器：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">struct redisServer &#123;</span><br><span class="line">    // ...</span><br><span class="line">    dict *repl_scriptcache_dict;</span><br><span class="line">    // ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>字典的键是一个个Lua脚本的SHA1校验和，字典的值则全部都是 NULL。当一个校验和出现在repl_scriptcache_dict字典时，说明<strong>这个校验和对应的Lua脚本已经传播给了所有从服务器</strong>，主服务器可以直接向从服务器传播包含这个SHA1校验和的 EVALSHA命令，而不必担心从服务器会出现脚本未找到错误。</p>
+<p>②清空repl_scriptcache_dict字典：每当主服务器添加一个新的从服务器时，主服务器都会清空自己的repl_scriptcache_dict字典，这是因为：<strong>随着新从服务器的出现，repl_scriptcache_dict字典里面记录的脚本已经不再被所有从服务器载入过</strong>，所以要强制自己重新向所有从服务器传播脚本，从而确保新的从服务器不会出现脚本未找到错误。</p>
+<p>③EVALSHA命令转换成EVAL命令的方法：通过使用EVALSHA命令指定的SHA1校验和，以及lua_scripts字典保存的Lua脚本，服务器总可以将一个EVALSHA命令：<code>EVALSHA &lt;sha1&gt; &lt;numkeys&gt; [key ...] [arg ...]</code>转换成一个等价的EVAL命令：<code>EVAL &lt;script&gt; &lt;numkeys&gt; [key ...] [arg ...]</code>。</p>
+<p>具体的转换方法如下：</p>
+<ul>
+<li>根据SHA1校验和sha1，在lua_scripts字典中查找sha1对应的Lua脚本script</li>
+<li>将原来的EVALSHA命令请求改写成EVAL命令请求，并且将校验和sha1改成脚本script，至于numkeys、key、arg等参数则保持不变</li>
+<li>如果一个SHA1值所对应的Lua脚本没有被所有从服务器载入过，那么主服务器可以将EVALSHA命令转换成等价的EVAL命令，然后通过传播等价的EVAL命令来代替原本想要传播的EVALSHA命令，以此来产生相同的脚本执行效果，并确保所有从服务器都不会出现脚本未找到错误</li>
+</ul>
+<p>④传播EVALSHA命令的方法：当主服务器成功在本机执行完一个EVALSHA命令之后，它将<strong>根据EVALSHA命令指定的SHA1校验和是否存在于repl_scriptcache_dict字典来决定是向从服务器传播EVALSHA命令还是EVAL命令</strong>：</p>
+<ul>
+<li>如果EVALSHA命令指定的SHA1校验和存在于repl_scriptcache_dict字典，那么主服务器直接向从服务器传播EVALSHA命令</li>
+<li>如果EVALSHA命令指定的SHA1校验和不存在于repl_scriptcache_dict字典，那么主服务器会将EVALSHA命令转换成等价的EVAL命令，然后传播这个等价的EVAL命令，并将 EVALSHA命令指定的SHA1校验和添加到repl_scriptcache_dict字典里面</li>
+</ul>
+<p><img src="/img/20191210203529149.png" alt></p>
+<h2 id="SORT"><a href="#SORT" class="headerlink" title="SORT"></a>SORT</h2><p>Redis的SORT命令可以对列表键、集合键或者有序集合键的值进行排序。</p>
+<h3 id="SORT-命令"><a href="#SORT-命令" class="headerlink" title="SORT 命令"></a>SORT <key>命令</key></h3><p>对键key进行排序，默认不带任何选项的SORT：<strong>只可以对包含数字键的键key进行排序</strong>，且<strong>默认是升序排序</strong>。例如下面对一个包含3个数字的列表进行排序：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">redis&gt; RPUSH numbers 3 1 2</span><br><span class="line">(integer) 3</span><br><span class="line"></span><br><span class="line">redis&gt; SORT numbers</span><br><span class="line">1) &quot;1&quot;</span><br><span class="line">2) &quot;2&quot;</span><br><span class="line">3) &quot;3&quot;</span><br></pre></td></tr></table></figure></p>
+<p>SORT命令的实现（struct  redisSortObject）</p>
+<ul>
+<li>SORT命令为每个被排序的键都创建一个与键长度相同的数组，数组的每个项都是一个redisSortObject结构；<br><img src="/img/20191211195135447.png" alt></li>
+<li>遍历数组，将各个数组项的obj指针分别指向numbers列表的各个项，构成obj指针和列表项之间的一对一关系，如下图所示<br><img src="/img/20191211195144421.png" alt></li>
+<li>遍历数组，将各个obj指针所指向的列表项转换成一个double类型的浮点数，并将这 个浮点数保存在相应数组项的u.score属性里面，如下图所示<br><img src="/img/20191211195151533.png" alt></li>
+<li>根据数组项u.score属性的值，对数组进行数字值排序，排序后的数组项按u.score属 性的值从小到大排列，如下图所示<br><img src="/img/20191211195205277.png" alt></li>
+<li>遍历数组，将各个数组项的obj指针所指向的列表项作为排序结果返回给客户端，程 序首先访问数组的索引0，返回u.score值为1.0的列表项”1”；然后访问数组的索引1，返回 u.score值为2.0的列表项”2”；最后访问数组的索引2，返回u.score值为3.0的列表项”3”</li>
+</ul>
+<p>以下是redisSortObject结构的完整定义：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">typedef struct _redisSortObject &#123;</span><br><span class="line">    //被排序键的值</span><br><span class="line">    robj *obj;</span><br><span class="line"> </span><br><span class="line">    //权重</span><br><span class="line">    union &#123;</span><br><span class="line">        //排序数字值时使用</span><br><span class="line">        double score;</span><br><span class="line">        //排序带有BY 选项的字符串值时使用</span><br><span class="line">        robj *cmpobj;</span><br><span class="line">    &#125; u;</span><br><span class="line">&#125; redisSortObject;</span><br></pre></td></tr></table></figure></p>
+<h3 id="ALPHA选项"><a href="#ALPHA选项" class="headerlink" title="ALPHA选项"></a>ALPHA选项</h3><p>命令格式：<code>SORT &lt;key&gt; ALPHA</code></p>
+<p>功能：默认的SORT只可以对包含数字的键进行排序，使用ALPHA选项可以对包含字符串值的键进行排序。例如下面对一个包含3个字符串值的集合键进行排序：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">redis&gt; SADD fruits apple banana cherry</span><br><span class="line">(interger) 3</span><br><span class="line"></span><br><span class="line"># 元素在集合中是乱序排放的</span><br><span class="line">redis&gt; SMEMBERS fruits</span><br><span class="line">1) &quot;apple&quot;</span><br><span class="line">2) &quot;cherry&quot;</span><br><span class="line">3) &quot;banana&quot;</span><br><span class="line"></span><br><span class="line">redis&gt; SORT fruits ALPHA</span><br><span class="line">1) &quot;apple&quot;</span><br><span class="line">2) &quot;banana&quot;</span><br><span class="line">3) &quot;cherry&quot;</span><br></pre></td></tr></table></figure></p>
+<p>过程:</p>
+<ul>
+<li>创建一个redisSortObject结构数组，数组的长度等于fruits集合的大小；</li>
+<li>遍历数组，将各个数组项的obj指针分别指向fruits集合的各个元素；</li>
+<li>根据obj指针所指向的集合元素，对数组进行字符串排序，排序后的数组项按集合元素的字符串值从小到大排列；</li>
+<li>遍历数组，依次将数组项的obj指针所指向的元素返回给客户端</li>
+</ul>
+<h3 id="ASC选项与DESC选项"><a href="#ASC选项与DESC选项" class="headerlink" title="ASC选项与DESC选项"></a>ASC选项与DESC选项</h3><p>命令格式：<code>SORT &lt;key&gt; ASC</code>、<code>SORT &lt;key&gt; DESC</code>。</p>
+<p>功能：默认情况下SORT对排序结果进行升序结果（也就是ASC选项），但是使用DESC选项可以对排序的结果进行降序排序</p>
+<h3 id="BY选项"><a href="#BY选项" class="headerlink" title="BY选项"></a>BY选项</h3><p>命令格式：<code>SORT &lt;key&gt; BY &lt;by-pattern&gt;</code></p>
+<p>功能：默认情况下SORT是根据键的元素的值作为权重来进行排序的，但是通过BY选项，<strong>SORT命令可以指定某些字符串键</strong>，或者<strong>某个哈希键所包含的某些域</strong>来作为元素的权重对一个键进行排序。例如，根据其他键的值作为权重来对fruits进行排序：<br><img src="/img/2019121120094735.png" alt></p>
+<p>执行上面SORT fruits BY*-price命令的详细步骤如下：</p>
+<ul>
+<li>创建一个redisSortObject结构数组，数组的长度等于fruits集合的大小</li>
+<li>遍历数组，将各个数组项的obj指针分别指向fruits集合的各个元素，如下图所示<br><img src="/img/20191211201300556.png" alt></li>
+<li>遍历数组，根据各个数组项的obj指针所指向的集合元素，以及BY选项所给定的模式 *-price，查找相应的权重键：<ul>
+<li>对于”apple”元素，查找程序返回权重键”apple-price”</li>
+<li>对于”banana”元素，查找程序返回权重键”banana-price”</li>
+<li>对于”cherry”元素，查找程序返回权重键”cherry-price”</li>
+</ul>
+</li>
+<li>将各个权重键的值转换成一个double类型的浮点数，然后保存在相应数组项的u.score 属性里面，如下图所示<ul>
+<li>“apple”元素的权重键”apple-price”的值转换之后为8.0</li>
+<li>“banana”元素的权重键”banana-price”的值转换之后为5.5</li>
+<li>“cherry”元素的权重键”cherry-price”的值转换之后为7.0</li>
+</ul>
+</li>
+<li>以数组项u.score属性的值为权重，对数组进行排序，得到一个按u.score属性的值从 小到大排序的数组，如下图所示<ul>
+<li>权重为5.5的”banana”元素位于数组的索引0位置上</li>
+<li>权重为7.0的”cherry”元素位于数组的索引1位置上</li>
+<li>权重为8.0的”apple”元素位于数组的索引2位置上<br><img src="/img/2019121120141150.png" alt></li>
+</ul>
+</li>
+<li>遍历数组，依次将数组项的obj指针所指向的集合元素返回给客户端</li>
+</ul>
+<h3 id="ALPHA选项与BY选项的配合使用"><a href="#ALPHA选项与BY选项的配合使用" class="headerlink" title="ALPHA选项与BY选项的配合使用"></a>ALPHA选项与BY选项的配合使用</h3><p><code>SORT &lt;key&gt; BY &lt;by-pattern&gt; ALPHA</code>。在上面，我们介绍了BY选项可以根据其他权重键的值进行排序，但是其他权重键的值也是数字类型，如果其他权重键的值是字符串类型，那么就可以配合ALPHA选项来实现。<br><img src="/img/20191211201900254.png" alt></p>
+<ul>
+<li>创建一个redisSortObject结构数组，数组的长度等于fruits集合的大小</li>
+<li>遍历数组，将各个数组项的obj指针分别指向fruits集合的各个元素，如下图所示<br><img src="/img/20191211202040496.png" alt></li>
+<li>遍历数组，根据各个数组项的obj指针所指向的集合元素，以及BY选项所给定的模式 *-id，查找相应的权重键：<ul>
+<li>对于”apple”元素，查找程序返回权重键”apple-id”</li>
+<li>对于”banana”元素，查找程序返回权重键”banana-id”</li>
+<li>对于”cherry “元素，查找程序返回权重键”cherry-id”</li>
+</ul>
+</li>
+<li>将各个数组项的u.cmpobj指针分别指向相应的权重键（一个字符串对象），如下图所示<br><img src="/img/20191211202110185.png" alt></li>
+<li>以各个数组项的权重键的值为权重，对数组执行字符串排序，结果如下图所示<ul>
+<li>权重为”FRUIT-13”的”cherry”元素位于数组的索引0位置上</li>
+<li>权重为”FRUIT-25”的”apple”元素位于数组的索引1位置上</li>
+<li>权重为”FRUIT-79”的”banana”元素位于数组的索引2位置上<br><img src="/img/20191211202122716.png" alt></li>
+</ul>
+</li>
+<li>遍历数组，依次将数组项的obj指针所指向的集合元素返回给客户端</li>
+</ul>
+<h3 id="LIMIT选项"><a href="#LIMIT选项" class="headerlink" title="LIMIT选项"></a>LIMIT选项</h3><p>命令格式：<code>SORT &lt;key&gt; LIMIT &lt;offset&gt; &lt;count&gt;</code>。功能：使用LIMIT选项可以限制SORT命令返回的结果数量。从offset索引（索引从0开始）处开始返回count条结果。<br><img src="/img/2019121120260186.png" alt></p>
+<h3 id="GET选项"><a href="#GET选项" class="headerlink" title="GET选项"></a>GET选项</h3><p>命令格式：<code>SORT &lt;key&gt; GET &lt;by-pattern&gt;</code>。功能：默认情况下SORT命令返回的是自己排序的结果，使用GET选项可以根据自己键的值来对别对的键进行排序。GET选项支持1个或多个，下面或依次介绍<br><img src="/img/20191211203353801.png" alt></p>
+<h3 id="STORE选项"><a href="#STORE选项" class="headerlink" title="STORE选项"></a>STORE选项</h3><p>命令格式：<code>SORT &lt;key&gt; STORE &lt;new_key&gt;</code>。功能：使用STORE选项，可以将排序的结果保存到一个新键中。<br><img src="/img/2019121120464239.png" alt></p>
+<h3 id="SORT命令选项的执行顺序"><a href="#SORT命令选项的执行顺序" class="headerlink" title="SORT命令选项的执行顺序"></a>SORT命令选项的执行顺序</h3><p>如果按照选项来划分的话，一个SORT命令的执行过程可以分为以下几步：</p>
+<ul>
+<li>排序：在这一步，命令会使用ALPHA、ASC或DESC、BY这几个选项，对输入键进 行排序，并得到一个排序结果集</li>
+<li>限制排序结果集的长度：在这一步，命令会使用LIMIT选项，对排序结果集的长度进 行限制，只有LIMIT选项指定的那部分元素会被保留在排序结果集中</li>
+<li>获取外部键：在这一步，命令会使用GET选项，根据排序结果集中的元素，以及 GET选项指定的模式，查找并获取指定键的值，并用这些值来作为新的排序结果集</li>
+<li>保存排序结果集：在这一步，命令会使用STORE选项，将排序结果集保存到指定的 键上面去</li>
+<li>向客户端返回排序结果集：在最后这一步，命令遍历排序结果集，并依次向客户端 返回排序结果集中的元素</li>
+</ul>
+<h2 id="二进制位数组操作"><a href="#二进制位数组操作" class="headerlink" title="二进制位数组操作"></a>二进制位数组操作</h2><p>实现：Redis使用字符串对象来表示位数组，因为字符串对象使用的SDS数据结构是二进制安全的，所以程序可以直接使用SDS结构来保存位数组，并使用SDS结构的操作函数来处理位数组。</p>
+<p>下图展示了用SDS表示的，一字节长的位数组：</p>
+<ul>
+<li>redisObject.type的值为REDIS_STRING，表示这是一个字符串对象。</li>
+<li>sdshdr.len的值为1，表示这个SDS保存了一个一字节长的位数组</li>
+<li>buf数组中的buf[0]字节保存了一字节长的位数组</li>
+<li>buf数组中的buf[1]字节保存了SDS程序自动追加到值的末尾的空字符’\0’</li>
+</ul>
+<p><img src="/img/20191214143233252.png" alt></p>
+<p>为了方便与表示二进制位，我们把buf[0]一字节表示为下面所示的状态（1字节8位）<br><img src="/img/20191214143331694.png" alt></p>
+<p>备注（重点）：</p>
+<ul>
+<li>buf数组保存二进制位与我们平时表示的二进制为顺序是相反的<ul>
+<li>例如在上图中我们的buf数组第1字节表示的二进制为10110010，实质上其表示的是01001101</li>
+<li>使用逆序来保存位数组可以简化SETBIT命令的实现（后面介绍SETBIT命令会解释）</li>
+</ul>
+</li>
+</ul>
+<h3 id="GETBIT命令"><a href="#GETBIT命令" class="headerlink" title="GETBIT命令"></a>GETBIT命令</h3><p>功能：用于获取位数组指定偏移量上的二进制位的值</p>
+<p>因为GETBIT命令执行的所有操作都可以在常数时间内完成，所以该命令的算法复杂度 为O（1）<br>格式：<code>GETBIT &lt;bitarray&gt; &lt;offset&gt;</code></p>
+<ul>
+<li>bitarray：二进制数组的名称</li>
+<li>offset：偏移量（索引从0开始）</li>
+</ul>
+<p>GETBIT命令的执行过程:</p>
+<ul>
+<li>计算byte= [offset÷8]，byte值记录了offset偏移量指定的二进制位保存在位数组的哪个字节</li>
+<li>计算bit=（offset mod 8）+1，bit值记录了offset偏移量指定的二进制位是byte字节的 第几个二进制位</li>
+<li>根据byte值和bit值，在位数组bitarray中定位offset偏移量指定的二进制位，并返回这个位的值</li>
+</ul>
+<p>举个例子，对于下图所示的位数组来说，执行以下命令：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GETBIT &lt;bitarray&gt; 3</span><br></pre></td></tr></table></figure></p>
+<p><img src="/img/2019121415081648.png" alt></p>
+<p>将执行以下操作：</p>
+<ul>
+<li>[3÷8]的值为0</li>
+<li>（3 mod 8）+1的值为4</li>
+<li>定位到buf[0]字节上面，然后取出该字节上的第4个二进制位（从左向右数）的值</li>
+<li>向客户端返回二进制位的值1</li>
+</ul>
+<p><img src="/img/20191214150925199.png" alt></p>
+<h3 id="SETBIT命令"><a href="#SETBIT命令" class="headerlink" title="SETBIT命令"></a>SETBIT命令</h3><p>功能：用于为位数组指定偏移量上的二进制位设置值，并将之前二进制位的旧值返回</p>
+<p>因为SETBIT命令执行的所有操作都可以在常数时间内完成，所以该命令的时间复杂度为 O（1）<br>格式：<code>SETBIE &lt;bitarray&gt; &lt;offset&gt; &lt;value&gt;</code></p>
+<ul>
+<li>bitarray：二进制位数组</li>
+<li>offset：偏移量（从0开始）</li>
+<li>value：设置的值</li>
+</ul>
+<p>SETBIT命令的执行过程：</p>
+<ul>
+<li>计算len=[offset÷8]+1，len值记录了保存offset偏移量指定的二进制位至少需 要多少字节</li>
+<li>检查bitarray键保存的位数组（也即是SDS）的长度是否小于len，如果是的话，将 SDS的长度扩展为len字节，并将所有新扩展空间的二进制位的值设置为0。</li>
+<li>计算byte=[offset÷8]，byte值记录了offset偏移量指定的二进制位保存在位数 组的哪个字节</li>
+<li>计算bit=（offset mod 8）+1，bit值记录了offset偏移量指定的二进制位是byte字节的 第几个二进制位</li>
+<li>根据byte值和bit值，在bitarray键保存的位数组中定位offset偏移量指定的二进制位， 首先将指定二进制位现在值保存在oldvalue变量，然后将新值value设置为这个二进制位的值</li>
+<li>向客户端返回oldvalue变量的值</li>
+</ul>
+<p>演示案例<br>首先，如果我们对下图所示的位数组执行命令：<code>SETBIT &lt;bitarray&gt; 1 1</code><br><img src="/img/20191214151613490.png" alt></p>
+<p>那么服务器将执行以下操作：</p>
+<ul>
+<li>计算[1÷8]+1，得出值1，这表示保存偏移量为1的二进制位至少需要1字节长 位数组</li>
+<li>检查位数组的长度，发现SDS的长度不小于1字节，无须执行扩展操作</li>
+<li>计算[1÷8]，得出值0，说明偏移量为1的二进制位位于buf[0]字节</li>
+<li>计算（1 mod 8）+1，得出值2，说明偏移量为1的二进制位是buf[0]字节的第2个二进 制位</li>
+<li>定位到buf[0]字节的第2个二进制位上面，将二进制位现在的值0保存到oldvalue变 量，然后将二进制位的值设置为1</li>
+<li>向客户端返回oldvalue变量的值0</li>
+</ul>
+<h4 id="带有扩展操作的SETBIT命令演示案例"><a href="#带有扩展操作的SETBIT命令演示案例" class="headerlink" title="带有扩展操作的SETBIT命令演示案例"></a>带有扩展操作的SETBIT命令演示案例</h4><p>前面展示的SETBIT例子无须对位数组进行扩展，现在，让我们来看一个需要对位数组进行扩展的例子<br>假设我们对下图所示的位数组执行命令：<code>SETBIT &lt;bitarray&gt; 12 1</code>。<br><img src="/img/20191214151613490.png" alt></p>
+<p>那么服务器将执行以下操作：</p>
+<ul>
+<li>计算[12÷8]+1，得出值2，这表示保存偏移量为12的二进制位至少需要2字节长的位数组</li>
+<li>对位数组的长度进行检查，得知位数组现在的长度为1字节，小于最小长度2字节，所以程序会要求将位数组的长度扩展为2字节。不过，尽管程序只要求2字节长的位数组，但SDS的空间预分配策略会为SDS额外多分配2字节的未使用空间，再加上 为保存空字符而额外分配的1字节，扩展之后buf数组的实际长度为5字节，如下图所示<br><img src="/img/2019121415213220.png" alt></li>
+<li>计算[12÷8]，得出值1，说明偏移量为12的二进制位位于buf[1]字节中</li>
+<li>计算（12 mod 8）+1，得出值5，说明偏移量为12的二进制位是buf[1]字节的第5个二进制位</li>
+<li>定位到buf[1]字节的第5个二进制位，将二进制位现在的值0保存到oldvalue变量，然 后将二进制位的值设置为1</li>
+<li>向客户端返回oldvalue变量的值0。 左图展示了SETBIT命令定位并设置指定二进制位的过程，而右图则展示了SETBIT 命令执行之后，位数组的样子<br><img src="/img/20191214152136589.png" alt></li>
+</ul>
+<p>注意，<strong>因为buf数组使用逆序来保存位数组，所以当程序对buf数组进行扩展之后，写入操作可以直接在新扩展的二进制位中完成</strong>，而不必改动位数组原来已有的二进制位。相反地，如果buf数组使用和书写位数组时一样的顺序来保存位数组，那么在每次扩展 buf数组之后，程序都需要将位数组已有的位进行移动，然后才能执行写入操作，这比 SETBIT命令目前的实现方式要复杂，并且移位带来的CPU时间消耗也会影响命令的执行速度。</p>
+<h3 id="BITCOUNT命令"><a href="#BITCOUNT命令" class="headerlink" title="BITCOUNT命令"></a>BITCOUNT命令</h3><p>功能：用于统计位数组里面，值为1的二进制位的数量。</p>
+<h4 id="二进制位统计算法（1）：遍历算法"><a href="#二进制位统计算法（1）：遍历算法" class="headerlink" title="二进制位统计算法（1）：遍历算法"></a>二进制位统计算法（1）：遍历算法</h4><p>实现BITCOUNT命令最简单直接的方法，就是遍历位数组中的每个二进制位，并在遇到值为1的二进制位时，将计数器的值增一，遍历算法虽然实现起来简单，但效率非常低。</p>
+<h4 id="二进制位统计算法（2）：查表算法"><a href="#二进制位统计算法（2）：查表算法" class="headerlink" title="二进制位统计算法（2）：查表算法"></a>二进制位统计算法（2）：查表算法</h4><p>优化检查操作的一个办法是使用查表法：对于一个有限集合来说，集合元素的排列方式是有限的，而对于一个有限长度的位数组来说，它能表示的二进制位排列也是有限的。根据这个原理，我们可以创建一个表，表的键为某种排列的位数组，而表的值则是相应位数组中，值为1的二进制位的数量。我们只需执行一次查表操作，就可以检查多个二进制位。</p>
+<h4 id="二进制位统计算法（3）：variable-precision-SWAR算法"><a href="#二进制位统计算法（3）：variable-precision-SWAR算法" class="headerlink" title="二进制位统计算法（3）：variable-precision SWAR算法"></a>二进制位统计算法（3）：variable-precision SWAR算法</h4><p>BITCOUNT命令要解决的问题——统计一个位数组中非0二进制位的数量，在数学上被称为“计算汉明重量（Hamming Weight）”。以下是一个处理32位长度位数组的variable-precision SWAR算法的实现：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">uint32_t swar(uint32_t i) &#123;</span><br><span class="line">    //步骤1</span><br><span class="line">    i = (i &amp; 0x55555555) + ((i &gt;&gt; 1) &amp; 0x55555555);</span><br><span class="line"> </span><br><span class="line">    //步骤2</span><br><span class="line">    i = (i &amp; 0x33333333) + ((i &gt;&gt; 2) &amp; 0x33333333);</span><br><span class="line"> </span><br><span class="line">    //步骤3</span><br><span class="line">    i = (i &amp; 0x0F0F0F0F) + ((i &gt;&gt; 4) &amp; 0x0F0F0F0F);</span><br><span class="line"> </span><br><span class="line">    //步骤4</span><br><span class="line">    i = (i*(0x01010101) &gt;&gt; 24);</span><br><span class="line">    </span><br><span class="line">    return i;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>以下是调用swar（bitarray）的执行步骤：</p>
+<ul>
+<li>步骤1计算出的值i的二进制表示可以按每两个二进制位为一组进行分组，各组的十进制表示就是该组的汉明重量</li>
+<li>步骤2计算出的值i的二进制表示可以按每四个二进制位为一组进行分组，各组的十进制表示就是该组的汉明重量</li>
+<li>步骤3计算出的值i的二进制表示可以按每八个二进制位为一组进行分组，各组的十进制表示就是该组的汉明重量</li>
+<li>步骤4的i*0x01010101语句计算出bitarray的汉明重量并记录在二进制位的最高八位，而 &gt;&gt;24语句则通过右移运算，将bitarray的汉明重量移动到最低八位，得出的结果就是bitarray 的汉明重量</li>
+</ul>
+<p>举个例子，对于调用swar（0x3A70F21B），程序在第一步将计算出值0x2560A116，这 个值的每两个二进制位的十进制表示记录了0x3A70F21B每两个二进制位的汉明重量，如下表所示<br><img src="/img/20191214153831312.png" alt></p>
+<p>之后，程序在第二步将计算出值0x22304113，这个值的每四个二进制位的十进制表示记 录了0x3A70F21B每四个二进制位的汉明重量，如下表所示<br><img src="/img/20191214153833386.png" alt></p>
+<p>接下来，程序在第三步将计算出值0x4030504，这个值的每八个二进制位的十进制表示 记录了0x3A70F21B每八个二进制位的汉明重量，如下表所示<br><img src="/img/20191214153840429.png" alt></p>
+<p>在第四步，程序首先计算0x4030504*0x01010101=0x100c0904，将汉明重量聚集到二进 制位的最高八位，如下表所示<br><img src="/img/20191214153848131.png" alt></p>
+<p>之后程序计算0x100c0904 &gt;&gt; 24，将汉明重量移动到低八位，最终得出值0x10，也即是 十进制值16，这个值就是0x3A70F21B的汉明重量，如下表所示<br><img src="/img/20191214153852689.png" alt></p>
+<p>swar函数每次执行可以计算32个二进制位的汉明重量，它比之前介绍的遍历算法要快32 倍，比键长为8位的查表法快4倍，比键长为16位的查表法快2倍，并且因为swar函数是单纯 的计算操作，所以它无须像查表法那样，使用额外的内存。<br>另外，因为swar函数是一个常数复杂度的操作，所以我们可以按照自己的需要，在一次循环中多次执行swar，从而按倍数提升计算汉明重量的效率：</p>
+<ul>
+<li>例如，如果我们在一次循环中调用两次swar函数，那么计算汉明重量的效率就从之前的 一次循环计算32位提升到了一次循环计算64位</li>
+<li>又例如，如果我们在一次循环中调用四次swar函数，那么一次循环就可以计算128个二 进制位的汉明重量，这比每次循环只调用一次swar函数要快四倍！</li>
+<li>当然，在一个循环里执行多个swar调用这种优化方式是有极限的：一旦循环中处理的位数组的大小超过了缓存的大小，这种优化的效果就会降低并最终消失</li>
+</ul>
+<h4 id="二进制位统计算法（4）：Redis的实现"><a href="#二进制位统计算法（4）：Redis的实现" class="headerlink" title="二进制位统计算法（4）：Redis的实现"></a>二进制位统计算法（4）：Redis的实现</h4><p>BITCOUNT命令的实现用到了查表和variable-precisionSWAR两种算法：</p>
+<ul>
+<li>查表算法使用键长为8位的表，表中记录了从0000 0000到1111 1111在内的所有二进制位 的汉明重量</li>
+<li>至于variable-precision SWAR算法方面，BITCOUNT命令在每次循环中载入128个二进 制位，然后调用四次32位variable-precision SWAR算法来计算这128个二进制位的汉明重量</li>
+</ul>
+<p>在执行BITCOUNT命令时，程序会根据未处理的二进制位的数量来决定使用那种算法：</p>
+<ul>
+<li>如果未处理的二进制位的数量大于等于128位，那么程序使用variable-precision SWAR算 法来计算二进制位的汉明重量</li>
+<li>如果未处理的二进制位的数量小于128位，那么程序使用查表算法来计算二进制位的汉 明重量</li>
+</ul>
+<p>以下伪代码展示了BITCOUNT命令的实现原理：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">#一个表，记录了所有八位长位数组的汉明重量</span><br><span class="line">#程序将8 位长的位数组转换成无符号整数，并在表中进行索引</span><br><span class="line">#例如，对于输入0000 0011 ，程序将二进制转换为无符号整数3</span><br><span class="line">#然后取出weight_in_byte[3] 的值2</span><br><span class="line"># 2 就是0000 0011 的汉明重量</span><br><span class="line">weight_in_byte = [0,1,1,2,1,2,2,/*...*/,7,7,8]</span><br><span class="line"> </span><br><span class="line">def BITCOUNT(bits):</span><br><span class="line">    # 计算位数组包含了多少个二进制位</span><br><span class="line">    count = count_bit(bits)</span><br><span class="line"> </span><br><span class="line">    # 初始化汉明重量为零</span><br><span class="line">    weight = 0</span><br><span class="line"> </span><br><span class="line">    # 如果未处理的二进制位大于等于128 位</span><br><span class="line">    # 那么使用variable-precision SWAR 算法来处理</span><br><span class="line">    while count &gt;= 128:</span><br><span class="line">        # 四个swar 调用，每个调用计算32 个二进制位的汉明重量</span><br><span class="line">        # 注意：bits[i:j] 中的索引j 是不包含在取值范围之内的</span><br><span class="line">        weight += swar(bits[0:32])</span><br><span class="line">        weight += swar(bits[32:64])</span><br><span class="line">        weight += swar(bits[64:96])</span><br><span class="line">        weight += swar(bits[96:128])</span><br><span class="line"> </span><br><span class="line">        # 移动指针，略过已处理的位，指向未处理的位</span><br><span class="line">        bits = bits[128:]</span><br><span class="line">        # 减少未处理位的长度</span><br><span class="line">        count -= 128</span><br><span class="line"> </span><br><span class="line">    # 如果执行到这里，说明未处理的位数量不足128 位</span><br><span class="line">    # 那么使用查表法来计算汉明重量</span><br><span class="line">    while count:</span><br><span class="line">        # 将8 个位转换成无符号整数，作为查表的索引（键）</span><br><span class="line">        index = bits_to_unsigned_int(bits[0:8])</span><br><span class="line">        weight += weight_in_byte[index]</span><br><span class="line"> </span><br><span class="line">        # 移动指针，略过已处理的位，指向未处理的位</span><br><span class="line">        bits = bits[8:]</span><br><span class="line">        # 减少未处理位的长度</span><br><span class="line">        count -= 8</span><br><span class="line">    </span><br><span class="line">    # 计算完毕，返回输入二进制位的汉明重量</span><br><span class="line">    return weight</span><br></pre></td></tr></table></figure></p>
+<p>这个BITCOUNT实现的算法复杂度为O（n），其中n为输入二进制位的数量。更具体一点，我们可以用以下公式来计算BITCOUNT命令在处理长度为n的二进制位输入时，命令中的两个循环需要执行的次数：</p>
+<ul>
+<li>第一个循环的执行次数可以用公式loop 1=n÷128」计算得出</li>
+<li>第二个循环的执行次数可以用公式loop 2=n mod 128计算得出</li>
+</ul>
+<h3 id="BITOP命令"><a href="#BITOP命令" class="headerlink" title="BITOP命令"></a>BITOP命令</h3><p>功能：可以对多个位数组进行按位与（and）、按位或（or）、按位异或（xor）、取反（not）。</p>
+<p>复杂度：</p>
+<ul>
+<li>BITOP AND、BITOP OR、BITOP XOR三个命令可以接受多个位数组作为输入， 程序需要遍历输入的每个位数组的每个字节来进行计算，所以这些命令的复杂度为 O（n^2）</li>
+<li><p>因为BITOP NOT命令只接受一个位数组输入，所以它的复杂度为 O（n）</p>
+</li>
+<li><p>在执行BITOP AND命令时，程序用<code>&amp;</code>操作计算出所有输入二进制位的逻辑与结果，然后保存在指定的键上面。</p>
+</li>
+<li>在执行BITOP OR命令时，程序用<code>|</code>操作计算出所有输入二进制位的逻辑或结果，然后保存在指定的键上面</li>
+<li>在执行BITOP XOR命令时，程序用<code>^</code>操作计算出所有输入二进制位的逻辑异或结果，然后保存在指定的键上面</li>
+<li>在执行BITOP NOT命令时，程序用<code>~</code>操作计算出输入二进制位的逻辑非结果，然后保存在指定的键上面。</li>
+</ul>
+<p>举个例子，假设客户端执行命令：<code>BITOP AND result x y</code>。其中，键x保存的位数组如左图所示，而键y保存的位数组如右图所示：<br><img src="/img/20191214152654458.png" alt></p>
+<p>BITOP命令将执行以下操作：</p>
+<ul>
+<li>创建一个空白的位数组value，用于保存AND操作的结果</li>
+<li>对两个位数组的第一个字节执行buf[0] &amp; buf[0]操作，并将结果保存到value[0]字节</li>
+<li>对两个位数组的第二个字节执行buf[1] &amp; buf[1]操作，并将结果保存到value[1]字节</li>
+<li>对两个位数组的第三个字节执行buf[2] &amp; buf[2]操作，并将结果保存到value[2]字节</li>
+<li>经过前面的三次逻辑与操作，程序得到了下图所示的计算结果，并将它保存在键 result上面</li>
+</ul>
+<p><img src="/img/20191214152724686.png" alt></p>
+<h2 id="慢查询日志"><a href="#慢查询日志" class="headerlink" title="慢查询日志"></a>慢查询日志</h2><p>Redis的慢查询日志功能用于记录执行时间超过给定时长的命令请求，用户可以通过这个功能产生的日志来监视和优化查询速度。</p>
+<p>慢查询日志选项：</p>
+<ul>
+<li><code>slowlog-log-slower-than</code>选项：指定执行时间超过多少微秒（1秒等于1000 000微秒）的命令请求会被记录到日志上</li>
+<li><code>slowlog-max-len</code>选项：指定服务器最多保存多少条慢查询日志</li>
+</ul>
+<p>服务器使用先进先出的方式保存多条慢查询日志，当服务器存储的慢查询日志数量等于slowlog-max-len选项的值时，服务器在添加一条新的慢查询日志之前，会先将最旧的一条慢查询日志删除</p>
+<p>慢查询日志的格式，以下面的图片为例：</p>
+<ol>
+<li>日志的唯一标识符</li>
+<li>命令执行时的UNIX时间戳</li>
+<li>命令执行的时常（单位微秒）</li>
+<li>命令以及命令参数</li>
+<li>命令执行的客户端IP与端口</li>
+</ol>
+<p><img src="/img/20191212224114584.png" alt></p>
+<h3 id="慢查询记录的保存"><a href="#慢查询记录的保存" class="headerlink" title="慢查询记录的保存"></a>慢查询记录的保存</h3><p>服务器状态中有几个变量：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">struct redisServer &#123;</span><br><span class="line">    // ...</span><br><span class="line">    //下一条慢查询日志的ID</span><br><span class="line">    long long slowlog_entry_id;</span><br><span class="line"></span><br><span class="line">    //保存了所有慢查询日志的链表</span><br><span class="line">    list *slowlog;</span><br><span class="line"></span><br><span class="line">    //服务器配置slowlog-log-slower-than 选项的值</span><br><span class="line">    long long slowlog_log_slower_than;</span><br><span class="line"></span><br><span class="line">    //服务器配置slowlog-max-len 选项的值</span><br><span class="line">    unsigned long slowlog_max_len;</span><br><span class="line">    // ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li>slowlog_entry_id属性的初始值为0，每当创建一条新的慢查询日志时，这个属性的值就会用作新日志的id值，之后程序会对这个属性的值增一<br>例如，在创建第一条慢查询日志时，slowlog_entry_id的值0会成为第一条慢查询日志的 ID，而之后服务器会对这个属性的值增一；当服务器再创建新的慢查询日志的时候， slowlog_entry_id的值1就会成为第二条慢查询日志的ID，然后服务器再次对这个属性的值增一。</li>
+<li>slowlog链表：保存了服务器中的所有慢查询日志，链表中的每个节点都保存了一个slowlogEntry结构，每个slowlogEntry结构代表一条慢查询日志<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">typedef struct slowlogEntry &#123;</span><br><span class="line">    //唯一标识符</span><br><span class="line">    long long id;</span><br><span class="line"></span><br><span class="line">    //命令执行时的时间，格式为UNIX 时间戳</span><br><span class="line">    time_t time;</span><br><span class="line"></span><br><span class="line">    //执行命令消耗的时间，以微秒为单位</span><br><span class="line">    long long duration;</span><br><span class="line"></span><br><span class="line">    //命令与命令参数</span><br><span class="line">    robj **argv;</span><br><span class="line"></span><br><span class="line">    //命令与命令参数的数量</span><br><span class="line">    int argc;</span><br><span class="line">&#125; slowlogEntry;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>每个slowlogEntry结构代表一条慢查询日志。举个例子：<br><img src="/img/20191212224752543.png" alt></p>
+<p>下图展示了一个服务器状态中和慢查询功能有关的属性：</p>
+<ul>
+<li>slowlog_entry_id的值为6，表示服务器下条慢查询日志的id值将为6</li>
+<li>slowlog链表包含了id为5至1的慢查询日志，最新的5号日志排在链表的表头，而最旧的1 号日志排在链表的表尾，这表明slowlog链表是使用插入到表头的方式来添加新日志的</li>
+<li>slowlog_log_slower_than记录了服务器配置slowlog-log-slower-than选项的值0，表示任何 执行时间超过0微秒的命令都会被慢查询日志记录</li>
+<li>slowlog-max-len属性记录了服务器配置slowlog-max-len选项的值5，表示服务器最多储存五条慢查询日志</li>
+</ul>
+<p><img src="/img/20191212224855213.png" alt></p>
+<h3 id="慢查询日志的阅览和删除"><a href="#慢查询日志的阅览和删除" class="headerlink" title="慢查询日志的阅览和删除"></a>慢查询日志的阅览和删除</h3><p>定义查看日志 的SLOWLOG GET命令：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">def SLOWLOG_GET(number=None):</span><br><span class="line">    # 用户没有给定number 参数</span><br><span class="line">    # 那么打印服务器包含的全部慢查询日志</span><br><span class="line">    if number is None:</span><br><span class="line">        number = SLOWLOG_LEN()</span><br><span class="line"></span><br><span class="line">    # 遍历服务器中的慢查询日志</span><br><span class="line">    for log in redisServer.slowlog:</span><br><span class="line">        if number &lt;= 0:</span><br><span class="line">            # 打印的日志数量已经足够，跳出循环</span><br><span class="line">            break</span><br><span class="line">        else:</span><br><span class="line">            # 继续打印，将计数器的值减一</span><br><span class="line">            number -= 1</span><br><span class="line">        # 打印日志</span><br><span class="line">        printLog(log)</span><br></pre></td></tr></table></figure></p>
+<p>查看日志数量的SLOWLOG LEN命令可以用以下伪代码来定义：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">def SLOWLOG_LEN():</span><br><span class="line">    # slowlog 链表的长度就是慢查询日志的条目数量</span><br><span class="line">    return len(redisServer.slowlog)</span><br></pre></td></tr></table></figure></p>
+<p>另外，用于清除所有慢查询日志的SLOWLOG RESET命令可以用以下伪代码来定义：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">def SLOWLOG_RESET():</span><br><span class="line">    # 遍历服务器中的所有慢查询日志</span><br><span class="line">    for log in redisServer.slowlog:</span><br><span class="line">        # 删除日志</span><br><span class="line">        deleteLog(log)</span><br></pre></td></tr></table></figure></p>
+<h3 id="添加新日志（slowlogPushEntryIfNeeded函数）"><a href="#添加新日志（slowlogPushEntryIfNeeded函数）" class="headerlink" title="添加新日志（slowlogPushEntryIfNeeded函数）"></a>添加新日志（slowlogPushEntryIfNeeded函数）</h3><p>在每次执行命令的之前和之后，程序都会记录微秒格式的当前UNIX时间戳，这两个时间戳之间的差就是服务器执行命令所耗费的时长，服务器会将这个时长作为参数之一传给<code>slowlogPushEntryIfNeeded</code>函数，而slowlogPushEntryIfNeeded函数则负责检查是否需要为这次执行的命令创建慢查询日志。以下伪代码展示了这一过程：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">#记录执行命令前的时间</span><br><span class="line">before = unixtime_now_in_us()</span><br><span class="line"></span><br><span class="line">#执行命令</span><br><span class="line">execute_command(argv, argc, client)</span><br><span class="line"></span><br><span class="line">#记录执行命令后的时间</span><br><span class="line">after = unixtime_now_in_us()</span><br><span class="line"></span><br><span class="line">#检查是否需要创建新的慢查询日志</span><br><span class="line">slowlogPushEntryIfNeeded(argv, argc, before-after)</span><br></pre></td></tr></table></figure></p>
+<p>slowlogPushEntryIfNeeded函数的作用有两个：</p>
+<ul>
+<li>检查命令的执行时长是否超过slowlog-log-slower-than选项所设置的时间，如果是的话，就为命令创建一个新的日志，并将新日志添加到slowlog链表的表头；</li>
+<li>检查慢查询日志的长度是否超过slowlog-max-len选项所设置的长度，如果是的话， 那么将多出来的日志从slowlog链表中删除掉</li>
+</ul>
+<p>以下是slowlogPushEntryIfNeeded函数的实现代码，需要说明的是slowlogCreateEntry函数，该函数根据传入的参数，创建一个新的慢查询日志，并将redisServer.slowlog_entry_id的值增1<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">void slowlogPushEntryIfNeeded(robj **argv, int argc, long long duration) &#123;</span><br><span class="line">//慢查询功能未开启，直接返回</span><br><span class="line">if (server.slowlog_log_slower_than &lt; 0) return;</span><br><span class="line"></span><br><span class="line">//如果执行时间超过服务器设置的上限，那么将命令添加到慢查询日志</span><br><span class="line">if (duration &gt;= server.slowlog_log_slower_than)</span><br><span class="line">    //新日志添加到链表表头</span><br><span class="line">    listAddNodeHead(server.slowlog,slowlogCreateEntry(argv,argc,duration));</span><br><span class="line"></span><br><span class="line">    //如果日志数量过多，那么进行删除</span><br><span class="line">    while (listLength(server.slowlog) &gt; server.slowlog_max_len)</span><br><span class="line">        listDelNode(server.slowlog,listLast(server.slowlog));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="监视器"><a href="#监视器" class="headerlink" title="监视器"></a>监视器</h2><p>通过执行MONITOR命令，客户端可以将自己变为一个监视器，实时地接收并打印出服务器当前处理的命令请求的相关信息：<br><img src="/img/20191211232027371.png" alt></p>
+<p>每当一个客户端向服务器发送一条命令请求时，服务器除了会处理这条命令请求之外， 还会将关于这条命令请求的信息发送给所有监视器，如下图所示：<br><img src="/img/20191211232033759.png" alt></p>
+<h3 id="成为监视器"><a href="#成为监视器" class="headerlink" title="成为监视器"></a>成为监视器</h3><p>发送MONITOR命令可以让一个普通客户端变为一个监视器，MONITOR命令的实现原理可以用 以下伪代码来实现：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">def MONITOR():</span><br><span class="line">    # 打开客户端的监视器标志</span><br><span class="line">    client.flags |= REDIS_MONITOR</span><br><span class="line">    # 将客户端添加到服务器状态的monitors 链表的末尾</span><br><span class="line">    server.monitors.append(client)</span><br><span class="line">    # 向客户端返回OK</span><br><span class="line">    send_reply(&quot;OK&quot;)</span><br></pre></td></tr></table></figure></p>
+<p>举个例子，如果客户端c10086向服务器发送MONITOR命令，那么这个客户端的REDIS_MONITOR标志会被打开，并且这个客户端本身会被添加到monitors链表的表尾。</p>
+<h3 id="向监视器发送命令信息"><a href="#向监视器发送命令信息" class="headerlink" title="向监视器发送命令信息"></a>向监视器发送命令信息</h3><p>服务器在每次处理命令请求之前，都会调用<code>replicationFeedMonitors</code>函数，由这个函数将被处理的命令请求的相关信息发送给各个监视器，以下是replicationFeedMonitors函数的伪代码定义，函数首先根据传入的参数创建信息， 然后将信息发送给所有监视器：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">def replicationFeedMonitors(client, monitors, dbid, argv, argc):</span><br><span class="line">    # 根据执行命令的客户端、当前数据库的号码、命令参数、命令参数个数等参数</span><br><span class="line">    # 创建要发送给各个监视器的信息</span><br><span class="line">    msg = create_message(client, dbid, argv, argc)</span><br><span class="line">    # 遍历所有监视器</span><br><span class="line">    for monitor in monitors:</span><br><span class="line">        # 将信息发送给监视器</span><br><span class="line">        send_message(monitor, msg)</span><br></pre></td></tr></table></figure></p>
+<p>举个例子，假设服务器在时间1378822257.329412，根据IP为127.0.0.1、端口号为56604 的客户端发送的命令请求，对0号数据库执行命令KEYS*，那么服务器将创建以下信息：<br><img src="/img/20191211232308597.png" alt></p>
+<p>如果服务器monitors链表的当前状态如上图所示，那么服务器会分别将信息发送给c128、c256、c512和c10086四个监视器，如下图所示<br><img src="/img/20191211232359823.png" alt></p>
+<p><img src="/img/" alt><br><img src="/img/" alt><br><img src="/img/" alt><br><img src="/img/" alt><br><img src="/img/" alt><br><img src="/img/" alt></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/数据库/" rel="tag"># 数据库</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/03/19/redis设计与实现3/" rel="next" title="Redis设计与实现——多机数据库的实现">
+                <i class="fa fa-chevron-left"></i> Redis设计与实现——多机数据库的实现
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">289</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">10</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/xiaomeihao.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#发布与订阅"><span class="nav-number">1.</span> <span class="nav-text">发布与订阅</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#频道的订阅与退订"><span class="nav-number">1.0.1.</span> <span class="nav-text">频道的订阅与退订</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#频道的退订（UNSUBSCRIBE命令）"><span class="nav-number">1.0.2.</span> <span class="nav-text">频道的退订（UNSUBSCRIBE命令）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#模式的订阅与退订"><span class="nav-number">1.1.</span> <span class="nav-text">模式的订阅与退订</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#订阅模式"><span class="nav-number">1.1.1.</span> <span class="nav-text">订阅模式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#模式的退订"><span class="nav-number">1.1.2.</span> <span class="nav-text">模式的退订</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#消息的发送"><span class="nav-number">1.2.</span> <span class="nav-text">消息的发送</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#将消息发送给频道订阅者"><span class="nav-number">1.2.1.</span> <span class="nav-text">将消息发送给频道订阅者</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#将消息发送给模式订阅者"><span class="nav-number">1.2.2.</span> <span class="nav-text">将消息发送给模式订阅者</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查看订阅信息"><span class="nav-number">1.3.</span> <span class="nav-text">查看订阅信息</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#PUBSUB-CHANNELS命令"><span class="nav-number">1.3.1.</span> <span class="nav-text">PUBSUB CHANNELS命令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#PUBSUB-NUMSUB命令"><span class="nav-number">1.3.2.</span> <span class="nav-text">PUBSUB NUMSUB命令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#PUBSUB-NUMPAT命令"><span class="nav-number">1.3.3.</span> <span class="nav-text">PUBSUB NUMPAT命令</span></a></li></ol></li></ol><li class="nav-item nav-level-2"><a class="nav-link" href="#事务"><span class="nav-number">2.</span> <span class="nav-text">事务</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#事务的实现"><span class="nav-number">2.1.</span> <span class="nav-text">事务的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#事务开始（MULTI命令）"><span class="nav-number">2.1.1.</span> <span class="nav-text">事务开始（MULTI命令）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#命令入队"><span class="nav-number">2.1.2.</span> <span class="nav-text">命令入队</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#事务队列（mstate属性）"><span class="nav-number">2.1.3.</span> <span class="nav-text">事务队列（mstate属性）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#执行事务"><span class="nav-number">2.1.4.</span> <span class="nav-text">执行事务</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WATCH命令"><span class="nav-number">2.2.</span> <span class="nav-text">WATCH命令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#使用WATCH命令监视数据库键（watched-keys字典）"><span class="nav-number">2.2.1.</span> <span class="nav-text">使用WATCH命令监视数据库键（watched_keys字典）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#监视机制的触发（touchWatchKey函数、REDIS-DIRTY-CAS标识）"><span class="nav-number">2.2.2.</span> <span class="nav-text">监视机制的触发（touchWatchKey函数、REDIS_DIRTY_CAS标识）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#判断事务是否安全"><span class="nav-number">2.2.3.</span> <span class="nav-text">判断事务是否安全</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#事务的ACID性质"><span class="nav-number">2.3.</span> <span class="nav-text">事务的ACID性质</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#原子性"><span class="nav-number">2.3.1.</span> <span class="nav-text">原子性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#一致性"><span class="nav-number">2.3.2.</span> <span class="nav-text">一致性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#隔离性"><span class="nav-number">2.3.3.</span> <span class="nav-text">隔离性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#耐久性（持久性）"><span class="nav-number">2.3.4.</span> <span class="nav-text">耐久性（持久性）</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lua脚本"><span class="nav-number">3.</span> <span class="nav-text">Lua脚本</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#创建并修改Lua环境"><span class="nav-number">3.1.</span> <span class="nav-text">创建并修改Lua环境</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Lua环境协作组件"><span class="nav-number">3.2.</span> <span class="nav-text">Lua环境协作组件</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#伪客户端"><span class="nav-number">3.2.1.</span> <span class="nav-text">伪客户端</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#lua-scripts字典"><span class="nav-number">3.2.2.</span> <span class="nav-text">lua_scripts字典</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#EVAL命令的实现"><span class="nav-number">3.3.</span> <span class="nav-text">EVAL命令的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#定义脚本函数"><span class="nav-number">3.3.1.</span> <span class="nav-text">定义脚本函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#将脚本保存到lua-scripts字典"><span class="nav-number">3.3.2.</span> <span class="nav-text">将脚本保存到lua_scripts字典</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#执行脚本函数"><span class="nav-number">3.3.3.</span> <span class="nav-text">执行脚本函数</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#EVALSHA命令"><span class="nav-number">3.4.</span> <span class="nav-text">EVALSHA命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#脚本管理命令"><span class="nav-number">3.5.</span> <span class="nav-text">脚本管理命令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#SCRIPT-FLUSH"><span class="nav-number">3.5.1.</span> <span class="nav-text">SCRIPT FLUSH</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SCRIPT-EXISTS"><span class="nav-number">3.5.2.</span> <span class="nav-text">SCRIPT EXISTS</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SCRIPT-LOAD"><span class="nav-number">3.5.3.</span> <span class="nav-text">SCRIPT LOAD</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SCRIPT-KILL"><span class="nav-number">3.5.4.</span> <span class="nav-text">SCRIPT KILL</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#脚本的复制"><span class="nav-number">3.6.</span> <span class="nav-text">脚本的复制</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#复制EVAL命令、SCRIPT-FLUSH命令、SCRIPT-LOAD命令"><span class="nav-number">3.6.1.</span> <span class="nav-text">复制EVAL命令、SCRIPT FLUSH命令、SCRIPT LOAD命令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#复制EVALSHA命令"><span class="nav-number">3.6.2.</span> <span class="nav-text">复制EVALSHA命令</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SORT"><span class="nav-number">4.</span> <span class="nav-text">SORT</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#SORT-命令"><span class="nav-number">4.1.</span> <span class="nav-text">SORT 命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ALPHA选项"><span class="nav-number">4.2.</span> <span class="nav-text">ALPHA选项</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ASC选项与DESC选项"><span class="nav-number">4.3.</span> <span class="nav-text">ASC选项与DESC选项</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#BY选项"><span class="nav-number">4.4.</span> <span class="nav-text">BY选项</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ALPHA选项与BY选项的配合使用"><span class="nav-number">4.5.</span> <span class="nav-text">ALPHA选项与BY选项的配合使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#LIMIT选项"><span class="nav-number">4.6.</span> <span class="nav-text">LIMIT选项</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#GET选项"><span class="nav-number">4.7.</span> <span class="nav-text">GET选项</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#STORE选项"><span class="nav-number">4.8.</span> <span class="nav-text">STORE选项</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SORT命令选项的执行顺序"><span class="nav-number">4.9.</span> <span class="nav-text">SORT命令选项的执行顺序</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二进制位数组操作"><span class="nav-number">5.</span> <span class="nav-text">二进制位数组操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#GETBIT命令"><span class="nav-number">5.1.</span> <span class="nav-text">GETBIT命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SETBIT命令"><span class="nav-number">5.2.</span> <span class="nav-text">SETBIT命令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#带有扩展操作的SETBIT命令演示案例"><span class="nav-number">5.2.1.</span> <span class="nav-text">带有扩展操作的SETBIT命令演示案例</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#BITCOUNT命令"><span class="nav-number">5.3.</span> <span class="nav-text">BITCOUNT命令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#二进制位统计算法（1）：遍历算法"><span class="nav-number">5.3.1.</span> <span class="nav-text">二进制位统计算法（1）：遍历算法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#二进制位统计算法（2）：查表算法"><span class="nav-number">5.3.2.</span> <span class="nav-text">二进制位统计算法（2）：查表算法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#二进制位统计算法（3）：variable-precision-SWAR算法"><span class="nav-number">5.3.3.</span> <span class="nav-text">二进制位统计算法（3）：variable-precision SWAR算法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#二进制位统计算法（4）：Redis的实现"><span class="nav-number">5.3.4.</span> <span class="nav-text">二进制位统计算法（4）：Redis的实现</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#BITOP命令"><span class="nav-number">5.4.</span> <span class="nav-text">BITOP命令</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#慢查询日志"><span class="nav-number">6.</span> <span class="nav-text">慢查询日志</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#慢查询记录的保存"><span class="nav-number">6.1.</span> <span class="nav-text">慢查询记录的保存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#慢查询日志的阅览和删除"><span class="nav-number">6.2.</span> <span class="nav-text">慢查询日志的阅览和删除</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#添加新日志（slowlogPushEntryIfNeeded函数）"><span class="nav-number">6.3.</span> <span class="nav-text">添加新日志（slowlogPushEntryIfNeeded函数）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#监视器"><span class="nav-number">7.</span> <span class="nav-text">监视器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#成为监视器"><span class="nav-number">7.1.</span> <span class="nav-text">成为监视器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#向监视器发送命令信息"><span class="nav-number">7.2.</span> <span class="nav-text">向监视器发送命令信息</span></a></li></ol></li></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
