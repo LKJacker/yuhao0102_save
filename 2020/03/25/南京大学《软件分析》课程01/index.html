@@ -116,7 +116,11 @@
 <meta property="og:image" content="http://yoursite.com/img/20200326181900.jpg">
 <meta property="og:image" content="http://yoursite.com/img/20200326210700.jpg">
 <meta property="og:image" content="http://yoursite.com/img/20200326211100.jpg">
-<meta property="og:updated_time" content="2020-03-26T12:48:35.156Z">
+<meta property="og:image" content="http://yoursite.com/img/20200328112400.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200328114700.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200328120500.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200328171700.jpg">
+<meta property="og:updated_time" content="2020-03-29T02:31:40.654Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="南京大学《软件分析》课程01">
 <meta name="twitter:description" content="IntroductionProgramming Languages三个部分：  理论Theory：怎么设计语言Language design、类型系统Type system、形式语言semantics and logics 环境Environment：编译器、运行时 应用Application：程序分析（静态程序分析）、程序验证、程序合成  过去十多年，语言的核心部分变化得很小，语言主要三类：命令">
@@ -545,6 +549,64 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">INPUT: CFG（kill(B) and gen(B) computed for each basic block B）</span><br><span class="line">OUTPUT: IN[B] and OUT[B] for each basic block B</span><br><span class="line">METHOD: </span><br><span class="line">    OUT[entry] = Φ</span><br><span class="line">    for (each basic block B\entry)</span><br><span class="line">        OUT[B] = Φ</span><br><span class="line">    while(changes to any OUT occur)</span><br><span class="line">        for(each basic block B\entry) &#123;</span><br><span class="line">            IN[B] = ∩ (P: a predecessor of B) OUT[P]</span><br><span class="line">            OUT[B] = gen(B) ∪ (IN[B] - kill(B))</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
 <p>一个例子：<br><img src="/img/20200326210700.jpg" alt></p>
 <p>本节课的总结表：<br><img src="/img/20200326211100.jpg" alt></p>
+<h2 id="foundation"><a href="#foundation" class="headerlink" title="foundation"></a>foundation</h2><p>假设一个有k个节点的CFG（一个程序的执行流），且这里的一个节点是一个statement，算法在每次迭代时都会更新每个节点的OUT信息。假设数据流分析中domain（所有程序里的definition作为数据流分析的值域）的值为V，可以定义一个k元组，每个node的OUT值作为这个k元组的值，(OUT[n1],OUT[n2],OUT[n3],…OUT[nk])，作为一个集合（V1×V2×…Vk）中的元素，这个集合定义为V^k，代表的是每次迭代遍历之后的分析值。<strong>所以说V^k存的是每次迭代之后每个节点分析的临时结果</strong>。每次迭代都可以作为使用函数<code>F:V^k -&gt; V^k</code>，通过转换函数和控制流处理建立V^k之间的映射关系。算法输出一系列的k元组，直到两次输出的k元组相同。这是从另一个角度观察之前的算法。</p>
+<p>每一个OUT初始化为空，之后开始遍历，第一次遍历结束之后产生一个OUT集，上标1表示第一次迭代，下标表示每个节点。一直迭代直到两次相同。每个k元组用Xi表示，每次遍历都可以表示成一个函数，比如X0作为F的输入，输出第一次迭代的结果X1，Xi=F[x(i-1)]，X(i)=X(i+1)=F(xi)，所以X(i)=F(xi)。<br><img src="/img/20200328112400.jpg" alt></p>
+<p>这里的Xi就是函数F的<strong>fixed point不动点</strong>，X=F(X)，迭代算法达到了一个不动点Xi。</p>
+<p>迭代算法生成了数据流分析的方案，那：</p>
+<ul>
+<li>算法保证能停止或者能到达一个不动点么？或者总是能找到一个解么？</li>
+<li>如果上述成立，那算法只能找到一个不动点么？我们找到的不动点是最好的么？</li>
+<li>何时能找到不动点？</li>
+</ul>
+<p>偏序partial order：我们定义一个偏序集(poset)为(P,⊑)，其中⊑在P上定义了一个二元偏序关系，满足：</p>
+<ul>
+<li>自反性(reflexivity)：<code>∀x∈P,x⊑x</code></li>
+<li>反对称性(antisymmetry)：<code>∀x,y∈P,x⊑y∧y⊑x ⟹ x=y</code></li>
+<li>传递性(transitivity)：<code>∀x,y,z∈P,x⊑y∧y⊑z ⟹ x⊑z</code></li>
+</ul>
+<p>偏序意味着有些在P内的有些元素对是没有办法比较的。</p>
+<p>S是整数集合，⊑是小于等于关系，S满足偏序关系：</p>
+<ul>
+<li>1 ≤ 1，2 ≤ 2，所以满足自反性</li>
+<li>x ≤ y ∩ y  ≤ x，则x = y，所以满足反对称性</li>
+<li>1 ≤ 2 ∩ 2  ≤ 3，则1 ≤ 3，所以满足传递性</li>
+</ul>
+<p>上下界：给定(P,⊑)和子集S⊂P，若u∈P是S的上界，则∀x∈S,x⊑u；类似地，若l∈P是S的下界，则∀x∈S,l⊑x，如下。<br><img src="/img/20200328114700.jpg" alt></p>
+<p>最小上界/上确界(lub/join)、最大下界/下确界(glb/meet)：所有S上界中最小的一个称为S的上确界，记为；所有S下界中最大的一个称为S的下确界，记为⊓S。通常，如果S只含两个元素a,b，那么上确界可被写成a⊔b(join)，下确界可被写成a⊓b(meet)<br><img src="/img/20200328120500.jpg" alt></p>
+<p>一些性质:</p>
+<ul>
+<li>并不是所有偏序集都有上确界或下确界；</li>
+<li>如果有的话一定唯一（反证法）；</li>
+<li>界不一定在子集S中。</li>
+</ul>
+<p>格(lattice)：如果偏序集是格，则<strong>任两个元素对</strong>都有lub和glb。</p>
+<p>半格(semilattice)：如果任两个元素对只有一侧的确界，则称其为join/meet半格。</p>
+<p>完全格(complete lattice)：对于格的任意子集都有上下确界，那么该格称为完全格。完全格中的最大元素⊤=⊔P称为top，最小元素⊥=⊓P称为bottom。幂集依然是个完全格。结论：有限的格都是完全格。</p>
+<p>乘积格(product lattice)：如果对于格L1=(P1,⊑1),L2=(P2,⊑2),…Ln=(Pn,⊑n)，如果对于所有的i，Li=(Pi,⊑i)有上下确界，那么定义乘积格<code>L^n=(P,⊑)</code>：</p>
+<ul>
+<li>P = P1 × P2 × … × Pn</li>
+<li>(x1, …, xn) ⊑ (y1, …, yn)，(x1⊑y1)∩…∩(xn⊑yn)</li>
+<li>(x1, …, xn) ⊔ (y1, …, yn)，(x1⊔y1, …. xn⊔yn)</li>
+<li>(x1, …, xn) ⊓ (y1, …, yn)，(x1⊓y1, …, xn⊓yn)</li>
+</ul>
+<p>数据流分析框架(D, L, F)：</p>
+<ul>
+<li>D：数据流的方向，正向或反向</li>
+<li>L：一个格，包括V的值域和上下界操作符</li>
+<li>F：从V到V的一个transfer function族</li>
+</ul>
+<p><img src="/img/20200328171700.jpg" alt></p>
+<p>左右两边建立关联，OUT[s1]={a}和OUT[s3]={b}并之后作为s2的IN={a, b}，实际上就是在这个格上，数据流进行流动，OUT[s2]={a, b, c}。数据流分析可以被认为是在一个格的值域上迭代执行转换函数和meet/join操作。</p>
+<p>对之前的三个问题：</p>
+<ul>
+<li>算法保证能停止或者能到达一个不动点么？或者总是能找到一个解么？这是<strong>格函数的单调性问题</strong>。</li>
+<li>如果上述成立，那算法只能找到一个不动点么？我们找到的不动点是最好的么？函数可能会有多个不动点，我们这个迭代过程是不是最精确的？</li>
+<li>何时能找到不动点？</li>
+</ul>
+<p><strong>单调性</strong>(monotonicity)：定义在格上的函数f:L↦L是单调的，若∀x,y∈L,x⊑y⟹f(x)⊑f(y)。</p>
+<p>不动点定理(fixed-point theorem)：给定完全格(L,⊑)，若满足：(a) f:L↦L是单调的，(b) L是有限的(finite)，则<strong>最小不动点</strong>可以通过迭代f(⊥), f(f(⊥)), …, fk(⊥)迭代得到，最大不动点可通过f(⊤), f(f(⊤)), …, fk(⊤)迭代得到，直到到达一个不动点。</p>
+<p>证明：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">根据f:L↦L和⊥，有⊥⊑f(⊥)。</span><br><span class="line">因为f是单调的，所以：f(⊥)⊑f(f(⊥))=f^2(⊥)</span><br><span class="line">同样的，不停使用这个性质，⊥⊑f(⊥)⊑f^2(⊥)⊑...⊑f^i(⊥)</span><br><span class="line">因为L是有限的，对于一个特定的k，我们有：f^fix = f^k(⊥) = f^(k+1)(⊥)</span><br><span class="line">因此不动点存在。</span><br><span class="line"></span><br><span class="line">假定有另一个不动点x，x=f(x)</span><br><span class="line">因为⊥的定义，⊥⊑x</span><br><span class="line"></span><br><span class="line">因为f是单调的，f(⊥)⊑f(x)</span><br><span class="line">假定f^i(⊥)⊑f^i(x)</span><br><span class="line">因为f是单调的，我们有f^(i+1)(⊥)⊑f^(i+1)(x)</span><br><span class="line">通过归纳，f^i(⊥)⊑f^i(x)</span><br><span class="line">因此^i(⊥)⊑f^i(x)=x，f^fix=f^k(⊥)⊑x</span><br><span class="line">因此不动点是最小的。</span><br></pre></td></tr></table></figure></p>
+<p>需要把迭代算法跟不动点定理相关联，一旦关联上就可以解释上述三个问题。</p>
 <h1 id="Inter-procedural-Analysis"><a href="#Inter-procedural-Analysis" class="headerlink" title="Inter-procedural Analysis"></a>Inter-procedural Analysis</h1><h1 id="CFL-Reachability-and-IFDS"><a href="#CFL-Reachability-and-IFDS" class="headerlink" title="CFL-Reachability and IFDS"></a>CFL-Reachability and IFDS</h1><h1 id="Soundness-and-Soundiness"><a href="#Soundness-and-Soundiness" class="headerlink" title="Soundness and Soundiness"></a>Soundness and Soundiness</h1><h1 id="Pointer-Analysis"><a href="#Pointer-Analysis" class="headerlink" title="Pointer Analysis"></a>Pointer Analysis</h1><h1 id="Modern-Pointer-Analysis"><a href="#Modern-Pointer-Analysis" class="headerlink" title="Modern Pointer Analysis"></a>Modern Pointer Analysis</h1><h1 id="Static-Analysis-for-Security"><a href="#Static-Analysis-for-Security" class="headerlink" title="Static Analysis for Security"></a>Static Analysis for Security</h1><h1 id="Datalog-Based-Analysis"><a href="#Datalog-Based-Analysis" class="headerlink" title="Datalog-Based Analysis"></a>Datalog-Based Analysis</h1><h1 id="Abstract-Interpretation"><a href="#Abstract-Interpretation" class="headerlink" title="Abstract Interpretation"></a>Abstract Interpretation</h1>
       
     </div>
@@ -584,6 +646,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/03/28/一致性算法Paxos_Raft_ZAB/" rel="prev" title="一致性算法（Paxos、Raft、ZAB）">
+                一致性算法（Paxos、Raft、ZAB） <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -661,7 +727,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">291</span>
+                  <span class="site-state-item-count">292</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -724,7 +790,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Introduction"><span class="nav-number">1.</span> <span class="nav-text">Introduction</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Intermediate-Representation"><span class="nav-number">2.</span> <span class="nav-text">Intermediate Representation</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#中间表示Intermediate-Representation-IR"><span class="nav-number">2.1.</span> <span class="nav-text">中间表示Intermediate Representation(IR)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Static-Single-Asssignment-SSA"><span class="nav-number">2.2.</span> <span class="nav-text">Static Single Asssignment(SSA)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Control-Flow-Analysis"><span class="nav-number">2.3.</span> <span class="nav-text">Control Flow Analysis</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Data-Flow-Analysis"><span class="nav-number">3.</span> <span class="nav-text">Data Flow Analysis</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Input-and-Output-states"><span class="nav-number">3.1.</span> <span class="nav-text">Input and Output states</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Reaching-Definitions-Analysis定义可达性"><span class="nav-number">3.2.</span> <span class="nav-text">Reaching Definitions Analysis定义可达性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#live-variables-analysis"><span class="nav-number">3.3.</span> <span class="nav-text">live variables analysis</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Available-Expressions-Analysis可用表达式分析"><span class="nav-number">3.4.</span> <span class="nav-text">Available Expressions Analysis可用表达式分析</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Inter-procedural-Analysis"><span class="nav-number">4.</span> <span class="nav-text">Inter-procedural Analysis</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CFL-Reachability-and-IFDS"><span class="nav-number">5.</span> <span class="nav-text">CFL-Reachability and IFDS</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Soundness-and-Soundiness"><span class="nav-number">6.</span> <span class="nav-text">Soundness and Soundiness</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Pointer-Analysis"><span class="nav-number">7.</span> <span class="nav-text">Pointer Analysis</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Modern-Pointer-Analysis"><span class="nav-number">8.</span> <span class="nav-text">Modern Pointer Analysis</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Static-Analysis-for-Security"><span class="nav-number">9.</span> <span class="nav-text">Static Analysis for Security</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Datalog-Based-Analysis"><span class="nav-number">10.</span> <span class="nav-text">Datalog-Based Analysis</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Abstract-Interpretation"><span class="nav-number">11.</span> <span class="nav-text">Abstract Interpretation</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Introduction"><span class="nav-number">1.</span> <span class="nav-text">Introduction</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Intermediate-Representation"><span class="nav-number">2.</span> <span class="nav-text">Intermediate Representation</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#中间表示Intermediate-Representation-IR"><span class="nav-number">2.1.</span> <span class="nav-text">中间表示Intermediate Representation(IR)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Static-Single-Asssignment-SSA"><span class="nav-number">2.2.</span> <span class="nav-text">Static Single Asssignment(SSA)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Control-Flow-Analysis"><span class="nav-number">2.3.</span> <span class="nav-text">Control Flow Analysis</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Data-Flow-Analysis"><span class="nav-number">3.</span> <span class="nav-text">Data Flow Analysis</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Input-and-Output-states"><span class="nav-number">3.1.</span> <span class="nav-text">Input and Output states</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Reaching-Definitions-Analysis定义可达性"><span class="nav-number">3.2.</span> <span class="nav-text">Reaching Definitions Analysis定义可达性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#live-variables-analysis"><span class="nav-number">3.3.</span> <span class="nav-text">live variables analysis</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Available-Expressions-Analysis可用表达式分析"><span class="nav-number">3.4.</span> <span class="nav-text">Available Expressions Analysis可用表达式分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#foundation"><span class="nav-number">3.5.</span> <span class="nav-text">foundation</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Inter-procedural-Analysis"><span class="nav-number">4.</span> <span class="nav-text">Inter-procedural Analysis</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CFL-Reachability-and-IFDS"><span class="nav-number">5.</span> <span class="nav-text">CFL-Reachability and IFDS</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Soundness-and-Soundiness"><span class="nav-number">6.</span> <span class="nav-text">Soundness and Soundiness</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Pointer-Analysis"><span class="nav-number">7.</span> <span class="nav-text">Pointer Analysis</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Modern-Pointer-Analysis"><span class="nav-number">8.</span> <span class="nav-text">Modern Pointer Analysis</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Static-Analysis-for-Security"><span class="nav-number">9.</span> <span class="nav-text">Static Analysis for Security</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Datalog-Based-Analysis"><span class="nav-number">10.</span> <span class="nav-text">Datalog-Based Analysis</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Abstract-Interpretation"><span class="nav-number">11.</span> <span class="nav-text">Abstract Interpretation</span></a></li></ol></div>
             
 
           </div>
