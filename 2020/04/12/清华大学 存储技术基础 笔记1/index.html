@@ -121,7 +121,40 @@
 <meta property="og:image" content="http://yoursite.com/img/20200415011900.jpg">
 <meta property="og:image" content="http://yoursite.com/img/20200415012100.jpg">
 <meta property="og:image" content="http://yoursite.com/img/20200415012300.jpg">
-<meta property="og:updated_time" content="2020-04-16T02:10:40.548Z">
+<meta property="og:image" content="http://yoursite.com/img/20200416113600.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200416113700.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200416115600.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200416115601.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200416115800.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200416120100.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200416120600.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200416123300.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200416123600.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200418122400.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200418122700.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200418122800.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200418124100.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200418124300.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200418134800.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200418135400.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200418135500.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200418140400.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200418140600.png">
+<meta property="og:image" content="http://yoursite.com/img/20200418165700.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200418165800.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200418170100.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200418170200.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200418170400.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200418170500.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200418170600.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200418172000.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200418173900.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20200418174000.jpg">
+<meta property="og:image" content="http://yoursite.com/img/">
+<meta property="og:image" content="http://yoursite.com/img/">
+<meta property="og:image" content="http://yoursite.com/img/">
+<meta property="og:image" content="http://yoursite.com/img/">
+<meta property="og:updated_time" content="2020-04-18T09:10:41.367Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="清华大学 存储技术基础 笔记">
 <meta name="twitter:description" content="磁盘磁盘结构： 寻址方式： 每个磁头用来读track的数据，每个track是一个圈，每个盘片有很多个track，不同盘片的同一位置的track组成一个柱面。 编址方式：CHS，属于哪个柱面（cylinder）、属于哪个盘面上（header）、属于哪个部分（sector）。右边是逻辑地址。 既是电子式的设备、又是机械式的设备，它的性能评价由时间决定：seek time + rotational la">
@@ -444,7 +477,121 @@
 <p>DRAM的refresh：电容中的电子会慢慢泄露，控制器会发出请求，每一行在64毫秒之后会被写入到row buffer中并被写回到row中，只要机器是开着的，每一行都要刷新，所以DRAM一直在工作。DRAM不能扩展也是因为这一个原因。在refresh时不能响应相应的请求。有两种refresh的方法：每隔一段时间刷新一个（burst），或者是每隔一段时间把所有的都刷新一下（distribute）。<br><img src="/img/20200415011900.jpg" alt></p>
 <p>减少refresh的次数：每次refresh几行，既减少了等待时间，又提高了效率。DRAM容量越大则refresh的时间越长，越影响读写效率。<br><img src="/img/20200415012100.jpg" alt></p>
 <p>很多row没有必要每隔一段很短的时间（64ms）就刷新，使用64ms是为了考虑worst case。如果256ms做一次的话，只有小于1000个cell失效，采用适合refersh的频率。<br><img src="/img/20200415012300.jpg" alt></p>
-<p>如何控制DRAM的时序：</p>
+<p>如何控制DRAM的时序：需要controller来控制时序，每一个channel都有一个controller。主要有以下几个功能：</p>
+<ul>
+<li>确保正确操作，refresh和计时</li>
+<li>在满足DRAM请求的同时要满足一定的时序条件，把请求翻译为DRAM指令序列。</li>
+<li>指令调度，优先调度某些请求，提高性能。</li>
+<li>管理电源、能耗，选择性的开关DRAM芯片。</li>
+</ul>
+<p>DRAM conroller放在CPU的chip中，直接对memory controller进行设置，方便且带宽高。图中，左边是CPU发过来的请求，中间的方框是memory controller，把请求发送到不同的队列中，在进入队列前进行地址翻译，<br><img src="/img/20200416113600.jpg" alt></p>
+<p>从memory发过来的请求先缓存在不同的buffer中，然后到DRAM的bank中去，再发送到实体芯片中。<br><img src="/img/20200416113700.jpg" alt></p>
+<p>调度算法：</p>
+<ul>
+<li>FCFS：先来先服务</li>
+<li>FR-FCFS：first ready指的是如果在buffer中有已经就绪的数据，就先服务，而且不能让先来的等很久。</li>
+<li>主要目标是实现最大的row buffer命中率。</li>
+</ul>
+<p>调度的策略实际上是给每个请求一个优先级：</p>
+<ul>
+<li>请求时间</li>
+<li>是否命中row buffer</li>
+<li>请求种类（prefetch，read，write），程序在等待读的操作时比store的操作优先级高</li>
+<li>已经miss很久的操作优先级肯定高，被很多指令依赖的请求优先级高</li>
+</ul>
+<p>row buffer管理策略：</p>
+<ul>
+<li>第一步active这个row，读取到row buffer中，第二步读取响应数据，最后再写回到对应row中。下文中的两种策略指的是precharge什么时候做。</li>
+<li>open row：不做precharge，即不写回，保持读的这个row在row buffer中，这个好处是命中简单，坏处是如果不命中的话需要很麻烦</li>
+<li>closed row：完全遵循顺序。</li>
+<li>如何自适应的选择？</li>
+</ul>
+<p><img src="/img/20200416115600.jpg" alt><br><img src="/img/20200416115601.jpg" alt><br><img src="/img/20200416115800.jpg" alt></p>
+<p>DRAM时序控制：选中row，读取到row buffer中，保持一段时间做IO，再写回。下图是时序控制图：<br><img src="/img/20200416120100.jpg" alt></p>
+<p>功耗管理：DRAM提供了不同的功耗管理模式。</p>
+<h1 id="Multi-Disk-System"><a href="#Multi-Disk-System" class="headerlink" title="Multi-Disk System"></a>Multi-Disk System</h1><p>多盘系统中最重要的是<strong>容错</strong>。如果错误已经体现在系统了，找到这个错误再去repair。</p>
+<ul>
+<li>reliability：持续提供服务，对应MTTF</li>
+<li>maintainability：服务中断，对应MTTR</li>
+<li><p>availability：对外服务的时间占比，对应EA=MTTF/(MTTF+MTTR)</p>
+</li>
+<li><p>MTBF: Mean Time Between Failure</p>
+</li>
+<li>MTTR: Mean Time To Recover</li>
+<li>MTTF: Mean Time To Failure</li>
+<li>MTBF = MTTR + MTTF</li>
+</ul>
+<p><img src="/img/20200416120600.jpg" alt><br><img src="/img/20200416123300.jpg" alt></p>
+<p>RAID的分类<br><img src="/img/20200416123600.jpg" alt></p>
+<h1 id="file-system"><a href="#file-system" class="headerlink" title="file system"></a>file system</h1><p>文件系统：用户直接操作和管理外存上的信息，繁琐复杂，易于出错，可靠性差；多道程序、分时系统的出现要求以方便可靠的方式共享大容量外存储器。</p>
+<ul>
+<li>program: 转成<file name, offset></file></li>
+<li>file system: 转成&lt;partition, block #&gt;</li>
+<li>device driver: 转成<disk #, sector #></disk></li>
+<li>I/O controller: 转成&lt;cylinder, track, sector&gt;</li>
+<li>disk media</li>
+</ul>
+<p>文件系统的功能:</p>
+<ul>
+<li>命名空间：实现按名存取，文件目录的建立、维护、检索</li>
+<li>存储管理：存储空间的分配与管理；文件块管理，实现逻辑地址与存储物理地址的映射。</li>
+<li>数据保护（灾备）与可靠性</li>
+</ul>
+<p>下图是一段程序，将一个文件的内容传到另一个文件中。用create创建一个新的文件。<br><img src="/img/20200418122400.jpg" alt></p>
+<p>文件操作：<br><img src="/img/20200418122700.jpg" alt></p>
+<p>文件夹操作：<br><img src="/img/20200418122800.jpg" alt></p>
+<p>文件是一连串的数据，和文件控制块（inode），存放着描述文件的信息。文件夹是一种特殊的文件，也有inode，但是content是子文件夹的目录项。</p>
+<p>两个程序都打开了同一个文件，生成两个file handler，或者只打开一次共享给两个程序用。每个handler有不同的offset给每个打开文件的程序使用。<br><img src="/img/20200418124100.jpg" alt></p>
+<p>ext2的inode组成：<br><img src="/img/20200418124300.jpg" alt></p>
+<p>目录是特殊文件，它其中的内容是directory entry。目录项要记录父目录、当前目录和子目录。下图是目录树，右图中是inode和entry的结构。用户拿到pathname，从根目录开始查，先找到inode，判断权限，再继续向下查找。<br><img src="/img/20200418134800.jpg" alt></p>
+<p>在这个过程中，要注意：</p>
+<ul>
+<li>权限检查。access control list。</li>
+<li>软链接。两个inode指向同一个文件，万一出现环的话？</li>
+<li>挂载点。一个文件名可能是一个挂载文件系统，查找过程需要继续进入新的文件系统进行查找。</li>
+</ul>
+<p>读取过程：<br><img src="/img/20200418135400.jpg" alt></p>
+<h2 id="文件系统内部"><a href="#文件系统内部" class="headerlink" title="文件系统内部"></a>文件系统内部</h2><p>简单的文件系统：<br><img src="/img/20200418135500.jpg" alt></p>
+<p>进行文件写的时候的时序操作图<br><img src="/img/20200418140400.jpg" alt></p>
+<p>目录树就是一个树形的结构，对大部分文件系统适用。通过filename找到inode，如果一个目录下有三个文件的话，如图所示:<br><img src="/img/20200418140600.png" alt></p>
+<p>一个系统里可能有多个文件系统，需要挂载到系统上。如何找到根目录：找到特定的地点写入根目录的位置。一个目录中有成千上万的目录时，这时缓存一部分目录，用树的结构，分为子目录。下图是硬链接：<br><img src="/img/20200418165700.jpg" alt></p>
+<p>下图是软链接，修改时要再跳一步去修改。<br><img src="/img/20200418165800.jpg" alt></p>
+<p>文件内存分配策略：</p>
+<ul>
+<li><p>连续分配：保证每个文件都是连续的。容易形成空洞。</p>
+<ul>
+<li>改进：部分连续的分配<br><img src="/img/20200418170100.jpg" alt><br><img src="/img/20200418170200.jpg" alt></li>
+</ul>
+</li>
+<li><p>链式分配：分配的时候简单，但是读取的时候难，通过循环遍历</p>
+<ul>
+<li>一个变种是FAT：不是把链表存在块中，而是把所有的链接存在表中，索引表放到内存中。<br><img src="/img/20200418170400.jpg" alt><br><img src="/img/20200418170500.jpg" alt></li>
+</ul>
+</li>
+<li><p>索引分配：用一个单独的块来索引空间，在分配空间上比较灵活，读取也方便。<br><img src="/img/20200418170600.jpg" alt></p>
+</li>
+</ul>
+<p>可以把索引分配方式和链式分配结合：每个数据块的分配采用索引方式，这样会生成一些索引块，把索引块用链式连接起来。可以支持更大的文件。下图中我们有索引块、二级索引块，等。<br><img src="/img/20200418172000.jpg" alt></p>
+<p>缓存：把相关的数据放到一起，需要比较大的传输IO，传输较大的块，均摊开销。</p>
+<p>Fast File System：把一个数据组放到一个柱面上，不需要做seek的操作，直接在这个柱面读取。分配的时候尽可能连续分配；实现预取。重新分配空间，把不连续的文件变为连续；预先分配，提前留出空间。</p>
+<p>一致性的存在：如果存放的指针没有保持一致性，文件的完整性就会损失。如果两个文件引用了同一个文件但是ref_count为1，会出错。出现一致性问题的原因有：</p>
+<ul>
+<li>并发修改。两个进程并发访问文件。</li>
+<li>盘坏掉了。</li>
+<li>偶然出错。数据传输过程中的错误</li>
+<li>系统崩溃。系统突然掉电，易失性数据丢失。</li>
+</ul>
+<p>real multi-write atomicity：</p>
+<ul>
+<li><p>write-ahead logging：如果直接往正常的数据写的话，可能会终端，先把A’，B’，C’写到log中，如果没问题了再真正写。<br><img src="/img/20200418173900.jpg" alt></p>
+</li>
+<li><p>shadow paging：先把数据写到新的位置，再把指针指过来。只要保证更新指针是原子性操作就行。<br><img src="/img/20200418174000.jpg" alt></p>
+</li>
+</ul>
+<p><img src="/img/" alt></p>
+<p><img src="/img/" alt></p>
+<p><img src="/img/" alt></p>
+<p><img src="/img/" alt></p>
 
       
     </div>
@@ -628,7 +775,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#磁盘"><span class="nav-number">1.</span> <span class="nav-text">磁盘</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#SSD"><span class="nav-number">2.</span> <span class="nav-text">SSD</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#main-memory"><span class="nav-number">3.</span> <span class="nav-text">main memory</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#磁盘"><span class="nav-number">1.</span> <span class="nav-text">磁盘</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#SSD"><span class="nav-number">2.</span> <span class="nav-text">SSD</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#main-memory"><span class="nav-number">3.</span> <span class="nav-text">main memory</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Multi-Disk-System"><span class="nav-number">4.</span> <span class="nav-text">Multi-Disk System</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#file-system"><span class="nav-number">5.</span> <span class="nav-text">file system</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#文件系统内部"><span class="nav-number">5.1.</span> <span class="nav-text">文件系统内部</span></a></li></ol></li></ol></div>
             
 
           </div>
