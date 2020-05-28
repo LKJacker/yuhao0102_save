@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="积累,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="下列两个循环哪个快？12345678910int array[1024][1024]// Loop 1for(int i = 0; i &amp;lt; 1024; i ++)    for(int j = 0; j &amp;lt; 1024; j ++)        array[i][j] ++;// Loop 2for(int i = 0; i &amp;lt; 1024; i ++)    for(int j">
+<meta name="keywords" content="积累">
+<meta property="og:type" content="article">
+<meta property="og:title" content="理解 CPU Cache">
+<meta property="og:url" content="http://yoursite.com/2020/05/28/理解 CPU Cache/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="下列两个循环哪个快？12345678910int array[1024][1024]// Loop 1for(int i = 0; i &amp;lt; 1024; i ++)    for(int j = 0; j &amp;lt; 1024; j ++)        array[i][j] ++;// Loop 2for(int i = 0; i &amp;lt; 1024; i ++)    for(int j">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/20200528120600.webp">
+<meta property="og:image" content="http://yoursite.com/img/20200528120601.webp">
+<meta property="og:image" content="http://yoursite.com/img/20200528120602.webp">
+<meta property="og:image" content="http://yoursite.com/img/20200528120603.webp">
+<meta property="og:image" content="http://yoursite.com/img/20200528120604.webp">
+<meta property="og:image" content="http://yoursite.com/img/20200528120605.webp">
+<meta property="og:image" content="http://yoursite.com/img/20200528120606.webp">
+<meta property="og:image" content="http://yoursite.com/img/20200528120607.webp">
+<meta property="og:image" content="http://yoursite.com/img/20200528120608.webp">
+<meta property="og:updated_time" content="2020-05-28T07:59:50.264Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="理解 CPU Cache">
+<meta name="twitter:description" content="下列两个循环哪个快？12345678910int array[1024][1024]// Loop 1for(int i = 0; i &amp;lt; 1024; i ++)    for(int j = 0; j &amp;lt; 1024; j ++)        array[i][j] ++;// Loop 2for(int i = 0; i &amp;lt; 1024; i ++)    for(int j">
+<meta name="twitter:image" content="http://yoursite.com/img/20200528120600.webp">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2020/05/28/理解 CPU Cache/">
+
+
+
+
+
+  <title>理解 CPU Cache | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-mybetterhalf">
+          <a href="/mybetterhalf/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            mybetterhalf
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/05/28/理解 CPU Cache/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">理解 CPU Cache</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-05-28T12:05:00+08:00">
+                2020-05-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>下列两个循环哪个快？<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">int array[1024][1024]</span><br><span class="line"></span><br><span class="line">// Loop 1</span><br><span class="line">for(int i = 0; i &lt; 1024; i ++)</span><br><span class="line">    for(int j = 0; j &lt; 1024; j ++)</span><br><span class="line">        array[i][j] ++;</span><br><span class="line">// Loop 2</span><br><span class="line">for(int i = 0; i &lt; 1024; i ++)</span><br><span class="line">    for(int j = 0; j &lt; 1024; j ++)</span><br><span class="line">        array[j][i] ++;</span><br></pre></td></tr></table></figure></p>
+<p>Loop 1 的 CPU cache 命中率高，所以它比 Loop 2 约快八倍！</p>
+<p>Gallery of Processor Cache Effects 用 7 个源码示例生动的介绍 cache 原理，深入浅出！但是可能因操作系统的差异、编译器是否优化，以及近些年 cache 性能的提升，第 3 个样例在 Mac 的效果与原文相差较大。另外 Berkeley 公开课 CS162 图文并茂，非常推荐。本文充当搬运工的角色，集二者之精华科普 CPU cache 知识。</p>
+<h1 id="What-is-Cache"><a href="#What-is-Cache" class="headerlink" title="What is Cache"></a>What is Cache</h1><p>维基百科定义为：在计算机系统中，CPU cache（中文简称缓存）是用于减少处理器访问内存所需平均时间的部件。在金字塔式存储体系中它位于自顶向下的第二层，仅次于CPU 寄存器。其容量远小于内存，但速度却可以接近处理器的频率。<br><img src="/img/20200528120600.webp" alt></p>
+<p>原图出处(CS162)。Note:早期的L2 cache 位于主板，现在L2和L3 cache均封装于 CPU 芯片。</p>
+<p>CPU 访问内存时，首先查询 cache 是否已缓存该数据。如果有，则返回数据，无需访问内存；如果不存在，则需把数据从内存中载入 cache，最后返回给理器。在处理器看来，缓存是一个透明部件，旨在提高处理器访问内存的速率，所以从逻辑的角度而言，编程时无需关注它，但是从性能的角度而言，理解其原理和机制有助于写出性能更好的程序。Cache 之所以有效，是因为程序对内存的访问存在一种概率上的局部特征：</p>
+<ul>
+<li>Spatial Locality：对于刚被访问的数据，其相邻的数据在将来被访问的概率高。</li>
+<li>Temporal Locality：对于刚被访问的数据，其本身在将来被访问的概率高。</li>
+</ul>
+<p>从广义的角度而言，cache 可以分为两类：</p>
+<ul>
+<li>数据(指令) cache: 缓存内存数据，根据层级又可分为 L1、L2 和 L3，如果 miss，CPU 需访内存获取数据(指令)。</li>
+<li>TLB(Translation lookaside buffer): 寻址 cache，缓存进程的虚拟机地址和物理地址之间的映射关系，如果 miss，MMU 需多次访问内存获取多级 page table 才能计算出物理地址。</li>
+</ul>
+<p>比 mac OS 为例，可用 sysctl 查询 cache 信息。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">$ sysctl -a</span><br><span class="line"></span><br><span class="line">hw.cachelinesize: 64</span><br><span class="line">hw.l1icachesize: 32768</span><br><span class="line">hw.l1dcachesize: 32768</span><br><span class="line">hw.l2cachesize: 262144</span><br><span class="line">hw.l3cachesize: 3145728</span><br><span class="line">machdep.cpu.cache.L2_associativity: 8</span><br><span class="line">machdep.cpu.core_count: 2</span><br><span class="line">machdep.cpu.thread_count: 4</span><br><span class="line">machdep.cpu.tlb.inst.large: 8</span><br><span class="line">machdep.cpu.tlb.data.small: 64</span><br><span class="line">machdep.cpu.tlb.data.small_level1: 64</span><br><span class="line">machdep.cpu.tlb.shared: 1024</span><br></pre></td></tr></table></figure></p>
+<p>如下图：<br><img src="/img/20200528120601.webp" alt></p>
+<h1 id="Why-Cache"><a href="#Why-Cache" class="headerlink" title="Why  Cache"></a>Why  Cache</h1><p>早期的 CPU 并没有 cache，以起于 1978 年的 intel x86 芯片为例，它从 1992 年开始才开始引入 cache：</p>
+<ul>
+<li>1992: 386 platform 引入 L1 cache</li>
+<li>1995: Pentium Pro 引入 L2 cache</li>
+<li>2008: Core i3 引入 L3 cache</li>
+</ul>
+<p>CPU 和 RAM 主频的增长速率的巨大差距是 cache 引入的直接原因。从 1980 年到 2010 年二者的发展状况，CPU 性能的年增长速度约为 60%，而 RAM 仅有约 9%，巨大的差异导致数十年后，CPU 的速度约比 RAM 快数百倍。</p>
+<p>有人问，为什么不提高 RAM 的速度，因为成本太高！成本因素也是 cache 分为多级的原因。越快的越贵，所以容量小；越慢越廉，容量可很大，它是成本和性能之间的折中方案。CS162 如下两句原话很好的概括了 cache 的作用。</p>
+<ul>
+<li>Present as much memory as in the cheapest technology</li>
+<li>Provide access at speed offered by the fastest technology</li>
+</ul>
+<h1 id="Cache-line-size"><a href="#Cache-line-size" class="headerlink" title="Cache line size"></a>Cache line size</h1><p>Cache line 是 cache 和 RAM 交换数据的最小单位，通常为 64 Byte。当 CPU 把内存的数据载入 cache 时，会把临近的共 64 Byte 的数据也一同载入，因为临近的数据在将来被访问的可能性大，这为 spatial locality 奠定了基础。本文开头的例子中，因为 loop 1 依次访问的数据在地址空间上是相邻的，故 cache 命中率高，耗时少。下列展示了如何测试 cache line 的 size:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">double diff, total_time = 0;</span><br><span class="line"></span><br><span class="line">struct timeval t1, t2;</span><br><span class="line">char *array, *clear_array;</span><br><span class="line">array = malloc(ARRAY_SIZE * sizeof(char));</span><br><span class="line">clear_array = malloc(L3_SIZE * sizeof(char));for(int t = 0; t &lt; TIMES; t++)   //loop for many times</span><br><span class="line">&#123;</span><br><span class="line">    gettimeofday(&amp;t1, NULL);</span><br><span class="line">    for(int i = 0; i &lt; ARRAY_SIZE; i += stride)&#123;</span><br><span class="line">        array[i]++;</span><br><span class="line">    &#125;</span><br><span class="line">    gettimeofday(&amp;t2, NULL);</span><br><span class="line">    diff = time_diff(t1, t2);</span><br><span class="line">    total_time += diff;</span><br><span class="line"></span><br><span class="line">    //clear array data in L1,L2,L3 cache</span><br><span class="line">    for(int i = 0; i &lt; L3_SIZE; i ++)&#123;</span><br><span class="line">        clear_array[i] ++;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>经归一化处理后，本人所测<code>array[i] ++</code>的平均时间与 stride 的关系如下(如果关闭 hardware prefetch，效果可能会更好)：<br><img src="/img/20200528120602.webp" alt></p>
+<h1 id="L1、L2-and-L3-cache-size"><a href="#L1、L2-and-L3-cache-size" class="headerlink" title="L1、L2 and L3 cache size"></a>L1、L2 and L3 cache size</h1><p>L1, L2 和 L3 cache size 的测试方法如下，在循环内每隔 64 Byte(cache line) 访问 array 一次：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">int steps = 64 * 1024 * 1024; // Arbitrary number of steps</span><br><span class="line"></span><br><span class="line">int length_mod = ARRAY_SIZE - 1;</span><br><span class="line"></span><br><span class="line">for (int i = 0; i &lt; steps; i += 64)</span><br><span class="line">&#123;</span><br><span class="line">    array[i &amp; length_mod]++; // (x &amp; length_mod) is equal to (i % length)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>所得结果为：<br><img src="/img/20200528120603.webp" alt></p>
+<p>原图出处 Gallery of Processor Cache Effects 注：本例在本人 Mac 的效果远远差于原著的效果，故采用原图。<br>对于当前个人计算机的 CPU，L1 cache 通常为数十 KB，L2 cache 为数百 KB，L3 cache 可达数 MB，但是 TLB 相对较小，一般只有几百个 entry。</p>
+<h1 id="Instruction-level-parallelism"><a href="#Instruction-level-parallelism" class="headerlink" title="Instruction-level parallelism"></a>Instruction-level parallelism</h1><p>下列循环哪个快？<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"># Loop 1</span><br><span class="line">gettimeofday(&amp;t1, NULL);</span><br><span class="line">for(int i = 0; i &lt; ARRAY_SIZE - 1; i++)&#123;</span><br><span class="line">    array[0] ++;</span><br><span class="line">    array[0] ++;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"># Loop 2</span><br><span class="line">gettimeofday(&amp;t2, NULL);</span><br><span class="line">for(int i = 0; i &lt; ARRAY_SIZE - 1; i++)&#123;</span><br><span class="line">    array[0] ++;</span><br><span class="line">    array[1] ++;</span><br><span class="line">&#125;gettimeofday(&amp;t3, NULL);</span><br><span class="line"></span><br><span class="line">loop1_time = time_diff(t1, t2);</span><br><span class="line">loop2_time = time_diff(t2, t3);</span><br></pre></td></tr></table></figure></p>
+<p>Loop 2 的速度比 Loop 1 接近快一倍。<br>目前 CPU 可以实现一定程度上的并行，比如在同一个时间点访问 L1 Cache 上的两处数据，也可以在同一个时间点执行两条算术运算指令。对于 Loop 2，它并行的运行 <code>array[0] ++</code> 和 <code>array[1] ++</code>。</p>
+<p>Loop 1<br><img src="/img/20200528120604.webp" alt></p>
+<p>原图出处 Gallery of Processor Cache Effects</p>
+<p>Loop 2<br><img src="/img/20200528120605.webp" alt></p>
+<h1 id="Cache-associativity"><a href="#Cache-associativity" class="headerlink" title="Cache associativity"></a>Cache associativity</h1><p>本节主要介绍内存中的数据在 cache 的存放规则，即对于给定地址的数据 A，它该存放在 cache 的何处？要回答此问题，首先需介绍三种不同的存放规则：</p>
+<ul>
+<li>Direct mapped cache: 数据 A 在 cache 的存放位置只有固定一处。</li>
+<li>N-way set associative cache: 数据 A 在 cache 的存放位置可以有 N 处。</li>
+<li>Full associative cache: 数据 A 可存放在 cache 的任意位置。</li>
+</ul>
+<p>从硬件的角度出发，direct mapped cache 设计简单，full associative cache 设计复杂，特别当 cache size 很大时，硬件成本非常之高。但是在 direct mapped cache 下数据的存放地址是固定唯一的，所以容易产生碰撞，最终降低 cache 的命中率，影响性能。在成本和性能的权衡下，当前的 CPU 都是 N-way set associative cache，N 通常为 4，8 或 16。</p>
+<p>以大小为 32 KB，cache line 的大小为 64 Byte 的某 cache 为例，对于不同存放规则，其硬件设计也不同，下列图片依次展示其原理。</p>
+<p>Direct mapped cache<br><img src="/img/20200528120606.webp" alt></p>
+<p>2-way set associative<br><img src="/img/20200528120607.webp" alt></p>
+<p>Full associative cache<br><img src="/img/20200528120608.webp" alt></p>
+<p>本人的 L2 cache 大小为 256 KB，8-way set associative，cache line 为 64 Byte，所以共有 512 个 set (256 K / 64 / 8)，所以地址间隔 32768 (512 * 64) 个 Byte 的数据都会落在 cache 的同一个 set 中。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">#define ARRAY_SIZE  64 * 1024 * 1024</span><br><span class="line">#define STEPS       1024 * 1024 * 1024</span><br><span class="line"></span><br><span class="line">for(int i = 0; i &lt; STEPS; i++)&#123;</span><br><span class="line">    array[p] ++;</span><br><span class="line">    p += STRIDE;</span><br><span class="line">    if(p &gt;= ARRAY_SIZE)</span><br><span class="line">        p = 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当STRIDE为32768时，array[p]总是访问相同cache set，造成大量的冲突和置换，所用时间为18s，当STRIDE为1时，所用时间为3.5s。</p>
+<h1 id="False-cache-line-sharing"><a href="#False-cache-line-sharing" class="headerlink" title="False cache line sharing"></a>False cache line sharing</h1><p>以本计算机的CPU(Intel(R) Core(TM) i5-4258U CPU @ 2.40GHz)为例，同一个core里的两个cpu thread共享L1和L2 cache，L3 cache则是由2个core共享。但一个cpu thread修改cache的某处时，该处所在的整个cache line都会被置为 invalid，其它的cpu thread不能使用该cache line，直到数据被同步到RAM中。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">int counter[1024]; // global variable</span><br><span class="line">void *update_counter(int position)</span><br><span class="line">&#123;</span><br><span class="line">    for(int i = 0; i &lt; 1000000000; i ++ )&#123;</span><br><span class="line">        counter[position] ++;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;int main()</span><br><span class="line">&#123;</span><br><span class="line">    double diff;</span><br><span class="line">    struct timeval t1, t2;</span><br><span class="line">    pthread_t tid1, tid2, tid3, tid4;</span><br><span class="line"></span><br><span class="line">    // Sharing</span><br><span class="line">    gettimeofday(&amp;t1, NULL);</span><br><span class="line">    pthread_create(&amp;tid1, NULL, update_counter, (void *)1);</span><br><span class="line">    pthread_create(&amp;tid2, NULL, update_counter, (void *)2);</span><br><span class="line">    pthread_create(&amp;tid3, NULL, update_counter, (void *)3);</span><br><span class="line">    pthread_create(&amp;tid4, NULL, update_counter, (void *)4);</span><br><span class="line">    pthread_join(tid1, NULL);</span><br><span class="line">    pthread_join(tid2, NULL);</span><br><span class="line">    pthread_join(tid3, NULL);</span><br><span class="line">    pthread_join(tid4, NULL);</span><br><span class="line">    gettimeofday(&amp;t2, NULL);</span><br><span class="line">    diff = time_diff(t1, t2);</span><br><span class="line">    printf(&quot;%f\n&quot;, diff);</span><br><span class="line"></span><br><span class="line">    // False Sharing</span><br><span class="line">    gettimeofday(&amp;t1, NULL);</span><br><span class="line">    pthread_create(&amp;tid1, NULL, update_counter, (void *)16);</span><br><span class="line">    pthread_create(&amp;tid2, NULL, update_counter, (void *)32);</span><br><span class="line">    pthread_create(&amp;tid3, NULL, update_counter, (void *)48);</span><br><span class="line">    pthread_create(&amp;tid4, NULL, update_counter, (void *)64);</span><br><span class="line">    pthread_join(tid1, NULL);</span><br><span class="line">    pthread_join(tid2, NULL);</span><br><span class="line">    pthread_join(tid3, NULL);</span><br><span class="line">    pthread_join(tid4, NULL);</span><br><span class="line"></span><br><span class="line">    gettimeofday(&amp;t2, NULL);</span><br><span class="line">    diff = time_diff(t1, t2);</span><br><span class="line">    printf(&quot;%f\n&quot;, diff);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>并行创建 4 个线程执行上述函数，当 position 值分别为 1，2，3，4 时，所用总时间为 13.1 s，当值为 16，32，48，64 时，所用总时间为 3.4 s。</p>
+<h1 id="Hardware-complexities"><a href="#Hardware-complexities" class="headerlink" title="Hardware complexities"></a>Hardware complexities</h1><p>上述例子为我们介绍了 Cache的基本原理，但是CPU还是非常复杂多样。例如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">int A, B, C, D, E, F, G;</span><br><span class="line">for (int i = 0; i &lt; 200000000; i++)</span><br><span class="line">&#123;</span><br><span class="line">    &lt;something&gt; // do something</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>结果为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;something&gt; Time</span><br><span class="line">A++; B++; C++; D++; 719 ms</span><br><span class="line">A++; C++; E++; G++; 448 ms</span><br><span class="line">A++; C++; 518 ms</span><br><span class="line">One more question</span><br></pre></td></tr></table></figure></p>
+<p>下列循环哪个快？<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">int array_512[512][512]</span><br><span class="line">int array_513[513][513]</span><br><span class="line"></span><br><span class="line">// Loop 1</span><br><span class="line">for(int i = 0; i &lt; 512; i++)&#123;</span><br><span class="line">    for(int j = 0; j &lt; 512; j ++)&#123;</span><br><span class="line">        tmp = array_512[i][j];</span><br><span class="line">        array_512[i][j] = array_512[j][i];</span><br><span class="line">        array_512[j][i] = tmp;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;// Loop 2</span><br><span class="line">for(int i = 0; i &lt; 513; i++)&#123;</span><br><span class="line">    for(int j = 0; j &lt; 513; j ++)&#123;</span><br><span class="line">        tmp = array_513[i][j];</span><br><span class="line">        array_513[i][j] = array_513[j][i];</span><br><span class="line">        array_513[j][i] = tmp;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/积累/" rel="tag"># 积累</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/05/20/Leetcode1_50/" rel="next" title="Leetcode1 - 50">
+                <i class="fa fa-chevron-left"></i> Leetcode1 - 50
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">238</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/xiaomeihao.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#What-is-Cache"><span class="nav-number">1.</span> <span class="nav-text">What is Cache</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Why-Cache"><span class="nav-number">2.</span> <span class="nav-text">Why  Cache</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Cache-line-size"><span class="nav-number">3.</span> <span class="nav-text">Cache line size</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#L1、L2-and-L3-cache-size"><span class="nav-number">4.</span> <span class="nav-text">L1、L2 and L3 cache size</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Instruction-level-parallelism"><span class="nav-number">5.</span> <span class="nav-text">Instruction-level parallelism</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Cache-associativity"><span class="nav-number">6.</span> <span class="nav-text">Cache associativity</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#False-cache-line-sharing"><span class="nav-number">7.</span> <span class="nav-text">False cache line sharing</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Hardware-complexities"><span class="nav-number">8.</span> <span class="nav-text">Hardware complexities</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<span id="busuanzi_container_site_uv"> 
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
