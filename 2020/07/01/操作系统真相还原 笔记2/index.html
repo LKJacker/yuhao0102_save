@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="操作系统,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="保护模式进阶，向内核迈进获取物理内存容量在Linux 中有多种方法获取内存容量，如果一种方法失败，就会试用其他方法。比如在Linux 2.6 内核中，是用detect_memory函数来获取内存容量的。其函数在本质上是通过调用BIOS中断0x15 实现的，分别是BIOS 中断0x15 的3 个子功能，子功能号要存放到寄存器EAX 或AX 中，如下。  EAX=0xE820：遍历主机上全部内存。 A">
+<meta name="keywords" content="操作系统">
+<meta property="og:type" content="article">
+<meta property="og:title" content="操作系统真相还原1-4章">
+<meta property="og:url" content="http://yoursite.com/2020/07/01/操作系统真相还原 笔记2/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="保护模式进阶，向内核迈进获取物理内存容量在Linux 中有多种方法获取内存容量，如果一种方法失败，就会试用其他方法。比如在Linux 2.6 内核中，是用detect_memory函数来获取内存容量的。其函数在本质上是通过调用BIOS中断0x15 实现的，分别是BIOS 中断0x15 的3 个子功能，子功能号要存放到寄存器EAX 或AX 中，如下。  EAX=0xE820：遍历主机上全部内存。 A">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/1593617828.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1593620340.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1593620777.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1593682604.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1593682860.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1593683057.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1593698361.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1593710779.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1593711197.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1593711313.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1593711357.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1593740354.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1593740513.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1593740580.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1593741243.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1593755336.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1593760525.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1593760544.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1593792617.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1593828572.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1593836299.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1593836453.jpg">
+<meta property="og:image" content="http://yoursite.com/img/">
+<meta property="og:image" content="http://yoursite.com/img/">
+<meta property="og:image" content="http://yoursite.com/img/">
+<meta property="og:image" content="http://yoursite.com/img/">
+<meta property="og:updated_time" content="2020-07-04T03:50:15.838Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="操作系统真相还原1-4章">
+<meta name="twitter:description" content="保护模式进阶，向内核迈进获取物理内存容量在Linux 中有多种方法获取内存容量，如果一种方法失败，就会试用其他方法。比如在Linux 2.6 内核中，是用detect_memory函数来获取内存容量的。其函数在本质上是通过调用BIOS中断0x15 实现的，分别是BIOS 中断0x15 的3 个子功能，子功能号要存放到寄存器EAX 或AX 中，如下。  EAX=0xE820：遍历主机上全部内存。 A">
+<meta name="twitter:image" content="http://yoursite.com/img/1593617828.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2020/07/01/操作系统真相还原 笔记2/">
+
+
+
+
+
+  <title>操作系统真相还原1-4章 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-mybetterhalf">
+          <a href="/mybetterhalf/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            mybetterhalf
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/07/01/操作系统真相还原 笔记2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">操作系统真相还原1-4章</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-07-01T11:13:00+08:00">
+                2020-07-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="保护模式进阶，向内核迈进"><a href="#保护模式进阶，向内核迈进" class="headerlink" title="保护模式进阶，向内核迈进"></a>保护模式进阶，向内核迈进</h1><h2 id="获取物理内存容量"><a href="#获取物理内存容量" class="headerlink" title="获取物理内存容量"></a>获取物理内存容量</h2><p>在Linux 中有多种方法获取内存容量，如果一种方法失败，就会试用其他方法。比如在Linux 2.6 内核中，是用<strong>detect_memory</strong>函数来获取内存容量的。其函数<strong>在本质上是通过调用BIOS中断0x15 实现的</strong>，分别是BIOS 中断0x15 的3 个子功能，子功能号要存放到寄存器EAX 或AX 中，如下。</p>
+<ul>
+<li><code>EAX=0xE820</code>：遍历主机上全部内存。</li>
+<li><code>AX=0xE801</code>：分别检测低 15MB 和16MB～4GB 的内存，最大支持4GB。</li>
+<li><code>AH=0x88</code>：最多检测出64MB 内存，实际内存超过此容量也按照64MB 返回。</li>
+</ul>
+<p><strong>BIOS 中断是实模式下的方法，只能在进入保护模式前调用</strong>。获取内存信息，其内部是通过<strong>连续调用硬件的应用程序接口</strong>来获取内存信息的。BIOS 0x15 中断提供了丰富的功能，具体要调用的功能，需要<strong>在寄存器ax 中指定</strong>。其中<strong>0xE8xx</strong>系列的子功能较为强大，0x15 中断的子功能0xE820 和0xE801 都可以用来获取内存，区别是0xE820 返回的是内存布局；而0xE801 直接返回的是内存容量。</p>
+<p>BIOS 中断 <strong>0x15 的子功能0xE820 能够获取系统的内存布局</strong>，BIOS按照类型属性来划分这片系统内存，所以这种查询呈迭代式，每次BIOS 只返回一种类型的内存信息，直到将所有内存类型返回完毕。<strong>子功能0xE820 的强大之处是返回的内存信息较丰富，包括多个属性字段</strong>，内存信息的内容是用地址范围描述符来描述的，用于存储这种描述符的结构称之为地址范围描述符ARDS。。每次int 0x15 之后，BIOS就返回这样一个20个字节的数据。<br><img src="/img/1593617828.jpg" alt></p>
+<p>其中的 Type 字段用来描述这段内存的类型，这里所谓的类型是说明这段内存的用途：</p>
+<ul>
+<li>AddressRangeMemory 这段内存可以被操作系统使用</li>
+<li>AddressRangeReserved 内存使用中或者被系统保留，操作系统不可以用此内存</li>
+<li>其他 将来会用到，目前保留。</li>
+</ul>
+<p>BIOS 中断只是一段函数例程，调用它就要为其提供参数：</p>
+<ul>
+<li>调用前输入<ul>
+<li>EAX 子功能号：EAX 寄存器用来指定子功能号，此处输入为0xE820</li>
+<li>EBX ARDS 后续值：内存信息需要按类型分多次返回，由于每次执行一次中断都只返回一种类型内存的ARDS 结构，所以要记录下一个待返回的内存ARDS，在下一次中断调用时通过此值告诉BIOS 该返回哪个ARDS，这就是后续值的作用。第一次调用时一定要置为0，EBX具体值我们不用关注，字取决于具体BIOS 的实现。每次中断返回后，BIOS 会更新此值</li>
+<li>ES：DI ARDS缓冲区：BIOS 将获取到的内存信息写入此寄存器指向的内存，每次都以ARDS 格式返回</li>
+<li>ECX ARDS 结构的字节大小：用来指示BIOS 写入的字节数。调用者和BIOS 都同时支持的大小是20 字节，将来也许会扩展此结构</li>
+<li>EDX 固定为签名标记0x534d4150，此十六进制数字是字符串SMAP 的ASCII 码：BIOS 将调用者正在请求的内存信息写入ES：DI 寄存器所指向的ARDS 缓冲区后，再用此签名校验其中的信息</li>
+</ul>
+</li>
+<li>返回后输出：<ul>
+<li>CF 位若 CF 位为0 表示调用未出错，CF 为1，表示调用出错</li>
+<li>EAX 字符串SMAP 的ASCII 码0x534d4150</li>
+<li>ES:DI ARDS 缓冲区地址，同输入值是一样的，返回时此结构中已经被BIOS 填充了内存信息</li>
+<li>CX BIOS 写入到ES:DI 所指向的ARDS 结构中的字节数，BIOS 最小写入20 字节</li>
+<li>EBX 后续值：下一个ARDS 的位置。每次中断返回后，BIOS 会更新此值，BIOS 通过此值可以找到下一个待返回的ARDS 结构，咱们不需要改变EBX 的值，下一次中断调用时还会用到它。在CF 位为0 的情况下，若返回后的EBX 值为0，表示这是最后一个ARDS 结构</li>
+</ul>
+</li>
+</ul>
+<p>另一个获取内存容量的方法是BIOS0x15 中断的子功能0xE801。此方法最大只能识别4GB内存，此方法检测到的内存是分别存放到两组寄存器中的。低于15MB 的内存以1KB 为单位大小来记录，单位数量在寄存器AX 和CX 中记录，所以15MB 空间以下的<code>实际内存容量=AX*1024</code>。AX、CX 最大值为0x3c00，即<code>0x3c00*1024=15MB</code>。16MB～4GB是以64KB 为单位大小来记录的，单位数量在寄存器BX 和DX 中记录，所以16MB 以上空间的<code>内存实际大小=BX*64*1024</code>。</p>
+<ul>
+<li>调用前输入 <ul>
+<li>AX：Function Code，子功能号：0xE801</li>
+<li>CF位：Carry Flag， 若CF 位为0 表示调用未出错，CF 为1，表示调用出错</li>
+<li>AX：Extended 1， 以1KB 为单位，只显示15MB 以下的内存容量，故最大值为0x3c00，即AX 表示的最大内存为0x3c00*1024=15MB</li>
+<li>BX： Extended 2， 以64KB 为单位，内存空间16MB～4GB 中连续的单位数量，即内存大小为BX<em>64</em>1024 字节</li>
+<li>CX： Configured 1， 同AX</li>
+</ul>
+</li>
+<li>返回后输出<ul>
+<li>DX： Configured 2， 同BX</li>
+</ul>
+</li>
+</ul>
+<p>最后一个获取内存的方法也同样是<strong>BIOS 0x15 中断，子功能号是0x88</strong>。该方法简单到只能识别最大64MB 的内存。即使内存容量大于64MB，也只会显示63MB，只会显示1MB之上的内存，不包括这1MB。</p>
+<h2 id="启用内存分页机制，畅游虚拟空间"><a href="#启用内存分页机制，畅游虚拟空间" class="headerlink" title="启用内存分页机制，畅游虚拟空间"></a>启用内存分页机制，畅游虚拟空间</h2><p>CPU 在引用一个段时，都要先查看段描述符。<strong>CPU 允许在描述符表中已注册的段不在内存中存在</strong>，这就是它提供给软件使用的策略，我们利用它实现段式内存管理。</p>
+<ul>
+<li><strong>如果该描述符中的P 位为1，表示该段在内存中存在。访问过该段后，CPU 将段描述符中的A 位置1，表示近来刚访问过该段</strong>。</li>
+<li>相反，如果P 位为0，说明内存中并不存在该段，CPU将会抛出异常，转而去执行中断处理程序将相应的段从外存中载入到内存，并将段描述符的P 位置1，中断处理函数结束后返回，CPU 重复执行这个检查，继续查看该段描述符的P 位，此时已经为1 了，在检查通过后，将段描述符的A 位置1。</li>
+</ul>
+<p>首先要做的是解除线性地址与物理地址一一对应的关系，然后将它们的关系重新建立。通过某种映射关系，可以将线性地址映射到任意物理地址。对于地址转换这种实时性较高的需求，通过一张表来实现，该表就是我们所说的页表。</p>
+<p><strong>将段基址和段内偏移地址相加求和的工作是由CPU 的段部件自动完成的</strong>。整个访问内存的过程如图5-6 所示。分页机制要建立在分段机制的基础上。图 5-7 说明，<strong>CPU 在不打开分页机制的情况下，是按照默认的分段方式进行的</strong>，段基址和段内偏移地址经过段部件处理后所输出的线性地址，CPU 就认为是物理地址。<strong>如果打开了分页机制，段部件输出的线性地址就不再等同于物理地址了，我们称之为虚拟地址</strong>，CPU 必须要拿到物理地址才行，此虚拟地址对应的物理地址需要在页表中查找，这项查找工作是由页部件自动完成的。<br><img src="/img/1593620340.jpg" alt></p>
+<p><strong>分页机制的思想是：通过映射，可以使连续的线性地址与任意物理内存地址相关联，逻辑上连续的线性地址其对应的物理地址可以不连续。</strong>分页机制的作用有两方面。</p>
+<ul>
+<li>将线性地址转换成物理地址。</li>
+<li>用大小相等的页代替大小不等的段。</li>
+</ul>
+<p><img src="/img/1593620777.jpg" alt></p>
+<p>上图表示的是一个进程的地址转换过程，从线性空间到虚拟空间再到物理地址空间，每个空间大小都是4GB。图上的4GB 物理地址空间属于所有进程包括操作系统在内的共享资源，其中标注为已分配页的内存块被分配给了其他进程，当前进程只能使用未分配页。此转换过程对任意一个进程都是一样的，也就是说，每个进程都有自己的4GB 虚拟空间。</p>
+<p>在分页机制下，分配情形如图中所示的虚拟地址空间中的代码段和数据段。<strong>代码段和数据段在逻辑上被拆分成以页为单位的小内存块</strong>。这时的虚拟地址虚如其名，不能存放任何数据。接着操作系统开始为这些虚拟内存页分配真实的物理内存页，它查找物理内存中可用的页，然后<strong>在页表中登记这些物理页地址</strong>，这样就完成了虚拟页到物理页的映射，每个进程都以为自己独享4GB 地址空间。</p>
+<p>线性地址对应物理地址的这种映射关系需要用<strong>页表</strong>（Page Table）存储。页表中的每一行（只有一个单元格）称为<strong>页表项</strong>（Page Table Entry，PTE），其大小是4字节，页表项的作用是<strong>存储内存物理地址</strong>。当访问一个线性地址时，实际上就是在访问页表项中所记录的物理内存地址。</p>
+<p>页是地址空间的计量单位，线性地址的一页也要对应物理地址的一页。一页大小为4KB，这样一来，<strong>4GB地址空间被划分成4GB/4KB=1M 个页</strong>，也就是4GB 空间中可以容纳1048576 个页，页表中自然也要有1048576个页表项，这就是我们要说的一级页表。<br><img src="/img/1593682604.jpg" alt></p>
+<p>经以上分析，<strong>虚拟地址的高20 位可用来定位一个物理页，低12 位可用来在该物理页内寻址</strong>。这是如何实现的呢？物理地址写在页表的页表项中，段部件输出的只是线性地址，所以问题就变成了：怎样用线性地址找到页表中对应的页表项。</p>
+<p><strong>分页机制打开前要将页表地址加载到控制寄存器cr3中</strong>。一个页表项对应一个页，所以，用线性地址的高20 位作为页表项的索引，每个页表项要占用4 字节大小，所以这高20 位的索引乘以4 后才是该页表项相对于页表物理地址的字节偏移量。<strong>用cr3 寄存器中的页表物理地址加上此偏移量便是该页表项的物理地址</strong>，<strong>从该页表项中得到映射的物理页地址</strong>，然后<strong>用线性地址的低12 位与该物理页地址相加，所得的地址之和便是最终要访问的物理地址</strong>。拿<code>mov ax，[0x1234]</code>来说：<br><img src="/img/1593682860.jpg" alt></p>
+<p>段基址为0，段内偏移地址为0x1234，经过段部件处理后，<strong>输出的线性地址是0x1234</strong>。页部件分析0x1234 的高20 位，用十六进制表示高20 位是0x00001。将此项作为页表项索引，再将该索引乘以4 后加上cr3 寄存器中页表的物理地址，这样便得到索引所指代的页表项的物理地址，从<strong>该物理地址处（页表项中）读取所映射的物理页地址：0x9000</strong>。线性地址的低12 位是0x234，它作为物理页的页内偏移地址与物理页地址0x9000 相加，和为<strong>0x9234</strong>，这就是线性地址0x1234 最终转换成的物理地址。</p>
+<p>每个页表的物理地址在页目录表中都以<strong>页目录项</strong>（Page Directory Entry，PDE）的形式存储，页目录项大小同页表项一<br>样，<strong>都用来描述一个物理页的物理地址</strong>，其大小都是4字节，而且最多有1024 个页表，所以页目录表也是4KB 大小，同样也是标准页的大小。<br><img src="/img/1593683057.jpg" alt></p>
+<p>页目录表中共1024 个页表，也就是有1024 个页目录项。<strong>一个页目录项中记录一个页表物理页地址</strong>，物理页地址是指页的物理地址，在页目录项及页表项中记录的都是页的物理地址。每个页表中有1024 个页表项，每个页表项中是一个物理页地址，最终数据写在这页表项中指定的物理页中。图中最粗的线存放页目录表物理页，稍细一点的线指向的是用来存放页表的物理页，其他最细的线是页表项中分配的物理页。</p>
+<p>每个页表中可容纳1024个物理页，故每个页表可表示的内存容量是<code>1024*4KB=4MB</code>，所有页表可表示的内存容量是<code>1024*4MB=4GB</code>。页目录中1024 个页表，只需要10 位二进制就能够表示了，所以，<strong>虚拟地址的高10 位（第31～22 位）用来在页目录中定位一个页表，也就是这高10 位用于定位页目录中的页目录项PDE，PDE 中有页表物理页地址</strong>。由于页表中可容纳1024 个物理页，故只需要10 位二进制就能够表示了。所以<strong>虚拟地址的中间10 位（第21～12 位）用来在页表中定位具体的物理页</strong>。由于标准页都是4KB，12 位二进制便可以表达4KB 之内的任意地址，故<strong>线性地址中余下的12 位（第11～0 位）用于页内偏移量</strong>。二级页表地址转换原理是<strong>将32 位虚拟地址拆分成高10 位、中间10 位、低12 位三部分</strong>，</p>
+<p>同一级页表一样，访问任何页表内的数据都要通过物理地址。由于页目录项PDE 和页表项PTE 都是4 字节大小，给出了PDE 和PTE 索引后，还需要在背后悄悄乘以4，再加上页表物理地址，这才是最终要访问的绝对物理地址。转换过程背后的具体步骤如下。</p>
+<ul>
+<li>用虚拟地址的高10 位乘以4，作为页目录表内的偏移地址，加上页目录表的物理地址，所得的和，便是页目录项的物理地址。读取该页目录项，从中获取到页表的物理地址。</li>
+<li>用虚拟地址的中间10 位乘以4，作为页表内的偏移地址，加上在第1 步中得到的页表物理地址，所得的和，便是页表项的物理地址。读取该页表项，从中获取到分配的物理页地址。</li>
+<li>虚拟地址的高10 位和中间10 位分别是PDE 和PTE 的索引值，所以它们需要乘以4。但低12 位就不是索引值啦，其表示的范围是0～0xfff，作为页内偏移最合适，所以虚拟地址的低12 位加上第2 步中得到的物理页地址，所得的和便是最终转换的物理地址。</li>
+</ul>
+<p>比如 mov ax，[0x1234567]：<br><img src="/img/1593698361.jpg" alt></p>
+<p>指令mov ax，[0x1234567]经过段部件处理，输出的线性地址为0x1234567，页部件首先要把地址拆分成高10位、中间10 位、低12 位三部分。其实低12 位最容易得出，十六进制的每1 位代表4 位二进制，所以低12 位直接就是0x567。</p>
+<ul>
+<li>高 10 位是0000 0001 00，十六进制为0x4。</li>
+<li>中间 10 位是10 0011 0100，十六进制为0x234。</li>
+<li><p>低 12 位是0101 0110 0111，十六进制为0x567。</p>
+</li>
+<li><p>第一步：为了得到页表物理地址，页部件用<strong>虚拟地址高 10 位乘以4 的积与页目录表物理地址相加，所得的和便是页目录项地址</strong>，读取该页目录项，获取页表物理地址。这里是0x4*4=0x10，页表物理地址存储在cr3寄存器中。要找的页表位于物理地址0x1000。</p>
+</li>
+<li>第二步：为了得到具体的物理页，需要找到页表中对应的页表项。页部件用<strong>虚拟地址中间 10 位的值乘以4 的积与第一步中得到的页表地址相加，所得的和便是页表项物理地址</strong>。这里是<code>0x234*4=0x8d0</code>，页表项物理地址是<code>0x8d0+0x1000=0x18d0</code>。在该页表项中的值是0xfa000，这意味着分配的物理页地址是0xfa000。</li>
+<li>第三步：为了得到最终的物理地址，用<strong>虚拟地址低12 位作为页内偏移地址与第二步中得到的物理页地址相加</strong>，所得的和便是最终的物理地址。这里是<code>0xfa000+0x567=0xfa567</code>。</li>
+</ul>
+<p>页目录项和页表项是4 字节大小，用来存储物理页地址，只有第12～31位才是物理地址，地址的低12位是0，所以只需要记录物理地址高20 位。其他位：</p>
+<ul>
+<li>P，Present，意为存在位。若为1 表示该页存在于物理内存中，若为0 表示该表不在物理内存中。</li>
+<li>RW，Read/Write，意为读写位。若为1 表示可读可写，若为0 表示可读不可写。</li>
+<li>US，User/Supervisor，意为普通用户/超级用户位。若为1 时，表示处于User 级，任意级别（0、1、2、3）特权的程序都可以访问该页。若为0，表示处于Supervisor 级，特权级别为3 的程序不允许访问该页，该页只允许特权级别为0、1、2 的程序可以访问。</li>
+<li>PWT，Page-level Write-Through，意为页级通写位，也称页级写透位。若为1 表示此项采用通写方式，表示该页不仅是普通内存，还是高速缓存。</li>
+<li>PCD，Page-level Cache Disable，意为页级高速缓存禁止位。若为1 表示该页启用高速缓存，为0 表示禁止将该页缓存。这里咱们将其置为0。</li>
+<li>A，Accessed，意为访问位。若为1 表示该页被CPU 访问过，A 位也可以用来记录某一内存页的使用频率</li>
+<li>D，Dirty，意为脏页位。当CPU 对一个页面执行写操作时，就会设置对应页表项的D 位为1。此项仅针对页表项有效，并不会修改页目录项中的D 位。</li>
+<li>PAT，Page Attribute Table，意为页属性表位，能够在页面一级的粒度上设置内存属性。比较复杂，将此位置0 即可。</li>
+<li>G，Global，意为全局位。将虚拟地址与物理地址转换结果存储在TLB（Translation Lookaside Buffer）中。此G 位用来指定该页是否为全局页，为1 表示是全局页，为0 表示不是全局页。若为全局页，该页将在高速缓存TLB 中一直保存，给出虚拟地址直接就出物理地址。</li>
+<li>AVL，意为Available 位，表示可用，谁可以用？当然是软件，操作系统可用该位，CPU 不理会该位的值，那咱们也不理会吧。</li>
+</ul>
+<p>控制寄存器cr3 用于存储页表物理地址，所以cr3 寄存器又称为页目录基址寄存器（Page Directory Base Register，PDBR）。只要在cr3 寄存器的第31～12 位中写入物理地址的高20 位就行了。另外，cr3 寄存器的低12 位中，除第3 位的PWT 位和第4 位的PCD 位外，其余位都没用。启动分页机制的开关是将控制寄存器cr0 的PG 位置1，PG 位是cr0 寄存器的最后一位：第31 位。</p>
+<p>处理器准备了一个高速缓存，可以匹配高速的处理器速率和低速的内存访问速度，它专门用来存放虚拟地址页框与物理地址页框的映射关系，这个调整缓存就是TLB，即Translation Lookaside Buffer，俗称快表。TLB 中的条目是虚拟地址的高20 位到物理地址高20 位的映射结果，实际上就是从虚拟页框到物理页框的映射。除此之外TLB中还有一些属性位，比如页表项的RW 属性。</p>
+<p>有两种方法可以间接更新TLB，一个是针对TLB 中所有条目的方法—重新加载CR3，比如将CR3 寄存器的数据读出来后再写入CR3，这会使整个TLB 失效。另一个方法是针对TLB 中某个条目的更新。处理器提供了指令invlpg（invalidate page），它用于在TLB 中刷新某个虚拟地址对应的条目，处理器是用虚拟地址来检索TLB 的，因此很自然地，指令invlpg 的操作数也是虚拟地址，其指令格式为invlpg m。</p>
+<h2 id="加载内核"><a href="#加载内核" class="headerlink" title="加载内核"></a>加载内核</h2><p>ELF 目标文件归纳见:<br><img src="/img/1593710779.jpg" alt></p>
+<p>程序中最重要的部分就是<strong>段（segment）和节（section）</strong>，它们是真正的程序体，程序中有很多段，如代码段和数据段等，同样也有很多节，段是由节来组成的，<strong>多个节经过链接之后就被合并成一个段了</strong>，段和节的信息也是用 header 来描述的，程序头是program header，节头是section header。程序中段的大小和数量是不固定的，节的大小和数量也不固定，用程序头表（program header table）和节头表（section header table）描述。这两个表相当于数组，数组元素分别是程序头program header 和节头section header。在表中，每个成员（数组元素）都统称为条目，即 entry，一个条目代表一个段或一个节的头描述信息。对于程序头表，它本质上就是用来描述段（segment）的，所以您也可以称它为段头表。ELF header 是个用来描述各种“头”的“头”，程序头表和节头表中的元素也是程序头和节头。<br><img src="/img/1593711197.jpg" alt></p>
+<p>无论是在待重定位文件，还是可执行文件中，文件最开头的部分必须是elf header。在ELF header之后紧挨着的是程序头表，这对于可执行文件是必须存在的，而对于待重定位文件是可选的。其他成员的位置要取决于各头表中的说明。</p>
+<p>一些重要的数据结构中用到了自定义的数据类型：<br><img src="/img/1593711313.jpg" alt></p>
+<p>C 语言中的结构体能够很直观地表示物理内存结构：<br><img src="/img/1593711357.jpg" alt></p>
+<ul>
+<li><p>e_ident[16]是16 字节大小的数组，用来表示elf 字符等信息，开头的4 个字节是固定不变的，是elf 文件的魔数，它们分别是0x7f，以及字符串ELF 的ascii码：0x45, 0x4c, 0x46。<br><img src="/img/1593740354.jpg" alt></p>
+</li>
+<li><p>e_type 占用2 字节，是用来指定elf 目标文件的类型，，ET_LOPROC和ET_HIPROC 这两个类型的取值跨度好大，显得似乎有些怪异，其实把它们搞得如此怪异，是为了突显它们的“与众不同”，它们是与硬件相关的参数，在它们之间的取值用来标识与处理器相关的文件格式。<br><img src="/img/1593740513.jpg" alt></p>
+</li>
+<li><p>e_machine 占用2 字节，用来描述elf 目标文件的体系结构类型，也就是说该文件要在哪种硬件平台（哪种机器）上才能运行。<br><img src="/img/1593740580.jpg" alt></p>
+</li>
+<li><p>e_version 占用4 字节，用来表示版本信息。</p>
+</li>
+<li>e_entry 占用4 字节，用来指明操作系统运行该程序时，将控制权转交到的虚拟地址。</li>
+<li>e_phoff 占用4 字节，用来指明程序头表（program header table）在文件内的字节偏移量。如果没有程序头表，该值为0。</li>
+<li>e_shoff 占用4 字节，用来指明节头表（section header table）在文件内的字节偏移量。若没有节头表，该值为0。</li>
+<li>e_flags 占用4 字节，用来指明与处理器相关的标志</li>
+<li>e_ehsize 占用2 字节，用来指明elf header 的字节大小。</li>
+<li>e_phentsize 占用2 字节，用来指明程序头表（program header table）中每个条目（entry）的字节大小，即每个用来描述段信息的数据结构的字节大小，该结构是后面要介绍的struct Elf32_Phdr。</li>
+<li>e_phnum 占用2 字节，用来指明程序头表中条目的数量。实际上就是段的个数。</li>
+<li>e_shentsize 占用2 字节，用来指明节头表（section header table）中每个条目（entry）的字节大小，即每个用来描述节信息的数据结构的字节大小。</li>
+<li>e_shnum 占用2 字节，用来指明节头表中条目的数量。实际上就是节的个数。</li>
+<li>e_shstrndx 占用2 字节，用来指明string name table 在节头表中的索引index。</li>
+</ul>
+<p>程序头表中的条目的数据结构，这是用来描述各个段的信息用的，此段是指程序中的某个数据或代码的区域段落：<br><img src="/img/1593741243.jpg" alt></p>
+<ul>
+<li>p_type 占用4 字节，用来指明程序中该段的类型。</li>
+<li>p_offset 占用4 字节，用来指明本段在文件内的起始偏移字节。</li>
+<li>p_vaddr 占用4 字节，用来指明本段在内存中的起始虚拟地址。</li>
+<li>p_paddr 占用4 字节，仅用于与物理地址相关的系统中，因为System V 忽略用户程序中所有的物理地址，所以此项暂且保留，未设定。</li>
+<li>p_filesz 占用4 字节，用来指明本段在文件中的大小。</li>
+<li>p_memsz 占用4 字节，用来指明本段在内存中的大小。</li>
+<li>p_flags 占用4 字节，用来指明与本段相关的标志，本段具有可执行权限、可写权限、可读权限、与操作系统相关、处理器相关</li>
+<li>p_align 占用4 字节，用来指明本段在文件和内存中的对齐方式。如果值为0 或1，则表示不对齐。否则p_align 应该是2 的幂次数。</li>
+</ul>
+<p>通过 dd 命令往磁盘上写，命令如下。<code>dd if= kernel.bin of=/your_path/hd60M.img bs=512 count=200 seek=9 conv=notrunc</code>，seek 为9，目的是跨过前9 个扇区（第0～8 个扇区），我们在第9 个扇区写入。count 为200，目的是一次往参数of 指定的文件中写入200 个扇区。</p>
+<h2 id="特权级深入浅出"><a href="#特权级深入浅出" class="headerlink" title="特权级深入浅出"></a>特权级深入浅出</h2><p>操作系统位于最内环的0 级特权，它要直接控制硬件，掌控各种核心数据，所以它的权利必须最大。系统程序分别位于<br>1 级特权和2 级特权，运行在这两层的程序一般是虚拟机、驱动程序等系统服务。在最外层的是3 级特权，我们的用户程序<br>就运行在此层，用户程序被设计为“有需求时找操作系统”，所以它不需要太大的能力，能完成一般工作即可，因此它的权利最弱。</p>
+<p>TSS，即Task State Segment，意为任务状态段，它是处理器在硬件上原生支持多任务的一种实现方式，TSS 是一种数据结构，它用于存储任务的环境。TSS 是每个任务都有的结构，它用于一个任务的标识，程序拥有此结构才能运行。<br><img src="/img/1593755336.jpg" alt></p>
+<p>任务在特权级变换时，本质上<strong>是处理器的当前特权级在变换</strong>，由一个特权级变成了另外一个特权级。处理器在不同特权级下，应该<strong>用不同特权级的栈</strong>，原因是如果在同一个栈中容纳所有特权级的数据时，这种交叉引用会使栈变得非常混乱，并且，用一个栈容纳多个特权级下的数据，栈容量有限，这很容易溢出。</p>
+<p>特权级转移分为两类，一类是由<strong>中断门、调用门等手段实现低特权级转向高特权级</strong>，另一类则相反，是由<strong>调用返回指令从高特权级返回到低特权级</strong>，这是唯一一种能让处理器降低特权级的情况。</p>
+<ul>
+<li>对于特权级由低到高的情况，<strong>由于不知道目标特权级对应的栈地址在哪里，所以要提前把目标栈的地址记录在某个地方</strong>，当处理器向高特权级转移时再从中取出来加载到SS 和ESP 中以更新栈，这个保存的地方就是TSS。处理器会自动地从TSS 中找到对应的高特权级栈地址。也就是说，<strong>除了调用返回外，处理器只能由低特权级向高特权级转移</strong>，TSS 中所记录的栈是转移后的高特权级目标栈，所以它一定比当前使用的栈特权级要高，只用于向更高特权级转移时提供相应特权的栈地址。</li>
+</ul>
+<p>所以，TSS 中不需要记录3 特权级的栈，因为3 特权级是最低的，没有更低的特权级会向它转移。<strong>不是每个任务都有4 个栈，一个任务可有拥有的栈的数量取决于当前特权级是否还有进一步提高的可能</strong>，即取决于它最低的特权级别。比如3 特权级的程序，它是最低的特权级，还能提升三级，所以可额外拥有2、1、0 特权级栈，用于将特权分别转移到2、1、0 级时使用。</p>
+<p>对于由高特权返回到低特权级的情况，处理器是不需要在TSS 中去寻找低特权级目标栈的。TSS 中只记录2、1、0 特权级的栈，而且，低特权级栈的地址其实已经存在了，这是由处理器的向高特权级转移指令（如int、call 等）实现的机制决定的。</p>
+<p>当处理器由低向高特权级转移时，它<strong>自动地把当时低特权级的栈地址（SS 和ESP）压入了转移后的高特权级所在的栈中</strong>，所以，当用返回指令如retf 或iret 从高特权级向低特权级返回时，处理器可以从当前使用的高特权级的栈中获取低特权级的栈段选择子及偏移量。当下次处理器再进入到高特权级时，它依然会在 TSS 中寻找对应的高特权级栈，而TSS 中栈指针值都是固定的，每次进入高特权级都会重复使用它们。</p>
+<p>TSS 是硬件支持的系统数据结构，它和GDT 等一样，由软件填写其内容，由硬件使用。GDT 也要加载到寄存器GDTR 中才能被处理器找到，TSS 也是一样，它是由TR（Task Register）寄存器加载的，每次处理器执行不同任务时，将TR 寄存器加载不同任务的TSS 就成了。</p>
+<p>计算机特权级的标签体现在DPL、CPL 和RPL，在 CPU 中运行的是指令，其运行过程中的指令总会属于某个代码段，该代码段的特权级，也就是<strong>代码段描述符中的DPL，便是当前CPU 所处的特权级</strong>，这个特权级称为<strong>当前特权级</strong>，即CPL（Current Privilege Level），它表示处理器正在执行的代码的特权级别。<strong>当前特权级实际上是指处理器当前所处的特权级</strong>，是指处理器的特权角色，在任意时刻，当前特权级CPL 保存在CS 选择子中的RPL 部分。</p>
+<p>代码是资源的请求者，<strong>代码段寄存器CS所指向的是处理器中当前运行的指令，所以代码段寄存器CS 中选择子的RPL 位称为当前特权级CPL</strong>，<strong>只是代码段寄存器CS 中的RPL 是CPL，其他段寄存器中选择子的RPL 与CPL 无关</strong>，因为CPL 是针对具有“能动性”的访问者（执行者）来说的，代码是执行者，它表示访问的请求者，所以CPL 只存放在代码段寄存器CS 中低2 位的RPL 中。</p>
+<p>DPL，即Descriptor Privilege Level，描述符特权级，DPL 字段在段描述符中占2位，表示4 个组合，00b、01b、10b、11b，所有特权级都齐了。<strong>DPL 是段描述符所代表的内存区域的“门槛”权限，访问者能否迈过此门槛访问到本描述符所代表的资源，其特权级至少要等于这个门槛</strong>。</p>
+<p>对于受访者为数据段（段描述符中 type 字段中未有X 可执行属性）来说：<strong>只有访问者的权限大于等于该DPL 表示的最低权限才能够继续访问，否则连这个门槛都迈不过去</strong>。对于受访者为代码段（段描述符中 type 字段中含有X 可执行属性）来说：<strong>只有访问者的权限等于该DPL 表示的最低权限才能够继续访问</strong>，CPU 没有理由先自降等级后再去做某事。</p>
+<p><strong>处理器从中断处理程序中返回到用户态的时候</strong>是唯一一种处理器会从高特权降到低特权运行的情况。<strong>中断处理都是在 0 特权级下进行的</strong>，因为中断的发生多半是外部硬件发生了某种状况或发生了某种不可抗力事件而必须要通知CPU 导致的，所以，在中断的处理过程中需要具备访问硬件的能力。再者，<strong>有些中断处理中需要的指令只能在0 特权级下使用，这部分指令称为特权指令</strong>。除了从中断处理过程返回外，任何时候CPU 都不允许从高特权级转移到低特权级。比目标代码段特权级低的访问者也会被拒绝访问目标代码段。综上所述，<strong>对于受访问者为代码段的情况，只能是平级访问</strong>。</p>
+<p>一致性代码段也称为<strong>依从代码段</strong>，Conforming，<strong>用来实现从低特权级的代码向高特权级的代码转移</strong>。<strong>一致性代码段是指如果自己是转移后的目标段，自己的特权级（DPL）一定要大于等于转移前的CPL</strong>，即数值上<code>CPL≥DPL</code>，也就是一致性代码段的DPL 是权限的上限，任何在此权限之下的特权级都可以转到此代码段上执行。</p>
+<p>该关系用公式表示如下：在数值上，<code>CPL≥一致性代码段的DPL</code>，一致性代码段的一大特点是<strong>转移后的特权级不与自己的特权级（DPL）为主，而是与转移前的低特权级一致，听从、依从转移前的低特权级</strong>，这就是它称为“依从、一致”的原因。</p>
+<p>顺便说一句，代码段可以有一致性和非一致性之分，但所有的数据段总是非一致的，即数据段不允许被比本数据段特权级更低的代码段访问。</p>
+<p>处理器只有通过“门结构”才能由低特权级转移到高特权级，是记录一段程序起始地址的描述符。<strong>门结构是记录一段程序起始地址的描述符</strong>。有一种称为“门描述符”的结构，用来描述一段程序。进入这种神奇的“门”，处理器便能转移到更高的特权级上。<br>门描述符同段描述符类似，都是 8 字节大小的数据结构，用来描述门中通向的代码。<br><img src="/img/1593760525.jpg" alt><br><img src="/img/1593760544.jpg" alt></p>
+<p>除了任务门外，其他三种门都是对应到一段例程，即对应一段函数，而不是像段描述符对应的是一片内存区域。任务门描述符可以放在GDT、LDT 和IDT中，调用门可以位于GDT、LDT 中，中断门和陷阱门仅位于IDT 中。</p>
+<p><strong>任务门、调用门都可以用call 和jmp 指令直接调用</strong>，原因是这两个门描述符都位于描述符表中，要么是GDT，要么是LDT，访问它们同普通的段描述符是一样的，也必须要通过选择子，因此只要在call 或jmp 指令后接任务门或调用门的选择子便可调用它们了。<strong>陷阱门和中断门只存在于IDT 中，因此不能主动调用，只能由中断信号来触发调用</strong>。任务门有点特殊，它用任务TSS 的描述符选择子来描述一个任务。</p>
+<ol>
+<li>调用门：call 和jmp 指令后接调用门选择子为参数，以调用函数例程的形式实现从低特权向高特权转移，可用来实现系统调用。call 指令使用调用门可以实现向高特权代码转移，jmp 指令使用调用门只能实现向平级代码转移。</li>
+<li>中断门：以 int 指令主动发中断的形式实现从低特权向高特权转移，Linux 系统调用便用此中断门实现</li>
+<li>陷阱门：以 int3 指令主动发中断的形式实现从低特权向高特权转移，这一般是编译器在调试时用</li>
+<li>任务门：任务以任务状态段TSS 为单位，用来实现任务切换，它可以借助中断或指令发起。当中断发生时，如果对应的中断向量号是任务门，则会发起任务切换。也可以像调用门那样，用call 或jmp 指令后接任务门的选择子或任务TSS 的选择子。</li>
+</ol>
+<p>门的“门槛”是访问者特权级的下限，访问者的特权级再低也不能比门描述符的特权级DPL 低，否则访问者连门都进不去，更谈不上使用调用门。门描述符的DPL 特权级要低于或等于当前特权级CPL，即<strong>数值上CPL≤门的DPL</strong>，此处可见，门描述符相当于数据段描述符一样，只允许比自己特权级高或相同特权级的程序访问。</p>
+<p>门的“门框”是访问者特权级的上限，访问者的特权级再高也不能比门描述符中目标程序所在代码段的DPL 高。门中包含的目标程序所在的段的特权级DPL 要高于或等于当前特权级CPL，即数值上CPL≥目标代码段DPL，进门之后，处理器将以目标代码段DPL 为当前特权级CPL。</p>
+<p><strong>各种门结构存在的目的就是为了让处理器提升特权级，这样处理器才能够做一些低特权级下无法完成的工作</strong>。调用门是一个描述符，称为门描述符，其中记录的是内核服务程序所在代码段的选择子及在代码段中的偏移地址。<strong>门描述符定义在全局描述符表GDT 和局部描述符表LDT 中</strong>，所以，要想使用调用门，就要通过门描述符的选择子。</p>
+<p><img src="/img/1593792617.jpg" alt></p>
+<ul>
+<li>在用户程序中有一句代码<code>call 调用门选择子</code>，call 指令可以使用调用门，参数就是调用门的选择子，该选择子指向GDT 或LDT 中的某个门描述符，不管选择子中的TI 位是0，还是1，我们暂且认为它是指向GDT 中的调用门。处理器用门描述符选择子的高13 位（索引位）乘以8 作为该描述符在GDT 中的偏移量，再加上寄存器GDTR 中的GDT 基地址，最终找到了门描述符的地址，它位于GDT中从0 起的第3 个描述符位置。</li>
+<li>在该描述符中记录的是内核例程的地址。我们知道，在保护模式下描述某个内存地址是离不开选择子和偏移量的，所以，门描述符中记录的是内核例程所在代码段的选择子及偏移量。处理器再用代码段选择子，重复之前的步骤，用选择子中高13位的索引值乘以8，再加上GDT 基址，所得到的地址为该代码段选择子所指向的内核代码段描述符地址，在该内核代码段描述符中找到内核代码段基址，用它加上门描述符中记录的内核例程在代码段中的偏移量，最终得到内核例程的起始地址。</li>
+</ul>
+<p>为了方便软件开发人员，<strong>处理器在固件上实现参数的自动复制</strong>，即，将用户进程压在3 特权级栈中的参数自动复制到0 特权级栈中。所以，在图中，其高32 位的起始处有个<strong>参数个数</strong>，这是处理器将用户提供的参数复制给内核时需要用到的，参数在栈中的顺序是挨着的，所以处理器只需要知道复制几个参数就行了，这就是调用门描述符中“参数个数”的作用，它是专门给处理器准备的。该位是用5 个BIT 来表示的，所以最多可传递31 个参数。</p>
+<p>调用门可以用call 指令和jmp 指令调用，jmp 属于一去不回头的指令，基本上用在不需要从调用门返回的场合。call 指令由于会在栈中留下返回地址，所以在执行retf 指令时还能返回。</p>
+<h3 id="调用门的过程保护"><a href="#调用门的过程保护" class="headerlink" title="调用门的过程保护"></a>调用门的过程保护</h3><p>假设用户进程要调用某个调用门，该门描述符中参数的个数是2，也就是用户进程需要为该调用门提供2 个参数才行。调用前的当前特权级为3，调用后的新特权级为0，所以调用门转移前用的是3 特权级栈，调用后用的是0 特权级栈。</p>
+<ul>
+<li>现在为此调用门提供2个参数，这是在使用调用门前完成的，目前是在3 特权级，所以要在特权级栈中压入参数，分别是参数1 和参数2</li>
+<li>在这一步骤中要确定新特权级使用的栈，<strong>新特权级就是未来的CPL，它就是转移后的目标代码段的DPL</strong>。所以，根据门描述符中选择子对应的目标代码段的DPL，<strong>处理器自动在TSS 中找到合适的栈段选择子SS 和栈指针ESP，它们作为转移后新的栈</strong>，记作SS_new、ESP_new。</li>
+<li>检查新栈段选择子对应的描述符的DPL 和TYPE，如果未通过检查则处理器引发异常。</li>
+<li>如果转移后的目标代码段DPL 比CPL 要高，说明栈段选择子SS_new 是特权级更高的栈，这说明需要特权级转换，需要切换到新栈，将旧栈段选择子记作SS_old，旧栈指针记作ESP_old。<strong>由于转移前的旧栈段选择子SS_old 及指针ESP_old 得保存到新栈中，这样在高特权级的目标程序执行完成后才能通过retf 指令恢复旧栈</strong>。将SS_new 加载到栈段寄存器SS，esp_new 加载到栈指针寄存器esp，这样便启用了新栈。</li>
+<li>在使用新栈后，将上一步中临时保存的SS_old 和ESP_old 压入到当前新栈中，也就是0 特权级栈。由于咱们讨论的是32 位模式，故栈操作数也是32 位，SS_old 只是16 位数据，将其高16 位用0 填充后入栈保存。</li>
+</ul>
+<p><img src="/img/1593828572.jpg" alt></p>
+<ul>
+<li>在这一步中要将用户栈中的参数复制到转移后的新栈中，根据调用门描述符中的“参数个数”决定复制几个参数。</li>
+<li>由于调用门描述符中记录的是目标程序所在代码段的选择子及偏移地址，这意味着<strong>代码段寄存器CS要用该选择子重新加载</strong>，只要段寄存器被加载，段描述符缓冲寄存器就会被刷新，从而相当于切换到了新段上运行，这是<strong>段间远转移</strong>，所以需要将当前代码段CS 和EIP 都备份在栈中，这两个值分别记作CS_old 和EIP_old，由于CS_old 只是16 位数据，在32 位模式下栈操作数大小是32 位，故将其高16 位用0 填充后再入栈。这两个值是将来恢复用户进程的关键，也就是从内核进程中返回时用的地址。</li>
+<li>一切就绪，只差运行调用门中指向的程序啦，于是，把门描述符中的代码段选择子装载到代码段寄存器CS，把偏移量装载到指令指针寄存器EIP。</li>
+</ul>
+<p>下面是利用 retf 指令从调用门返回的过程：</p>
+<ul>
+<li>当处理器执行到retf 指令时，它知道这是远返回，所以需要<strong>从栈中返回旧栈的地址及返回到低特权级的程序中</strong>。这时候它要进行特权级检查。先检查栈中CS选择子，根据其RPL位，即未来的CPL，判断在返回过程中是否要改变特权级。</li>
+<li>此时栈顶应该指向栈中的EIP_old。在此步骤中获取栈中CS_old 和EIP_old，<strong>根据该CS_old 选择子对应的代码段的DPL 及选择子中的RPL 做特权级检查</strong>，规则不再赘述。如果检查通过，先从栈中弹出32 位数据，即EIP_old 到寄存器EIP，然后再弹出32 位数据CS_old，此时要临时处理一下，由于所有的段寄存器都是16 位的，当然包括CS，所以丢弃CS_old 的高16 位，将低16 位加载到CS 寄存器。此时栈指针ESP_new 指向最后一个参数。</li>
+<li>如果返回指令retf 后面有参数，则增加栈指针ESP_new 的值，以跳过栈中参数，retf 后面的参数应该等于参数个数*参数大小。此时，栈指针ESP_new 便指向ESP_old。</li>
+<li>如果在第1 步中判断出需要改变特权级，从栈中弹出32 位数据ESP_old 到寄存器ESP。同样寄存器 SS 也是16 位的，故再弹出32 位的SS_old，只将其低16 位加载到寄存器SS，此时恢复了旧栈。相当于丢弃寄存器SS 和ESP 中原有的SS_new 和ESP_new。</li>
+</ul>
+<p>RPL，Request Privilege Level，请求特权级，代表真正请求者的特权级，其实是代表真正资源需求者的CPL。<strong>在请求某特权级为DPL 级别的资源时，参与特权检查的不只是CPL，还要加上RPL</strong>，<strong>CPL 和RPL的特权必须同时大于等于受访者的特权DPL，即：数值上 CPL≥DPL 并且RPL≤DPL</strong></p>
+<p>RPL 引入的目的是避免低特权级的程序访问高特权级的资源。<strong>DPL 相当于权限的门槛，它代表进入本描述符所对应内存区域的最低权限，任何想迈过这个门槛的人，它的RPL 和CPL 权限必须都要大于等于DPL，即数值上CPL≤DPL &amp;&amp; RPL≤DPL</strong>。用来检查当前请求者和真正的资源需求方是否都具有访问受访者的资格。处理器的特权检查，都是只发生在往段寄存器中加载选择子访问描述符的那一瞬间，所以，RPL 放在选择子中是多么的合理。</p>
+<p>总结下不通过调用门、直接访问一般数据和代码时的特权检查规则，</p>
+<ul>
+<li>对于受访者为代码段时：<ul>
+<li>如果目标为非一致性代码段，要求：数值上 CPL=RPL=目标代码段DPL</li>
+<li>如果目标为一致性代码段，要求：数值上（CPL≥目标代码段DPL &amp;&amp; RPL≥目标代码段DPL）</li>
+<li>受访者若为代码，只有在特权级转移时才会被用到，所以有关代码的特权检查都发生在能够改变代码段寄存器CS 和指令指针寄存器EIP 的指令中，即这些指令要么改变EIP，要么改变CS 和EIP。例如call、jmp、int、ret、sysexit 等能改变程序执行流的指令。</li>
+</ul>
+</li>
+<li>对于受访者为数据段时：<ul>
+<li>数值上（CPL ≤目标数据段DPL &amp;&amp; RPL ≤ 目标数据段 DPL）</li>
+</ul>
+</li>
+<li>栈段的特权级检查比较特殊，因为在各个特权级下，处理器都要有相应的栈（后面会说到），也就是说栈的特权等级要和CPL 相同。所以往段寄存器SS 中赋予数据段选择子时，处理器要求CPL 等于栈段选择子对应的数据段的DPL，即数值上C<strong>PL = RPL = 用作栈的目标数据段DPL</strong>。</li>
+<li>受访者若为数据，特权级检查会发生在往数据段寄存器中加载段选择子的时候，数据段寄存器包括DS 和附加段寄存器ES、FS、GS。</li>
+</ul>
+<p>RPL 是位于选择子中的，所以，要看当前运行的程序在访问数据或代码时用的是谁提供的选择子，如果用的<br>是自己提供的选择子，那肯定CPL 和RPL 都出自同一个程序；如果选择子是别人提供的，那就有可能RPL和CPL 出自两段程序。CPL 是对当前正在运行的程序而言的，而RPL 有可能是正在运行的程序。</p>
+<p>在保护模式下，处理器中的“阶级”不仅体现在数据和代码的访问，还体现在指令中。</p>
+<ul>
+<li>一方面将指令分级的原因是有些指令的执行对计算机有着严重的影响，它们只有在0 特权级下被执行，因此被称为<strong>特权指令</strong>（Privilege Instruction）。</li>
+<li>另一方面体现在I/O 读写控制上。IO 读写特权是由标志寄存器eflags 中的IOPL 位和TSS 中的IO 位图决定的，它们用来指定执行IO 操作的最小特权级。IO 相关的指令只有在当前特权级大于等于IOPL 时才能执行，所以它们称为<strong>IO 敏感指令</strong>（I/O Sensitive Instruction），如果当前特权级小于IOPL 时执行这些指令会引发处理器异常。这类指令有in、out、cli、sti。</li>
+</ul>
+<p>在eflags 寄存器中第12～13 位便是<strong>IOPL</strong>（I/O Privilege Level），即<strong>IO 特权级</strong>，它除了<strong>限制当前任务进行IO 敏感指令的最低特权级外，还用来决定任务是否允许操作所有的IO 端口</strong>，IOPL 位是打开所有IO 端口的开关。每个任务（内核进程或用户进程）都有自己的eflags 寄存器，所以每个任务都有自己的IOPL，它表示当前任务要想执行全部IO 指令的最低特权级，也就是处理器最低的CPL，只有任务的当前特权级大于等于IOPL才允许执行全部IO 指令，即数值上CPL≤IOPL。通过IO 位图来设置部分端口的访问权限。<br><img src="/img/1593836299.jpg" alt></p>
+<p>I/O 位图是位于TSS 中的，它可以存在，也可以不存在，它只是用来设置对某些特定端口的访问，没有它的话便默认为禁止访问所有端口。有一项是“I/O 位图在TSS 中的偏移地址”，它在TSS 中偏移102 字节的地方，占2 个字节空间，就是图5-47 的左上角，此处用来存储I/O 位图的偏移地址，即此地址是I/O 位图在TSS 中以0 为起始的偏移量。如果某个TSS 存在I/O 位图的话，此处用来保存它的偏移地址。</p>
+<p>TSS 中如果有I/O 位图的话，它将位于TSS 的顶端，这就是TSS 的实际尺寸并不固定的原因，当包括I/O 位图时，其大小是“I/O 位图偏移地址”+8192+1 字节，结尾这个1 字节是I/O 位图中最后的0xff。此字节有两个作用。</p>
+<ul>
+<li>第一，处理器允许I/O 位图中不映射所有的端口，即I/O 位图长度可以不足8KB，但位图的最后一字节必须为0xFF。如果在位图范围外的端口，处理器一律默认禁止访问。这样一来，<strong>如果位图最后一字节的0xFF 属于全部65536 个端口范围之内，字节各位全为1 表示禁止访问此字节代表的全部端口，这并没什么过错</strong>。</li>
+<li>第二，<strong>如果该字节已经超过了全部端口的范围，它并不用来映射端口，只是用来作为位图的边界标记，用于跨位图最后一个字节时的“余量字节”。避免越界访问TSS 外的内存</strong>。</li>
+</ul>
+<h1 id="完善内核"><a href="#完善内核" class="headerlink" title="完善内核"></a>完善内核</h1><p><img src="/img/1593836453.jpg" alt></p>
+<p><img src="/img/" alt></p>
+<p><img src="/img/" alt></p>
+<p><img src="/img/" alt></p>
+<p><img src="/img/" alt></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/操作系统/" rel="tag"># 操作系统</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/06/29/Leetcode1201_1250/" rel="next" title="Leetcode1201 - 1250">
+                <i class="fa fa-chevron-left"></i> Leetcode1201 - 1250
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">233</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/xiaomeihao.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#保护模式进阶，向内核迈进"><span class="nav-number">1.</span> <span class="nav-text">保护模式进阶，向内核迈进</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#获取物理内存容量"><span class="nav-number">1.1.</span> <span class="nav-text">获取物理内存容量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#启用内存分页机制，畅游虚拟空间"><span class="nav-number">1.2.</span> <span class="nav-text">启用内存分页机制，畅游虚拟空间</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#加载内核"><span class="nav-number">1.3.</span> <span class="nav-text">加载内核</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#特权级深入浅出"><span class="nav-number">1.4.</span> <span class="nav-text">特权级深入浅出</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#调用门的过程保护"><span class="nav-number">1.4.1.</span> <span class="nav-text">调用门的过程保护</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#完善内核"><span class="nav-number">2.</span> <span class="nav-text">完善内核</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<span id="busuanzi_container_site_uv"> 
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
