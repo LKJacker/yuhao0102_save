@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="作者：Java小咖秀https://juejin.im/post/5efe8dc9f265da22aa0ef08f  grep、sed、awk我们叫他们三剑客，掌握它们可以更好的运维，提升工作效率，即使不是运维，对我们处理数据都是非常方便的～就很多数据处理来讲，写程序肯定是也能处理的，但是远没有已经存在特定功能的命令更高效，我们只需要操作命令即可。 grepgrep是一款强大的文本搜索工具，支持">
+<meta name="keywords" content="Linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="grep、sed、awk高效文件处理3剑客">
+<meta property="og:url" content="http://yoursite.com/2020/08/06/grep_sed_awk/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="作者：Java小咖秀https://juejin.im/post/5efe8dc9f265da22aa0ef08f  grep、sed、awk我们叫他们三剑客，掌握它们可以更好的运维，提升工作效率，即使不是运维，对我们处理数据都是非常方便的～就很多数据处理来讲，写程序肯定是也能处理的，但是远没有已经存在特定功能的命令更高效，我们只需要操作命令即可。 grepgrep是一款强大的文本搜索工具，支持">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/20200806172800.webp">
+<meta property="og:updated_time" content="2020-08-13T09:37:29.117Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="grep、sed、awk高效文件处理3剑客">
+<meta name="twitter:description" content="作者：Java小咖秀https://juejin.im/post/5efe8dc9f265da22aa0ef08f  grep、sed、awk我们叫他们三剑客，掌握它们可以更好的运维，提升工作效率，即使不是运维，对我们处理数据都是非常方便的～就很多数据处理来讲，写程序肯定是也能处理的，但是远没有已经存在特定功能的命令更高效，我们只需要操作命令即可。 grepgrep是一款强大的文本搜索工具，支持">
+<meta name="twitter:image" content="http://yoursite.com/img/20200806172800.webp">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2020/08/06/grep_sed_awk/">
+
+
+
+
+
+  <title>grep、sed、awk高效文件处理3剑客 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-mybetterhalf">
+          <a href="/mybetterhalf/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            mybetterhalf
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/08/06/grep_sed_awk/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">grep、sed、awk高效文件处理3剑客</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-08-06T17:22:00+08:00">
+                2020-08-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote>
+<p>作者：Java小咖秀<br><a href="https://juejin.im/post/5efe8dc9f265da22aa0ef08f" target="_blank" rel="noopener">https://juejin.im/post/5efe8dc9f265da22aa0ef08f</a></p>
+</blockquote>
+<p>grep、sed、awk我们叫他们三剑客，掌握它们可以更好的运维，提升工作效率，即使不是运维，对我们处理数据都是非常方便的～就很多数据处理来讲，写程序肯定是也能处理的，但是远没有已经存在特定功能的命令更高效，我们只需要操作命令即可。</p>
+<h1 id="grep"><a href="#grep" class="headerlink" title="grep"></a>grep</h1><p>grep是一款强大的文本搜索工具，支持正则表达式。全称（ global search regular expression(RE) and print out the line）</p>
+<blockquote>
+<p>语法:grep [option]… PATTERN [FILE]…</p>
+</blockquote>
+<p>常用:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">usage: grep [-abcDEFGHhIiJLlmnOoqRSsUVvwxZ] [-A num] [-B num] [-C[num]]</span><br><span class="line"> [-e pattern] [-f file] [--binary-files=value] [--color=when]</span><br><span class="line"> [--context[=num]] [--directories=action] [--label] [--line-buffered]</span><br><span class="line"> [--null] [pattern] [file ...]</span><br></pre></td></tr></table></figure></p>
+<p>常用参数:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">-v        取反</span><br><span class="line">-i        忽略大小写</span><br><span class="line">-c        符合条件的行数</span><br><span class="line">-n        输出的同时打印行号</span><br><span class="line">^*        以*开头         </span><br><span class="line">*$         以*结尾 </span><br><span class="line">^$         空行</span><br></pre></td></tr></table></figure></p>
+<h2 id="实际使用"><a href="#实际使用" class="headerlink" title="实际使用"></a>实际使用</h2><p>准备好一个小故事txt:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# cat monkey</span><br><span class="line">One day,a little monkey is playing by the well.一天,有只小猴子在井边玩儿.</span><br><span class="line">He looks in the well and shouts :它往井里一瞧,高喊道：</span><br><span class="line">“Oh!My god!The moon has fallen into the well!” “噢!我的天!月亮掉到井里头啦!”</span><br><span class="line">An older monkeys runs over,takes a look,and says,一只大猴子跑来一看,说,</span><br><span class="line">“Goodness me!The moon is really in the water!” “糟啦!月亮掉在井里头啦!”</span><br><span class="line">And olderly monkey comes over.老猴子也跑过来.</span><br><span class="line">He is very surprised as well and cries out:他也非常惊奇,喊道：</span><br><span class="line">“The moon is in the well.” “糟了,月亮掉在井里头了!”</span><br><span class="line">A group of monkeys run over to the well .一群猴子跑到井边来,</span><br><span class="line">They look at the moon in the well and shout:他们看到井里的月亮,喊道：</span><br><span class="line">“The moon did fall into the well!Come on!Let’get it out!”</span><br><span class="line">“月亮掉在井里头啦!快来!让我们把它捞起来!”</span><br><span class="line">Then,the oldest monkey hangs on the tree up side down ,with his feet on the branch .</span><br><span class="line">然后,老猴子倒挂在大树上,</span><br><span class="line">And he pulls the next monkey’s feet with his hands.拉住大猴子的脚,</span><br><span class="line">All the other monkeys follow his suit,其他的猴子一个个跟着,</span><br><span class="line">And they join each other one by one down to the moon in the well.</span><br><span class="line">它们一只连着一只直到井里.</span><br><span class="line">Just before they reach the moon,the oldest monkey raises his head and happens to see the moon in the sky,正好他们摸到月亮的时候,老猴子抬头发现月亮挂在天上呢</span><br><span class="line">He yells excitedly “Don’t be so foolish!The moon is still in the sky!”</span><br><span class="line">它兴奋地大叫：“别蠢了!月亮还好好地挂在天上呢!</span><br></pre></td></tr></table></figure></p>
+<p>直接查找符合条件的行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# grep moon monkey</span><br><span class="line">“Oh!My god!The moon has fallen into the well!” “噢!我的天!月亮掉到井里头啦!”</span><br><span class="line">“Goodness me!The moon is really in the water!” “糟啦!月亮掉在井里头啦!”</span><br><span class="line">“The moon is in the well.” “糟了,月亮掉在井里头了!”</span><br><span class="line">They look at the moon in the well and shout:他们看到井里的月亮,喊道：</span><br><span class="line">“The moon did fall into the well!Come on!Let’get it out!”</span><br><span class="line">And they join each other one by one down to the moon in the well.</span><br><span class="line">Just before they reach the moon,the oldest monkey raises his head and happens to see the moon in the sky,正好他们摸到月亮的时候,老猴子抬头发现月亮挂在天上呢</span><br><span class="line">He yells excitedly “Don’t be so foolish!The moon is still in the sky!”</span><br></pre></td></tr></table></figure></p>
+<p>查找反向符合条件的行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# grep -v  moon monkey</span><br><span class="line">One day,a little monkey is playing by the well.一天,有只小猴子在井边玩儿.</span><br><span class="line">He looks in the well and shouts :它往井里一瞧,高喊道：</span><br><span class="line">An older monkeys runs over,takes a look,and says,一只大猴子跑来一看,说,</span><br><span class="line">And olderly monkey comes over.老猴子也跑过来.</span><br><span class="line">He is very surprised as well and cries out:他也非常惊奇,喊道：</span><br><span class="line">A group of monkeys run over to the well .一群猴子跑到井边来,</span><br><span class="line">“月亮掉在井里头啦!快来!让我们把它捞起来!”</span><br><span class="line">Then,the oldest monkey hangs on the tree up side down ,with his feet on the branch .</span><br><span class="line">然后,老猴子倒挂在大树上,</span><br><span class="line">And he pulls the next monkey’s feet with his hands.拉住大猴子的脚,</span><br><span class="line">All the other monkeys follow his suit,其他的猴子一个个跟着,</span><br><span class="line">它们一只连着一只直到井里.</span><br><span class="line">它兴奋地大叫：“别蠢了!月亮还好好地挂在天上呢!”</span><br></pre></td></tr></table></figure></p>
+<p>直接查找符合条件的行数<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# grep -c  moon monkey</span><br><span class="line">8</span><br></pre></td></tr></table></figure></p>
+<p>忽略大小写查找符合条件的行数，先来看一下直接查找的结果<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# grep my monkey</span><br></pre></td></tr></table></figure></p>
+<p>忽略大小写查看<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# grep -i my monkey</span><br><span class="line">“Oh!My god!The moon has fallen into the well!” “噢!我的天!月亮掉到井里头啦!”</span><br></pre></td></tr></table></figure></p>
+<p>查找符合条件的行并输出行号<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# grep -n monkey monkey</span><br><span class="line">1:One day,a little monkey is playing by the well.一天,有只小猴子在井边玩儿.</span><br><span class="line">4:An older monkeys runs over,takes a look,and says,一只大猴子跑来一看,说,</span><br><span class="line">6:And olderly monkey comes over.老猴子也跑过来.</span><br><span class="line">9:A group of monkeys run over to the well .一群猴子跑到井边来,</span><br><span class="line">13:Then,the oldest monkey hangs on the tree up side down ,with his feet on the branch .</span><br><span class="line">15:And he pulls the next monkey’s feet with his hands.拉住大猴子的脚,</span><br><span class="line">16:All the other monkeys follow his suit,其他的猴子一个个跟着,</span><br><span class="line">19:Just before they reach the moon,the oldest monkey raises his head and happens to see the moon in the sky,正好他们摸到月亮的时候,老猴子抬头发现月亮挂在天上呢</span><br></pre></td></tr></table></figure></p>
+<p>查找开头是J的行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# grep &apos;^J&apos; monkey</span><br><span class="line">Just before they reach the moon,the oldest monkey raises his head and happens to see the moon in the sky,正好他们摸到月亮的时候,老猴子抬头发现月亮挂在天上呢</span><br></pre></td></tr></table></figure></p>
+<p>查找结尾是呢的行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# grep &quot;呢$&quot; monkey</span><br><span class="line">Just before they reach the moon,the oldest monkey raises his head and happens to see the moon in the sky,正好他们摸到月亮的时候,老猴子抬头发现月亮挂在天上呢</span><br></pre></td></tr></table></figure></p>
+<p>大家可以grep –help，查看更多相关的命令，这里就不一一演示了。</p>
+<h1 id="sed"><a href="#sed" class="headerlink" title="sed"></a>sed</h1><p>sed是一种流编辑器，是一款处理文本比较优秀的工具，可以结合正则表达式一起使用。</p>
+<p>sed执行过程：<br><img src="/img/20200806172800.webp" alt></p>
+<ul>
+<li>sed命令: sed</li>
+<li>语法 :  sed [选项]… {命令集} [输入文件]…</li>
+</ul>
+<p>常用命令:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">d  删除选择的行    </span><br><span class="line">s   查找    </span><br><span class="line">y  替换</span><br><span class="line">i   当前行前面插入一行</span><br><span class="line">a  当前行后面插入一行</span><br><span class="line">p  打印行       </span><br><span class="line">q  退出</span><br></pre></td></tr></table></figure></p>
+<p> 替换符:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">数字 ：替换第几处    </span><br><span class="line">g :  全局替换    </span><br><span class="line">\1:  子串匹配标记，前面搜索可以用元字符集\(..\)</span><br><span class="line">&amp;:  保留搜索刀的字符用来替换其他字符</span><br></pre></td></tr></table></figure></p>
+<p>操作:</p>
+<p>替换：</p>
+<p>查看文件:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">➜  happy cat word</span><br><span class="line">Twinkle, twinkle, little star</span><br><span class="line">How I wonder what you are</span><br><span class="line">Up above the world so high</span><br><span class="line">Like a diamond in the sky</span><br><span class="line">When the blazing sun is gone</span><br></pre></td></tr></table></figure></p>
+<p>替换：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">➜  happy sed &apos;s/little/big/&apos; word</span><br><span class="line">Twinkle, twinkle, big star</span><br><span class="line">How I wonder what you are</span><br><span class="line">Up above the world so high</span><br><span class="line">Like a diamond in the sky</span><br><span class="line">When the blazing sun is gone</span><br></pre></td></tr></table></figure></p>
+<p>查看文本:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">➜  happy cat word1</span><br><span class="line">Oh if there&apos;s one thing to be taught</span><br><span class="line">it&apos;s dreams are made to be caught</span><br><span class="line">and friends can never be bought</span><br><span class="line">Doesn&apos;t matter how long it&apos;s been</span><br><span class="line">I know you&apos;ll always jump in</span><br><span class="line">&apos;Cause we don&apos;t know how to quit</span><br></pre></td></tr></table></figure></p>
+<p>全局替换:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">➜  happy sed &apos;s/to/can/g&apos; word1</span><br><span class="line">Oh if there&apos;s one thing can be taught</span><br><span class="line">it&apos;s dreams are made can be caught</span><br><span class="line">and friends can never be bought</span><br><span class="line">Doesn&apos;t matter how long it&apos;s been</span><br><span class="line">I know you&apos;ll always jump in</span><br><span class="line">&apos;Cause we don&apos;t know how can quit</span><br></pre></td></tr></table></figure></p>
+<p>按行替换（替换2到最后一行)<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">➜  happy sed &apos;2,$s/to/can/&apos; word1</span><br><span class="line">Oh if there&apos;s one thing to be taught</span><br><span class="line">it&apos;s dreams are made can be caught</span><br><span class="line">and friends can never be bought</span><br><span class="line">Doesn&apos;t matter how long it&apos;s been</span><br><span class="line">I know you&apos;ll always jump in</span><br><span class="line">&apos;Cause we don&apos;t know how can quit</span><br></pre></td></tr></table></figure></p>
+<p>删除:</p>
+<p>查看文本:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">➜  happy cat word</span><br><span class="line">Twinkle, twinkle, little star</span><br><span class="line">How I wonder what you are</span><br><span class="line">Up above the world so high</span><br><span class="line">Like a diamond in the sky</span><br><span class="line">When the blazing sun is gone</span><br></pre></td></tr></table></figure></p>
+<p>删除:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">➜  happy sed &apos;2d&apos; word</span><br><span class="line">Twinkle, twinkle, little star</span><br><span class="line">Up above the world so high</span><br><span class="line">Like a diamond in the sky</span><br><span class="line">When the blazing sun is gone</span><br></pre></td></tr></table></figure></p>
+<p>显示行号:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">➜  happy sed &apos;=;2d&apos; word</span><br><span class="line">1</span><br><span class="line">Twinkle, twinkle, little star</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">Up above the world so high</span><br><span class="line">4</span><br><span class="line">Like a diamond in the sky</span><br><span class="line">5</span><br><span class="line">When the blazing sun is gone</span><br></pre></td></tr></table></figure></p>
+<p>删除第2行到第四行:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">➜  happy sed &apos;=;2,4d&apos; word</span><br><span class="line">1</span><br><span class="line">Twinkle, twinkle, little star</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">When the blazing sun is gone</span><br></pre></td></tr></table></figure></p>
+<p>添加行:</p>
+<p>向前插入:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">➜  happy echo &quot;hello&quot; | sed &apos;i\kitty&apos;</span><br><span class="line">kitty</span><br><span class="line">hello</span><br></pre></td></tr></table></figure></p>
+<p>向后插入:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">➜  happy echo &quot;kitty&quot; | sed &apos;i\hello&apos;</span><br><span class="line">hello</span><br><span class="line">kitty</span><br></pre></td></tr></table></figure></p>
+<p>修改行:</p>
+<p>替换第二行为hello kitty<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">➜  happy sed &apos;2c\hello kitty&apos; word</span><br><span class="line">Twinkle, twinkle, little star</span><br><span class="line">hello kitty</span><br><span class="line">Up above the world so high</span><br><span class="line">Like a diamond in the sky</span><br><span class="line">When the blazing sun is gone</span><br></pre></td></tr></table></figure></p>
+<p>替换第二行到最后一行为hello kitty<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">➜  happy sed &apos;2,$c\hello kitty&apos; word</span><br><span class="line">Twinkle, twinkle, little star</span><br><span class="line">hello kitty</span><br></pre></td></tr></table></figure></p>
+<p>写入行，把带star的行写入c文件中,c提前创建<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">➜  happy sed -n &apos;/star/w c&apos; word</span><br><span class="line">➜  happy cat c</span><br><span class="line">Twinkle, twinkle, little star</span><br></pre></td></tr></table></figure></p>
+<p>退出：打印3行后，退出sed<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">➜  happy sed &apos;3q&apos; word</span><br><span class="line">Twinkle, twinkle, little star</span><br><span class="line">How I wonder what you are</span><br><span class="line">Up above the world so high</span><br></pre></td></tr></table></figure></p>
+<h1 id="awk"><a href="#awk" class="headerlink" title="awk"></a>awk</h1><p>比起sed和grep，awk不仅仅是一个小工具，也可以算得上一种小型的编程语言了，支持if判断分支和while循环语句还有它的内置函数等，是一个要比grep和sed更强大的文本处理工具，但也就意味着要学习的东西更多了。</p>
+<p>下面来说一下awk的一些基础概念以及实际操作。</p>
+<p>语法：</p>
+<ul>
+<li>Usage: <code>awk [POSIX or GNU style options] -f progfile [--] file ...</code></li>
+<li>Usage: <code>awk [POSIX or GNU style options] [--] &#39;program&#39; file ...</code></li>
+</ul>
+<p>域：类似数据库列的概念，但它是按照序号来指定的，比如我要第一个列就是1，第二列就是2，依此类推。$0就是输出整个文本的内容。默认用空格作为分隔符，当然你可以自己通过-F设置适合自己情况的分隔符。</p>
+<p>提前自己编了一段数据，学生以及学生成绩数据表。</p>
+<table>
+<thead>
+<tr>
+<th>列数</th>
+<th>名称</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Name</td>
+<td>姓名</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Math</td>
+<td>数学</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Chinese</td>
+<td>语文</td>
+</tr>
+<tr>
+<td>4</td>
+<td>English</td>
+<td>英语</td>
+</tr>
+<tr>
+<td>5</td>
+<td>History</td>
+<td>历史</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Sport</td>
+<td>体育</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Grade</td>
+<td>班级</td>
+</tr>
+</tbody>
+</table>
+<p>“Name  Math  Chinese  English History  Sport grade 输出整个文本<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# awk &apos;&#123;print $0&#125;&apos; students_store</span><br><span class="line">Xiaoka          60   80    40    90   77  class-1</span><br><span class="line">Yizhihua        70    66   50    80   90  class-1</span><br><span class="line">kerwin          80    90   60    70   60  class-2</span><br><span class="line">Fengzheng       90    78    62   40   62  class-2</span><br></pre></td></tr></table></figure></p>
+<p>输出第一列（姓名列)<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# awk &apos;&#123;print $1&#125;&apos; students_store</span><br><span class="line">Xiaoka</span><br><span class="line">Yizhihua</span><br><span class="line">kerwin</span><br><span class="line">Fengzheng</span><br></pre></td></tr></table></figure></p>
+<p>模式&amp;动作<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">awk &apos;&#123;[pattern] action&#125;&apos; &#123;filenames&#125;</span><br></pre></td></tr></table></figure></p>
+<p>模式pattern 可以是</p>
+<ul>
+<li>条件语句</li>
+<li>正则</li>
+</ul>
+<p>模式的两个特殊字段 BEGIN 和 END (不指定时匹配或打印行数)</p>
+<ul>
+<li>BEGIN ：一般用来打印列名称。</li>
+<li>END : 一般用来打印总结性质的字符。</li>
+</ul>
+<p>动作：action 在{}内指定，一般用来打印，也可以是一个代码段。</p>
+<h2 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h2><p>给上面的文本加入标题头:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]#  awk &apos;BEGIN &#123;print &quot;Name     Math  Chinese  English History  Sport grade\n----------------------------------------------&quot;&#125; &#123;print $0&#125;&apos; students_store</span><br><span class="line"></span><br><span class="line">Name         Math  Chinese  English History  Sport  grade</span><br><span class="line">----------------------------------------------------------</span><br><span class="line">Xiaoka       60    80       40      90     77    class-1</span><br><span class="line">Yizhihua     70    66       50      80     90    class-1</span><br><span class="line">kerwin       80    90       60      70     60    class-2</span><br><span class="line">Fengzheng    90    78       62      40     62    class-2</span><br></pre></td></tr></table></figure></p>
+<p>仅打印姓名、数学成绩、班级信息，再加一个文尾(再接再厉):<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# awk &apos;BEGIN &#123;print &quot;Name   Math  grade\n---------------------&quot;&#125; &#123;print $1 2 &quot;\t&quot; $7&#125; END &#123;print &quot;continue to exert oneself&quot;&#125;&apos; students_store</span><br><span class="line"></span><br><span class="line">Name     Math  grade</span><br><span class="line">---------------------</span><br><span class="line">Xiaoka   60   class-1</span><br><span class="line">Yizhihua 70   class-1</span><br><span class="line">kerwin   80   class-2</span><br><span class="line">Fengzheng 90  class-2</span><br><span class="line">continue to exert oneself</span><br></pre></td></tr></table></figure></p>
+<h2 id="结合正则"><a href="#结合正则" class="headerlink" title="结合正则"></a>结合正则</h2><p>使用方法：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">符号 ~  后接正则表达式</span><br></pre></td></tr></table></figure></p>
+<p>此时我们再加入一条后来的新同学，并且没有分班。先来看下现在的数据<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# cat students_store</span><br><span class="line">Xiaoka       60   80    40    90   77  class-1</span><br><span class="line">Yizhihua     70    66   50    80   90  class-1</span><br><span class="line">kerwin       80    90   60    70   60  class-2</span><br><span class="line">Fengzheng    90    78   62    40   62  class-2</span><br><span class="line">xman         -     -     -     -   -    -</span><br></pre></td></tr></table></figure></p>
+<p>模糊匹配|查询已经分班的学生<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# awk &apos;$0 ~/class/&apos; students_store</span><br><span class="line">Xiaoka       60   80    40    90   77  class-1</span><br><span class="line">Yizhihua     70    66   50    80   90  class-1</span><br><span class="line">kerwin       80    90   60     70  60  class-2</span><br><span class="line">Fengzheng    90    78   62     40  62  class-2</span><br></pre></td></tr></table></figure></p>
+<p>精准匹配|查询1班的学生<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# awk &apos;$7==&quot;class-1&quot; &#123;print $0&#125;&apos;  students_store</span><br><span class="line">Xiaoka       60   80    40    90   77  class-1</span><br><span class="line">Yizhihua     70    66   50    80   90  class-1</span><br></pre></td></tr></table></figure></p>
+<p>反向匹配|查询不是1班的学生<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# awk &apos;$7!=&quot;class-1&quot; &#123;print $0&#125;&apos;  students_store</span><br><span class="line">kerwin       80    90   60     70   60  class-2</span><br><span class="line">Fengzheng    90    78    62     40  62 class-2</span><br><span class="line">xman         -     -     -     -   -    -</span><br></pre></td></tr></table></figure></p>
+<p>比较操作|查询数学大于80的<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# awk &apos;$2&gt;60 &#123;print $0&#125;&apos;  students_store</span><br><span class="line">Yizhihua     70    66   50    80   90  class-1</span><br><span class="line">kerwin       80    90   60     70   60  class-2</span><br><span class="line">Fengzheng    90    78    62     40  62 class-2</span><br></pre></td></tr></table></figure></p>
+<p>查询数学大于英语成绩的<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# awk &apos;$2 &gt; $4  &#123;print $0&#125;&apos;  students_store</span><br><span class="line">Xiaoka       60   80    40    90   77  class-1</span><br><span class="line">Yizhihua     70    66   50    80   90  class-1</span><br><span class="line">kerwin       80    90   60    70   60  class-2</span><br><span class="line">Fengzheng    90    78    62   40   62  class-2</span><br></pre></td></tr></table></figure></p>
+<p>匹配指定字符中的任意字符，在加一列专业，让我们来看看憨憨们的专业，顺便给最后一个新来的同学分个班吧。然后再来看下此时的数据。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# cat students_store</span><br><span class="line">Xiaoka       60   80    40    90   77  class-1  Java</span><br><span class="line">Yizhihua     70    66   50    80   90  class-1  java</span><br><span class="line">kerwin       80    90   60     70   60  class-2 Java</span><br><span class="line">Fengzheng    90    78    62     40  62 class-2  java</span><br><span class="line">xman         -     -     -     -   -    class-3 php</span><br></pre></td></tr></table></figure></p>
+<p>或关系匹配|查询1班和3班的学生<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">root@iz2ze76ybn73dvwmdij06zz ~]# awk &apos;$0 ~/(class-1|class-3)/&apos; students_store</span><br><span class="line">Xiaoka       60   80    40    90   77  class-1  Java</span><br><span class="line">Yizhihua     70    66   50    80   90  class-1  java</span><br><span class="line">xman         -     -     -     -   -   class-3 php</span><br></pre></td></tr></table></figure></p>
+<p>任意字符匹配|名字第二个字母是</p>
+<p>字符解释：</p>
+<ul>
+<li>^ : 字段或记录的开头。</li>
+<li>. : 任意字符。</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">root@iz2ze76ybn73dvwmdij06zz ~]# awk &apos;$0 ~/(class-1|class-3)/&apos; students_store</span><br><span class="line">Xiaoka       60   80    40    90   77  class-1  Java</span><br><span class="line">Yizhihua     70    66   50    80   90  class-1  java</span><br><span class="line">xman         -     -     -     -   -    class-3 php</span><br></pre></td></tr></table></figure>
+<p>复合表达式：&amp;&amp; AND的关系，必同时满足才行哦~</p>
+<p>查询数学成绩大于60并且语文成绩也大于60的童鞋。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# awk &apos;&#123; if ($2 &gt; 60 &amp;&amp; $3 &gt; 60) print $0&#125;&apos; students_store</span><br><span class="line">Yizhihua     70    66   50    80   90  class-1  java</span><br><span class="line">kerwin       80    90   60    70   60  class-2  Java</span><br><span class="line">Fengzheng    90    78    62   40   62  class-2  java</span><br></pre></td></tr></table></figure></p>
+<p>||  OR：查询数学大于80或者语文大于80的童鞋。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]#  awk &apos;&#123; if ($2 &gt; 80 || $4 &gt; 80) print $0&#125;&apos; students_store</span><br><span class="line">Fengzheng    90    78    62     40  62 class-2  java</span><br></pre></td></tr></table></figure></p>
+<h2 id="printf-格式化输出"><a href="#printf-格式化输出" class="headerlink" title="printf 格式化输出"></a>printf 格式化输出</h2><p>除了能达到功能以外，一个好看的格式也是必不可少的，因此格式化的输出看起来会更舒服哦～</p>
+<p>语法：</p>
+<ul>
+<li>printf ([格式]，参数)</li>
+<li>printf %x(格式) 具体参数 x代表具体格式</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>符号</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>-</td>
+<td>左对齐</td>
+</tr>
+<tr>
+<td>Width</td>
+<td>域的步长</td>
+</tr>
+<tr>
+<td>.prec</td>
+<td>最大字符串长度或小数点右边位数</td>
+</tr>
+</tbody>
+</table>
+<p>格式转化符常用格式</p>
+<table>
+<thead>
+<tr>
+<th>符号</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>%c</td>
+<td>ASCII</td>
+</tr>
+<tr>
+<td>%d</td>
+<td>整数</td>
+</tr>
+<tr>
+<td>%o</td>
+<td>八进制</td>
+</tr>
+<tr>
+<td>%x</td>
+<td>十六进制数</td>
+</tr>
+<tr>
+<td>%f</td>
+<td>浮点数</td>
+</tr>
+<tr>
+<td>%e</td>
+<td>浮点数（科学记数法)</td>
+</tr>
+<tr>
+<td>%s</td>
+<td>字符串</td>
+</tr>
+<tr>
+<td>%g</td>
+<td>决定使用浮点转化e/f</td>
+</tr>
+</tbody>
+</table>
+<h2 id="具体操作示例"><a href="#具体操作示例" class="headerlink" title="具体操作示例"></a>具体操作示例</h2><p>ASCII码🐎<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# echo &quot;66&quot; | awk &apos;&#123;printf &quot;%c\n&quot;,$0&#125;&apos;</span><br><span class="line">B</span><br></pre></td></tr></table></figure></p>
+<p>浮点数<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# awk &apos;BEGIN &#123;printf &quot;%f\n&quot;,100&#125;&apos;</span><br><span class="line">100.000000</span><br></pre></td></tr></table></figure></p>
+<p>16进制数<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# awk &apos;BEGIN &#123;printf &quot;%x&quot;,996&#125;&apos;</span><br><span class="line">3e4</span><br></pre></td></tr></table></figure></p>
+<h2 id="内置变量"><a href="#内置变量" class="headerlink" title="内置变量"></a>内置变量</h2><p>频率较高常用内置变量</p>
+<ul>
+<li>NF ：记录浏览域的个数，在记录被读后设置。</li>
+<li>NR ：已读的记录数。</li>
+<li>FS : 设置输入域分隔符</li>
+<li>ARGC ：命令行参数个数，支持命令行传入。</li>
+<li>RS : 控制记录分隔符</li>
+<li>FIlENAME : awk当前读文件的名称</li>
+</ul>
+<h3 id="操作"><a href="#操作" class="headerlink" title="操作"></a>操作</h3><p>输出学生成绩表和域个数以及已读记录数。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# awk &apos;&#123;print $0, NF , NR&#125;&apos; students_store</span><br><span class="line">Xiaoka       60   80    40    90   77  class-1  Java 8 1</span><br><span class="line">Yizhihua     70    66   50    80   90  class-1  java 8 2</span><br><span class="line">kerwin       80    90   60     70  60  class-2  Java 8 3</span><br><span class="line">Fengzheng    90    78   62     40  62  class-2  java 8 4</span><br><span class="line">xman         -     -     -     -   -   class-3  php  8 5</span><br></pre></td></tr></table></figure></p>
+<h2 id="内置函数"><a href="#内置函数" class="headerlink" title="内置函数"></a>内置函数</h2><p>常用函数:</p>
+<ul>
+<li>length(s)  返回s长度</li>
+<li>index(s,t) 返回s中字符串t第一次出现的位置</li>
+<li>match (s,r) s中是否包含r字符串</li>
+<li>split(s,a,fs) 在fs上将s分成序列a</li>
+<li>gsub(r,s) 用s代替r，范围全文本</li>
+<li>gsub(r,s,t) 范围t中，s代替r</li>
+<li>substr(s,p) 返回字符串s从第p个位置开始后面的部分（下标是从1 开始算的，大家可以自己试试）</li>
+<li>substr(s,p,n) 返回字符串s从第p个位置开始后面n个字符串的部分</li>
+</ul>
+<h3 id="操作-1"><a href="#操作-1" class="headerlink" title="操作"></a>操作</h3><p>length<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# awk &apos;BEGIN &#123;print length(&quot; hello,im xiaoka&quot;)&#125;&apos;</span><br><span class="line">16</span><br></pre></td></tr></table></figure></p>
+<p>index<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# awk &apos;BEGIN &#123;print index(&quot;xiaoka&quot;,&quot;ok&quot;)&#125;&apos;</span><br><span class="line">4</span><br></pre></td></tr></table></figure></p>
+<p>match<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# awk &apos;BEGIN &#123;print match(&quot;Java小咖秀&quot;,&quot;va小&quot;)&#125;&apos;</span><br><span class="line">3</span><br></pre></td></tr></table></figure></p>
+<p>gsub<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# awk &apos;gsub(&quot;Xiaoka&quot;,&quot;xk&quot;) &#123;print $0&#125;&apos; students_store</span><br><span class="line">xk       60   80    40    90   77  class-1  Java</span><br></pre></td></tr></table></figure></p>
+<p>substr(s,p)<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# awk &apos;BEGIN &#123;print substr(&quot;xiaoka&quot;,3)&#125;&apos;</span><br><span class="line">aoka</span><br></pre></td></tr></table></figure></p>
+<p>substr(s,p,n)<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# awk &apos;BEGIN &#123;print substr(&quot;xiaoka&quot;,3,2)&#125;&apos;</span><br><span class="line">ao</span><br></pre></td></tr></table></figure></p>
+<p>split<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# str=&quot;java,xiao,ka,xiu&quot;</span><br><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# awk &apos;BEGIN&#123;split(&apos;&quot;\&quot;$str\&quot;&quot;&apos;,ary,&quot;,&quot;); for(i in ary) &#123;if(ary[i]&gt;1) print ary[i]&#125;&#125;&apos;</span><br><span class="line">xiu</span><br><span class="line">java</span><br><span class="line">xiao</span><br><span class="line">ka</span><br></pre></td></tr></table></figure></p>
+<h2 id="awk脚本"><a href="#awk脚本" class="headerlink" title="awk脚本"></a>awk脚本</h2><p>前面说过awk是可以说是一个小型编程语言。如果命令比较短我们可以直接在命令行执行，当命令行比较长的时候，可以使用脚本来处理，比命令行的可读性更高，还可以加上注释。</p>
+<h3 id="写一个完整的awk脚本并执行步骤"><a href="#写一个完整的awk脚本并执行步骤" class="headerlink" title="写一个完整的awk脚本并执行步骤"></a>写一个完整的awk脚本并执行步骤</h3><p>1.先创建一个awk文件<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# vim printname.awk</span><br></pre></td></tr></table></figure></p>
+<p>2.脚本第一行要指定解释器<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#!/usr/bin/awk -f</span><br></pre></td></tr></table></figure></p>
+<p>3.编写脚本内容，打印一下名称<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# cat printname.awk</span><br><span class="line">#!/usr/bin/awk -f</span><br><span class="line">#可以加注释了，哈哈</span><br><span class="line">BEGIN &#123; print &quot;my name is Java小咖秀&quot;&#125;</span><br></pre></td></tr></table></figure></p>
+<p>4.既然是脚本，必不可少的可执行权限安排上~<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# chmod +x printname.awk</span><br><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# ll printname.awk</span><br><span class="line">-rwxr-xr-x 1 root root 60 7月   1 15:23 printname.awk</span><br></pre></td></tr></table></figure></p>
+<p>5.有了可执行权限，我们来执行下看结果<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze76ybn73dvwmdij06zz ~]# ./printname.awk</span><br><span class="line">my name is Java小咖秀</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/08/06/操作系统真相还原 笔记5/" rel="next" title="操作系统真相还原12-13章">
+                <i class="fa fa-chevron-left"></i> 操作系统真相还原12-13章
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/08/06/Linux select poll机制原理分析/" rel="prev" title="Linux selectpoll机制原理分析">
+                Linux selectpoll机制原理分析 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">247</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/xiaomeihao.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#grep"><span class="nav-number">1.</span> <span class="nav-text">grep</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#实际使用"><span class="nav-number">1.1.</span> <span class="nav-text">实际使用</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#sed"><span class="nav-number">2.</span> <span class="nav-text">sed</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#awk"><span class="nav-number">3.</span> <span class="nav-text">awk</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#示例"><span class="nav-number">3.1.</span> <span class="nav-text">示例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#结合正则"><span class="nav-number">3.2.</span> <span class="nav-text">结合正则</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#printf-格式化输出"><span class="nav-number">3.3.</span> <span class="nav-text">printf 格式化输出</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#具体操作示例"><span class="nav-number">3.4.</span> <span class="nav-text">具体操作示例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内置变量"><span class="nav-number">3.5.</span> <span class="nav-text">内置变量</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#操作"><span class="nav-number">3.5.1.</span> <span class="nav-text">操作</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内置函数"><span class="nav-number">3.6.</span> <span class="nav-text">内置函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#操作-1"><span class="nav-number">3.6.1.</span> <span class="nav-text">操作</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#awk脚本"><span class="nav-number">3.7.</span> <span class="nav-text">awk脚本</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#写一个完整的awk脚本并执行步骤"><span class="nav-number">3.7.1.</span> <span class="nav-text">写一个完整的awk脚本并执行步骤</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<span id="busuanzi_container_site_uv"> 
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>

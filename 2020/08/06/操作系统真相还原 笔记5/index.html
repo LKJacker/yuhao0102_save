@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="操作系统,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="进一步完善内核Linux 系统调用浅析Linux 系统调用是用中断门来实现的，通过软中断指令int来主动发起中断信号。Linux只占用一个中断向量号，即0x80，处理器执行指令int 0x80 时便触发了系统调用。在系统调用之前，Linux在寄存器eax中写入子功能号，通过int 0x80进行系统调用时，对应的中断处理例程会根据eax 的值来判断用户进程申请哪种系统调用。syscall 的原型是i">
+<meta name="keywords" content="操作系统">
+<meta property="og:type" content="article">
+<meta property="og:title" content="操作系统真相还原12-13章">
+<meta property="og:url" content="http://yoursite.com/2020/08/06/操作系统真相还原 笔记5/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="进一步完善内核Linux 系统调用浅析Linux 系统调用是用中断门来实现的，通过软中断指令int来主动发起中断信号。Linux只占用一个中断向量号，即0x80，处理器执行指令int 0x80 时便触发了系统调用。在系统调用之前，Linux在寄存器eax中写入子功能号，通过int 0x80进行系统调用时，对应的中断处理例程会根据eax 的值来判断用户进程申请哪种系统调用。syscall 的原型是i">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/1596905973.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1596960694.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1596960753.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1596960904.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1596988852.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1597044168.jpg">
+<meta property="og:updated_time" content="2020-08-13T09:37:30.706Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="操作系统真相还原12-13章">
+<meta name="twitter:description" content="进一步完善内核Linux 系统调用浅析Linux 系统调用是用中断门来实现的，通过软中断指令int来主动发起中断信号。Linux只占用一个中断向量号，即0x80，处理器执行指令int 0x80 时便触发了系统调用。在系统调用之前，Linux在寄存器eax中写入子功能号，通过int 0x80进行系统调用时，对应的中断处理例程会根据eax 的值来判断用户进程申请哪种系统调用。syscall 的原型是i">
+<meta name="twitter:image" content="http://yoursite.com/img/1596905973.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2020/08/06/操作系统真相还原 笔记5/">
+
+
+
+
+
+  <title>操作系统真相还原12-13章 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-mybetterhalf">
+          <a href="/mybetterhalf/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            mybetterhalf
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/08/06/操作系统真相还原 笔记5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">操作系统真相还原12-13章</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-08-06T11:13:00+08:00">
+                2020-08-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="进一步完善内核"><a href="#进一步完善内核" class="headerlink" title="进一步完善内核"></a>进一步完善内核</h1><h2 id="Linux-系统调用浅析"><a href="#Linux-系统调用浅析" class="headerlink" title="Linux 系统调用浅析"></a>Linux 系统调用浅析</h2><p>Linux 系统调用是用<strong>中断门</strong>来实现的，通过<strong>软中断指令int</strong>来主动发起中断信号。Linux<strong>只占用一个中断向量号</strong>，即<code>0x80</code>，处理器执行指令int 0x80 时便触发了系统调用。在系统调用之前，Linux在<strong>寄存器eax</strong>中写入子功能号，通过<code>int 0x80</code>进行系统调用时，对应的中断处理例程会根据<br>eax 的值来判断用户进程申请哪种系统调用。syscall 的原型是<code>int syscall(int number, …)</code>，其中的<code>number</code>是int 型，这是系统调用号。<code>number</code> 后面的“…”表示此函数支持变参。函数<code>syscall</code>并不是由操作系统提供的，它是由<strong>C运行库glibc</strong>提供的，因此syscall实际上是库函数。</p>
+<p>直接的做法是利用操作系统提供的<code>_syscall[X]</code>，它是一系列的宏。<code>_syscall</code> 是系统调用“族”，所以图中用<code>_syscallX</code>来表示它们，其中的X 表示系统调用中的参数个数，其原型是<code>_syscallX(type,name,type1,arg1,type2,arg2,…)</code>。<code>_syscallX</code>是用宏来实现的，根据系统调用中参数个数、类型及返回值的不同，这里共有7 个不同的宏，分别是<code>_syscall[0-6]</code>，因此，对于参数个数不同的系统调用，需要调用不同的宏来完成。<br><img src="/img/1596905973.jpg" alt></p>
+<p>Linux 中的系统调用是<strong>用寄存器来传递参数的</strong>，这些参数需要依次存入到不同的通用寄存器（除esp）中。其中，寄存器<code>eax</code>用来保存子功能号，<code>ebx</code>保存第1 个参数，<code>ecx</code>保存第2 个参数，<code>edx</code>保存第3 个参数，<code>esi</code>保存第4 个参数，edi 保存第5 个参数。</p>
+<p>传递参数还可以用栈（内存），用户进程执行<code>int 0x80</code>时还处于用户态，编译器根据C调用约定，系统调用所用的参数会被压到用户栈中，这是3 特权级栈。当<code>int 0x80</code>执行后，任务陷入内核态，此时进入了0 特权级，因此需要用到0 特权级栈，但系统调用的参数还在3 特权级的栈中，为了获取用户栈地址，还得在0 特权级栈中获取处理器自动压入的用户栈的SS 和esp 寄存器的值，然后再次从用户栈中获取参数。</p>
+<p>_syscall3 举例，如下所示：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _syscall3(type, name, type1, arg1, type2, arg2, type3, arg3) \</span></span><br><span class="line"><span class="function">type <span class="title">name</span><span class="params">(type1 arg1, type2 arg2, type3 arg3)</span> </span>&#123; \</span><br><span class="line"><span class="keyword">long</span> __res; \</span><br><span class="line">__<span class="function">asm__ <span class="title">volatile</span> <span class="params">(<span class="string">"push %%ebx; movl %2,%%ebx; int $0x80; pop %%ebx"</span> \</span></span></span><br><span class="line"><span class="function"><span class="params">        : <span class="string">"=a"</span> (__res) \</span></span></span><br><span class="line"><span class="function"><span class="params">        : <span class="string">"0"</span> (__NR_##name),<span class="string">"ri"</span> ((<span class="keyword">long</span>)(arg1)),<span class="string">"c"</span> ((<span class="keyword">long</span>)(arg2)), \</span></span></span><br><span class="line"><span class="function"><span class="params">        <span class="string">"d"</span> ((<span class="keyword">long</span>)(arg3)) : <span class="string">"memory"</span>)</span></span>; \</span><br><span class="line">__syscall_return(type,__res); \</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>第2～9行是宏体，第2 行的<code>type</code>是函数的返回值类型，<code>name</code>是函数名，也就是系统调用名，函数名后面括号中是一系列的形参，用的是宏<code>_syscall3</code>中的参数。第3 行是函数体的开始，<code>__res</code>是返回值。跨过第4 行先说下第5～7 行，第5 行的<code>&quot;=a&quot; (__res)</code>位于输出部<code>output</code>，这表明变量<code>__res</code> 由寄存器<code>eax</code>赋值。我们知道，根据abi 约定，<strong>eax 作为函数调用的返回值</strong>，这里是用变量<code>__res</code>来存储从中断返回后的返回值。第6 行是参数输入部<code>input</code>，<code>&quot;0&quot; (__NR_##name)</code>中的<code>_NR_##name</code> 是系统调用的字符串名，即<code>__NR_系统调用名</code>，然后变成数值型的子功能号，其中<code>##</code>表示联结字符串，<code>&quot;0&quot; (__NR_##name)</code>中的0 是通用约束，<strong>表示<code>__NR_##name</code>使用的寄存器或内存与第0 个约束表达式使用的寄存器或内存一致</strong>，这里指的是和第5行的<code>&quot;=a&quot; (__res)</code>一致，也就是<strong>寄存器eax 既做子功能号输入，又做返回值的输出</strong>。后面<code>&quot;ri&quot; ((long)(arg1))</code>是将变量arg1 约束到通用寄存器中，<code>&quot;c&quot; ((long)(arg2))</code>是将变量约束到<code>ecx</code>寄存器中，第7 行的<code>&quot;d&quot;((long)(arg3))</code>是将变量约束到edx 中。第4行是内联汇编代码，其中<code>push %%ebx</code>的作用是在用户空间的栈中提前保护好ebx的值，<code>movl %2,%%ebx</code>将arg1 的值写入寄存器ebx，<code>%2</code>是序号占位符，表示第2 个约束，即arg1 对应的寄存器或内存。<code>int $0x80</code>触发软中断，进行系统调用，完成后通过<code>pop %%ebx</code>恢复<code>ebx</code>的值。</p>
+<p>第8 行是<code>__syscall_return(type,__res);</code>，对返回值<code>__res</code>判断后返回，其中<code>__syscall_return</code>也是个宏，实现如下，不再说明。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> __syscall_return(type, res) \</span></span><br><span class="line">    <span class="keyword">do</span> &#123; \</span><br><span class="line">        <span class="keyword">if</span> ((<span class="keyword">unsigned</span> <span class="keyword">long</span>)(res) &gt;= (<span class="keyword">unsigned</span> <span class="keyword">long</span>)(<span class="number">-125</span>)) &#123; \</span><br><span class="line">            errno = -(res); \</span><br><span class="line">            res = <span class="number">-1</span>; \</span><br><span class="line">        &#125; \</span><br><span class="line">    <span class="keyword">return</span> (type) (res); \</span><br><span class="line">&#125; <span class="keyword">while</span> (<span class="number">0</span>)</span><br></pre></td></tr></table></figure></p>
+<p>当参数多于5 个时，可以用内存来传递，注意啦，此时在<strong>内存中存储的参数仅是第1 个参数及第6 个以上的所有参数</strong>，不包括第2～5 个参数，第2～5 个参数依然要顺序放在寄存器ecx、edx、esi 及edi 中，eax 始终是子功能号。我们看下宏<code>_syscall6</code>的实现就清楚了，如下所示。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _syscall6(type,name, type1,arg1, type2,arg2, type3,arg3,</span></span><br><span class="line">                  type4,arg4, type5,arg5, type6,arg6) \</span><br><span class="line"><span class="function">type <span class="title">name</span> <span class="params">(type1 arg1,type2 arg2,type3 arg3,\</span></span></span><br><span class="line"><span class="function"><span class="params">           type4 arg4,type5 arg5,type6 arg6)</span> </span>&#123; \</span><br><span class="line">    <span class="keyword">long</span> __res; \</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> &#123;</span> <span class="keyword">long</span> __a1; <span class="keyword">long</span> __a6; &#125; __s = &#123; (<span class="keyword">long</span>)arg1, (<span class="keyword">long</span>)arg6 &#125;; \</span><br><span class="line">    __<span class="function">asm__ <span class="title">volatile</span> <span class="params">(<span class="string">"push %%ebp ; push %%ebx ; movl 4(%2),%%ebp ; "</span> \</span></span></span><br><span class="line"><span class="function"><span class="params">                      <span class="string">"movl 0(%2),%%ebx ; movl %1,%%eax ; int $0x80 ; "</span> \</span></span></span><br><span class="line"><span class="function"><span class="params">                      <span class="string">"pop %%ebx ; pop %%ebp"</span> \</span></span></span><br><span class="line"><span class="function"><span class="params">    : <span class="string">"=a"</span> (__res) \</span></span></span><br><span class="line"><span class="function"><span class="params">    : <span class="string">"i"</span> (__NR_##name),<span class="string">"0"</span> ((<span class="keyword">long</span>)(&amp;__s)),<span class="string">"c"</span> ((<span class="keyword">long</span>)(arg2)), \</span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="string">"d"</span> ((<span class="keyword">long</span>)(arg3)),<span class="string">"S"</span> ((<span class="keyword">long</span>)(arg4)),<span class="string">"D"</span> ((<span class="keyword">long</span>)(arg5)) \</span></span></span><br><span class="line"><span class="function"><span class="params">    : <span class="string">"memory"</span>)</span></span>; \</span><br><span class="line">    __syscall_return(type,__res); \</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="系统调用的实现"><a href="#系统调用的实现" class="headerlink" title="系统调用的实现"></a>系统调用的实现</h2><p>系统调用的实现思路:</p>
+<ol>
+<li>用中断门实现系统调用，效仿Linux 用0x80 号中断作为系统调用的入口。</li>
+<li>在IDT 中安装0x80 号中断对应的描述符，在该描述符中注册系统调用对应的中断处理例程。</li>
+<li>建立系统调用子功能表syscall_table，利用eax 寄存器中的子功能号在该表中索引相应的处理函数。</li>
+<li>用宏实现用户空间系统调用接口_syscall，最大支持3 个参数的系统调用，故只需要完成_syscall[0-3]。寄存器传递参数，eax 为子功能号，ebx保存第1 个参数，ecx 保存第2 个参数，edx 保存第3 个参数。</li>
+</ol>
+<p>首先我们要修改interrupt.c，在其中安装0x80 对应的中断描述符。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">…略</span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> IDT_DESC_CNT 0x81 <span class="comment">// 目前总共支持的中断数</span></span></span><br><span class="line">…略</span><br><span class="line"><span class="function"><span class="keyword">extern</span> uint32_t <span class="title">syscall_handler</span><span class="params">(<span class="keyword">void</span>)</span></span>;</span><br><span class="line">…略</span><br><span class="line"><span class="comment">/*初始化中断描述符表*/</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">idt_desc_init</span><span class="params">(<span class="keyword">void</span>)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i, lastindex = IDT_DESC_CNT - <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; IDT_DESC_CNT; i++) &#123;</span><br><span class="line">        make_idt_desc(&amp;idt[i], IDT_DESC_ATTR_DPL0, intr_entry_table[i]);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">/* 单独处理系统调用，系统调用对应的中断门dpl 为3，</span></span><br><span class="line"><span class="comment">* 中断处理程序为单独的syscall_handler */</span></span><br><span class="line">    make_idt_desc(&amp;idt[lastindex], IDT_DESC_ATTR_DPL3, syscall_handler);</span><br><span class="line">    put_str(<span class="string">" idt_desc_init done\n"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>宏<code>IDT_DESC_CNT</code>修改为0x81，这表示我们最大支持<code>0x81</code>个中断，即0～0x80，<code>0x80</code>是我们系统调用对应的中断向量。声明了外部函数<code>syscall_handler</code>，我们将在kernel.S 中定义它，<code>syscall_handler</code>就是系统调用对应的中断入口例程。在后面的<code>idt_desc_init</code>函数中，我们在增加了<code>0x80</code>号中断向量对应的中断描述符，在描述符中注册的中断处理例程为<code>syscall_handler</code>。这里要注意的是记得给此描述符的dpl 指定为用户级<code>IDT_DESC_ATTR_DPL3</code>，若指定为0 级，则在3 级环境下执行int 指令会产生GP 异常。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 无参数的系统调用 */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _syscall0(NUMBER) (&#123;				       \</span></span><br><span class="line">   <span class="keyword">int</span> retval;					               \</span><br><span class="line">   <span class="function"><span class="keyword">asm</span> <span class="title">volatile</span> <span class="params">(					       \</span></span></span><br><span class="line"><span class="function"><span class="params">   <span class="string">"int $0x80"</span>						       \</span></span></span><br><span class="line"><span class="function"><span class="params">   : <span class="string">"=a"</span> (retval)					       \</span></span></span><br><span class="line"><span class="function"><span class="params">   : <span class="string">"a"</span> (NUMBER)					       \</span></span></span><br><span class="line"><span class="function"><span class="params">   : <span class="string">"memory"</span>						       \</span></span></span><br><span class="line"><span class="function"><span class="params">   )</span></span>;							       \</span><br><span class="line">   retval;						       \</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 一个参数的系统调用 */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _syscall1(NUMBER, ARG1) (&#123;			       \</span></span><br><span class="line">   <span class="keyword">int</span> retval;					               \</span><br><span class="line">   <span class="function"><span class="keyword">asm</span> <span class="title">volatile</span> <span class="params">(					       \</span></span></span><br><span class="line"><span class="function"><span class="params">   <span class="string">"int $0x80"</span>						       \</span></span></span><br><span class="line"><span class="function"><span class="params">   : <span class="string">"=a"</span> (retval)					       \</span></span></span><br><span class="line"><span class="function"><span class="params">   : <span class="string">"a"</span> (NUMBER), <span class="string">"b"</span> (ARG1)				       \</span></span></span><br><span class="line"><span class="function"><span class="params">   : <span class="string">"memory"</span>						       \</span></span></span><br><span class="line"><span class="function"><span class="params">   )</span></span>;							       \</span><br><span class="line">   retval;						       \</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 两个参数的系统调用 */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _syscall2(NUMBER, ARG1, ARG2) (&#123;		       \</span></span><br><span class="line">   <span class="keyword">int</span> retval;						       \</span><br><span class="line">   <span class="function"><span class="keyword">asm</span> <span class="title">volatile</span> <span class="params">(					       \</span></span></span><br><span class="line"><span class="function"><span class="params">   <span class="string">"int $0x80"</span>						       \</span></span></span><br><span class="line"><span class="function"><span class="params">   : <span class="string">"=a"</span> (retval)					       \</span></span></span><br><span class="line"><span class="function"><span class="params">   : <span class="string">"a"</span> (NUMBER), <span class="string">"b"</span> (ARG1), <span class="string">"c"</span> (ARG2)		       \</span></span></span><br><span class="line"><span class="function"><span class="params">   : <span class="string">"memory"</span>						       \</span></span></span><br><span class="line"><span class="function"><span class="params">   )</span></span>;							       \</span><br><span class="line">   retval;						       \</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 三个参数的系统调用 */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _syscall3(NUMBER, ARG1, ARG2, ARG3) (&#123;		       \</span></span><br><span class="line">   <span class="keyword">int</span> retval;						       \</span><br><span class="line">   <span class="function"><span class="keyword">asm</span> <span class="title">volatile</span> <span class="params">(					       \</span></span></span><br><span class="line"><span class="function"><span class="params">      <span class="string">"int $0x80"</span>					       \</span></span></span><br><span class="line"><span class="function"><span class="params">      : <span class="string">"=a"</span> (retval)					       \</span></span></span><br><span class="line"><span class="function"><span class="params">      : <span class="string">"a"</span> (NUMBER), <span class="string">"b"</span> (ARG1), <span class="string">"c"</span> (ARG2), <span class="string">"d"</span> (ARG3)       \</span></span></span><br><span class="line"><span class="function"><span class="params">      : <span class="string">"memory"</span>					       \</span></span></span><br><span class="line"><span class="function"><span class="params">   )</span></span>;							       \</span><br><span class="line">   retval;						       \</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>咱们打算最多支持3 个参数的系统调用，它们是_syscall[0-3]，代码中列出了无参数版本和3 个参数的版本。</p>
+<p>修改kernel.S，在里面安装中断向量0x80 对应的中断处理程序：<br><figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">;;;;;;;;;;;;;;;;   0x80号中断   ;;;;;;;;;;;;;;;;</span></span><br><span class="line">[<span class="meta">bits</span> <span class="number">32</span>]</span><br><span class="line"><span class="meta">extern</span> syscall_table</span><br><span class="line"><span class="meta">section</span> .text</span><br><span class="line"><span class="meta">global</span> syscall_handler</span><br><span class="line"><span class="symbol">syscall_handler:</span></span><br><span class="line"><span class="comment">;1 保存上下文环境</span></span><br><span class="line">   <span class="keyword">push</span> <span class="number">0</span>			    <span class="comment">; 压入0, 使栈中格式统一</span></span><br><span class="line"></span><br><span class="line">   <span class="keyword">push</span> <span class="built_in">ds</span></span><br><span class="line">   <span class="keyword">push</span> <span class="built_in">es</span></span><br><span class="line">   <span class="keyword">push</span> <span class="built_in">fs</span></span><br><span class="line">   <span class="keyword">push</span> <span class="built_in">gs</span></span><br><span class="line">   <span class="keyword">pushad</span>			    <span class="comment">; PUSHAD指令压入32位寄存器，其入栈顺序是:</span></span><br><span class="line">				        <span class="comment">; EAX,ECX,EDX,EBX,ESP,EBP,ESI,EDI </span></span><br><span class="line">				 </span><br><span class="line">   <span class="keyword">push</span> <span class="number">0x80</span>			<span class="comment">; 此位置压入0x80也是为了保持统一的栈格式</span></span><br><span class="line"></span><br><span class="line"><span class="comment">;2 为系统调用子功能传入参数</span></span><br><span class="line">   <span class="keyword">push</span> <span class="built_in">edx</span>			    <span class="comment">; 系统调用中第3个参数</span></span><br><span class="line">   <span class="keyword">push</span> <span class="built_in">ecx</span>			    <span class="comment">; 系统调用中第2个参数</span></span><br><span class="line">   <span class="keyword">push</span> <span class="built_in">ebx</span>			    <span class="comment">; 系统调用中第1个参数</span></span><br><span class="line"></span><br><span class="line"><span class="comment">;3 调用子功能处理函数</span></span><br><span class="line">   <span class="keyword">call</span> [syscall_table + <span class="built_in">eax</span>*<span class="number">4</span>]	    <span class="comment">; 编译器会在栈中根据C函数声明匹配正确数量的参数</span></span><br><span class="line">   <span class="keyword">add</span> <span class="built_in">esp</span>, <span class="number">12</span>			    <span class="comment">; 跨过上面的三个参数</span></span><br><span class="line"></span><br><span class="line"><span class="comment">;4 将call调用后的返回值存入待当前内核栈中eax的位置</span></span><br><span class="line">   <span class="keyword">mov</span> [<span class="built_in">esp</span> + <span class="number">8</span>*<span class="number">4</span>], <span class="built_in">eax</span>	</span><br><span class="line">   <span class="keyword">jmp</span> intr_exit		    <span class="comment">; intr_exit返回,恢复上下文</span></span><br></pre></td></tr></table></figure></p>
+<p>声明了外部数据结构<code>syscall_table</code>，<code>syscall_table</code>是个数组，数组成员是系统调用中子功能对应的处理函数（以后将在新文件中定义它），这里我们用子功能号在此数组中索引子功能号对应的处理函数。由于只支持3 个参数的系统调用，故只压入了三个参数，按照C调用约定，最右边的参数先入栈，因此先把edx 中的第3 个参数入栈，其次是ecx 中的第2 个参数、ebx 中的第1 个参数。</p>
+<p>寄存器 eax 中是系统调用子功能号，用它在数组<code>syscall_table</code>中索引对应的子功能处理函数。<code>syscall_table</code>中存储的是函数地址，每个成员是4 字节大小，因此在第122 行中，要用<code>eax*4</code> 做<code>syscall_table</code>的偏移量，这样代码<code>call [syscall_table + eax*4]</code>便去调用子功能处理函数。调用之后，在第123 行通过<code>add esp, 12</code>跨过这三个参数。</p>
+<p>通过<code>mov [esp + 8*4], eax</code>将<strong>返回值写到了栈（此时是内核栈）中保存eax的那个内存空间</strong>。这里解释一下<code>[esp+8*4]</code>，这是寄存器相对寻址，esp 就是当前栈顶，<code>8*4</code>就是相对栈顶，往栈中高地址方向的偏移量，其实把<code>8*4</code>拆分成<code>(1+7)*4</code>更好，其中的1 是指上面的<code>push 0x80</code>所占的4 字节，另外的7 是指<code>pushad</code>指令会将eax 最先压入，故要跨过7 个4 字节，总共是8 个4 字节，即<code>[esp+8*4]</code>是对应栈中eax 的“藏身之所”。</p>
+<p>要实现的第一个系统调用是<code>getpid</code>，<code>getpid</code> 的功能是获取任务自己的pid，<code>getpid</code> 是给用户进程使用的接口函数，它在内核中对应的处理函数是<code>sys_getpid</code>。定义了<code>syscall_table</code>相关参数，<code>syscall_nr</code>表示<strong>最大支持的系统调用子功能个数</strong>，其值为32。第8 行用<code>typedef</code>自定义<code>syscall</code>类型为空指针<code>void*</code>，第9 行<code>syscall</code>是数组<code>syscall_table</code>的元素类型，也就是<code>syscall_table</code>为函数指针数组。第12 行是<code>sys_getpid</code>的定义，它的实现很简单，就是将当前任务pcb 中的pid 返回。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> syscall_nr 32 </span></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">void</span>* syscall;</span><br><span class="line">syscall syscall_table[syscall_nr];</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 返回当前任务的pid */</span></span><br><span class="line"><span class="keyword">uint32_t</span> sys_getpid(<span class="keyword">void</span>) &#123;</span><br><span class="line">   <span class="keyword">return</span> running_thread()-&gt;pid;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 初始化系统调用 */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">syscall_init</span><span class="params">(<span class="keyword">void</span>)</span> </span>&#123;</span><br><span class="line">   put_str(<span class="string">"syscall_init start\n"</span>);</span><br><span class="line">   syscall_table[SYS_GETPID] = sys_getpid;</span><br><span class="line">   put_str(<span class="string">"syscall_init done\n"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在系统中安装第一个系统调用—getpid：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">ifndef</span> __LIB_USER_SYSCALL_H</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> __LIB_USER_SYSCALL_H</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"stdint.h"</span></span></span><br><span class="line"><span class="keyword">enum</span> SYSCALL_NR &#123;</span><br><span class="line">    SYS_GETPID</span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">uint32_t</span> getpid(<span class="keyword">void</span>);</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br></pre></td></tr></table></figure></p>
+<p>主要定义了枚举结构<code>enum SYSCALL_NR</code>，此结构用来存放系统调用子功能号，目前里面只有<code>SYS_GETPID</code>，默认值为0，以后再增加新的系统调用后还需要把新的子功能号添加到此结构中。</p>
+<p>getpid放在syscall.c 中比较合适：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"syscall.h"</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* 无参数的系统调用 */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _syscall0(NUMBER) (&#123; \</span></span><br><span class="line">    <span class="keyword">int</span> retval; \</span><br><span class="line">    <span class="function"><span class="keyword">asm</span> <span class="title">volatile</span> <span class="params">( \</span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="string">"int $0x80"</span> \</span></span></span><br><span class="line"><span class="function"><span class="params">    : <span class="string">"=a"</span> (retval) \</span></span></span><br><span class="line"><span class="function"><span class="params">    : <span class="string">"a"</span> (NUMBER) \</span></span></span><br><span class="line"><span class="function"><span class="params">    : <span class="string">"memory"</span> \</span></span></span><br><span class="line"><span class="function"><span class="params">    )</span></span>; \</span><br><span class="line">    retval; \</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 返回当前任务pid */</span></span><br><span class="line"><span class="keyword">uint32_t</span> getpid() &#123;</span><br><span class="line">    <span class="keyword">return</span> _syscall0(SYS_GETPID);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>总结下增加系统调用的步骤。</p>
+<ol>
+<li>在<code>syscall.h</code>中的结构<code>enum SYSCALL_NR</code>里添加新的子功能号。</li>
+<li>在<code>syscall.c</code>中增加系统调用的用户接口。</li>
+<li>在<code>syscall-init.c</code>中定义子功能处理函数并在<code>syscall_table</code>中注册。</li>
+</ol>
+<h2 id="printf的实现"><a href="#printf的实现" class="headerlink" title="printf的实现"></a>printf的实现</h2><p>C调用约定规定：<strong>由调用者把参数以从右向左的顺序压入栈中，并且由调用者清理堆栈中的参数</strong>。<code>printf(char* format, arg1, arg2，…)</code>中的参数format 就是包含<code>%类型字符</code>的字符串，其调用后栈中布局如图。无论函数的参数个数是否固定，采用 C 调用约定，调用者都能完好地回收栈空间<br><img src="/img/1596960694.jpg" alt></p>
+<p>为方便引用函数中的可变参数，编译器gcc 的头文件stdarg.h 中定义了3 个宏。这3 个宏<code>va_start</code>、<code>va_end</code> 和<code>va_arg</code> 都以va（Variable Argument）开头，表示<strong>可变参数</strong>，但这里它们的值都是以<code>_builtin</code>为开头的内建符号，<code>va_start(v,l)</code>的值为<code>_builtin_va_start(v,l)</code>，gcc 的内建函数都放在其源码文件<code>builtins.c</code> 中用函数<code>static rtxexpand_builtin_va_start (tree exp)</code>来处理<code>__builtin_va_start</code>。<br><img src="/img/1596960753.jpg" alt></p>
+<p>执行man 3 stdarg 后回车：<br><img src="/img/1596960904.jpg" alt></p>
+<p>ap（argument pointer）是个指针变量，表示参数的指针，用来<strong>指向可变参数在栈中的地址</strong>。ap 的类型为<code>va_list</code>，本质上是指针类型，类型是char*。下面是3 个宏的说明。</p>
+<ol>
+<li><code>va_start(ap,v)</code>，参数ap是<strong>用于指向可变参数的指针变量</strong>，参数v 是支持可变参数的函数的第1 个参数。此宏的功能是<strong>使指针ap 指向v 的地址</strong>，它的调用必须先于其他两个宏，相当于初始化ap 指针的作用。</li>
+<li><code>va_arg(ap,t)</code>，参数ap 是用于指向可变参数的指针变量，参数t 是可变参数的类型，此宏的功能是<strong>使指针ap 指向栈中下一个参数的地址并返回其值</strong>。</li>
+<li><code>va_end(ap)</code>，将指向可变参数的变量ap 置为null，也就是<strong>清空指针变量ap</strong>。</li>
+</ol>
+<h3 id="实现printf"><a href="#实现printf" class="headerlink" title="实现printf"></a>实现printf</h3><p>函数<code>vsprintf</code>原型是<code>int vsprintf(char *str, const char *format, va_list ap);</code>。此函数的功能是<strong>把ap 指向的可变参数，以字符串格式format 中的符号’%’为替换标记，不修改原格式字符串format，将format 中除“%类型字符”以外的内容复制到str，把“%类型字符”替换成具体参数后写入str 中对应“%类型字符”的位置</strong>，vsprintf 执行完成后返回字符串str 的长度。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> va_start(ap, v) ap = (va_list)&amp;v  <span class="comment">// 把ap指向第一个固定参数v</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> va_arg(ap, t) *((t*)(ap += 4))	  <span class="comment">// ap指向下一个参数并返回其值</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> va_end(ap) ap = NULL		  <span class="comment">// 清除ap</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* 将整型转换成字符(integer to ascii) */</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">itoa</span><span class="params">(<span class="keyword">uint32_t</span> value, <span class="keyword">char</span>** buf_ptr_addr, <span class="keyword">uint8_t</span> base)</span> </span>&#123;</span><br><span class="line">   <span class="keyword">uint32_t</span> m = value % base;	    <span class="comment">// 求模,最先掉下来的是最低位   </span></span><br><span class="line">   <span class="keyword">uint32_t</span> i = value / base;	    <span class="comment">// 取整</span></span><br><span class="line">   <span class="keyword">if</span> (i) &#123;			    <span class="comment">// 如果倍数不为0则递归调用。</span></span><br><span class="line">      itoa(i, buf_ptr_addr, base);</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">if</span> (m &lt; <span class="number">10</span>) &#123;      <span class="comment">// 如果余数是0~9</span></span><br><span class="line">      *((*buf_ptr_addr)++) = m + <span class="string">'0'</span>;	  <span class="comment">// 将数字0~9转换为字符'0'~'9'</span></span><br><span class="line">   &#125; <span class="keyword">else</span> &#123;	      <span class="comment">// 否则余数是A~F</span></span><br><span class="line">      *((*buf_ptr_addr)++) = m - <span class="number">10</span> + <span class="string">'A'</span>; <span class="comment">// 将数字A~F转换为字符'A'~'F'</span></span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 将参数ap按照格式format输出到字符串str,并返回替换后str长度 */</span></span><br><span class="line"><span class="keyword">uint32_t</span> <span class="built_in">vsprintf</span>(<span class="keyword">char</span>* str, <span class="keyword">const</span> <span class="keyword">char</span>* format, va_list ap) &#123;</span><br><span class="line">   <span class="keyword">char</span>* buf_ptr = str;</span><br><span class="line">   <span class="keyword">const</span> <span class="keyword">char</span>* index_ptr = format;</span><br><span class="line">   <span class="keyword">char</span> index_char = *index_ptr;</span><br><span class="line">   <span class="keyword">int32_t</span> arg_int;</span><br><span class="line">   <span class="keyword">while</span>(index_char) &#123;</span><br><span class="line">      <span class="keyword">if</span> (index_char != <span class="string">'%'</span>) &#123;</span><br><span class="line">	 *(buf_ptr++) = index_char;</span><br><span class="line">	 index_char = *(++index_ptr);</span><br><span class="line">	 <span class="keyword">continue</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      index_char = *(++index_ptr);	 <span class="comment">// 得到%后面的字符</span></span><br><span class="line">      <span class="keyword">switch</span>(index_char) &#123;</span><br><span class="line">	 <span class="keyword">case</span> <span class="string">'x'</span>:</span><br><span class="line">	    arg_int = va_arg(ap, <span class="keyword">int</span>);</span><br><span class="line">	    itoa(arg_int, &amp;buf_ptr, <span class="number">16</span>); </span><br><span class="line">	    index_char = *(++index_ptr); <span class="comment">// 跳过格式字符并更新index_char</span></span><br><span class="line">	    <span class="keyword">break</span>;</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">return</span> <span class="built_in">strlen</span>(str);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 格式化输出字符串format */</span></span><br><span class="line"><span class="keyword">uint32_t</span> <span class="built_in">printf</span>(<span class="keyword">const</span> <span class="keyword">char</span>* format, ...) &#123;</span><br><span class="line">   va_list args;</span><br><span class="line">   va_start(args, format);	       <span class="comment">// 使args指向format</span></span><br><span class="line">   <span class="keyword">char</span> buf[<span class="number">1024</span>] = &#123;<span class="number">0</span>&#125;;	       <span class="comment">// 用于存储拼接后的字符串</span></span><br><span class="line">   <span class="built_in">vsprintf</span>(buf, format, args);</span><br><span class="line">   va_end(args);</span><br><span class="line">   <span class="keyword">return</span> write(buf); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><code>va_list</code>定义在<code>stdio.h</code>中，代码是<code>typedef char* va_list;</code>，因此<code>va_list</code>是字符指针。<code>va_start(ap, v)</code>的作用是<strong>初始化指针ap</strong>，即<strong>把ap 指向栈中可变参数中的第一个参数v</strong>，<code>ap = (va_list)&amp;v</code>。<code>va_arg(ap, t)</code>的作用是<strong>使指针ap 指向栈中下一个参数，并根据下一个参数的类型t 返回下一个参数的值</strong>，其实现是<code>*((t*)(ap += 4))</code>。<strong><code>va_arg(ap, t)</code>必须在<code>va_start(ap, v)</code>之后调用</strong>，否则指针ap未初始化将导致错误。ap 已经指向了栈中可变参数中的第1 个参数，<code>(ap+=4)</code>将指向下一个参数在栈中的地址，而后将其<strong>强制转换成t 型指针<code>(t*)</code></strong>，最后再用<code>*</code>号取值，即<code>*((t*)(ap += 4))</code>是下一个参数的值。<code>va_end(ap)</code>的作用就是<strong>回收指针ap</strong>，清空，其实现为<code>ap = NULL</code>。</p>
+<p>itoa作用是<strong>将整型转换为字符串</strong>。其原型是<code>void itoa(uint32_t value, char** buf_ptr_addr, uint8_t base)</code>，iota 的任务有两个：<strong>一个是数制转换</strong>，<strong>另一个是将转换后的数值转换成字符</strong>，即第20 行的代码<code>*((*buf_ptr_addr)++) = m + &#39;0&#39;</code>。</p>
+<p>vsprint的功能是<strong>将参数ap按照格式format 输出到字符串str 并返回替换后str 的长度</strong>。printf支持可变参数，因此它的函数声明为<code>uint32_t printf(const char* format, ...)</code>，其中的“…”表示可变参数。定义了变量args用它来指向参数，并调用宏<code>va_start(args, format)</code>对其初始化。定义了1024 字节大小的数组buf，用它来存储由<code>vsprintf</code>处理的结果，也就是str，完成之后宏<code>va_end(args)</code>使args 清空。最后执行系统调用<code>write(buf)</code>将处理后的字符串输出。</p>
+<h2 id="完善堆内存管理"><a href="#完善堆内存管理" class="headerlink" title="完善堆内存管理"></a>完善堆内存管理</h2><p><strong>arena</strong>是很多开源项目中都会用到的内存管理概念，<strong>将一大块内存划分成多个小内存块，每个小内存块之间互不干涉</strong>，可以分别管理，这样众多的小内存块就称为arena。arena 的<strong>一大块内存</strong>也是通过<code>malloc_page</code>获得的<strong>以4KB 为粒度的内存</strong>，按内存块的大小，可以划分出多种不同规格的arena，特定大小的arena只响应相应大小的请求。为支持多种容量内存块的分配，我们要提前建立好多种不同容量内存块的arena。arena分为两部分，一部分是<strong>元信息</strong>，用来描述自己内存池中空闲内存块数量，此部分占用的空间是固定的，约为12 字节。另一部分就是<strong>内存池区域</strong>，这里面有无数的内存块<code>mem_block</code>，此部分占用arena 大量的空间。</p>
+<p>arena 也是一样的，起始为某一类型内存块的arena只有1 个，分配完时系统再创建一个同规格的arena，又被分配完时再创建。为了跟踪每个arena中的空闲内存块，分别为每一种规格的内存块建立一个内存块描述符，即<code>mem_block_desc</code>，在其中记录内存块规格大小，以及位于所有同类arena 中的空闲内存块链表。</p>
+<p>在内存管理系统中，arena 为任意大小内存的分配提供了统一的接口，它既支持 1024 字节以下的小块内存的分配，又支持大于1024 字节以上的大块内存，malloc 函数实际上就是通过arena 申请这些内存块。<strong>arena 是个内存仓库，并不直接对外提供内存分配，只有内存块描述符才对外提供内存块</strong>，内存块描述符将同类arena 中的空闲内存块汇聚到一起，作为某一规格内存块的分配入口。因此，内存块描述符与arena 是一对多的关系，<strong>每个arena 都要与唯一的内存块描述符关联起来</strong>，多个同一规格的arena 为同一规格的内存块描述符供应内存块，它们各自的元信息中用内存块描述符指针指向同一个内存块描述符。<br><img src="/img/1596988852.jpg" alt></p>
+<p>右上角的A 图是用于处理大于1024 字节的大内存的arena，其大小是1 页框以上，其中的<strong>内存池部分并没有划分成多个小内存块</strong>，因此arena 元信息中，内存块描述符指针<code>mem_block_desc</code>值为NULL。左下角的图B 是被拆分成64KB 小内存块的<code>arena</code>，其指针<code>mem_block_desc</code>指向规格为64 字节的内存块描述符，内存块描述符的空闲内存块链表<code>free_list</code>将arena 中可用内存块汇总。C中当一个arena 中的内存块不够用时，需要用多个arena 为同一规格内存块“供货”。此例的内存块描述符规格是16 字节，因此与其关联“供货”的arena 规格也必须是16 字节。起初是左边那个arena 为其提供内存块，当它的内存块分配耗尽时，系统又创建右边的arena（虚线表示的），从而保证该规格的内存块“货源充足”。</p>
+<p>构建7种规格的内存块描述符：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">…略</span><br><span class="line"><span class="comment">/* 内存块 */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">mem_block</span> &#123;</span></span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">list_elem</span> <span class="title">free_elem</span>;</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 内存块描述符 */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">mem_block_desc</span> &#123;</span></span><br><span class="line">   <span class="keyword">uint32_t</span> block_size; <span class="comment">// 内存块大小</span></span><br><span class="line">   <span class="keyword">uint32_t</span> blocks_per_arena; <span class="comment">// 本arena 中可容纳此mem_block 的数量</span></span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">list</span> <span class="title">free_list</span>;</span> <span class="comment">// 目前可用的mem_block 链表</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> DESC_CNT 7 <span class="comment">// 内存块描述符个数</span></span></span><br><span class="line">…略</span><br></pre></td></tr></table></figure></p>
+<p>在memory.h 中最先定义的是内存块结构<code>struct mem_block</code>，只有一个成员<code>struct list_elem</code>，用来添加到同规格内存块描述符的<code>free_list</code>中。内存块<code>mem_block</code>所占用的内存是从arena 中拆分出来的，其相关属性用<code>mem_block_desc</code>来描述，有3 个成员，<code>free_list</code>是空闲内存块链表，<code>block_size</code>是本描述符的规格，<strong>它的<code>free_list</code>中只能添加规格为<code>block_size</code>的内存块</strong>。<code>blocks_per_arena</code>是告诉本arena 中可容纳规格为<code>block_size</code>的内存块的数量。最后的宏<code>DESC_CNT</code>表示内存块描述符的数量，其值为7，从16 字节起，分别是16、32、64、128、256、512、1024 字节，共有7 种规格的内存块。</p>
+<p>新的memory.c：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 内存仓库arena元信息 */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">arena</span> &#123;</span></span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">mem_block_desc</span>* <span class="title">desc</span>;</span>	 <span class="comment">// 此arena关联的mem_block_desc</span></span><br><span class="line"><span class="comment">/* large为ture时,cnt表示的是页框数。</span></span><br><span class="line"><span class="comment"> * 否则cnt表示空闲mem_block数量 */</span></span><br><span class="line">   <span class="keyword">uint32_t</span> cnt;</span><br><span class="line">   <span class="keyword">bool</span> large;		   </span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">mem_block_desc</span> <span class="title">k_block_descs</span>[<span class="title">DESC_CNT</span>];</span>	<span class="comment">// 内核内存块描述符数组</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">pool</span> <span class="title">kernel_pool</span>, <span class="title">user_pool</span>;</span>      <span class="comment">// 生成内核内存池和用户内存池</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">virtual_addr</span> <span class="title">kernel_vaddr</span>;</span>	 <span class="comment">// 此结构是用来给内核分配虚拟地址</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* 为malloc做准备 */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">block_desc_init</span><span class="params">(struct mem_block_desc* desc_array)</span> </span>&#123;				   </span><br><span class="line">   <span class="keyword">uint16_t</span> desc_idx, block_size = <span class="number">16</span>;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/* 初始化每个mem_block_desc描述符 */</span></span><br><span class="line">   <span class="keyword">for</span> (desc_idx = <span class="number">0</span>; desc_idx &lt; DESC_CNT; desc_idx++) &#123;</span><br><span class="line">      desc_array[desc_idx].block_size = block_size;</span><br><span class="line"></span><br><span class="line">      <span class="comment">/* 初始化arena中的内存块数量 */</span></span><br><span class="line">      desc_array[desc_idx].blocks_per_arena = (PG_SIZE - <span class="keyword">sizeof</span>(struct arena)) / block_size;	  </span><br><span class="line"></span><br><span class="line">      list_init(&amp;desc_array[desc_idx].free_list);</span><br><span class="line"></span><br><span class="line">      block_size *= <span class="number">2</span>;         <span class="comment">// 更新为下一个规格内存块</span></span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 内存管理部分初始化入口 */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">mem_init</span><span class="params">()</span> </span>&#123;</span><br><span class="line">   put_str(<span class="string">"mem_init start\n"</span>);</span><br><span class="line">   <span class="keyword">uint32_t</span> mem_bytes_total = (*(<span class="keyword">uint32_t</span>*)(<span class="number">0xb00</span>));</span><br><span class="line">   mem_pool_init(mem_bytes_total);	  <span class="comment">// 初始化内存池</span></span><br><span class="line"><span class="comment">/* 初始化mem_block_desc数组descs,为malloc做准备 */</span></span><br><span class="line">   block_desc_init(k_block_descs);</span><br><span class="line">   put_str(<span class="string">"mem_init done\n"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>给arena 结构体指针赋予1 个页框以上的内存，<strong>页框中除了此结构体外的部分都将作为arena 的内存池区域</strong>，该区域会被平均拆分成多个规格大小相等的内存块，即<code>mem_block</code>，这些<code>mem_block</code>会被添加到内存块描述符的<code>free_list</code>。结构中第1个成员是desc，它指向本arena中的内存块被关联到哪个内存块描述符，同一规格的arena 只能关联到同一规格的内存块描述符，<code>desc</code>只能指向规格为64 字节的内存块描述符。第2个成员是cnt，它的意义要取决于第3 个成员large的值。当large 为ture 时，cnt 表示的是本arena 占用的页框数，否则large 为false 时，cnt 表示本arena 中还有多少空闲内存块可用，将来释放内存时要用到此项。</p>
+<p>内核内存块描述符数组<code>k_block_descs[DESC_CNT]</code>，共有7 种描述符规格。通过for循环将7 种规格的内存块描述符初始化，分别<strong>初始化内核内存块描述符的<code>block_size</code>、<code>blocks_per_arena</code>和<code>free_list</code></strong>。block_size 起始值为16，desc_idx 起始值为0，循环体的最后会将其乘以2，因此下标<code>desc_idx</code>越低，<code>block_size</code>越小，也就是说，内核和用户内存块描述符数组中，<strong>下标越低的内存块描述符，其表示的内存块容量越小</strong>。对blocks_per_arena 初始化时，减去arena 的大小后再向下整除，这样保证内存块数量不会越过此arena 占用的页框边界，不过会浪费一部分内存。最后调用list_init 初始化内存块描述符的free_list。</p>
+<p>sys_malloc 的功能是分配并维护内存块资源，动态创建arena 以满足内存块的分配。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 返回arena中第idx个内存块的地址 */</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> struct mem_block* <span class="title">arena2block</span><span class="params">(struct arena* a, <span class="keyword">uint32_t</span> idx)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> (struct mem_block*)((<span class="keyword">uint32_t</span>)a + <span class="keyword">sizeof</span>(struct arena) + idx * a-&gt;desc-&gt;block_size);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 返回内存块b所在的arena地址 */</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> struct arena* <span class="title">block2arena</span><span class="params">(struct mem_block* b)</span> </span>&#123;</span><br><span class="line">   <span class="keyword">return</span> (struct arena*)((<span class="keyword">uint32_t</span>)b &amp; <span class="number">0xfffff000</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 在堆中申请size字节内存 */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span>* <span class="title">sys_malloc</span><span class="params">(<span class="keyword">uint32_t</span> size)</span> </span>&#123;</span><br><span class="line">   <span class="keyword">enum</span> pool_flags PF;</span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">pool</span>* <span class="title">mem_pool</span>;</span></span><br><span class="line">   <span class="keyword">uint32_t</span> pool_size;</span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">mem_block_desc</span>* <span class="title">descs</span>;</span></span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span>* <span class="title">cur_thread</span> = <span class="title">running_thread</span>();</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* 判断用哪个内存池*/</span></span><br><span class="line">   <span class="keyword">if</span> (cur_thread-&gt;pgdir == <span class="literal">NULL</span>) &#123;     <span class="comment">// 若为内核线程</span></span><br><span class="line">      PF = PF_KERNEL; </span><br><span class="line">      pool_size = kernel_pool.pool_size;</span><br><span class="line">      mem_pool = &amp;kernel_pool;</span><br><span class="line">      descs = k_block_descs;</span><br><span class="line">   &#125; <span class="keyword">else</span> &#123;				      <span class="comment">// 用户进程pcb中的pgdir会在为其分配页表时创建</span></span><br><span class="line">      PF = PF_USER;</span><br><span class="line">      pool_size = user_pool.pool_size;</span><br><span class="line">      mem_pool = &amp;user_pool;</span><br><span class="line">      descs = cur_thread-&gt;u_block_desc;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/* 若申请的内存不在内存池容量范围内则直接返回NULL */</span></span><br><span class="line">   <span class="keyword">if</span> (!(size &gt; <span class="number">0</span> &amp;&amp; size &lt; pool_size)) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">arena</span>* <span class="title">a</span>;</span></span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">mem_block</span>* <span class="title">b</span>;</span>	</span><br><span class="line">   lock_acquire(&amp;mem_pool-&gt;lock);</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 超过最大内存块1024, 就分配页框 */</span></span><br><span class="line">   <span class="keyword">if</span> (size &gt; <span class="number">1024</span>) &#123;</span><br><span class="line">      <span class="keyword">uint32_t</span> page_cnt = DIV_ROUND_UP(size + <span class="keyword">sizeof</span>(struct arena), PG_SIZE);    <span class="comment">// 向上取整需要的页框数</span></span><br><span class="line"></span><br><span class="line">      a = malloc_page(PF, page_cnt);</span><br><span class="line"></span><br><span class="line">      <span class="keyword">if</span> (a != <span class="literal">NULL</span>) &#123;</span><br><span class="line">	 <span class="built_in">memset</span>(a, <span class="number">0</span>, page_cnt * PG_SIZE);	 <span class="comment">// 将分配的内存清0  </span></span><br><span class="line"></span><br><span class="line">      <span class="comment">/* 对于分配的大块页框,将desc置为NULL, cnt置为页框数,large置为true */</span></span><br><span class="line">	 a-&gt;desc = <span class="literal">NULL</span>;</span><br><span class="line">	 a-&gt;cnt = page_cnt;</span><br><span class="line">	 a-&gt;large = <span class="literal">true</span>;</span><br><span class="line">	 lock_release(&amp;mem_pool-&gt;lock);</span><br><span class="line">	 <span class="keyword">return</span> (<span class="keyword">void</span>*)(a + <span class="number">1</span>);		 <span class="comment">// 跨过arena大小，把剩下的内存返回</span></span><br><span class="line">      &#125; <span class="keyword">else</span> &#123; </span><br><span class="line">	 lock_release(&amp;mem_pool-&gt;lock);</span><br><span class="line">	 <span class="keyword">return</span> <span class="literal">NULL</span>; </span><br><span class="line">      &#125;</span><br><span class="line">   &#125; <span class="keyword">else</span> &#123;    <span class="comment">// 若申请的内存小于等于1024,可在各种规格的mem_block_desc中去适配</span></span><br><span class="line">      <span class="keyword">uint8_t</span> desc_idx;</span><br><span class="line">      </span><br><span class="line">      <span class="comment">/* 从内存块描述符中匹配合适的内存块规格 */</span></span><br><span class="line">      <span class="keyword">for</span> (desc_idx = <span class="number">0</span>; desc_idx &lt; DESC_CNT; desc_idx++) &#123;</span><br><span class="line">	 <span class="keyword">if</span> (size &lt;= descs[desc_idx].block_size) &#123;  <span class="comment">// 从小往大后,找到后退出</span></span><br><span class="line">	    <span class="keyword">break</span>;</span><br><span class="line">	 &#125;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/* 若mem_block_desc的free_list中已经没有可用的mem_block,</span></span><br><span class="line"><span class="comment">    * 就创建新的arena提供mem_block */</span></span><br><span class="line">      <span class="keyword">if</span> (list_empty(&amp;descs[desc_idx].free_list)) &#123;</span><br><span class="line">	 a = malloc_page(PF, <span class="number">1</span>);       <span class="comment">// 分配1页框做为arena</span></span><br><span class="line">	 <span class="keyword">if</span> (a == <span class="literal">NULL</span>) &#123;</span><br><span class="line">	    lock_release(&amp;mem_pool-&gt;lock);</span><br><span class="line">	    <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">	 &#125;</span><br><span class="line">	 <span class="built_in">memset</span>(a, <span class="number">0</span>, PG_SIZE);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 对于分配的小块内存,将desc置为相应内存块描述符, </span></span><br><span class="line"><span class="comment">     * cnt置为此arena可用的内存块数,large置为false */</span></span><br><span class="line">	 a-&gt;desc = &amp;descs[desc_idx];</span><br><span class="line">	 a-&gt;large = <span class="literal">false</span>;</span><br><span class="line">	 a-&gt;cnt = descs[desc_idx].blocks_per_arena;</span><br><span class="line">	 <span class="keyword">uint32_t</span> block_idx;</span><br><span class="line"></span><br><span class="line">	 <span class="keyword">enum</span> intr_status old_status = intr_disable();</span><br><span class="line"></span><br><span class="line">	 <span class="comment">/* 开始将arena拆分成内存块,并添加到内存块描述符的free_list中 */</span></span><br><span class="line">	 <span class="keyword">for</span> (block_idx = <span class="number">0</span>; block_idx &lt; descs[desc_idx].blocks_per_arena; block_idx++) &#123;</span><br><span class="line">	    b = arena2block(a, block_idx);</span><br><span class="line">	    ASSERT(!elem_find(&amp;a-&gt;desc-&gt;free_list, &amp;b-&gt;free_elem));</span><br><span class="line">	    list_append(&amp;a-&gt;desc-&gt;free_list, &amp;b-&gt;free_elem);	</span><br><span class="line">	 &#125;</span><br><span class="line">	 intr_set_status(old_status);</span><br><span class="line">      &#125;    </span><br><span class="line"></span><br><span class="line">   <span class="comment">/* 开始分配内存块 */</span></span><br><span class="line">      b = elem2entry(struct mem_block, free_elem, list_pop(&amp;(descs[desc_idx].free_list)));</span><br><span class="line">      <span class="built_in">memset</span>(b, <span class="number">0</span>, descs[desc_idx].block_size);</span><br><span class="line"></span><br><span class="line">      a = block2arena(b);  <span class="comment">// 获取内存块b所在的arena</span></span><br><span class="line">      a-&gt;cnt--;		   <span class="comment">// 将此arena中的空闲内存块数减1</span></span><br><span class="line">      lock_release(&amp;mem_pool-&gt;lock);</span><br><span class="line">      <span class="keyword">return</span> (<span class="keyword">void</span>*)b;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><code>arena2block</code>接受两个参数，arena指针a 和内存块<code>mem_block</code> 在arena 中的索引，函数功能是<strong>返回arena中第idx 个内存块的首地址</strong>。arena 结构体<code>struct arena</code> 并不是全部arena 的大小，结构体中<strong>仅有3 个成员</strong>，它就是我们所说的arena的<strong>元信息</strong>。在arena 指针指向的页框中，<strong>除去元信息外的部分才被用于内存块的平均拆分</strong>，每个内存块都是相等的大小且连续挨着，因此<code>arena2block</code> 的原理是<strong>在arena 指针指向的页框中，跳过元信息部分，即struct arena 的大小，再用idx 乘以该arena 中内存块大小，最终的地址便是arena 中第idx 个内存块的首地址</strong>，最后将其转换成<code>mem_block</code> 类型后返回。内存块大小记录在由desc 指向的内存块描述符的<code>block_size</code> 中。转换过程对应的代码是<code>return (struct mem_block*)((uint32_t)a + sizeof(struct arena) + idx * a-&gt;desc-&gt;block_size)</code>。</p>
+<p><code>block2arena</code>接受一个参数，内存块指针b。用于<strong>将7 种规格的内存块转换为内存块所在的arena</strong>，内存块的高20 位地址便是arena 所在的地址，将此地址转换成<code>struct arena*</code>后返回即可，对应代码<code>return (struct arena*)((uint32_t)b &amp; 0xfffff000)</code>。</p>
+<p><code>sys_malloc</code> 只有一个参数size是申请的内存字节数。针对内核线程和用户进程两种情况为PF、mem_pool、pool_size 和descs赋值。定义了arena 指针a 和mem_block 指针b，指针a 用来指向新创建的arena，指针b 用来指向arena中的mem_block。如前介绍原理时所述，arena 既可处理大于1024 字节的大内存分配，也支持1024 字节以内的小内存分配。</p>
+<p>如果申请的内存量大于1024 字节，先计算页框数，存入变量page_cnt。<code>a = malloc_page(PF,page_cnt)</code>把<code>malloc_page</code>返回的页框地址赋值给<code>arena</code>指针a。内存中并没有<code>struct arena</code>和<code>struct mem_block</code>静态实例，只有指向堆中的指针。<strong>对大内存的处理我们直接返回arena 的内存区</strong>，没有对应的内存块描述符，故<code>a-&gt;desc = NULL</code>。<code>a-&gt;cnt</code>此时的意义是此arena占用的页框数，因此<code>a-&gt;cnt = page_cnt</code>。<code>a-&gt;large = true</code>表示<strong>此arena 用于处理大于1024 字节以上的内存分配</strong>。用<code>(a+1)</code>跨过arena 元信息，也就是跨过一个<code>struct arena</code>的大小。最后通过<code>return (void*)(a + 1)</code>把arena 中的内存池起始地址返回。</p>
+<p>内存小于1024 字节的情况：用for循环排查所有的内存块描述符，<strong>下标越低，其block_size 的值越小</strong>，从低容量的内存块向上找，遍历7种<code>block_size</code>，找到<code>desc_idx</code>。<code>if (list_empty (&amp;descs[desc_idx].free_list))</code>判断是否有可用的内存块，如果没有则用<code>a = malloc_page(PF, 1)</code>分配1页内存来创建新的arena，之后用<code>memset(a, 0, PG_SIZE)</code>清0。<code>a-&gt;desc = &amp;descs[desc_idx];</code>使desc 指向上面找到的内存块描述符。<code>a-&gt;large</code>置为false，表示<strong>此arena 不用于处理大于1024 字节的大内存</strong>。<code>a-&gt;cnt</code>置为<code>descs[desc_idx].blocks_per_arena</code>，表示<strong>此arena 现在具有的空闲内存块数量</strong>。</p>
+<p>在创建新的arena 后，下一步是将它<strong>拆分成内存块</strong>，循环次数是<code>descs[desc_idx].blocks_per_arena</code>，通过<code>arena2block</code>完成，新拆分出来的内存块添加到内存块描述符的<code>free_list</code>中。用<code>list_pop</code>从<code>free_list</code>中弹出一个内存块，此时得到的仅仅是内存块<code>mem_block</code>中<code>list_elem</code>的地址，因此要用到<code>elem2entry</code>宏将其转换成<code>mem_block</code>的地址。</p>
+<p>分配内存时的一般步骤如下。</p>
+<ol>
+<li>在虚拟地址池中分配虚拟地址，相关的函数是<code>vaddr_get</code>，此函数操作的是内核虚拟内存池位图<code>kernel_vaddr.vaddr_bitmap</code>或用户虚拟内存池位图<code>pcb-&gt;userprog_vaddr.vaddr_bitmap</code>。</li>
+<li>在物理内存池中分配物理地址，相关的函数是palloc，此函数操作的是内核物理内存池位图<code>kernel_pool-&gt;pool_bitmap</code>或用户物理内存池位图<code>user_pool-&gt;pool_bitmap</code>。</li>
+<li>在页表中完成虚拟地址到物理地址的映射，相关的函数是page_table_add。</li>
+</ol>
+<p>释放内存是与分配内存相反的过程，咱们对照着设计一套释放内存的方法。</p>
+<ol>
+<li>在物理地址池中释放物理页地址，相关的函数是pfree，操作的位图同palloc。</li>
+<li>在页表中去掉虚拟地址的映射，原理是将虚拟地址对应pte 的P 位置0，CPU 就认为该虚拟地址未做映射，从而达到删除虚拟地址的目的。相关的函数是<code>page_table_pte_remove</code>。</li>
+<li>在虚拟地址池中释放虚拟地址，相关的函数是vaddr_remove，操作的位图同<code>vaddr_get</code>。</li>
+</ol>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 将物理地址pg_phy_addr回收到物理内存池 */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">pfree</span><span class="params">(<span class="keyword">uint32_t</span> pg_phy_addr)</span> </span>&#123;</span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">pool</span>* <span class="title">mem_pool</span>;</span></span><br><span class="line">   <span class="keyword">uint32_t</span> bit_idx = <span class="number">0</span>;</span><br><span class="line">   <span class="keyword">if</span> (pg_phy_addr &gt;= user_pool.phy_addr_start) &#123;     <span class="comment">// 用户物理内存池</span></span><br><span class="line">      mem_pool = &amp;user_pool;</span><br><span class="line">      bit_idx = (pg_phy_addr - user_pool.phy_addr_start) / PG_SIZE;</span><br><span class="line">   &#125; <span class="keyword">else</span> &#123;	  <span class="comment">// 内核物理内存池</span></span><br><span class="line">      mem_pool = &amp;kernel_pool;</span><br><span class="line">      bit_idx = (pg_phy_addr - kernel_pool.phy_addr_start) / PG_SIZE;</span><br><span class="line">   &#125;</span><br><span class="line">   bitmap_set(&amp;mem_pool-&gt;pool_bitmap, bit_idx, <span class="number">0</span>);	 <span class="comment">// 将位图中该位清0</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 去掉页表中虚拟地址vaddr的映射,只去掉vaddr对应的pte */</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">page_table_pte_remove</span><span class="params">(<span class="keyword">uint32_t</span> vaddr)</span> </span>&#123;</span><br><span class="line">   <span class="keyword">uint32_t</span>* pte = pte_ptr(vaddr);</span><br><span class="line">   *pte &amp;= ~PG_P_1;	<span class="comment">// 将页表项pte的P位置0</span></span><br><span class="line">   <span class="function"><span class="keyword">asm</span> <span class="title">volatile</span> <span class="params">(<span class="string">"invlpg %0"</span>::<span class="string">"m"</span> (vaddr):<span class="string">"memory"</span>)</span></span>;    <span class="comment">//更新tlb</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 在虚拟地址池中释放以_vaddr起始的连续pg_cnt个虚拟页地址 */</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">vaddr_remove</span><span class="params">(<span class="keyword">enum</span> pool_flags pf, <span class="keyword">void</span>* _vaddr, <span class="keyword">uint32_t</span> pg_cnt)</span> </span>&#123;</span><br><span class="line">   <span class="keyword">uint32_t</span> bit_idx_start = <span class="number">0</span>, vaddr = (<span class="keyword">uint32_t</span>)_vaddr, cnt = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">   <span class="keyword">if</span> (pf == PF_KERNEL) &#123;  <span class="comment">// 内核虚拟内存池</span></span><br><span class="line">      bit_idx_start = (vaddr - kernel_vaddr.vaddr_start) / PG_SIZE;</span><br><span class="line">      <span class="keyword">while</span>(cnt &lt; pg_cnt) &#123;</span><br><span class="line">	 bitmap_set(&amp;kernel_vaddr.vaddr_bitmap, bit_idx_start + cnt++, <span class="number">0</span>);</span><br><span class="line">      &#125;</span><br><span class="line">   &#125; <span class="keyword">else</span> &#123;  <span class="comment">// 用户虚拟内存池</span></span><br><span class="line">      struct task_struct* cur_thread = running_thread();</span><br><span class="line">      bit_idx_start = (vaddr - cur_thread-&gt;userprog_vaddr.vaddr_start) / PG_SIZE;</span><br><span class="line">      <span class="keyword">while</span>(cnt &lt; pg_cnt) &#123;</span><br><span class="line">	 bitmap_set(&amp;cur_thread-&gt;userprog_vaddr.vaddr_bitmap, bit_idx_start + cnt++, <span class="number">0</span>);</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>函数<code>pfree</code>接受一个参数，即物理页框地址<code>pg_phy_addr</code>，功能是<strong>将物理页框回收到相应的物理内存池</strong>。根据物理地址池的起始地址判断<code>pg_phy_addr</code>属于哪个物理内存池，用变量<code>mem_pool</code>指向物理内存池，<code>bit_idx</code>为物理地址在相应物理内存池中的偏移量，最后通过代码<code>bitmap_set(&amp;mem_pool-&gt;pool_bitmap, bit_idx, 0)</code>在位图中回收该位。</p>
+<p>函数<code>page_table_pte_remove</code>接受<strong>虚拟地址vaddr</strong>，功能是<strong>将pte中的P 位置0</strong>。函数体中，先调用<code>pte_ptr(vaddr)</code>获取虚拟地址所在的pte 指针，通过代码<code>*pte &amp;= ~PG_P_1</code>使pte中的P位取反为0。之后更新TLB，有两种方式，一是<strong>用invlpg 指令更新单条虚拟地址条目</strong>，另外一个是<strong>重新加载cr3 寄存器</strong>，这将直接清空TLB。采用<code>invlpg</code>指令去单独更新vaddr 对应的缓存。<code>invlpg</code>的指令格式为<code>invlpg m</code>，其中m是操作数，表示虚拟地址内存，<code>invalpg</code>是汇编指令，<code>asm volatile (&quot;invlpg %0&quot;::&quot;m&quot; (vaddr):&quot;memory&quot;)</code>来<strong>更新虚拟地址vaddr 在tlb 缓存中的条目</strong>，</p>
+<p><code>vaddr_remove</code>接受3个参数，pf 是<strong>虚拟内存池标志</strong>，_vaddr 是<strong>待释放的虚拟地址</strong>，pg_cnt 是<strong>连续的虚拟页框数</strong>。函数功能是<strong>在虚拟地址池中释放以_vaddr 起始的连续pg_cnt 个虚拟页地址</strong>。先根据pf 判断是处理哪个虚拟内存池，然后再<strong>用位图函数<code>bitmap_set</code>将虚拟地址在虚拟内存池位图中相应的位清0</strong>。如果是内核，就针对内核的虚拟内存池<code>kernel_vaddr</code>操作，计算虚拟地址<code>vaddr</code>在位图<code>kernel_vaddr</code>中的偏移量，存入变量<code>bit_idx_start</code>中，然后循环<code>pg_cnt</code>次，依次将虚拟内存池位图中的相应位清0。针对用户虚拟内存池的处理与此同理，只是虚拟内存池位图是当前用户进程<code>pcb-&gt;userprog_vaddr</code>，不再赘述。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/* 释放以虚拟地址vaddr为起始的cnt个物理页框 */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">mfree_page</span><span class="params">(<span class="keyword">enum</span> pool_flags pf, <span class="keyword">void</span>* _vaddr, <span class="keyword">uint32_t</span> pg_cnt)</span> </span>&#123;</span><br><span class="line">   <span class="keyword">uint32_t</span> pg_phy_addr;</span><br><span class="line">   <span class="keyword">uint32_t</span> vaddr = (<span class="keyword">int32_t</span>)_vaddr, page_cnt = <span class="number">0</span>;</span><br><span class="line">   ASSERT(pg_cnt &gt;=<span class="number">1</span> &amp;&amp; vaddr % PG_SIZE == <span class="number">0</span>); </span><br><span class="line">   pg_phy_addr = addr_v2p(vaddr);  <span class="comment">// 获取虚拟地址vaddr对应的物理地址</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* 确保待释放的物理内存在低端1M+1k大小的页目录+1k大小的页表地址范围外 */</span></span><br><span class="line">   ASSERT((pg_phy_addr % PG_SIZE) == <span class="number">0</span> &amp;&amp; pg_phy_addr &gt;= <span class="number">0x102000</span>);</span><br><span class="line">   </span><br><span class="line"><span class="comment">/* 判断pg_phy_addr属于用户物理内存池还是内核物理内存池 */</span></span><br><span class="line">   <span class="keyword">if</span> (pg_phy_addr &gt;= user_pool.phy_addr_start) &#123;   <span class="comment">// 位于user_pool内存池</span></span><br><span class="line">      vaddr -= PG_SIZE;</span><br><span class="line">      <span class="keyword">while</span> (page_cnt &lt; pg_cnt) &#123;</span><br><span class="line">	 vaddr += PG_SIZE;</span><br><span class="line">	 pg_phy_addr = addr_v2p(vaddr);</span><br><span class="line"></span><br><span class="line">	 <span class="comment">/* 确保物理地址属于用户物理内存池 */</span></span><br><span class="line">	 ASSERT((pg_phy_addr % PG_SIZE) == <span class="number">0</span> &amp;&amp; pg_phy_addr &gt;= user_pool.phy_addr_start);</span><br><span class="line"></span><br><span class="line">	 <span class="comment">/* 先将对应的物理页框归还到内存池 */</span></span><br><span class="line">	 pfree(pg_phy_addr);</span><br><span class="line"></span><br><span class="line">         <span class="comment">/* 再从页表中清除此虚拟地址所在的页表项pte */</span></span><br><span class="line">	 page_table_pte_remove(vaddr);</span><br><span class="line"></span><br><span class="line">	 page_cnt++;</span><br><span class="line">      &#125;</span><br><span class="line">   <span class="comment">/* 清空虚拟地址的位图中的相应位 */</span></span><br><span class="line">      vaddr_remove(pf, _vaddr, pg_cnt);</span><br><span class="line"></span><br><span class="line">   &#125; <span class="keyword">else</span> &#123;	     <span class="comment">// 位于kernel_pool内存池</span></span><br><span class="line">      vaddr -= PG_SIZE;	      </span><br><span class="line">      <span class="keyword">while</span> (page_cnt &lt; pg_cnt) &#123;</span><br><span class="line">	 vaddr += PG_SIZE;</span><br><span class="line">	 pg_phy_addr = addr_v2p(vaddr);</span><br><span class="line">      <span class="comment">/* 确保待释放的物理内存只属于内核物理内存池 */</span></span><br><span class="line">	 ASSERT((pg_phy_addr % PG_SIZE) == <span class="number">0</span> &amp;&amp; \</span><br><span class="line">	       pg_phy_addr &gt;= kernel_pool.phy_addr_start &amp;&amp; \</span><br><span class="line">	       pg_phy_addr &lt; user_pool.phy_addr_start);</span><br><span class="line">	</span><br><span class="line">	 <span class="comment">/* 先将对应的物理页框归还到内存池 */</span></span><br><span class="line">	 pfree(pg_phy_addr);</span><br><span class="line"></span><br><span class="line">         <span class="comment">/* 再从页表中清除此虚拟地址所在的页表项pte */</span></span><br><span class="line">	 page_table_pte_remove(vaddr);</span><br><span class="line"></span><br><span class="line">	 page_cnt++;</span><br><span class="line">      &#125;</span><br><span class="line">   <span class="comment">/* 清空虚拟地址的位图中的相应位 */</span></span><br><span class="line">      vaddr_remove(pf, _vaddr, pg_cnt);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>mfree_page</code>接受3 个参数，pf 是内存池标志，_vaddr 是待释放的虚拟地址，pg_cnt 是连续的页框数，此函数的功能是<strong>释放以虚拟地址vaddr 为起始的cnt 个物理页框</strong>。先调用pfree 清空物理地址位图中的相应位，再调用page_table_pte_remove 删除页表中此地址的pte，最后调用vaddr_remove 清除虚拟地址位图中的相应位。</p>
+<p>sys_free 针对页框级别的内存和小内存块的处理有各自的方法，对于大内存的处理称之为<strong>释放</strong>，就是<strong>把页框在虚拟内存池和物理内存池的位图中将相应位置0</strong>。对于小内存的处理称之为<strong>回收</strong>，是<strong>将arena 中的内存块重新放回到内存块描述符中的空闲块链表free_list</strong>。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/* 回收内存ptr */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">sys_free</span><span class="params">(<span class="keyword">void</span>* ptr)</span> </span>&#123;</span><br><span class="line">   ASSERT(ptr != <span class="literal">NULL</span>);</span><br><span class="line">   <span class="keyword">if</span> (ptr != <span class="literal">NULL</span>) &#123;</span><br><span class="line">      <span class="keyword">enum</span> pool_flags PF;</span><br><span class="line">      <span class="class"><span class="keyword">struct</span> <span class="title">pool</span>* <span class="title">mem_pool</span>;</span></span><br><span class="line"></span><br><span class="line">   <span class="comment">/* 判断是线程还是进程 */</span></span><br><span class="line">      <span class="keyword">if</span> (running_thread()-&gt;pgdir == <span class="literal">NULL</span>) &#123;</span><br><span class="line">	 ASSERT((<span class="keyword">uint32_t</span>)ptr &gt;= K_HEAP_START);</span><br><span class="line">	 PF = PF_KERNEL; </span><br><span class="line">	 mem_pool = &amp;kernel_pool;</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">	 PF = PF_USER;</span><br><span class="line">	 mem_pool = &amp;user_pool;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      lock_acquire(&amp;mem_pool-&gt;lock);   </span><br><span class="line">      <span class="class"><span class="keyword">struct</span> <span class="title">mem_block</span>* <span class="title">b</span> = <span class="title">ptr</span>;</span></span><br><span class="line">      <span class="class"><span class="keyword">struct</span> <span class="title">arena</span>* <span class="title">a</span> = <span class="title">block2arena</span>(<span class="title">b</span>);</span>	     <span class="comment">// 把mem_block转换成arena,获取元信息</span></span><br><span class="line">      ASSERT(a-&gt;large == <span class="number">0</span> || a-&gt;large == <span class="number">1</span>);</span><br><span class="line">      <span class="keyword">if</span> (a-&gt;desc == <span class="literal">NULL</span> &amp;&amp; a-&gt;large == <span class="literal">true</span>) &#123; <span class="comment">// 大于1024的内存</span></span><br><span class="line">	 mfree_page(PF, a, a-&gt;cnt); </span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;				 <span class="comment">// 小于等于1024的内存块</span></span><br><span class="line">	 <span class="comment">/* 先将内存块回收到free_list */</span></span><br><span class="line">	 list_append(&amp;a-&gt;desc-&gt;free_list, &amp;b-&gt;free_elem);</span><br><span class="line"></span><br><span class="line">	 <span class="comment">/* 再判断此arena中的内存块是否都是空闲,如果是就释放arena */</span></span><br><span class="line">	 <span class="keyword">if</span> (++a-&gt;cnt == a-&gt;desc-&gt;blocks_per_arena) &#123;</span><br><span class="line">	    <span class="keyword">uint32_t</span> block_idx;</span><br><span class="line">	    <span class="keyword">for</span> (block_idx = <span class="number">0</span>; block_idx &lt; a-&gt;desc-&gt;blocks_per_arena; block_idx++) &#123;</span><br><span class="line">	       <span class="class"><span class="keyword">struct</span> <span class="title">mem_block</span>*  <span class="title">b</span> = <span class="title">arena2block</span>(<span class="title">a</span>, <span class="title">block_idx</span>);</span></span><br><span class="line">	       ASSERT(elem_find(&amp;a-&gt;desc-&gt;free_list, &amp;b-&gt;free_elem));</span><br><span class="line">	       list_remove(&amp;b-&gt;free_elem);</span><br><span class="line">	    &#125;</span><br><span class="line">	    mfree_page(PF, a, <span class="number">1</span>); </span><br><span class="line">	 &#125; </span><br><span class="line">      &#125;   </span><br><span class="line">      lock_release(&amp;mem_pool-&gt;lock); </span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><code>sys_free</code> 只接受1 个参数，内存指针ptr，函数功能是<strong>释放ptr 指向的内存</strong>。将ptr赋值给内存块指针b，然后通过<code>struct arena* a = block2arena(b)</code><strong>获取内存块b 所在的arena 指针</strong>，此目的是获取arena 中的元信息，<strong>通过元信息中的变量desc 和large 的值分别进行下一步处理</strong>。如果<code>a-&gt;desc</code>的值为NULL 并且<code>a-&gt;large</code>的值为true，这说明待释放的内存（也就是ptr 指向的内存）并不是在arena 中的小内存块，而是大于1024 字节的大内存，其大小是1 个或多个页框。如果待释放的内存是小内存块，流程就进入了<code>list_append(&amp;a-&gt;desc-&gt; free_list, &amp;b-&gt;free_elem)</code>，将此内存块回收到此内存块描述符的free_list 中。如果<code>++a-&gt;cnt</code>与内存块描述符中的<code>blocks_per_arena</code>相等，则此arena 中的空闲内存块已经达到最大数，说明可以释放。</p>
+<p>先在syscall.h 中添加malloc 和free 的系统调用号及接口:<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">enum</span> SYSCALL_NR &#123;</span><br><span class="line">   SYS_GETPID,</span><br><span class="line">   SYS_WRITE,</span><br><span class="line">   SYS_MALLOC,</span><br><span class="line">   SYS_FREE</span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">uint32_t</span> getpid(<span class="keyword">void</span>);</span><br><span class="line"><span class="keyword">uint32_t</span> write(<span class="keyword">char</span>* str);</span><br><span class="line"><span class="function"><span class="keyword">void</span>* <span class="title">malloc</span><span class="params">(<span class="keyword">uint32_t</span> size)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">free</span><span class="params">(<span class="keyword">void</span>* ptr)</span></span>;</span><br></pre></td></tr></table></figure></p>
+<p>接着在syscall.c 中完成malloc 和free 的实现：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 申请size 字节大小的内存，并返回结果 */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span>* <span class="title">malloc</span><span class="params">(<span class="keyword">uint32_t</span> size)</span> </span>&#123;</span><br><span class="line">   <span class="keyword">return</span> (<span class="keyword">void</span>*)_syscall1(SYS_MALLOC, size);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 释放ptr 指向的内存 */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">free</span><span class="params">(<span class="keyword">void</span>* ptr)</span> </span>&#123;</span><br><span class="line">   _syscall1(SYS_FREE, ptr);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>最后在syscall-init.c 中完成系统调用号与子功能处理函数的关联，也就是更新数组syscall_table。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 初始化系统调用 */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">syscall_init</span><span class="params">(<span class="keyword">void</span>)</span> </span>&#123;</span><br><span class="line">   put_str(<span class="string">"syscall_init start\n"</span>);</span><br><span class="line">   syscall_table[SYS_GETPID] = sys_getpid;</span><br><span class="line">   syscall_table[SYS_WRITE] = sys_write;</span><br><span class="line">   syscall_table[SYS_MALLOC] = sys_malloc;</span><br><span class="line">   syscall_table[SYS_FREE] = sys_free;</span><br><span class="line">   put_str(<span class="string">"syscall_init done\n"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="编写硬盘驱动程序"><a href="#编写硬盘驱动程序" class="headerlink" title="编写硬盘驱动程序"></a>编写硬盘驱动程序</h1><h2 id="硬盘及分区表"><a href="#硬盘及分区表" class="headerlink" title="硬盘及分区表"></a>硬盘及分区表</h2><p><strong>磁盘分区表</strong>（Disk Partition Table）简称DPT，是由多个分区元信息汇成的表，表中<strong>每一个表项都对应一个分区</strong>，主要记录<strong>各分区的起始扇区地址，大小界限等</strong>。磁盘分区表就是个数组，<strong>此数组长度固定为4</strong>，数组元素是分区元信息的结构。最初的磁盘分区表位于<strong> MBR 引导扇区</strong>中。<strong>MBR</strong>（Main Boot Record）即主引导记录，它是一段引导程序，其所在的扇区称为<strong>主引导扇区</strong>，该扇区位于0 盘0 道1 扇区（物理扇区编号从1 开始，逻辑扇区地址LBA 从0 开始），也就是硬盘最开始的扇区，扇区大小为512 字节，这512 字节内容由三部分组成。</p>
+<ol>
+<li>主引导记录MBR。MBR 引导程序位于<strong>主引导扇区中偏移0～0x1BD 的空间</strong>，共计446 字节大小，这其中包括硬盘参数及部分指令（由BIOS 跳入执行），它是由分区工具产生的，独立于任何操作系统。</li>
+<li>磁盘分区表DPT。磁盘分区表位于主引导扇区中偏移0x1BE～0x1FD 的空间，总共64 字节大小，每个分区表项是16字节，因此磁盘分区表最大支持4 个分区。</li>
+<li>结束魔数55AA，表示此扇区为主引导扇区，里面包含控制程序。位于扇区偏移0x1FE～0x1FF，也就是最后2 个字节。</li>
+<li>位于引导扇区后有多个<strong>空闲的扇区</strong>：<strong>对于不够一个柱面的剩余的空间一般不再利用，并不参与分区</strong>。除去MBR 引导扇区占用的1 扇区，这部分剩余空间是62 个扇区。</li>
+</ol>
+<p><strong>扩展分区</strong>被划分出多个<strong>子扩展分区</strong>，每个子扩展分区都有自己的分区表，所以<strong>子扩展分区在逻辑上相当于单独的硬盘</strong>，各分区表在各个子扩展分区最开始的扇区中，<strong>该扇区同MBR 引导扇区结构相同</strong>，称为EBR，即扩展引导记录。MBR 和EBR 所在的扇区统称为<strong>引导扇区</strong>。由于扩展分区采用了<strong>链式分区表</strong>，理论上支持无限个逻辑分区。EBR 中分区表的第一分区表项用来<strong>描述所包含的逻辑分区的元信息</strong>，第二分区表项用来<strong>描述下一个子扩展分区的地址</strong>。位于EBR 中的分区表相当于链表中的结点，第一个分区表项存的是分区数据，第二个分区表项存的是后继分区的指针。</p>
+<p>分区表项的结构：<br><img src="/img/1597044168.jpg" alt></p>
+<p><strong>活动分区是指引导程序所在的分区</strong>，这个引导程序通常是<strong>操作系统内核加载器</strong>，故此引导程序通常被称为<strong>操作系统引导记录</strong>，即<strong>OBR</strong>（OS Boot Record）。如果MBR 发现该分区表项的活动分区标记为<code>0x80</code>，这就表示该分区的引导扇区中<strong>有引导程序</strong>，MBR 就将CPU 使用权交给此引导程序，此扇区被称为操作系统引导扇区，也就是<strong>OBR 引导扇区</strong>。而 <strong>OBR 引导扇区是分区中最开始的扇区</strong>，归操作系统的文件系统管理，因此操作系统通常往OBR 引导扇区中添加内核加载器的代码，<strong>供MBR 调用以实现操作系统自举</strong>，</p>
+<p><strong>分区起始偏移扇区</strong>是个相对量，它表示<strong>各分区的起始扇区地址是相对于某“基准”的偏移扇区数</strong>，<code>各分区的绝对扇区LBA 地址=“基准”的绝对扇区起始LBA 地址+各分区的起始偏移扇区</code>，<strong>分区容量扇区数</strong>就是表示分区的容量扇区数。以上两项用来确定一个分区的位置和大小。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/操作系统/" rel="tag"># 操作系统</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/07/31/操作系统真相还原 笔记4/" rel="next" title="操作系统真相还原10-11章">
+                <i class="fa fa-chevron-left"></i> 操作系统真相还原10-11章
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/08/06/grep_sed_awk/" rel="prev" title="grep、sed、awk高效文件处理3剑客">
+                grep、sed、awk高效文件处理3剑客 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">247</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/xiaomeihao.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#进一步完善内核"><span class="nav-number">1.</span> <span class="nav-text">进一步完善内核</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux-系统调用浅析"><span class="nav-number">1.1.</span> <span class="nav-text">Linux 系统调用浅析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#系统调用的实现"><span class="nav-number">1.2.</span> <span class="nav-text">系统调用的实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#printf的实现"><span class="nav-number">1.3.</span> <span class="nav-text">printf的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#实现printf"><span class="nav-number">1.3.1.</span> <span class="nav-text">实现printf</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#完善堆内存管理"><span class="nav-number">1.4.</span> <span class="nav-text">完善堆内存管理</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#编写硬盘驱动程序"><span class="nav-number">2.</span> <span class="nav-text">编写硬盘驱动程序</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#硬盘及分区表"><span class="nav-number">2.1.</span> <span class="nav-text">硬盘及分区表</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<span id="busuanzi_container_site_uv"> 
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>

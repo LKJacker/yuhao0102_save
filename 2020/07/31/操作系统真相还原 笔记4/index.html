@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="操作系统,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="输入输出系统同步机制——锁互斥也可称为排他，是指某一时刻公共资源只能被1 个任务独享，即不允许多个任务同时出现在自己的临界区中。竞争条件是指多个任务以非互斥的方式同时进入临界区，公共资源的最终状态依赖于这些任务的临界区中的微操作执行次序。 在计算机中，信号量就是个0 以上的整数值，当为0 时表示已无可用信号，或者说条件不再允许，因此它表示某种信号的累积“量”，故称为信号量。P 是指Proberen">
+<meta name="keywords" content="操作系统">
+<meta property="og:type" content="article">
+<meta property="og:title" content="操作系统真相还原10-11章">
+<meta property="og:url" content="http://yoursite.com/2020/07/31/操作系统真相还原 笔记4/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="输入输出系统同步机制——锁互斥也可称为排他，是指某一时刻公共资源只能被1 个任务独享，即不允许多个任务同时出现在自己的临界区中。竞争条件是指多个任务以非互斥的方式同时进入临界区，公共资源的最终状态依赖于这些任务的临界区中的微操作执行次序。 在计算机中，信号量就是个0 以上的整数值，当为0 时表示已无可用信号，或者说条件不再允许，因此它表示某种信号的累积“量”，故称为信号量。P 是指Proberen">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/1596562686.png">
+<meta property="og:image" content="http://yoursite.com/img/1596594426.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1596608900.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1596612666.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1596613142.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1596617774.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1596619615.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1596734922.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1596768041.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1596768232.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1596770122.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1596772239.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1596788618.jpg">
+<meta property="og:updated_time" content="2020-08-13T09:37:30.493Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="操作系统真相还原10-11章">
+<meta name="twitter:description" content="输入输出系统同步机制——锁互斥也可称为排他，是指某一时刻公共资源只能被1 个任务独享，即不允许多个任务同时出现在自己的临界区中。竞争条件是指多个任务以非互斥的方式同时进入临界区，公共资源的最终状态依赖于这些任务的临界区中的微操作执行次序。 在计算机中，信号量就是个0 以上的整数值，当为0 时表示已无可用信号，或者说条件不再允许，因此它表示某种信号的累积“量”，故称为信号量。P 是指Proberen">
+<meta name="twitter:image" content="http://yoursite.com/img/1596562686.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2020/07/31/操作系统真相还原 笔记4/">
+
+
+
+
+
+  <title>操作系统真相还原10-11章 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-mybetterhalf">
+          <a href="/mybetterhalf/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            mybetterhalf
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/07/31/操作系统真相还原 笔记4/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">操作系统真相还原10-11章</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-07-31T11:13:00+08:00">
+                2020-07-31
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="输入输出系统"><a href="#输入输出系统" class="headerlink" title="输入输出系统"></a>输入输出系统</h1><h2 id="同步机制——锁"><a href="#同步机制——锁" class="headerlink" title="同步机制——锁"></a>同步机制——锁</h2><p>互斥也可称为排他，是指某一时刻公共资源只能被1 个任务独享，即不允许多个任务同时出现在自己的临界区中。竞争条件是指多个任务以非互斥的方式同时进入临界区，公共资源的最终状态依赖于这些任务的临界区中的微操作执行次序。</p>
+<p>在计算机中，信号量就是个0 以上的整数值，当为0 时表示已无可用信号，或者说条件不再允许，因此它表示某种信号的累积“量”，故称为信号量。<strong>P 是指Proberen，表示减少，V 是指单词Verhogen，表示增加</strong>。增加操作up 包括两个微操作：</p>
+<ol>
+<li>将信号量的值加1。</li>
+<li>唤醒在此信号量上等待的线程。</li>
+</ol>
+<p>减少操作down 包括三个子操作。</p>
+<ol>
+<li>判断信号量是否大于0。</li>
+<li>若信号量大于0，则将信号量减1。</li>
+<li>若信号量等于0，当前线程将自己阻塞，以在此信号量上等待。</li>
+</ol>
+<p>信号量是个全局共享变量，up 和down 又都是读写这个全局变量的操作，而且它们都包含一系列的子操作，因此它们必须都是<strong>原子操作</strong>。信号量的初值代表是<strong>信号资源的累积量</strong>，也就是剩余量，若初值为1 的话，它的取值就只能为0 和1，这便称为<strong>二元信号量</strong>，我们可以利用二元信号量来实现锁。在二元信号量中，<strong>down 操作就是获得锁，up 操作就是释放锁</strong>。我们可以让线程通过锁进入临界区，可以借此保证只有一个线程可以进入临界区，从而做到互斥。大致流程为：</p>
+<ul>
+<li>线程A 进入临界区前先通过down 操作获得锁（我们有强制通过锁进入临界区的手段），此时信号量的值便为0。</li>
+<li>后续线程B 再进入临界区时也通过down 操作获得锁，由于信号量为0，线程B 便在此信号量上等待，也就是相当于线程B 进入了睡眠态。</li>
+<li><strong>当线程A 从临界区出来后执行up 操作释放锁，此时信号量的值重新变成1</strong>，之后线程A 将线程B唤醒。</li>
+<li>线程B 醒来后获得了锁，进入临界区。</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 当前线程将自己阻塞,标志其状态为stat. */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">thread_block</span><span class="params">(<span class="keyword">enum</span> task_status stat)</span> </span>&#123;</span><br><span class="line"><span class="comment">/* stat取值为TASK_BLOCKED,TASK_WAITING,TASK_HANGING,也就是只有这三种状态才不会被调度*/</span></span><br><span class="line">   ASSERT(((stat == TASK_BLOCKED) || (stat == TASK_WAITING) || (stat == TASK_HANGING)));</span><br><span class="line">   <span class="keyword">enum</span> intr_status old_status = intr_disable();</span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span>* <span class="title">cur_thread</span> = <span class="title">running_thread</span>();</span></span><br><span class="line">   cur_thread-&gt;status = stat; <span class="comment">// 置其状态为stat </span></span><br><span class="line">   schedule();		      <span class="comment">// 将当前线程换下处理器</span></span><br><span class="line"><span class="comment">/* 待当前线程被解除阻塞后才继续运行下面的intr_set_status */</span></span><br><span class="line">   intr_set_status(old_status);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 将线程pthread解除阻塞 */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">thread_unblock</span><span class="params">(struct task_struct* pthread)</span> </span>&#123;</span><br><span class="line">   <span class="keyword">enum</span> intr_status old_status = intr_disable();</span><br><span class="line">   ASSERT(((pthread-&gt;status == TASK_BLOCKED) || (pthread-&gt;status == TASK_WAITING) || (pthread-&gt;status == TASK_HANGING)));</span><br><span class="line">   <span class="keyword">if</span> (pthread-&gt;status != TASK_READY) &#123;</span><br><span class="line">      ASSERT(!elem_find(&amp;thread_ready_list, &amp;pthread-&gt;general_tag));</span><br><span class="line">      <span class="keyword">if</span> (elem_find(&amp;thread_ready_list, &amp;pthread-&gt;general_tag)) &#123;</span><br><span class="line">	 PANIC(<span class="string">"thread_unblock: blocked thread in ready_list\n"</span>);</span><br><span class="line">      &#125;</span><br><span class="line">      list_push(&amp;thread_ready_list, &amp;pthread-&gt;general_tag);    <span class="comment">// 放到队列的最前面,使其尽快得到调度</span></span><br><span class="line">      pthread-&gt;status = TASK_READY;</span><br><span class="line">   &#125; </span><br><span class="line">   intr_set_status(old_status);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>thread_block，它接受一个参数stat，stat 是线程的状态，它的取值为“不可运行态”，函数功能是将当前线程的状态置为stat，从而实现了线程的阻塞。stat 取值范围是TASK_BLOCKED、TASK_WAITING 和TASK_HANGING，这三个就是上面所说的“不可运行态”。只有status 为TASK_RUNNING 的线程才可以被添加到就绪队列thread_ready_list。当前运行线程的status 必然是TASK_RUNNING。在调用schedule 之后，下面的中断状态恢复代码intr_set_status(old_status)本次便没机会执行了，只有在当前线程被唤醒后才会被执行到。</p>
+<p>函数thread_unblock 与thread_block 的功能相反，<strong>它将某线程解除阻塞，唤醒某线程</strong>。被阻塞的线程已无法运行，无法自己唤醒自己，必须被其他线程唤醒，因此参数<strong>pthread 指向的是目前已经被阻塞，又希望被唤醒的线程</strong>。通过list_push 将阻塞的线程重新添加到就绪队列，这里用list_push 是将线程添加到就绪队列的队首，因此<strong>保证这个睡了很久的线程能被优先调度</strong>。最后再将线程的status 置为TASK_READY，至此，线程重新回到了就绪队列，它有再被调度的机会了，也就是实现了唤醒。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 信号量结构 */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">semaphore</span> &#123;</span></span><br><span class="line">   <span class="keyword">uint8_t</span>  value;</span><br><span class="line">   <span class="class"><span class="keyword">struct</span>   <span class="title">list</span> <span class="title">waiters</span>;</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 锁结构 */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">lock</span> &#123;</span></span><br><span class="line">   <span class="class"><span class="keyword">struct</span>   <span class="title">task_struct</span>* <span class="title">holder</span>;</span>	    <span class="comment">// 锁的持有者</span></span><br><span class="line">   <span class="class"><span class="keyword">struct</span>   <span class="title">semaphore</span> <span class="title">semaphore</span>;</span>	    <span class="comment">// 用二元信号量实现锁</span></span><br><span class="line">   <span class="keyword">uint32_t</span> holder_repeat_nr;		    <span class="comment">// 锁的持有者重复申请锁的次数</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>锁结构中必须包含一个信号量成员，这里就是semaphore，它就是信号量结构体<code>struct semaphore</code>实例。此信号量的初值会被赋值为1，也就是用二元信号量实现锁。成员holder_repeat_nr 用来<strong>累积锁的持有者重复申请锁的次数</strong>，释放锁的时候会参考此变量的值。为了避免内外层函数在释放锁时会对同一个锁释放两次，用此变量来累积重复申请的次数，释放锁时会根据变量holder_repeat_nr 的值来执行具体动作。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 初始化信号量 */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">sema_init</span><span class="params">(struct semaphore* psema, <span class="keyword">uint8_t</span> value)</span> </span>&#123;</span><br><span class="line">   psema-&gt;value = value;       <span class="comment">// 为信号量赋初值</span></span><br><span class="line">   list_init(&amp;psema-&gt;waiters); <span class="comment">//初始化信号量的等待队列</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 初始化锁plock */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">lock_init</span><span class="params">(struct lock* plock)</span> </span>&#123;</span><br><span class="line">   plock-&gt;holder = <span class="literal">NULL</span>;</span><br><span class="line">   plock-&gt;holder_repeat_nr = <span class="number">0</span>;</span><br><span class="line">   sema_init(&amp;plock-&gt;semaphore, <span class="number">1</span>);  <span class="comment">// 信号量初值为1</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 信号量down操作 */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">sema_down</span><span class="params">(struct semaphore* psema)</span> </span>&#123;</span><br><span class="line"><span class="comment">/* 关中断来保证原子操作 */</span></span><br><span class="line">   <span class="keyword">enum</span> intr_status old_status = intr_disable();</span><br><span class="line">   <span class="keyword">while</span>(psema-&gt;value == <span class="number">0</span>) &#123;	<span class="comment">// 若value为0,表示已经被别人持有</span></span><br><span class="line">      ASSERT(!elem_find(&amp;psema-&gt;waiters, &amp;running_thread()-&gt;general_tag));</span><br><span class="line">      <span class="comment">/* 当前线程不应该已在信号量的waiters队列中 */</span></span><br><span class="line">      <span class="keyword">if</span> (elem_find(&amp;psema-&gt;waiters, &amp;running_thread()-&gt;general_tag)) &#123;</span><br><span class="line">	 PANIC(<span class="string">"sema_down: thread blocked has been in waiters_list\n"</span>);</span><br><span class="line">      &#125;</span><br><span class="line"><span class="comment">/* 若信号量的值等于0,则当前线程把自己加入该锁的等待队列,然后阻塞自己 */</span></span><br><span class="line">      list_append(&amp;psema-&gt;waiters, &amp;running_thread()-&gt;general_tag); </span><br><span class="line">      thread_block(TASK_BLOCKED);    <span class="comment">// 阻塞线程,直到被唤醒</span></span><br><span class="line">   &#125;</span><br><span class="line"><span class="comment">/* 若value为1或被唤醒后,会执行下面的代码,也就是获得了锁。*/</span></span><br><span class="line">   psema-&gt;value--;</span><br><span class="line">   ASSERT(psema-&gt;value == <span class="number">0</span>);	    </span><br><span class="line"><span class="comment">/* 恢复之前的中断状态 */</span></span><br><span class="line">   intr_set_status(old_status);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 信号量的up操作 */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">sema_up</span><span class="params">(struct semaphore* psema)</span> </span>&#123;</span><br><span class="line"><span class="comment">/* 关中断,保证原子操作 */</span></span><br><span class="line">   <span class="keyword">enum</span> intr_status old_status = intr_disable();</span><br><span class="line">   ASSERT(psema-&gt;value == <span class="number">0</span>);	    </span><br><span class="line">   <span class="keyword">if</span> (!list_empty(&amp;psema-&gt;waiters)) &#123;</span><br><span class="line">      <span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span>* <span class="title">thread_blocked</span> = <span class="title">elem2entry</span>(<span class="title">struct</span> <span class="title">task_struct</span>, <span class="title">general_tag</span>, <span class="title">list_pop</span>(&amp;<span class="title">psema</span>-&gt;<span class="title">waiters</span>));</span></span><br><span class="line">      thread_unblock(thread_blocked);</span><br><span class="line">   &#125;</span><br><span class="line">   psema-&gt;value++;</span><br><span class="line">   ASSERT(psema-&gt;value == <span class="number">1</span>);	    </span><br><span class="line"><span class="comment">/* 恢复之前的中断状态 */</span></span><br><span class="line">   intr_set_status(old_status);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 获取锁plock */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">lock_acquire</span><span class="params">(struct lock* plock)</span> </span>&#123;</span><br><span class="line"><span class="comment">/* 排除曾经自己已经持有锁但还未将其释放的情况。*/</span></span><br><span class="line">   <span class="keyword">if</span> (plock-&gt;holder != running_thread()) &#123; </span><br><span class="line">      sema_down(&amp;plock-&gt;semaphore);    <span class="comment">// 对信号量P操作,原子操作</span></span><br><span class="line">      plock-&gt;holder = running_thread();</span><br><span class="line">      ASSERT(plock-&gt;holder_repeat_nr == <span class="number">0</span>);</span><br><span class="line">      plock-&gt;holder_repeat_nr = <span class="number">1</span>;</span><br><span class="line">   &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      plock-&gt;holder_repeat_nr++;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 释放锁plock */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">lock_release</span><span class="params">(struct lock* plock)</span> </span>&#123;</span><br><span class="line">   ASSERT(plock-&gt;holder == running_thread());</span><br><span class="line">   <span class="keyword">if</span> (plock-&gt;holder_repeat_nr &gt; <span class="number">1</span>) &#123;</span><br><span class="line">      plock-&gt;holder_repeat_nr--;</span><br><span class="line">      <span class="keyword">return</span>;</span><br><span class="line">   &#125;</span><br><span class="line">   ASSERT(plock-&gt;holder_repeat_nr == <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">   plock-&gt;holder = <span class="literal">NULL</span>;	   <span class="comment">// 把锁的持有者置空放在V操作之前</span></span><br><span class="line">   plock-&gt;holder_repeat_nr = <span class="number">0</span>;</span><br><span class="line">   sema_up(&amp;plock-&gt;semaphore);	   <span class="comment">// 信号量的V操作,也是原子操作</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>sema_init 函数接受两个参数，psema 是待初始化的信号量，value 是信号量的初值，函数功能是<strong>将信号量psema 初值初始化为value</strong>。锁是用信号量来实现的，因此锁的初始化中会调用sema_init。函数lock_init 接受一个参数，plock 是待初始化的锁。函数功能是<strong>将锁的持有者holder 置为空，将持有者重复申请次数累积变量holder_repeat_nr 置为0，并调用sema_init(&amp;plock-&gt;semaphore, 1)将锁使用的信号量初值赋值为1</strong>，这样锁中的信号量就成为了二元信号量。</p>
+<p>函数sema_down接受一个参数，psema 是待执行down 操作的信号量。函数功能就是<strong>在信号量psema 上执行个down 操作</strong>。为保证down 操作的原子性，在函数开头便通过intr_disable 关了中断。这里通过<code>while(psema-&gt;value == 0)</code>判断信号量是否为0，如果为0，就进入while 的循环体做两件事。</p>
+<ol>
+<li>将自己添加到该信号量的等待队列中。对应的代码为<code>list_append(&amp;psema-&gt;waiters, &amp;running_thread()-&gt;general_tag);</code></li>
+<li>将自己阻塞，状态为<code>TASK_BLOCKED</code>。对应的代码为：<code>thread_block(TASK_BLOCKED);</code></li>
+</ol>
+<p>如果信号量不为0，也就是为1，则将信号量减1，即<code>psema-&gt;value--</code>。</p>
+<p>函数sema_up 接受一个参数，psema 是待执行up 操作的信号量。<strong>函数功能是将信号量的值加1</strong>。函数内部的操作也要保证原子性，因此在函数的开头也执行了intr_disable 函数关中断。其他线程可以申请锁了，因此在信号量的等待队列<code>psema-&gt;waiters</code> 中通过list_pop 弹出队首的第一个线程，并通过宏elem2entry 将其转换成PCB，存储到thread_blocked 中。然后通过<code>thread_unblock(thread_blocked)</code>将此线程唤醒。在将线程唤醒后，接下来将信号量值加1，即代码<code>psema-&gt;value++</code>。</p>
+<p>提醒一下，<strong>所谓的唤醒并不是指马上就运行，而是重新加入到就绪队列，将来可以参与调</strong>度，运行是将来的事。最后通过<code>intr_set_status(old_status)</code>恢复之前的中断状态。</p>
+<p>函数lock_acquire 接受一个参数，plock 是所要获得的锁，函数功能是<strong>获取锁plock</strong>。在函数开头先<strong>判断自己是否已经是该锁的持有者</strong>，即代码<code>if (plock-&gt;holder != running_thread())</code>。如果自己尚未持有此锁的话，通过<code>sema_down(&amp;plock-&gt;semaphore)</code>将锁的信号量减1。成功后将当前线程记为锁的持有者，即<code>plock-&gt;holder = running_thread()</code>，然后将holder_repeat_nr 置为1，表示第1 次申请了该锁。</p>
+<p>函数lock_release 只接受一个参数，plock 指向待释放的锁，函数功能是<strong>释放锁plock</strong>。如果持有者的变量<code>holder_repeat_nr</code>大于1，这说明自已多次申请该锁，此时还不能真正将锁释放，因此只是将<code>holder_repeat_nr--</code>，随后返回。如果锁持有者的变量holder_repeat_nr 为1，说明现在可以释放锁了，通过代码<code>plock-&gt;holder = NULL</code> 将持有者置空，随后将holder_repeat_nr 置为0，最后通过<code>sema_up(&amp;plock-&gt;semaphore)</code>将信号量加1，自此，锁被真正释放。</p>
+<h1 id="环形缓冲区的实现"><a href="#环形缓冲区的实现" class="headerlink" title="环形缓冲区的实现"></a>环形缓冲区的实现</h1><p>只要我们能够设计出合理的缓冲区操作方式，就能够解决生产者与消费者问题。环形缓冲区本质上依然是线性缓冲区，但其使用方式像环一样，没有固定的起始地址和终止地址，环内任何地址都可以作为起始和结束。缓冲区相当于一个队列，数据在队列头被写入，在队尾处被读出。<br><img src="/img/1596562686.png" alt></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/* 环形队列 */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">ioqueue</span> &#123;</span></span><br><span class="line"><span class="comment">// 生产者消费者问题</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">lock</span> <span class="title">lock</span>;</span></span><br><span class="line"> <span class="comment">/* 生产者,缓冲区不满时就继续往里面放数据,</span></span><br><span class="line"><span class="comment">  * 否则就睡眠,此项记录哪个生产者在此缓冲区上睡眠。*/</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span>* <span class="title">producer</span>;</span></span><br><span class="line"></span><br><span class="line"> <span class="comment">/* 消费者,缓冲区不空时就继续从往里面拿数据,</span></span><br><span class="line"><span class="comment">  * 否则就睡眠,此项记录哪个消费者在此缓冲区上睡眠。*/</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span>* <span class="title">consumer</span>;</span></span><br><span class="line">    <span class="keyword">char</span> buf[bufsize];			    <span class="comment">// 缓冲区大小</span></span><br><span class="line">    <span class="keyword">int32_t</span> head;			    <span class="comment">// 队首,数据往队首处写入</span></span><br><span class="line">    <span class="keyword">int32_t</span> tail;			    <span class="comment">// 队尾,数据从队尾处读出</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>struct ioqueue 结构便是咱们定义的环形缓冲区，它包括六个成员，其中：</li>
+<li>lock 是本缓冲区的锁，每次对缓冲区操作时都要先申请这个锁，从而保证缓冲区操作互斥。</li>
+<li>producer 是生产者，此项来记录当缓冲区满时，在此缓冲区睡眠的生产者线程。</li>
+<li>consumer 是消费者，此项来记录当缓冲区空时，在此缓冲区睡眠的消费者线程。</li>
+<li>buf[bufsize]是定义的缓冲区数组，其大小为bufsize，在上面用define 定义为64。</li>
+<li>head 是缓冲区队列的队首地址，tail 是队尾地址。</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 初始化io队列ioq */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">ioqueue_init</span><span class="params">(struct ioqueue* ioq)</span> </span>&#123;</span><br><span class="line">   lock_init(&amp;ioq-&gt;lock);     <span class="comment">// 初始化io队列的锁</span></span><br><span class="line">   ioq-&gt;producer = ioq-&gt;consumer = <span class="literal">NULL</span>;  <span class="comment">// 生产者和消费者置空</span></span><br><span class="line">   ioq-&gt;head = ioq-&gt;tail = <span class="number">0</span>; <span class="comment">// 队列的首尾指针指向缓冲区数组第0个位置</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 返回pos在缓冲区中的下一个位置值 */</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> int32_t <span class="title">next_pos</span><span class="params">(<span class="keyword">int32_t</span> pos)</span> </span>&#123;</span><br><span class="line">   <span class="keyword">return</span> (pos + <span class="number">1</span>) % bufsize; </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 判断队列是否已满 */</span></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">ioq_full</span><span class="params">(struct ioqueue* ioq)</span> </span>&#123;</span><br><span class="line">   ASSERT(intr_get_status() == INTR_OFF);</span><br><span class="line">   <span class="keyword">return</span> next_pos(ioq-&gt;head) == ioq-&gt;tail;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 判断队列是否已空 */</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">bool</span> <span class="title">ioq_empty</span><span class="params">(struct ioqueue* ioq)</span> </span>&#123;</span><br><span class="line">   ASSERT(intr_get_status() == INTR_OFF);</span><br><span class="line">   <span class="keyword">return</span> ioq-&gt;head == ioq-&gt;tail;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 使当前生产者或消费者在此缓冲区上等待 */</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">ioq_wait</span><span class="params">(struct task_struct** waiter)</span> </span>&#123;</span><br><span class="line">   ASSERT(*waiter == <span class="literal">NULL</span> &amp;&amp; waiter != <span class="literal">NULL</span>);</span><br><span class="line">   *waiter = running_thread();</span><br><span class="line">   thread_block(TASK_BLOCKED);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 唤醒waiter */</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">wakeup</span><span class="params">(struct task_struct** waiter)</span> </span>&#123;</span><br><span class="line">   ASSERT(*waiter != <span class="literal">NULL</span>);</span><br><span class="line">   thread_unblock(*waiter); </span><br><span class="line">   *waiter = <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 消费者从ioq队列中获取一个字符 */</span></span><br><span class="line"><span class="function"><span class="keyword">char</span> <span class="title">ioq_getchar</span><span class="params">(struct ioqueue* ioq)</span> </span>&#123;</span><br><span class="line">   ASSERT(intr_get_status() == INTR_OFF);</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 若缓冲区(队列)为空,把消费者ioq-&gt;consumer记为当前线程自己,</span></span><br><span class="line"><span class="comment"> * 目的是将来生产者往缓冲区里装商品后,生产者知道唤醒哪个消费者,</span></span><br><span class="line"><span class="comment"> * 也就是唤醒当前线程自己*/</span></span><br><span class="line">   <span class="keyword">while</span> (ioq_empty(ioq)) &#123;</span><br><span class="line">      lock_acquire(&amp;ioq-&gt;lock);	 </span><br><span class="line">      ioq_wait(&amp;ioq-&gt;consumer);</span><br><span class="line">      lock_release(&amp;ioq-&gt;lock);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="keyword">char</span> byte = ioq-&gt;buf[ioq-&gt;tail];	  <span class="comment">// 从缓冲区中取出</span></span><br><span class="line">   ioq-&gt;tail = next_pos(ioq-&gt;tail);	  <span class="comment">// 把读游标移到下一位置</span></span><br><span class="line"></span><br><span class="line">   <span class="keyword">if</span> (ioq-&gt;producer != <span class="literal">NULL</span>) &#123;</span><br><span class="line">      wakeup(&amp;ioq-&gt;producer);		  <span class="comment">// 唤醒生产者</span></span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="keyword">return</span> byte; </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 生产者往ioq队列中写入一个字符byte */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">ioq_putchar</span><span class="params">(struct ioqueue* ioq, <span class="keyword">char</span> byte)</span> </span>&#123;</span><br><span class="line">   ASSERT(intr_get_status() == INTR_OFF);</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 若缓冲区(队列)已经满了,把生产者ioq-&gt;producer记为自己,</span></span><br><span class="line"><span class="comment"> * 为的是当缓冲区里的东西被消费者取完后让消费者知道唤醒哪个生产者,</span></span><br><span class="line"><span class="comment"> * 也就是唤醒当前线程自己*/</span></span><br><span class="line">   <span class="keyword">while</span> (ioq_full(ioq)) &#123;</span><br><span class="line">      lock_acquire(&amp;ioq-&gt;lock);</span><br><span class="line">      ioq_wait(&amp;ioq-&gt;producer);</span><br><span class="line">      lock_release(&amp;ioq-&gt;lock);</span><br><span class="line">   &#125;</span><br><span class="line">   ioq-&gt;buf[ioq-&gt;head] = byte;      <span class="comment">// 把字节放入缓冲区中</span></span><br><span class="line">   ioq-&gt;head = next_pos(ioq-&gt;head); <span class="comment">// 把写游标移到下一位置</span></span><br><span class="line"></span><br><span class="line">   <span class="keyword">if</span> (ioq-&gt;consumer != <span class="literal">NULL</span>) &#123;</span><br><span class="line">      wakeup(&amp;ioq-&gt;consumer);          <span class="comment">// 唤醒消费者</span></span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>ioqueue_init</code> 函数<code>接受一个缓冲区参数ioq，用于初始化缓冲区ioq</code>。此函数负责三样工作，<strong>先通过初始化io 队列的锁</strong>，<strong>再将生产者和消费者置为NULL</strong>，最后再<strong>将缓冲区的队头和队尾置为下标0</strong>。next_pos 函数接受一个参数pos，功能是<strong>返回pos 在缓冲区中的下一个位置值</strong>，它是将pos+1 后再对bufsize 求模得到的，这保证了缓冲区指针回绕着数组buf，从而实现了环形缓冲区。ioq_full 函数接受一个缓冲区参数ioq。功能是<strong>返回队列是否已满</strong>，若已满则返回true，否则返回false。原理是<code>next_pos(ioq-&gt;head) == ioq-&gt;tail</code>。ioq_empty 函数接受一个缓冲区参数ioq。功能是<strong>返回队列是否为空</strong>，若空则返回true。原理是判断ioq-&gt;head 是否等于ioq-&gt;tail，若头尾相等则为空。</p>
+<p>ioq_wait 函数接受一个参数waiter，函数功能是<strong>使当前线程睡眠</strong>，并在缓冲区中等待。估计大伙儿都猜到了，传给waiter 的实参一定是缓冲区中的成员producer 或consumer。在函数体内就做了两件事，将当前线程记录在waiter 指向的指针中，也就是缓冲区中的producer 或consumer，因此<code>*waiter</code> 相当于ioq-&gt;consumer 或ioq-&gt;producer。随后调用<code>thread_block(TASK_BLOCKED)</code>将当前线程阻塞。wakeup 函数接受一个参数waiter，它同样也是pcb 类型的二级指针，因此传给它的实参也是缓冲区中的成员producer 或consumer。函数功能就是通过<code>thread_unblock(*waiter)</code>唤醒<code>*waiter</code>（生产者或消费者），随后将<code>*waiter</code>置空。</p>
+<p>ioq_getchar 函数接受一个缓冲区参数ioq，函数功能是<strong>从ioq 的队尾处返回一个字节</strong>，这属于从缓冲区中取数据，因此ioq_getchar 是由消费者线程调用的。函数体中，先通过<code>while(ioq_empty(ioq))</code>循环判断缓冲区ioq 是否为空，如果为空就表示没有数据可取，只好先在此缓冲区上睡眠，直到有生产者将数据添加到此缓冲区后再被叫醒重新取数据。while 循环体中先通过<code>lock_acquire(&amp;ioq-&gt;lock)</code>申请缓冲区的锁，持有锁后，通过<code>ioq_ wait(&amp;ioq-&gt;consumer)</code>将自己阻塞，也就是在此缓冲区上休眠。在while 循环判断中，如果缓冲区不为空的话，通过代码<code>byte = ioq-&gt;buf[ioq-&gt;tail]</code>从缓冲区队尾获取1 字节的数据，接着通过<code>ioq-&gt;tail = next_pos(ioq-&gt;tail)</code>将队尾更新为下一个位置。如果现在缓冲区已被当前消费者线程腾出一个数据单位的空间了，此时应该叫醒生产者继续往缓冲区中添加数据。因此调用<code>wakeup(&amp;ioq-&gt;producer)</code>唤醒生产者。之后通过return byte 返回获取数据。</p>
+<p>ioq_putchar 函数接受两个参数，一个是缓冲区参数ioq，另一个是待加入字节数据byte，函数功能是<code>往缓冲区ioq 中添加byte</code>，这是由生产者线程调用的。在函数体中也是先通过while 循环判断缓冲区ioq 是否为满，如果满了的话，先申请缓冲区的锁ioq-&gt;lock，然后通过调用<code>ioq_wait(&amp;ioq-&gt;producer)</code>将自己阻塞并登记在缓冲区ioq 的成员producer 中，这样消费者便知道唤醒哪个生产者了。随后释放锁。如果缓冲区不满的话，通过<code>ioq-&gt;buf[ioq-&gt;head] = byte</code>，将数据byte 写入缓冲区的队首ioq-&gt;head。随后通过<code>ioq-&gt;head = next_pos(ioq-&gt;head)</code>将队首更新为下一位置。</p>
+<h1 id="用户进程"><a href="#用户进程" class="headerlink" title="用户进程"></a>用户进程</h1><h2 id="为什么要有任务状态段-TSS"><a href="#为什么要有任务状态段-TSS" class="headerlink" title="为什么要有任务状态段 TSS"></a>为什么要有任务状态段 TSS</h2><p>TSS 是Task State Segment 的缩写。LDT 是Local Descriptor Table 的缩写，即局部描述符表，为每个程序单独赋予一个结构来存储其私有的资源。LDT 属于<strong>任务私有的结构</strong>，LDT 必须像其他描述符那样在GDT 注册，之后便能够用选择子找到它。描述符的作用是<strong>描述一段内存区域的属性</strong>，其中最重要的属性是内存区域的起始地址及偏移大小。</p>
+<p>LDT 虽然是描述符“表”，为了在GDT 中注册，必须也得为它找个描述符，用此描述符来描述某任务的LDT 的起始地址及偏移大小，此描述符便称为<strong>LDT 描述符</strong>。<br><img src="/img/1596594426.jpg" alt></p>
+<p>在LDT 中，描述符的D 位和L 位固定为0。<strong>LDT 描述符属于系统段描述符，因此S 为0</strong>。在S 为0 的前提下，若TYPE 的值为0010，这表示此描述符是LDT 描述符。CPU 专门准备了个寄存器来<strong>存储其位置及偏移量</strong>，想必您又猜到了，对，这就是LDTR。CPU 同样也准备了配套的指令，就是<strong>lldt</strong>，用此指令能够<strong>将ldt 加载到LDTR 寄存器</strong>。lldt 的指令格式为<code>lldt 16 位通用寄存器或16位内存单元</code>。</p>
+<p>对比一下，加载 GDT 的指令是<code>lgdt</code>，其格式是：<code>lgdt 16 位内存单元 &amp; 32 位内存单元</code>，<strong>前 16 位表示GDT 的偏移大小，后32 位表示GDT 的起始地址</strong>。区别是，<strong>lgdt 的操作数是GDT 表的偏移量及起始地址</strong>，而<strong>lldt 的操作数是ldt 在GDT 中的选择子</strong>。</p>
+<p>LDTR 寄存器结构如图。LDTR 分为两个部分，选择器是中16 位的LDT 选择子，描述符缓冲器中是LDT 的起始地址及偏移大小等属性。LDT 中的描述符全部用于指向任务自己的内存段。<br><img src="/img/1596608900.jpg" alt></p>
+<p>选择子的高 13 位表示可索引的描述符范围，2 的13 次方等于8192，也就是说一个任务最多可定义8192个内存段。由于LDT 描述符放在GDT 中，如果任务是用LDT 来实现的话，最多可同时创建8192 个任务。当前运行的任务，其LDT 位于LDTR 指向的地址，这样CPU 才能从中拿到任务运行所需要的资源（指令和数据）。因此，每切换一个任务时，需要用lldt 指令重新加载新任务的LDT 到LDTR。</p>
+<p>当加载新任务时，<strong>CPU 自动把当前任务（旧任务）的状态存入当前任务的TSS</strong>，然后<strong>将新任务TSS 中的数据载入到对应的寄存器中</strong>，这就实现了任务<br>切换。TSS 就是任务的代表，CPU 用不同的TSS 区分不同的任务，因此任务切换的本质就是TSS 的换来换去。TSS 描述符也要在GDT 中注册，这样才能“找到它”。<br><img src="/img/1596612666.jpg" alt></p>
+<p>TSS 描述符属于系统段描述符，因此<strong>S为0</strong>，在S 为0 的情况下，TYPE 的值为10B1。B 表示busy 位，B 位为0 时，表示任务不繁忙，B 位为1 时，表示任务繁忙。任务繁忙有两方面的含义，一方面就是指<strong>此任务是否为当前正在CPU 上运行的任务</strong>。另一方面是指<strong>此任务嵌套调用了新的任务，CPU 正在执行新任务，此任务暂时挂起</strong>。新老任务的调用关系形成了调用关系链。给当前任务打个标记，目的是<strong>避免当前任务调用自己</strong>，当前任务只能调用其他任务，不能自己调用自己。<strong>CPU 利用B 位来判断被调用的任务是否是当前任务，若被调用任务的B 位为1，这就表示当前任务自己在调用自己</strong>。因此，B 位主要是用来给CPU 做重入判断用的。</p>
+<p>TSS 同其他普通段一样，是位于内存中的区域，TSS 中的数据是按照固定格式来存储的，所以TSS 是个数据结构。<br><img src="/img/1596613142.jpg" alt></p>
+<p>TSS 中有三组栈：SS0 和esp0，SS1 和esp1，SS2 和esp2。这三组栈是用来由低特权级往高特权级跳转时用的，最低的特权级是3，没有更低的特权级会跳入3 特权级，因此，TSS 中没有SS3 和esp3。当任务被换下CPU 时，CPU 会自动将当前寄存器中的值存储到TSS 中的对应位置，当有新任务上CPU 运行时，CPU会自动从新任务的TSS 中找到相应的寄存器值加载到对应的寄存器中。</p>
+<p><strong>TSS 和LDT 一样，必须要在GDT 中注册才行</strong>，这也是为了在引用描述符的阶段做安全检查。因此TSS 是通过选择子来访问的，将tss 加载到寄存器TR 的指令是<code>ltr</code>，其指令格式为：<code>ltr 16 位通用寄存器或16位内存单元</code>，有了 TSS 后，任务在被换下CPU 时，由CPU 自动地把当前任务的资源状态（所有寄存器、必要的内存结构，如栈等）保存到该任务对应的TSS 中（由寄存器TR 指定）。CPU 通过新任务的TSS 选择子加载新任务时，会把该TSS 中的数据载入到CPU 的寄存器中，同时用此TSS 描述符更新寄存器TR。</p>
+<p>总结；</p>
+<ul>
+<li>TSS 由用户提供，由CPU 自动维护。</li>
+<li>TSS 与其他普通段一样，也有自己的描述符，即TSS 描述符，用它来描述一个TSS 的信息，此描述符需要定义在GDT 中。寄存器TR 始终指向当前任务的<br>TSS。任务切换就是改变TR 的指向，CPU 自动将当前寄存器组的值（快照）写入TR 指向的TSS，同时将新任务TSS 中的各寄存器的值载入CPU 中对应的寄存器，从而实现了任务切换。</li>
+<li>TSS 和LDT 都只能且必须在GDT 中注册描述符，TR 寄存器中存储的是TSS 的选择子，LDTR 寄存器中存储的是LDT 的选择子，GDTR 寄存器中存储的是GDT 的起始地址及界限偏移（大小减1）</li>
+</ul>
+<p><img src="/img/1596617774.jpg" alt></p>
+<h3 id="CPU-原生支持的任务切换方式"><a href="#CPU-原生支持的任务切换方式" class="headerlink" title="CPU 原生支持的任务切换方式"></a>CPU 原生支持的任务切换方式</h3><p>进行任务切换的方式有<strong>中断+任务门</strong>，<strong>call 或jmp+任务门</strong>和<strong>iretd</strong>，下面分别介绍。</p>
+<p>通过<strong>中断+任务门</strong>进行任务切换。中断是定时发生的，因此用中断进行任务切换的好处是明显的：实现简单，抢占式多任务调度，所有任务都有运行的机会。若想通过中断的方式进行任务切换，该中断对应的描述符中必须要包含TSS选择子，唯一包含TSS 选择子的描述符便是任务门描述符。CPU 为原生支持多任务做了很多努力，最直接实现任务切换的方式是任务门。<br><img src="/img/1596619615.jpg" alt></p>
+<p>任务门描述符中的内容是TSS 选择子，任务门描述符也是系统段，因此S 的值为0，在S 为0的情况下，TYPE 的值为0101 时，就表示此描述符是任务门描述符。当中断发生时，处理器通过中断向量号在IDT 中找到描述符后，通过分析描述符中字段S 和字段TYPE的组合，发现此中断对应的描述符是中断门描述符，则转而去执行此中断门描述符中指定的中断处理例程。在中断处理程序的最后，通过iretd 指令返回到被中断任务的中断前的代码处。若发现中断对应的是门描述符，此时便进行任务切换。</p>
+<p>当中断发生时，假设当前任务A 被中断，CPU 进入中断后，它有可能的动作是：</p>
+<ul>
+<li>假设是中断门或陷阱门，执行完中断处理例程后是用iretd 指令返回到任务A 中断前的指令部分。</li>
+<li>假设是任务门，进行任务切换，此时是嵌套调用任务B，任务B 在执行期间又发生了中断，进入了对应的中断门，当执行完对应的中断处理程序后，用iretd 指令返回。</li>
+<li>同样假设是任务门，任务A 调用任务B 执行，任务B 执行完成后要通过iretd 指令返回到任务A，使任务A 继续完成后续的指令。</li>
+</ul>
+<p>标志寄存器eflags 中的NT 位和TSS 中的<strong>上一个任务的TSS 指针</strong>字段用于区分这几种情况。NT 位是eflags 中的第14 位，1bit 的宽度，它表示Nest Task Flag，任务嵌套。任务嵌套是指<strong>当前任务是被前一个任务调用后才执行的</strong>，也就是当前任务嵌套于另一个任务中，相当于另一个任务的子任务，在<br>此任务执行完成后还要回到前一个任务，使其继续执行。TSS 的字段<strong>上一个任务的TSS 指针</strong>，<strong>用于记录是哪个任务调用了当前任务</strong>，此字段中的值是TSS 的地址，因此它就形成了<strong>任务嵌套关系的单向链表</strong>，每个TSS 属于链表中的结点，CPU用此链表来记录任务的嵌套调用关系。</p>
+<p>当调用一个新任务时，处理器做了两件准备工作。</p>
+<ul>
+<li>自动将新任务 eflags 中的NT 位置为1，这就表示新任务能够执行的原因是被别的任务调用，也就是嵌套调用。</li>
+<li>随后处理器将旧任务的TSS 选择子写入新任务TSS 的“上一个任务的TSS 指针”字段中。</li>
+</ul>
+<p>当CPU 执行iretd 指令时，始终要判断NT 位的值。如果NT 等于1，这表示是从新任务返回到旧任务，于是CPU 到当前任务（新任务）TSS 的“上一个任务的TSS 指针”字段中获取旧任务的TSS，转而去执行旧任务。如果NT 等于0，这表示要回到当前任务中断前的指令部分。</p>
+<p>中断发生时，通过任务门进行任务切换的过程如下。</p>
+<ol>
+<li>从该任务门描述符中取出任务的TSS 选择子。</li>
+<li>用新任务的TSS 选择子在GDT 中索引TSS 描述符。</li>
+<li>判断该TSS 描述符的P 位是否为1，为1 表示该TSS 描述符对应的TSS 已经位于内存中TSS 描述符指定的位置，可以访问。否则P 不为1 表示该TSS 描述符对应的TSS 不在内存中，这会导致异常。</li>
+<li>从寄存器TR 中获取旧任务的TSS 位置，保存旧任务（当前任务）的状态到旧TSS 中。其中，任务状态是指CPU 中寄存器的值，这仅包括TSS 结构中列出的寄存器：8 个通用寄存器，6 个段寄存器，指令指针eip，栈指针寄存器esp，页表寄存器cr3 和标志寄存器eflags 等。</li>
+<li>把新任务的TSS 中的值加载到相应的寄存器中。</li>
+<li>使寄存器TR 指向新任务的TSS。</li>
+<li>将新任务（当前任务）的TSS 描述符中的B 位置1。</li>
+<li>将新任务标志寄存器中eflags 的NT 位置1。</li>
+<li>将旧任务的TSS 选择子写入新任务TSS 中“上一个任务的TSS 指针”字段中。</li>
+<li>开始执行新任务。</li>
+</ol>
+<p>当新任务执行完成后，调用iretd 指令返回到旧任务，此时处理器检查NT 位，若其值为1，便进行返回工作，步骤如下。</p>
+<ol>
+<li>将当前任务（新任务）标志寄存器中eflags 的NT 位置0。</li>
+<li>将当前任务TSS 描述符中的B 位置为0。</li>
+<li>将当前任务的状态信息写入TR 指向的TSS。</li>
+<li>获取当前任务TSS 中“上一个任务的TSS 指针”字段的值，将其加载到TR 中，恢复上一个任务的状态。</li>
+<li>执行上一个任务（当前任务），从而恢复到旧任务。</li>
+</ol>
+<h3 id="call、jmp-切换任务"><a href="#call、jmp-切换任务" class="headerlink" title="call、jmp 切换任务"></a>call、jmp 切换任务</h3><p>call 是有去有回的指令，jmp 是一去不回的指令，它们在调用新任务时的区别也在于此。call 指令以任务嵌套的方式调用新任务，当以call 指令调用新任务时，我们以操作数为TSS 选择子为例，比如<code>call 0x0018:0x1234</code>，任务切换的步骤如下。</p>
+<ol>
+<li>CPU 忽略偏移量0x1234，拿选择子0x0018 在GDT 中索引到第3 个描述符。</li>
+<li>检查描述符中的P 位，若P 为0，表示该描述符对应的段不存在，这将引发异常。同时检查该描述符的S 与TYPE 的值，判断其类型，如果是TSS 描述符，检查该描述符的B 位，B 位若为1 将抛出GP异常，即表示调用不可重入。</li>
+<li>进行特权级检查，数值上“CPL 和TSS 选择子中的RPL”都要小于等于TSS 描述符的DPL，否则抛出GP 异常。</li>
+<li>特权检查完成后，将当前任务的状态保存到寄存器TR 指向的TSS 中。</li>
+<li>加载新任务TSS 选择子到TR 寄存器的选择器部分，同时把TSS 描述符中的起始地址和偏移量等属性加载到TR 寄存器中的描述符缓冲器中。</li>
+<li>将新任务TSS 中的寄存器数据载入到相应的寄存器中，同时进行特权级检查，如果检查未通过，则抛出GP 异常。</li>
+<li>CPU 会把新任务的标志寄存器eflags 中的NT 位置为1。</li>
+<li>将旧任务TSS 选择子写入新任务TSS 中的字段“上一个任务的TSS 指针”中，这表示新任务是被旧任务调用才执行的。</li>
+<li>然后将新任务TSS 描述符中的B 位置为1 以表示任务忙。旧任务TSS 描述符中的B 位不变，依然保持为1，旧任务的标志寄存器eflags 中的NT 位的值保持不变，之前是多少就是多少。</li>
+<li>开始执行新任务，完成任务切换。</li>
+</ol>
+<p>jmp 指令以非嵌套的方式调用新任务，新任务和旧任务之间不会形成链式关系。当以jmp 指令调用新任务时，新任务TSS 描述符中的B 位会被CPU 置为1 以表示任务忙，旧任务TSS 描述符中的B 位会被CPU 清0。</p>
+<p>Linux 为每个CPU 创建一个TSS，<strong>在各个CPU 上的所有任务共享同一个TSS</strong>，各CPU 的TR 寄存器保存各CPU 上的TSS，在用<code>ltr</code>指令加载TSS 后，该TR 寄存器永远指向同一个TSS，<strong>之后再也不会重新加载TSS</strong>。在进程切换时，只需要把TSS 中的SS0 及esp0 更新为新任务的内核栈的段地址及栈指针。</p>
+<p>当CPU 由低特权级进入高特权级时，<strong>CPU 会“自动”从TSS 中获取对应高特权级的栈指针</strong>，CPU 自动从当前任务的TSS 中获取SS0 和esp0 字段的值作为0 特权级的栈，然后<strong>Linux执行一系列的push 指令将任务的状态的保存在0 特权级栈中</strong>，也就是TSS 中SS0 和esp0 所指向的栈。任务切换的开销更小了。</p>
+<h2 id="定义并初始化-TSS"><a href="#定义并初始化-TSS" class="headerlink" title="定义并初始化 TSS"></a>定义并初始化 TSS</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">// ----------------  GDT描述符属性  ----------------</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span>	DESC_G_4K    1</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span>	DESC_D_32    1</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> DESC_L	     0	<span class="comment">// 64位代码标记，此处标记为0便可。</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> DESC_AVL     0	<span class="comment">// cpu不用此位，暂置为0  </span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> DESC_P	     1</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> DESC_DPL_0   0</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> DESC_DPL_1   1</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> DESC_DPL_2   2</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> DESC_DPL_3   3</span></span><br><span class="line"><span class="comment">/* </span></span><br><span class="line"><span class="comment">   代码段和数据段属于存储段，tss和各种门描述符属于系统段</span></span><br><span class="line"><span class="comment">   s为1时表示存储段,为0时表示系统段.</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> DESC_S_CODE	1</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> DESC_S_DATA	DESC_S_CODE</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> DESC_S_SYS	0</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> DESC_TYPE_CODE	8	<span class="comment">// x=1,c=0,r=0,a=0 代码段是可执行的,非依从的,不可读的,已访问位a清0.  </span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> DESC_TYPE_DATA  2	<span class="comment">// x=0,e=0,w=1,a=0 数据段是不可执行的,向上扩展的,可写的,已访问位a清0.</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> DESC_TYPE_TSS   9	<span class="comment">// B位为0,不忙</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span>	 RPL0  0</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span>	 RPL1  1</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span>	 RPL2  2</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span>	 RPL3  3</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> TI_GDT 0</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> TI_LDT 1</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SELECTOR_K_CODE	   ((1 &lt;&lt; 3) + (TI_GDT &lt;&lt; 2) + RPL0)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SELECTOR_K_DATA	   ((2 &lt;&lt; 3) + (TI_GDT &lt;&lt; 2) + RPL0)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SELECTOR_K_STACK   SELECTOR_K_DATA </span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SELECTOR_K_GS	   ((3 &lt;&lt; 3) + (TI_GDT &lt;&lt; 2) + RPL0)</span></span><br><span class="line"><span class="comment">/* 第3个段描述符是显存,第4个是tss */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SELECTOR_U_CODE	   ((5 &lt;&lt; 3) + (TI_GDT &lt;&lt; 2) + RPL3)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SELECTOR_U_DATA	   ((6 &lt;&lt; 3) + (TI_GDT &lt;&lt; 2) + RPL3)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SELECTOR_U_STACK   SELECTOR_U_DATA</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> GDT_ATTR_HIGH		 ((DESC_G_4K &lt;&lt; 7) + (DESC_D_32 &lt;&lt; 6) + (DESC_L &lt;&lt; 5) + (DESC_AVL &lt;&lt; 4))</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> GDT_CODE_ATTR_LOW_DPL3	 ((DESC_P &lt;&lt; 7) + (DESC_DPL_3 &lt;&lt; 5) + (DESC_S_CODE &lt;&lt; 4) + DESC_TYPE_CODE)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> GDT_DATA_ATTR_LOW_DPL3	 ((DESC_P &lt;&lt; 7) + (DESC_DPL_3 &lt;&lt; 5) + (DESC_S_DATA &lt;&lt; 4) + DESC_TYPE_DATA)</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//---------------  TSS描述符属性  ------------</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> TSS_DESC_D  0 </span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> TSS_ATTR_HIGH ((DESC_G_4K &lt;&lt; 7) + (TSS_DESC_D &lt;&lt; 6) + (DESC_L &lt;&lt; 5) + (DESC_AVL &lt;&lt; 4) + 0x0)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> TSS_ATTR_LOW ((DESC_P &lt;&lt; 7) + (DESC_DPL_0 &lt;&lt; 5) + (DESC_S_SYS &lt;&lt; 4) + DESC_TYPE_TSS)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SELECTOR_TSS ((4 &lt;&lt; 3) + (TI_GDT &lt;&lt; 2 ) + RPL0)</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">gdt_desc</span> &#123;</span></span><br><span class="line">   <span class="keyword">uint16_t</span> limit_low_word;</span><br><span class="line">   <span class="keyword">uint16_t</span> base_low_word;</span><br><span class="line">   <span class="keyword">uint8_t</span>  base_mid_byte;</span><br><span class="line">   <span class="keyword">uint8_t</span>  attr_low_byte;</span><br><span class="line">   <span class="keyword">uint8_t</span>  limit_high_attr_high;</span><br><span class="line">   <span class="keyword">uint8_t</span>  base_high_byte;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/* 任务状态段tss结构 */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">tss</span> &#123;</span></span><br><span class="line">    <span class="keyword">uint32_t</span> backlink;</span><br><span class="line">    <span class="keyword">uint32_t</span>* esp0;</span><br><span class="line">    <span class="keyword">uint32_t</span> ss0;</span><br><span class="line">    <span class="keyword">uint32_t</span>* esp1;</span><br><span class="line">    <span class="keyword">uint32_t</span> ss1;</span><br><span class="line">    <span class="keyword">uint32_t</span>* esp2;</span><br><span class="line">    <span class="keyword">uint32_t</span> ss2;</span><br><span class="line">    <span class="keyword">uint32_t</span> cr3;</span><br><span class="line">    <span class="keyword">uint32_t</span> (*eip) (<span class="keyword">void</span>);</span><br><span class="line">    <span class="keyword">uint32_t</span> eflags;</span><br><span class="line">    <span class="keyword">uint32_t</span> eax;</span><br><span class="line">    <span class="keyword">uint32_t</span> ecx;</span><br><span class="line">    <span class="keyword">uint32_t</span> edx;</span><br><span class="line">    <span class="keyword">uint32_t</span> ebx;</span><br><span class="line">    <span class="keyword">uint32_t</span> esp;</span><br><span class="line">    <span class="keyword">uint32_t</span> ebp;</span><br><span class="line">    <span class="keyword">uint32_t</span> esi;</span><br><span class="line">    <span class="keyword">uint32_t</span> edi;</span><br><span class="line">    <span class="keyword">uint32_t</span> es;</span><br><span class="line">    <span class="keyword">uint32_t</span> cs;</span><br><span class="line">    <span class="keyword">uint32_t</span> ss;</span><br><span class="line">    <span class="keyword">uint32_t</span> ds;</span><br><span class="line">    <span class="keyword">uint32_t</span> fs;</span><br><span class="line">    <span class="keyword">uint32_t</span> gs;</span><br><span class="line">    <span class="keyword">uint32_t</span> ldt;</span><br><span class="line">    <span class="keyword">uint32_t</span> trace;</span><br><span class="line">    <span class="keyword">uint32_t</span> io_base;</span><br><span class="line">&#125;; </span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">tss</span> <span class="title">tss</span>;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* 更新tss中esp0字段的值为pthread的0级线 */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">update_tss_esp</span><span class="params">(struct task_struct* pthread)</span> </span>&#123;</span><br><span class="line">   tss.esp0 = (<span class="keyword">uint32_t</span>*)((<span class="keyword">uint32_t</span>)pthread + PG_SIZE);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 创建gdt描述符 */</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> struct gdt_desc <span class="title">make_gdt_desc</span><span class="params">(<span class="keyword">uint32_t</span>* desc_addr, <span class="keyword">uint32_t</span> limit, <span class="keyword">uint8_t</span> attr_low, <span class="keyword">uint8_t</span> attr_high)</span> </span>&#123;</span><br><span class="line">   <span class="keyword">uint32_t</span> desc_base = (<span class="keyword">uint32_t</span>)desc_addr;</span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">gdt_desc</span> <span class="title">desc</span>;</span></span><br><span class="line">   desc.limit_low_word = limit &amp; <span class="number">0x0000ffff</span>;</span><br><span class="line">   desc.base_low_word = desc_base &amp; <span class="number">0x0000ffff</span>;</span><br><span class="line">   desc.base_mid_byte = ((desc_base &amp; <span class="number">0x00ff0000</span>) &gt;&gt; <span class="number">16</span>);</span><br><span class="line">   desc.attr_low_byte = (<span class="keyword">uint8_t</span>)(attr_low);</span><br><span class="line">   desc.limit_high_attr_high = (((limit &amp; <span class="number">0x000f0000</span>) &gt;&gt; <span class="number">16</span>) + (<span class="keyword">uint8_t</span>)(attr_high));</span><br><span class="line">   desc.base_high_byte = desc_base &gt;&gt; <span class="number">24</span>;</span><br><span class="line">   <span class="keyword">return</span> desc;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 在gdt中创建tss并重新加载gdt */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">tss_init</span><span class="params">()</span> </span>&#123;</span><br><span class="line">   put_str(<span class="string">"tss_init start\n"</span>);</span><br><span class="line">   <span class="keyword">uint32_t</span> tss_size = <span class="keyword">sizeof</span>(tss);</span><br><span class="line">   <span class="built_in">memset</span>(&amp;tss, <span class="number">0</span>, tss_size);</span><br><span class="line">   tss.ss0 = SELECTOR_K_STACK;</span><br><span class="line">   tss.io_base = tss_size;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* gdt段基址为0x900,把tss放到第4个位置,也就是0x900+0x20的位置 */</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/* 在gdt中添加dpl为0的TSS描述符 */</span></span><br><span class="line">  *((struct gdt_desc*)<span class="number">0xc0000920</span>) = make_gdt_desc((<span class="keyword">uint32_t</span>*)&amp;tss, tss_size - <span class="number">1</span>, TSS_ATTR_LOW, TSS_ATTR_HIGH);</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* 在gdt中添加dpl为3的数据段和代码段描述符 */</span></span><br><span class="line">  *((struct gdt_desc*)<span class="number">0xc0000928</span>) = make_gdt_desc((<span class="keyword">uint32_t</span>*)<span class="number">0</span>, <span class="number">0xfffff</span>, GDT_CODE_ATTR_LOW_DPL3, GDT_ATTR_HIGH);</span><br><span class="line">  *((struct gdt_desc*)<span class="number">0xc0000930</span>) = make_gdt_desc((<span class="keyword">uint32_t</span>*)<span class="number">0</span>, <span class="number">0xfffff</span>, GDT_DATA_ATTR_LOW_DPL3, GDT_ATTR_HIGH);</span><br><span class="line">   </span><br><span class="line">  <span class="comment">/* gdt 16位的limit 32位的段基址 */</span></span><br><span class="line">   <span class="keyword">uint64_t</span> gdt_operand = ((<span class="number">8</span> * <span class="number">7</span> - <span class="number">1</span>) | ((<span class="keyword">uint64_t</span>)(<span class="keyword">uint32_t</span>)<span class="number">0xc0000900</span> &lt;&lt; <span class="number">16</span>));   <span class="comment">// 7个描述符大小</span></span><br><span class="line">   <span class="function"><span class="keyword">asm</span> <span class="title">volatile</span> <span class="params">(<span class="string">"lgdt %0"</span> : : <span class="string">"m"</span> (gdt_operand))</span></span>;</span><br><span class="line">   <span class="function"><span class="keyword">asm</span> <span class="title">volatile</span> <span class="params">(<span class="string">"ltr %w0"</span> : : <span class="string">"r"</span> (SELECTOR_TSS))</span></span>;</span><br><span class="line">   put_str(<span class="string">"tss_init and ltr done\n"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在 tss.c 的开头第8～36行定义了<strong>TSS 的结构体struct tss</strong>，第 40 行定义的函数<code>update_tss_esp</code>用来<strong>更新TSS 中的esp0</strong>，<strong>只修改TSS 中的特权级0 对应的栈</strong>。此函数将TSS 中esp0 修改为参数pthread 的0 级栈地址，也就是线程pthread的PCB 所在页的最顶端—<code>(uint32_t)pthread + PG_SIZE</code>。</p>
+<p>在第 45 行创建了函数<code>make_gdt_desc</code>，<strong>专门生成描述符结构</strong>。此函数的实现是<strong>按照段描述符的格式来拼数据，在内部生成一局部描述符结构体变量struct gdt_desc desc，后面把此结构体变量中的属性填充好后通过return 返回其值</strong>。第 58 行是函数<code>tss_init</code>，此函数除了用来初始化tss 并将其安装到GDT 中外，还另外在GDT 中安装两个供用户进程使用的描述符，一个是DPL 为3 的数据段，另一个是DPL 为3 的代码段。第 61 行将全局变量tss 清0 后，在第62 行为其ss0 字段赋0 级栈段的选择子SELECTOR_ K_STACK。第 63 行代码<code>tss.io_base = tss_size</code>，将tss 的io_base 字段置为tss 的大小tss_size，这表示此TSS 中并没有IO 位图。在第 68 行，我们在GDT 中安装TSS 描述符。在调用<code>make_gdt_desc</code>后，其返回的描述符是安装在<code>0xc0000920</code> 的地址，即<code>*((struct gdt_desc*)0xc0000920)</code>，</p>
+<p>接下来在第71 行和第72 行安装了两个DPL 为3 的段描述符，分别是代码段和数据段，这是为用户进程提前做的准备，它们在GDT 中的位置基于TSS 描述符顺延，分别是偏移GDT0x28 和0x30 的位置。在第 75 行，定义了变量gdt_operand 作为lgdt 指令的操作数。</p>
+<p>操作数中的高32 位是GDT 起始地址，在这里我们把GDT 线性地址0xc0000900 先转换成uint32_t 后，再将其转换成uint64_t 位，最后通过按位或运算符’|’拼合在一起。通过内联汇编，第76 行将新的GDT 重新加载，第77 行将tss 加载到TR。至此，新的GDT 和TSS已经生效。</p>
+<h2 id="实现用户进程"><a href="#实现用户进程" class="headerlink" title="实现用户进程"></a>实现用户进程</h2><p>在 <code>thread_start（…,function,…）</code>的调用中，function 是我们最终在线程中执行的函数。在thread_start 内部，先是通过<code>get_kernel_pages(1)</code>在内核内存池中获取1 个物理页做线程的pcb，即thread，接着调用<code>init_thread</code> 初始化该线程pcb 中的信息，然后再用<code>thread_create</code> 创建线程运行的栈，实际上是将栈中的返回地址指向了<code>kernel_thread</code> 函数，因此相当于调用了<code>kernel_thread</code>，在<code>kernel_thread</code> 中通过调用function 的方式使function 得到执行。如果要基于线程实现进程，我们把function 替换为创建进程的新函数就可以啦。</p>
+<p>进程是基于线程实现的，因此它和线程一样使用相同的pcb 结构，即<code>struct task_struct</code>，我们要做的就是在此结构中增加一个成员，用它来跟踪用户空间虚拟地址的分配情况。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/* 进程或线程的pcb,程序控制块 */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> &#123;</span></span><br><span class="line">   <span class="keyword">uint32_t</span>* self_kstack;	 <span class="comment">// 各内核线程都用自己的内核栈</span></span><br><span class="line">   <span class="keyword">enum</span> task_status status;</span><br><span class="line">   <span class="keyword">char</span> name[<span class="number">16</span>];</span><br><span class="line">   <span class="keyword">uint8_t</span> priority;</span><br><span class="line">   <span class="keyword">uint8_t</span> ticks;	   <span class="comment">// 每次在处理器上执行的时间嘀嗒数</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* 此任务自上cpu运行后至今占用了多少cpu嘀嗒数,</span></span><br><span class="line"><span class="comment"> * 也就是此任务执行了多久*/</span></span><br><span class="line">   <span class="keyword">uint32_t</span> elapsed_ticks;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* general_tag的作用是用于线程在一般的队列中的结点 */</span></span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">list_elem</span> <span class="title">general_tag</span>;</span>				    </span><br><span class="line"></span><br><span class="line"><span class="comment">/* all_list_tag的作用是用于线程队列thread_all_list中的结点 */</span></span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">list_elem</span> <span class="title">all_list_tag</span>;</span></span><br><span class="line"></span><br><span class="line">   <span class="keyword">uint32_t</span>* pgdir;              <span class="comment">// 进程自己页表的虚拟地址</span></span><br><span class="line"></span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">virtual_addr</span> <span class="title">userprog_vaddr</span>;</span>   <span class="comment">// 用户进程的虚拟地址</span></span><br><span class="line">   <span class="keyword">uint32_t</span> stack_magic;	 <span class="comment">// 用这串数字做栈的边界标记,用于检测栈的溢出</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>其中第 95 行的<code>struct virtual_addr userprog_vaddr</code> 便是每个用户进程的虚拟地址池。第93 行的pgdir 用于存放进程页目录表的虚拟地址，这将在为进程创建页表时为其赋值。</p>
+<p>页表虽然用于管理内存，但它本身也要用内存来存储，所以要为每个进程单独申请存储页目录项及页表项的虚拟内存页。除此之外，我们还要为用户进程创建在3 特权级的栈。鉴于以上两点原因，这必然涉及到内存分配的工作，咱们的内存管理是在 memory.c 中：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/* 在pf表示的虚拟内存池中申请pg_cnt个虚拟页,</span></span><br><span class="line"><span class="comment"> * 成功则返回虚拟页的起始地址, 失败则返回NULL */</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span>* <span class="title">vaddr_get</span><span class="params">(<span class="keyword">enum</span> pool_flags pf, <span class="keyword">uint32_t</span> pg_cnt)</span> </span>&#123;</span><br><span class="line">   <span class="keyword">int</span> vaddr_start = <span class="number">0</span>, bit_idx_start = <span class="number">-1</span>;</span><br><span class="line">   <span class="keyword">uint32_t</span> cnt = <span class="number">0</span>;</span><br><span class="line">   <span class="keyword">if</span> (pf == PF_KERNEL) &#123;     <span class="comment">// 内核内存池</span></span><br><span class="line">      bit_idx_start  = bitmap_scan(&amp;kernel_vaddr.vaddr_bitmap, pg_cnt);</span><br><span class="line">      <span class="keyword">if</span> (bit_idx_start == <span class="number">-1</span>) &#123;</span><br><span class="line">	 <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">while</span>(cnt &lt; pg_cnt) &#123;</span><br><span class="line">	 bitmap_set(&amp;kernel_vaddr.vaddr_bitmap, bit_idx_start + cnt++, <span class="number">1</span>);</span><br><span class="line">      &#125;</span><br><span class="line">      vaddr_start = kernel_vaddr.vaddr_start + bit_idx_start * PG_SIZE;</span><br><span class="line">   &#125; <span class="keyword">else</span> &#123;	     <span class="comment">// 用户内存池	</span></span><br><span class="line">      struct task_struct* cur = running_thread();</span><br><span class="line">      bit_idx_start  = bitmap_scan(&amp;cur-&gt;userprog_vaddr.vaddr_bitmap, pg_cnt);</span><br><span class="line">      <span class="keyword">if</span> (bit_idx_start == <span class="number">-1</span>) &#123;</span><br><span class="line">	 <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">while</span>(cnt &lt; pg_cnt) &#123;</span><br><span class="line">	 bitmap_set(&amp;cur-&gt;userprog_vaddr.vaddr_bitmap, bit_idx_start + cnt++, <span class="number">1</span>);</span><br><span class="line">      &#125;</span><br><span class="line">      vaddr_start = cur-&gt;userprog_vaddr.vaddr_start + bit_idx_start * PG_SIZE;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/* (0xc0000000 - PG_SIZE)做为用户3级栈已经在start_process被分配 */</span></span><br><span class="line">      ASSERT((<span class="keyword">uint32_t</span>)vaddr_start &lt; (<span class="number">0xc0000000</span> - PG_SIZE));</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">return</span> (<span class="keyword">void</span>*)vaddr_start;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">/* 在用户空间中申请4k内存,并返回其虚拟地址 */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span>* <span class="title">get_user_pages</span><span class="params">(<span class="keyword">uint32_t</span> pg_cnt)</span> </span>&#123;</span><br><span class="line">   lock_acquire(&amp;user_pool.lock);</span><br><span class="line">   <span class="keyword">void</span>* vaddr = malloc_page(PF_USER, pg_cnt);</span><br><span class="line">   <span class="built_in">memset</span>(vaddr, <span class="number">0</span>, pg_cnt * PG_SIZE);</span><br><span class="line">   lock_release(&amp;user_pool.lock);</span><br><span class="line">   <span class="keyword">return</span> vaddr;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 将地址vaddr与pf池中的物理地址关联,仅支持一页空间分配 */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span>* <span class="title">get_a_page</span><span class="params">(<span class="keyword">enum</span> pool_flags pf, <span class="keyword">uint32_t</span> vaddr)</span> </span>&#123;</span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">pool</span>* <span class="title">mem_pool</span> = <span class="title">pf</span> &amp; <span class="title">PF_KERNEL</span> ? &amp;<span class="title">kernel_pool</span> :</span> &amp;user_pool;</span><br><span class="line">   lock_acquire(&amp;mem_pool-&gt;lock);</span><br><span class="line"></span><br><span class="line">   <span class="comment">/* 先将虚拟地址对应的位图置1 */</span></span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span>* <span class="title">cur</span> = <span class="title">running_thread</span>();</span></span><br><span class="line">   <span class="keyword">int32_t</span> bit_idx = <span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 若当前是用户进程申请用户内存,就修改用户进程自己的虚拟地址位图 */</span></span><br><span class="line">   <span class="keyword">if</span> (cur-&gt;pgdir != <span class="literal">NULL</span> &amp;&amp; pf == PF_USER) &#123;</span><br><span class="line">      bit_idx = (vaddr - cur-&gt;userprog_vaddr.vaddr_start) / PG_SIZE;</span><br><span class="line">      ASSERT(bit_idx &gt; <span class="number">0</span>);</span><br><span class="line">      bitmap_set(&amp;cur-&gt;userprog_vaddr.vaddr_bitmap, bit_idx, <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">   &#125; <span class="keyword">else</span> <span class="keyword">if</span> (cur-&gt;pgdir == <span class="literal">NULL</span> &amp;&amp; pf == PF_KERNEL)&#123;</span><br><span class="line"><span class="comment">/* 如果是内核线程申请内核内存,就修改kernel_vaddr. */</span></span><br><span class="line">      bit_idx = (vaddr - kernel_vaddr.vaddr_start) / PG_SIZE;</span><br><span class="line">      ASSERT(bit_idx &gt; <span class="number">0</span>);</span><br><span class="line">      bitmap_set(&amp;kernel_vaddr.vaddr_bitmap, bit_idx, <span class="number">1</span>);</span><br><span class="line">   &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      PANIC(<span class="string">"get_a_page:not allow kernel alloc userspace or user alloc kernelspace by get_a_page"</span>);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="keyword">void</span>* page_phyaddr = palloc(mem_pool);</span><br><span class="line">   <span class="keyword">if</span> (page_phyaddr == <span class="literal">NULL</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">   &#125;</span><br><span class="line">   page_table_add((<span class="keyword">void</span>*)vaddr, page_phyaddr); </span><br><span class="line">   lock_release(&amp;mem_pool-&gt;lock);</span><br><span class="line">   <span class="keyword">return</span> (<span class="keyword">void</span>*)vaddr;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 得到虚拟地址映射到的物理地址 */</span></span><br><span class="line"><span class="keyword">uint32_t</span> addr_v2p(<span class="keyword">uint32_t</span> vaddr) &#123;</span><br><span class="line">   <span class="keyword">uint32_t</span>* pte = pte_ptr(vaddr);</span><br><span class="line"><span class="comment">/* (*pte)的值是页表所在的物理页框地址,</span></span><br><span class="line"><span class="comment"> * 去掉其低12位的页表项属性+虚拟地址vaddr的低12位 */</span></span><br><span class="line">   <span class="keyword">return</span> ((*pte &amp; <span class="number">0xfffff000</span>) + (vaddr &amp; <span class="number">0x00000fff</span>));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 初始化内存池 */</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">mem_pool_init</span><span class="params">(<span class="keyword">uint32_t</span> all_mem)</span> </span>&#123;</span><br><span class="line">   put_str(<span class="string">"   mem_pool_init start\n"</span>);</span><br><span class="line">   <span class="keyword">uint32_t</span> page_table_size = PG_SIZE * <span class="number">256</span>;	  <span class="comment">// 页表大小= 1页的页目录表+第0和第768个页目录项指向同一个页表+</span></span><br><span class="line">                                                  <span class="comment">// 第769~1022个页目录项共指向254个页表,共256个页框</span></span><br><span class="line">   <span class="keyword">uint32_t</span> used_mem = page_table_size + <span class="number">0x100000</span>;	  <span class="comment">// 0x100000为低端1M内存</span></span><br><span class="line">   <span class="keyword">uint32_t</span> free_mem = all_mem - used_mem;</span><br><span class="line">   <span class="keyword">uint16_t</span> all_free_pages = free_mem / PG_SIZE;		  <span class="comment">// 1页为4k,不管总内存是不是4k的倍数,</span></span><br><span class="line">							  <span class="comment">// 对于以页为单位的内存分配策略，不足1页的内存不用考虑了。</span></span><br><span class="line">   <span class="keyword">uint16_t</span> kernel_free_pages = all_free_pages / <span class="number">2</span>;</span><br><span class="line">   <span class="keyword">uint16_t</span> user_free_pages = all_free_pages - kernel_free_pages;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 为简化位图操作，余数不处理，坏处是这样做会丢内存。</span></span><br><span class="line"><span class="comment">好处是不用做内存的越界检查,因为位图表示的内存少于实际物理内存*/</span></span><br><span class="line">   <span class="keyword">uint32_t</span> kbm_length = kernel_free_pages / <span class="number">8</span>;			  <span class="comment">// Kernel BitMap的长度,位图中的一位表示一页,以字节为单位</span></span><br><span class="line">   <span class="keyword">uint32_t</span> ubm_length = user_free_pages / <span class="number">8</span>;			  <span class="comment">// User BitMap的长度.</span></span><br><span class="line"></span><br><span class="line">   <span class="keyword">uint32_t</span> kp_start = used_mem;				  <span class="comment">// Kernel Pool start,内核内存池的起始地址</span></span><br><span class="line">   <span class="keyword">uint32_t</span> up_start = kp_start + kernel_free_pages * PG_SIZE;	  <span class="comment">// User Pool start,用户内存池的起始地址</span></span><br><span class="line"></span><br><span class="line">   kernel_pool.phy_addr_start = kp_start;</span><br><span class="line">   user_pool.phy_addr_start   = up_start;</span><br><span class="line"></span><br><span class="line">   kernel_pool.pool_size = kernel_free_pages * PG_SIZE;</span><br><span class="line">   user_pool.pool_size	 = user_free_pages * PG_SIZE;</span><br><span class="line"></span><br><span class="line">   kernel_pool.pool_bitmap.btmp_bytes_len = kbm_length;</span><br><span class="line">   user_pool.pool_bitmap.btmp_bytes_len	  = ubm_length;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*********    内核内存池和用户内存池位图   ***********</span></span><br><span class="line"><span class="comment"> *   位图是全局的数据，长度不固定。</span></span><br><span class="line"><span class="comment"> *   全局或静态的数组需要在编译时知道其长度，</span></span><br><span class="line"><span class="comment"> *   而我们需要根据总内存大小算出需要多少字节。</span></span><br><span class="line"><span class="comment"> *   所以改为指定一块内存来生成位图.</span></span><br><span class="line"><span class="comment"> *   ************************************************/</span></span><br><span class="line"><span class="comment">// 内核使用的最高地址是0xc009f000,这是主线程的栈地址.(内核的大小预计为70K左右)</span></span><br><span class="line"><span class="comment">// 32M内存占用的位图是2k.内核内存池的位图先定在MEM_BITMAP_BASE(0xc009a000)处.</span></span><br><span class="line">   kernel_pool.pool_bitmap.bits = (<span class="keyword">void</span>*)MEM_BITMAP_BASE;</span><br><span class="line">							       </span><br><span class="line"><span class="comment">/* 用户内存池的位图紧跟在内核内存池位图之后 */</span></span><br><span class="line">   user_pool.pool_bitmap.bits = (<span class="keyword">void</span>*)(MEM_BITMAP_BASE + kbm_length);</span><br><span class="line">   <span class="comment">/******************** 输出内存池信息 **********************/</span></span><br><span class="line">   put_str(<span class="string">"      kernel_pool_bitmap_start:"</span>);put_int((<span class="keyword">int</span>)kernel_pool.pool_bitmap.bits);</span><br><span class="line">   put_str(<span class="string">" kernel_pool_phy_addr_start:"</span>);put_int(kernel_pool.phy_addr_start);</span><br><span class="line">   put_str(<span class="string">"\n"</span>);</span><br><span class="line">   put_str(<span class="string">"      user_pool_bitmap_start:"</span>);put_int((<span class="keyword">int</span>)user_pool.pool_bitmap.bits);</span><br><span class="line">   put_str(<span class="string">" user_pool_phy_addr_start:"</span>);put_int(user_pool.phy_addr_start);</span><br><span class="line">   put_str(<span class="string">"\n"</span>);</span><br><span class="line"></span><br><span class="line">   <span class="comment">/* 将位图置0*/</span></span><br><span class="line">   bitmap_init(&amp;kernel_pool.pool_bitmap);</span><br><span class="line">   bitmap_init(&amp;user_pool.pool_bitmap);</span><br><span class="line"></span><br><span class="line">   lock_init(&amp;kernel_pool.lock);</span><br><span class="line">   lock_init(&amp;user_pool.lock);</span><br><span class="line"></span><br><span class="line">   <span class="comment">/* 下面初始化内核虚拟地址的位图,按实际物理内存大小生成数组。*/</span></span><br><span class="line">   kernel_vaddr.vaddr_bitmap.btmp_bytes_len = kbm_length;      <span class="comment">// 用于维护内核堆的虚拟地址,所以要和内核内存池大小一致</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/* 位图的数组指向一块未使用的内存,目前定位在内核内存池和用户内存池之外*/</span></span><br><span class="line">   kernel_vaddr.vaddr_bitmap.bits = (<span class="keyword">void</span>*)(MEM_BITMAP_BASE + kbm_length + ubm_length);</span><br><span class="line"></span><br><span class="line">   kernel_vaddr.vaddr_start = K_HEAP_START;</span><br><span class="line">   bitmap_init(&amp;kernel_vaddr.vaddr_bitmap);</span><br><span class="line">   put_str(<span class="string">"   mem_pool_init done\n"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在内存池<code>struct pool</code>中新增了锁<code>struct lock lock</code>，用它来在内存申请时做互斥，避免公共资源的竞争。在接下来的<code>vaddr_get</code>函数中，我们<strong>新增了在用户内存池分配内存的功能</strong>，即代码第48～62 行。<code>get_user_pages</code>用来<strong>在用户内存池中以整页为单位分配内存</strong>，返回分配的虚拟地址。另一个新增的函数是 <code>get_a_page</code>，它用来在某个内存池中获取一个页，功能是<strong>申请一页内存，并用vaddr映射到该页</strong>。</p>
+<p>最后一个要介绍的新函数是 addr_v2p，此函数<strong>返回虚拟地址vaddr 所映射的物理地址</strong>。<code>addr_v2p</code> 的原理是根据页表映射原理，<strong>先得到虚拟地址vaddr 最终所映射到的物理页框起始地址，也就是在页表中vaddr 所在的pte 中记录的那个物理页地址，然后再将vaddr 的低12 位与此值相加，所得的地址和便是vaddr 映射的物理地址</strong>。</p>
+<p>该函数实现中的<code>uint32_t*pte = pte_ptr(vaddr)</code>，在指针变量pte中得到vaddr 的所在pte 的地址，此时<code>*pte</code> 的内容是vaddr 所在pte 的内容，也就是<strong>vaddr 最终所映射到的物理页框的32 位地址中的高20 位和12 位的页表项属性</strong>，因为页框都是自然页，低12 位地址是0，所以<strong>页表项pte（和页目录项pde）中只需要记录页框的高20 位地址即可</strong>，<code>(*pte &amp; 0xfffff000)</code>。另外的代码<code>(vaddr&amp; 0x00000fff)</code>就是获取原虚拟地址vaddr 的低12 位。</p>
+<p>最后要说明的是由于我们在内存池 <code>struct pool</code> 中增加了锁，在内存池初始化函数<code>mem_pool_init</code> 中，我们增加了锁的初始化：<code>lock_init(&amp;kernel_pool.lock);</code>和<code>lock_init(&amp;user_pool.lock);</code>。</p>
+<p>退出中断的出口是汇编语言函数<code>intr_exit</code>，此函数用来恢复中断发生时、被中断的任务的上下文状态，并且退出中断。<strong>从中断返回，必须要经过intr_exit，即使是“假装”</strong>。<strong>必须提前准备好用户进程所用的栈结构，在里面填装好用户进程的上下文信息</strong>，借一系列pop 出栈的机会，将用户进程的上下文信息载入CPU 的寄存器，为用户进程的运行准备好环境。</p>
+<p><strong>我们要在栈中存储的CS 选择子，其RPL必须为3</strong>。操作系统会将选择子的RPL 置为用户进程的CPL，只有CPL 和RPL 在数值上同时小于等于选择子所指向的内存段的DPL 时，CPU 的安全检测才通过，既然用户进程的特权级为3，<strong>用户进程所有段选择子的RPL 都置为3</strong>，因此，在RPL=CPL=3 的情况下，用户进程只能访问DPL 为3 的内存段，即代码段、数据段、栈段。</p>
+<p><strong>栈中段寄存器的选择子必须指向DPL 为3 的内存段</strong>。<strong>必须使栈中eflags 的IF 位为1</strong>，继续响应新的中断。<strong>必须使栈中eflags 的IOPL 位为0</strong>，不允许用户进程直接访问硬件。</p>
+<h3 id="用户进程创建的流程"><a href="#用户进程创建的流程" class="headerlink" title="用户进程创建的流程"></a>用户进程创建的流程</h3><p><img src="/img/1596734922.jpg" alt></p>
+<p>在<code>process_execute</code>中，先调用函数<code>get_kernel_pages</code>申请1 页内存创建进程的<code>pcb</code>，这里的<code>pcb</code>就是<code>thread</code>，接下来调用函数<code>init_thread</code>对thread 进行初始化。随后调用函数<code>create_user_vaddr_bitmap</code>为用户进程创建管理虚拟地址空间的位图。接着调用<code>thread_create</code>创建线程，此函数的作用是将函数<code>start_process</code>和用户进程<code>user_prog</code>作为<code>kernel_thread</code>的参数，以使<code>kernel_thread</code>能够调用<code>start_proces(user_prog)</code>。接下来是调用函数<code>create_page_dir</code>为进程创建页表，随后通过函数<code>list_append</code>将进程<code>pcb</code>，加入就绪队列和全部队列，至此用户进程的创建部分完成。</p>
+<p>在<code>schedule</code>中，调用了<code>process_activate</code>来激活进程或线程的相关资源（页表等），随后通过<code>switch_to</code>函数调度进程，<strong>根据先前进程创建时函数<code>thread_create</code>的工作，已经将<code>kernel_thread</code>作为函数<code>switch_to</code>的返回地址</strong>，即在<code>switch_to</code>中退出后，处理器会执行<code>kernel_thread</code>函数。</p>
+<p>函数<code>start_process</code>主要用来构建用户进程的上下文，它会<strong>将<code>user_prog</code>作为进程“从中断返回”的地址</strong>，由于是从0 特权级的中断返回，故返回地址<code>user_prog</code>被<code>iretd</code>指令使用，为了复用中断退出的代码，现在需要跳转到中断出口<code>intr_exit</code>处，利用那里的<code>iretd</code>指令使返回地址<code>user_prog</code><strong>作为EIP 寄存器的值</strong>以使<code>user_prog</code>得到执行，故相当于<code>start_process</code>调用<code>intr_exit</code>，<code>intr_exit</code>调用<code>user_prog</code>，最终用户进程<code>user_prog</code>在3 特权级下执行。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">extern</span> <span class="keyword">void</span> <span class="title">intr_exit</span><span class="params">(<span class="keyword">void</span>)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 构建用户进程初始上下文信息 */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">start_process</span><span class="params">(<span class="keyword">void</span>* filename_)</span> </span>&#123;</span><br><span class="line">   <span class="keyword">void</span>* function = filename_;</span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span>* <span class="title">cur</span> = <span class="title">running_thread</span>();</span></span><br><span class="line">   cur-&gt;self_kstack += <span class="keyword">sizeof</span>(struct thread_stack);</span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">intr_stack</span>* <span class="title">proc_stack</span> = (<span class="title">struct</span> <span class="title">intr_stack</span>*)<span class="title">cur</span>-&gt;<span class="title">self_kstack</span>;</span>	 </span><br><span class="line">   proc_stack-&gt;edi = proc_stack-&gt;esi = proc_stack-&gt;ebp = proc_stack-&gt;esp_dummy = <span class="number">0</span>;</span><br><span class="line">   proc_stack-&gt;ebx = proc_stack-&gt;edx = proc_stack-&gt;ecx = proc_stack-&gt;eax = <span class="number">0</span>;</span><br><span class="line">   proc_stack-&gt;gs = <span class="number">0</span>;		 <span class="comment">// 用户态用不上,直接初始为0</span></span><br><span class="line">   proc_stack-&gt;ds = proc_stack-&gt;es = proc_stack-&gt;fs = SELECTOR_U_DATA;</span><br><span class="line">   proc_stack-&gt;eip = function;	 <span class="comment">// 待执行的用户程序地址</span></span><br><span class="line">   proc_stack-&gt;cs = SELECTOR_U_CODE;</span><br><span class="line">   proc_stack-&gt;eflags = (EFLAGS_IOPL_0 | EFLAGS_MBS | EFLAGS_IF_1);</span><br><span class="line">   proc_stack-&gt;esp = (<span class="keyword">void</span>*)((<span class="keyword">uint32_t</span>)get_a_page(PF_USER, USER_STACK3_VADDR) + PG_SIZE) ;</span><br><span class="line">   proc_stack-&gt;ss = SELECTOR_U_DATA; </span><br><span class="line">   <span class="function"><span class="keyword">asm</span> <span class="title">volatile</span> <span class="params">(<span class="string">"movl %0, %%esp; jmp intr_exit"</span> : : <span class="string">"g"</span> (proc_stack) : <span class="string">"memory"</span>)</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 击活页表 */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">page_dir_activate</span><span class="params">(struct task_struct* p_thread)</span> </span>&#123;</span><br><span class="line"><span class="comment">/********************************************************</span></span><br><span class="line"><span class="comment"> * 执行此函数时,当前任务可能是线程。</span></span><br><span class="line"><span class="comment"> * 之所以对线程也要重新安装页表, 原因是上一次被调度的可能是进程,</span></span><br><span class="line"><span class="comment"> * 否则不恢复页表的话,线程就会使用进程的页表了。</span></span><br><span class="line"><span class="comment"> ********************************************************/</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* 若为内核线程,需要重新填充页表为0x100000 */</span></span><br><span class="line">   <span class="keyword">uint32_t</span> pagedir_phy_addr = <span class="number">0x100000</span>;  <span class="comment">// 默认为内核的页目录物理地址,也就是内核线程所用的页目录表</span></span><br><span class="line">   <span class="keyword">if</span> (p_thread-&gt;pgdir != <span class="literal">NULL</span>)	&#123;    <span class="comment">// 用户态进程有自己的页目录表</span></span><br><span class="line">      pagedir_phy_addr = addr_v2p((<span class="keyword">uint32_t</span>)p_thread-&gt;pgdir);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/* 更新页目录寄存器cr3,使新页表生效 */</span></span><br><span class="line">   <span class="function"><span class="keyword">asm</span> <span class="title">volatile</span> <span class="params">(<span class="string">"movl %0, %%cr3"</span> : : <span class="string">"r"</span> (pagedir_phy_addr) : <span class="string">"memory"</span>)</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 击活线程或进程的页表,更新tss中的esp0为进程的特权级0的栈 */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">process_activate</span><span class="params">(struct task_struct* p_thread)</span> </span>&#123;</span><br><span class="line">   ASSERT(p_thread != <span class="literal">NULL</span>);</span><br><span class="line">   <span class="comment">/* 击活该进程或线程的页表 */</span></span><br><span class="line">   page_dir_activate(p_thread);</span><br><span class="line"></span><br><span class="line">   <span class="comment">/* 内核线程特权级本身就是0,处理器进入中断时并不会从tss中获取0特权级栈地址,故不需要更新esp0 */</span></span><br><span class="line">   <span class="keyword">if</span> (p_thread-&gt;pgdir) &#123;</span><br><span class="line">      <span class="comment">/* 更新该进程的esp0,用于此进程被中断时保留上下文 */</span></span><br><span class="line">      update_tss_esp(p_thread);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>函数<code>start_process</code>接收一个参数<code>filename_</code>，此参数表示<strong>用户程序的名称</strong>，此函数用来<strong>创建用户进程<code>filename_</code>的上下文</strong>，也就是填充<br>用户进程的<code>struct intr_stack</code>，通过假装从中断返回的方式，间接使<code>filename_</code>运行。</p>
+<p>start_process 的函数体中第一句是<code>void* function = filename_;</code>。用户进程上下文保存在<code>struct intr_stack</code>栈中。在函数<code>init_thread</code>中<code>pthread-&gt;self_kstack = (uint32_t*)((uint32_t)pthread + PG_SIZE);</code>，目的是初始化线程所用的栈的基址，后面的两个栈<code>struct intr_stack</code>和<code>struct thread_stack</code>的布局及所占的空间以此基地址往下顺延，这个布局操作是在函数<code>thread_create</code>中完成的，相关代码是：<code>pthread-&gt;self_kstack -= sizeof(struct intr_stack);</code>和<code>pthread-&gt;self_kstack -= sizeof(struct thread_stack);</code></p>
+<p><code>struct intr_stack</code>栈用来存储进入中断时任务的上下文，<code>struct thread_stack</code>用来存储在中断处理程序中、任务切换（switch_to）前后的上下文。这两个栈的布局情况如图。<br><img src="/img/1596768041.jpg" alt></p>
+<p>为了引用struct intr_stack 栈，我们通过代码<code>cur-&gt;self_ kstack += sizeof(struct thread_stack);</code>使指针<code>self_kstack</code>跨过<code>struct thread_stack</code>栈，最终指向<code>struct intr_stack</code>栈的最低处，此时PCB 中栈的情况如图。<br><img src="/img/1596768232.jpg" alt></p>
+<p>程序能上 CPU 运行，原因就是CS:[E]IP 指向了程序入口地址。通过<code>proc_stack-&gt;eip = function;</code>，先对栈中eip 赋值为function，这是<code>start_process</code>的参数<code>filename_</code>的值。通过<code>proc_stack-&gt;cs = SELECTOR_U_CODE</code>将栈中代码段寄存器cs 赋值为先前我们已在GDT 中安装好的用户级代码段。接下来对栈中eflags 赋值，<code>EFLAGS_IOPL_0</code>表示IOPL 位为0，<code>EFLAGS_IF_1</code>表示IF 位为1，<code>EFLAGS_MBS</code>固定为1，它们在eflags 中的位置如图。<br><img src="/img/1596770122.jpg" alt></p>
+<p><img src="/img/1596772239.jpg" alt><br>用户程序内存空间的<strong>最顶端用来存储命令行参数及环境变量</strong>，接着是栈空间和堆空间，<strong>栈向下扩展，堆向上扩展，栈与堆在空间上是相接的</strong>，最下面的<strong>未初始化数据段bss、初始化数据段data 及代码段text由链接器和编译器负责</strong>。在 4GB 的虚拟地址空间中，(0xc0000000-1)是用户空间的最高地址，0xc0000000～0xffffffff 是内核空间。</p>
+<p>由于在申请内存时，内存管理模块返回的地址是内存空间的下边界，所以我们为栈申请的地址应该是（0xc0000000-0x1000），此地址是用户栈空间栈顶的下边界。这里我们用宏来定义此地址，即<code>USER_STACK3_VADDR</code>，<code>#define USER_STACK3_VADDR (0xc0000000 - 0x1000)</code>，用第27 行的<code>get_a_page(PF_USER, USER_STACK3_VADDR)</code>先获取特权级3 的栈的下边界地址，将此地址再加上PG_SIZE，所得的和就是栈的上边界，即栈底，将此栈底赋值给<code>proc_stack-&gt;esp</code>。</p>
+<p>在进程创建部分，有一项工作是<code>create_page_dir</code>，这是<strong>提前为用户进入创建了页目录表</strong>，在进程执行部分，有一项工作是<code>process_activate</code>，这是使任务自己的页表生效。我们是在函数<code>start_process</code>中为用户进程创建了3 特权级栈，<code>start_process</code>是在执行任务页表激活之后执行的，也就是在<code>process_activate</code>之后运行，那时已经把页表更新为用户进程的页表了，所以3 特权级栈是安装在用户进程自己的页表中的。</p>
+<p>第 29 行通过内联汇编，<strong>将栈esp 替换为我们刚刚填充好的proc_stack</strong>，然后通过<code>jmp intr_exit</code>使程序流程跳转到中断出口地址intr_exit，通过那里的一系列pop 指令和iretd 指令，将proc_stack 中的数据载入CPU 的寄存器，从而使程序“假装”退出中断，进入特权级3。</p>
+<p><code>page_dir_activate</code>接受一个参数p_thread，用来激活p_thread 的页表，p_thread可能是进程，也可能是线程。<code>process_activate</code>的功能有两个，一是<strong>激活线程或进程的页表</strong>，二是<strong>更新tss 中的esp0 为进程的特权级0 的栈</strong>。进程或线程在被中断信号打断时，处理器会进入0 特权级，并会在0 特权级栈中保存进程或线程的上下文环境。<strong>如果被中断的是0 特权级的内核线程，由于内核线程已经是0 特权级，进入中断后不涉及特权级的改变，所以处理器并不会到tss 中获取esp0</strong>，所以，用<code>if (p_thread-&gt;pgdir)</code>来判断：<strong>如果是用户进程的话才去更新tss 中的esp0</strong>。</p>
+<h3 id="bss-简介"><a href="#bss-简介" class="headerlink" title="bss 简介"></a>bss 简介</h3><p>链接器将目标文件中属性相同的节（section）合并成段（segment），因此一个段是由多个节组成的，我们平时所说的C 程序内存空间中的数据段、代码段就是指合并后的segment。一是为了保护模式下的安全检查，二是为了操作系统在加载程序时省事。按照属性来划分节，大致上有三种类型。</p>
+<ul>
+<li>可读写的数据，如数据节.data 和未初始化节.bss。</li>
+<li>只读可执行的代码，如代码节.text 和初始化代码节.init。</li>
+<li>只读数据，如只读数据节.rodata，一般情况下字符串就存储在此节。</li>
+</ul>
+<p>经过这样的划分，所有节都可归并到以上三种之一，这样方便了操作系统加载程序时的内存分配。由链接器把目标文件中相同属性的节归并之后的节的集合，便称为segment，它存在于二进制可执行文件中。</p>
+<p><strong>bss 并不存在于程序文件中，它仅存在于内存中</strong>，其实际内容是在程序运行过程中才产生的，<strong>程序文件中仅在elf 头中有bss 节的虚拟地址、大小等相关记录</strong>，bss 中的数据是未初始化的全局变量和局部静态变量，程序运行后才会为它们赋值，bss 区域的目的是<strong>提前为这些未初始化数据预留内存空间</strong>。由于bss 中的内容是变量，其属性为可读写，这和数据段属性一致，故<strong>链接器将bss 占用的内存空间大小合并到数据段占用的内存中</strong>，这样便在数据段中预留出bss 的空间以供程序在将来运行时使用。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 创建页目录表,将当前页表的表示内核空间的pde复制,</span></span><br><span class="line"><span class="comment"> * 成功则返回页目录的虚拟地址,否则返回-1 */</span></span><br><span class="line"><span class="keyword">uint32_t</span>* create_page_dir(<span class="keyword">void</span>) &#123;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/* 用户进程的页表不能让用户直接访问到,所以在内核空间来申请 */</span></span><br><span class="line">   <span class="keyword">uint32_t</span>* page_dir_vaddr = get_kernel_pages(<span class="number">1</span>);</span><br><span class="line">   <span class="keyword">if</span> (page_dir_vaddr == <span class="literal">NULL</span>) &#123;</span><br><span class="line">      console_put_str(<span class="string">"create_page_dir: get_kernel_page failed!"</span>);</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/************************** 1  先复制页表  *************************************/</span></span><br><span class="line">   <span class="comment">/*  page_dir_vaddr + 0x300*4 是内核页目录的第768项 */</span></span><br><span class="line">   <span class="built_in">memcpy</span>((<span class="keyword">uint32_t</span>*)((<span class="keyword">uint32_t</span>)page_dir_vaddr + <span class="number">0x300</span>*<span class="number">4</span>), (<span class="keyword">uint32_t</span>*)(<span class="number">0xfffff000</span>+<span class="number">0x300</span>*<span class="number">4</span>), <span class="number">1024</span>);</span><br><span class="line"><span class="comment">/*****************************************************************************/</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/************************** 2  更新页目录地址 **********************************/</span></span><br><span class="line">   <span class="keyword">uint32_t</span> new_page_dir_phy_addr = addr_v2p((<span class="keyword">uint32_t</span>)page_dir_vaddr);</span><br><span class="line">   <span class="comment">/* 页目录地址是存入在页目录的最后一项,更新页目录地址为新页目录的物理地址 */</span></span><br><span class="line">   page_dir_vaddr[<span class="number">1023</span>] = new_page_dir_phy_addr | PG_US_U | PG_RW_W | PG_P_1;</span><br><span class="line"><span class="comment">/*****************************************************************************/</span></span><br><span class="line">   <span class="keyword">return</span> page_dir_vaddr;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 创建用户进程虚拟地址位图 */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">create_user_vaddr_bitmap</span><span class="params">(struct task_struct* user_prog)</span> </span>&#123;</span><br><span class="line">   user_prog-&gt;userprog_vaddr.vaddr_start = USER_VADDR_START;</span><br><span class="line">   <span class="keyword">uint32_t</span> bitmap_pg_cnt = DIV_ROUND_UP((<span class="number">0xc0000000</span> - USER_VADDR_START) / PG_SIZE / <span class="number">8</span> , PG_SIZE);</span><br><span class="line">   user_prog-&gt;userprog_vaddr.vaddr_bitmap.bits = get_kernel_pages(bitmap_pg_cnt);</span><br><span class="line">   user_prog-&gt;userprog_vaddr.vaddr_bitmap.btmp_bytes_len = (<span class="number">0xc0000000</span> - USER_VADDR_START) / PG_SIZE / <span class="number">8</span>;</span><br><span class="line">   bitmap_init(&amp;user_prog-&gt;userprog_vaddr.vaddr_bitmap);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 创建用户进程 */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">process_execute</span><span class="params">(<span class="keyword">void</span>* filename, <span class="keyword">char</span>* name)</span> </span>&#123; </span><br><span class="line">   <span class="comment">/* pcb内核的数据结构,由内核来维护进程信息,因此要在内核内存池中申请 */</span></span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span>* <span class="title">thread</span> = <span class="title">get_kernel_pages</span>(1);</span></span><br><span class="line">   init_thread(thread, name, default_prio); </span><br><span class="line">   create_user_vaddr_bitmap(thread);</span><br><span class="line">   thread_create(thread, start_process, filename);</span><br><span class="line">   thread-&gt;pgdir = create_page_dir();</span><br><span class="line">   </span><br><span class="line">   <span class="keyword">enum</span> intr_status old_status = intr_disable();</span><br><span class="line">   ASSERT(!elem_find(&amp;thread_ready_list, &amp;thread-&gt;general_tag));</span><br><span class="line">   list_append(&amp;thread_ready_list, &amp;thread-&gt;general_tag);</span><br><span class="line"></span><br><span class="line">   ASSERT(!elem_find(&amp;thread_all_list, &amp;thread-&gt;all_list_tag));</span><br><span class="line">   list_append(&amp;thread_all_list, &amp;thread-&gt;all_list_tag);</span><br><span class="line">   intr_set_status(old_status);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们目前使用的是二级页表，<strong>加载到页目录表寄存器CR3 中的是页目录表的物理地址</strong>，页目录表中一共包含1024 个页目录项（pde），页目录项大小为4B，故页目录表大小为4KB。每个页表本身占用4KB。每个页表可表示的地址空间为<code>1024*4KB=4MB</code>，一个页目录表中可包含1024 个页表，因此可表示<code>1024*4MB=4GB</code> 大小的地址空间。目前我们的内核位于0xc0000000 以上的地址空间，也就是位于页目录表中第768～1023 个页目录项所<br>指向的页表中，这一共是256 个页目录项，即1GB 空间，目前页表与内核的关系如图。<br><img src="/img/1596788618.jpg" alt></p>
+<p>图 11-20 是任意进程的页目录表，其中，用户进程占据页目录表中第0～767 个页目录项，内核占据页目录表中第768～1023 个页目录项。</p>
+<p>为用户进程创建虚拟内存池的函数是<code>create_user_vaddr_bitmap</code>，它接受一个参数<code>user_prog</code>，表示用户进程，函数功能是<strong>创建用户进程的虚拟地址位图<code>user_prog-&gt;userprog_vaddr</code></strong>，也就是按照用户进程的虚拟内存信息初始化位图结构体<code>struct virtual_addr</code>。<code>user_prog-&gt;userprog_vaddr.vaddr_start</code>是<strong>位图中所管理的内存空间的起始地址</strong>，我们为用户进程定的起始地址是<code>USER_VADDR_START</code>，该值定义在<code>process.h</code>中，其值为<code>0x8048000</code>，这是Linux 用户程序入口地址。</p>
+<p>变量<code>bitmap_pg_cnt</code>用来<strong>记录位图需要的内存页框数</strong>，计算过程中用到了宏<code>DIV_ROUND_UP</code>，它用来实现除法的向上取整，此宏定义在global.h 中，原型是：<code>#define DIV_ROUND_UP(X, STEP) ((X + STEP - 1) / (STEP))</code>。</p>
+<p>接下来通过<code>get_kernel_pages(bitmap_pg_cnt)</code>为位图分配内存，返回的地址记录在位图指针<code>user_prog-&gt;userprog_vaddr.vaddr_bitmap.bits</code> 中。然后将位图长度记录在<code>user_prog-&gt;userprog_vaddr. vaddr_bitmap.btmp_bytes_len</code>中。最后调用函数<code>bitmap_init(&amp;user_prog-&gt;userprog_vaddr.vaddr_bitmap)</code>进行位图初始化，至此用户虚拟地址位图创建完成。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 实现任务调度 */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">schedule</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">   ASSERT(intr_get_status() == INTR_OFF);</span><br><span class="line"></span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span>* <span class="title">cur</span> = <span class="title">running_thread</span>();</span> </span><br><span class="line">   <span class="keyword">if</span> (cur-&gt;status == TASK_RUNNING) &#123; <span class="comment">// 若此线程只是cpu时间片到了,将其加入到就绪队列尾</span></span><br><span class="line">      ASSERT(!elem_find(&amp;thread_ready_list, &amp;cur-&gt;general_tag));</span><br><span class="line">      list_append(&amp;thread_ready_list, &amp;cur-&gt;general_tag);</span><br><span class="line">      cur-&gt;ticks = cur-&gt;priority;     <span class="comment">// 重新将当前线程的ticks再重置为其priority;</span></span><br><span class="line">      cur-&gt;status = TASK_READY;</span><br><span class="line">   &#125; <span class="keyword">else</span> &#123; </span><br><span class="line">      <span class="comment">/* 若此线程需要某事件发生后才能继续上cpu运行,</span></span><br><span class="line"><span class="comment">      不需要将其加入队列,因为当前线程不在就绪队列中。*/</span></span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   ASSERT(!list_empty(&amp;thread_ready_list));</span><br><span class="line">   thread_tag = <span class="literal">NULL</span>;	  <span class="comment">// thread_tag清空</span></span><br><span class="line"><span class="comment">/* 将thread_ready_list队列中的第一个就绪线程弹出,准备将其调度上cpu. */</span></span><br><span class="line">   thread_tag = list_pop(&amp;thread_ready_list);   </span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span>* <span class="title">next</span> = <span class="title">elem2entry</span>(<span class="title">struct</span> <span class="title">task_struct</span>, <span class="title">general_tag</span>, <span class="title">thread_tag</span>);</span></span><br><span class="line">   next-&gt;status = TASK_RUNNING;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/* 激活任务页表等 */</span></span><br><span class="line">   process_activate(next);</span><br><span class="line">   switch_to(cur, next);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在 thread.c 中需要修改<code>schedule</code>，修改的内容也很简单，就是在第126 行增加了代码<code>process_activate(next);</code>，<code>process_activate</code>除了用来更新任务的页表外，还要根据任务是否为进程，修改tss 中的esp0，此函数之前已经介绍了。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/操作系统/" rel="tag"># 操作系统</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/07/23/求二进制数中1的个数/" rel="next" title="求二进制数中1的个数">
+                <i class="fa fa-chevron-left"></i> 求二进制数中1的个数
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/08/06/操作系统真相还原 笔记5/" rel="prev" title="操作系统真相还原12-13章">
+                操作系统真相还原12-13章 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">247</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/xiaomeihao.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#输入输出系统"><span class="nav-number">1.</span> <span class="nav-text">输入输出系统</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#同步机制——锁"><span class="nav-number">1.1.</span> <span class="nav-text">同步机制——锁</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#环形缓冲区的实现"><span class="nav-number">2.</span> <span class="nav-text">环形缓冲区的实现</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#用户进程"><span class="nav-number">3.</span> <span class="nav-text">用户进程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么要有任务状态段-TSS"><span class="nav-number">3.1.</span> <span class="nav-text">为什么要有任务状态段 TSS</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#CPU-原生支持的任务切换方式"><span class="nav-number">3.1.1.</span> <span class="nav-text">CPU 原生支持的任务切换方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#call、jmp-切换任务"><span class="nav-number">3.1.2.</span> <span class="nav-text">call、jmp 切换任务</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#定义并初始化-TSS"><span class="nav-number">3.2.</span> <span class="nav-text">定义并初始化 TSS</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实现用户进程"><span class="nav-number">3.3.</span> <span class="nav-text">实现用户进程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#用户进程创建的流程"><span class="nav-number">3.3.1.</span> <span class="nav-text">用户进程创建的流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bss-简介"><span class="nav-number">3.3.2.</span> <span class="nav-text">bss 简介</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<span id="busuanzi_container_site_uv"> 
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
