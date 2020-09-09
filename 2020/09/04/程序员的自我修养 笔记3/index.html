@@ -102,7 +102,7 @@
 <meta property="og:image" content="http://yoursite.com/img/20161209003627796.png">
 <meta property="og:image" content="http://yoursite.com/img/20161209003839953.png">
 <meta property="og:image" content="http://yoursite.com/img/20161209010512894.png">
-<meta property="og:updated_time" content="2020-09-05T11:14:52.081Z">
+<meta property="og:updated_time" content="2020-09-09T03:12:34.110Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="程序员的自我修养 笔记3">
 <meta name="twitter:description" content="第8章 Linux共享库的组织从文件的结构上来讲，共享库和共享对象没什么区别 8.1 共享库兼容性 共享库的更新分为： 1 兼容更新； 2 不兼容更新    导致C语言的共享库ABI（接口）改变的行为有：  导出函数的行为发生改变，也就是调用该函数产生的结果和以前不一致； 导出函数被删除； 导出数据的结构发生变化； 导出函数的接口发生变化；  解决共享库的兼容性问题的有效办法之一是使用共享库版本的">
@@ -505,8 +505,42 @@
 <li><strong>栈的维护方式</strong> 在函数将参数压栈之后，函数体会被调用，伺候需要被压入栈中的参数全部弹出，以使得栈在函数调用前后保持一致。这个弹出的工作可以由函数的调用方来完成，也可以由函数本身来完成。</li>
 <li><strong>名字修饰的策略</strong> 为了链接的时候对调用惯例进行区分，调用惯例要对函数本身的名字进行修饰。不同的调用惯例有不同的修饰策略。</li>
 </ul>
-<table><br>    <tr><br>        <th>调用惯例</th><br>        <th>出栈方</th><br>        <th>参数传递</th><br>        <th>名字修饰</th><br>    </tr><br>    <tr><br>        <td>cdecl</td><br>        <td>函数调用方</td><br>        <td>从右至左的顺序压参数入栈</td><br>        <td>下划线+函数名</td><br>    </tr><br>    <tr><br>        <td>stdcall</td><br>        <td>函数本身</td><br>        <td>从右至左的顺序压参数入栈</td><br>        <td>下划线+函数名+@+参数的字节数</td><br>    </tr><br>    <tr><br>        <td>fastcall</td><br>        <td>函数本身</td><br>        <td>头两个DWORD类型或者占更少字节的参数被放入寄存器，其他剩下的参数按从右至左的顺序压入栈中</td><br>        <td>@+函数名+@+参数的字节数</td><br>    </tr><br>    <tr><br>        <td>pascal</td><br>        <td>函数本身</td><br>        <td>从左至右的顺序压参数入栈</td><br>        <td>较为复杂，参见pascal文档</td><br>    </tr><br></table>
-
+<table>
+<thead>
+<tr>
+<th>调用惯例</th>
+<th>出栈方</th>
+<th>参数传递</th>
+<th>名字修饰</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cdecl</td>
+<td>函数调用方</td>
+<td>从右至左的顺序压参数入栈</td>
+<td>下划线+函数名</td>
+</tr>
+<tr>
+<td>stdcall</td>
+<td>函数本身</td>
+<td>从右至左的顺序压参数入栈</td>
+<td>下划线+函数名+@+参数的字节数</td>
+</tr>
+<tr>
+<td>fastcall</td>
+<td>函数本身</td>
+<td>头两个DWORD类型或者占更少字节的参数被放入寄存器，其他剩下的参数按从右至左的顺序压入栈中</td>
+<td>@+函数名+@+参数的字节数</td>
+</tr>
+<tr>
+<td>pascal</td>
+<td>函数本身</td>
+<td>从左至右的顺序压参数入栈</td>
+<td>较为复杂，参见pascal文档</td>
+</tr>
+</tbody>
+</table>
 <h4 id="10-2-3-函数返回值传递"><a href="#10-2-3-函数返回值传递" class="headerlink" title="10.2.3 函数返回值传递"></a>10.2.3 函数返回值传递</h4><p>函数将返回值存储在eax中，返回后函数的调用方再读取eax。但是eax本身只有4个字节，对于返回5~8字节对象的情况，几乎所有的调用惯例都是采用eax和edx联合返回的方式进行的。其中eax存储返回值要低4字节，而edx存储返回值要高1~4字节。而对于超过8字节的返回类型，一般会栈上额外开辟一片空间，并将这片空间的一部分作为传递返回值的临时对象，并将对象的地址作为隐藏参数传递给函数。</p>
 <h3 id="10-3-堆与内存管理"><a href="#10-3-堆与内存管理" class="headerlink" title="10.3 堆与内存管理"></a>10.3 堆与内存管理</h3><h4 id="10-3-1-什么是堆"><a href="#10-3-1-什么是堆" class="headerlink" title="10.3.1 什么是堆"></a>10.3.1 什么是堆</h4><p>堆是一块巨大的内存空间，常常占据整个虚拟空间的绝大部分。在这片空间里，程序可以请求一块连续内存，并自由地使用，这块内存在程序主动放弃之前都会一直保持有效。</p>
 <h4 id="10-3-2-Linux进程堆管理"><a href="#10-3-2-Linux进程堆管理" class="headerlink" title="10.3.2 Linux进程堆管理"></a>10.3.2 Linux进程堆管理</h4><p>Linux提供了两种堆空间分配方式：brk()系统调用和mmap()系统调用。</p>
