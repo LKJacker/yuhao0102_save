@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="积累,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="安装设置 加载 mpivars.[c]sh 脚本。 创建文本文件 mpd.hosts ，其中保存有集群的节点列表，每行一个名字  (只针对开发者) 确保环境变量 PATH 中包含有相应的编译器，比如 icc。 (只针对开发者) 使用适当的编译驱动编译测试程序，比如 mpiicc。1$ mpiicc -o test test.c    使用 mpirun 运行测试程序 1$ mpirun -r ss">
+<meta name="keywords" content="积累">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Intel MPI 配置与基本使用">
+<meta property="og:url" content="http://yoursite.com/2020/09/17/MPI配置/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="安装设置 加载 mpivars.[c]sh 脚本。 创建文本文件 mpd.hosts ，其中保存有集群的节点列表，每行一个名字  (只针对开发者) 确保环境变量 PATH 中包含有相应的编译器，比如 icc。 (只针对开发者) 使用适当的编译驱动编译测试程序，比如 mpiicc。1$ mpiicc -o test test.c    使用 mpirun 运行测试程序 1$ mpirun -r ss">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2020-09-23T13:39:38.902Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Intel MPI 配置与基本使用">
+<meta name="twitter:description" content="安装设置 加载 mpivars.[c]sh 脚本。 创建文本文件 mpd.hosts ，其中保存有集群的节点列表，每行一个名字  (只针对开发者) 确保环境变量 PATH 中包含有相应的编译器，比如 icc。 (只针对开发者) 使用适当的编译驱动编译测试程序，比如 mpiicc。1$ mpiicc -o test test.c    使用 mpirun 运行测试程序 1$ mpirun -r ss">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2020/09/17/MPI配置/">
+
+
+
+
+
+  <title>Intel MPI 配置与基本使用 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-mybetterhalf">
+          <a href="/mybetterhalf/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            mybetterhalf
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/09/17/MPI配置/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Intel MPI 配置与基本使用</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-09-17T19:45:00+08:00">
+                2020-09-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><h2 id="设置"><a href="#设置" class="headerlink" title="设置"></a>设置</h2><ul>
+<li>加载 mpivars.[c]sh 脚本。</li>
+<li><p>创建文本文件 mpd.hosts ，其中保存有集群的节点列表，每行一个名字</p>
+<ul>
+<li>(只针对开发者) 确保环境变量 PATH 中包含有相应的编译器，比如 icc。</li>
+<li>(只针对开发者) 使用适当的编译驱动编译测试程序，比如 mpiicc。<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ mpiicc -o test test.c</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>使用 mpirun 运行测试程序</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ mpirun -r ssh -f mpd.hosts -n &lt;# of processes&gt; ./test</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h2 id="编译链接"><a href="#编译链接" class="headerlink" title="编译链接"></a>编译链接</h2><ul>
+<li>保证在PATH环境变量中编译器设置正确。使用Intel编译器，确保<code>LD_LIBRARY_PATH</code>环境变量中含有编译库的路径。</li>
+<li>通过相应的 mpi 命令编译 MPI 程序。比如调用 mpicc 使用 GNU C 编译器：<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ mpicc &lt;path-to-test&gt;/test.c</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>(支持的编译器都有对应的以 mpi 开头的命令，比如 Intel Fortran (ifort ) 对应的为 mpiifort).</p>
+<h2 id="运行MPI程序"><a href="#运行MPI程序" class="headerlink" title="运行MPI程序"></a>运行MPI程序</h2><h3 id="设置-MPD-守护进程"><a href="#设置-MPD-守护进程" class="headerlink" title="设置 MPD 守护进程"></a>设置 MPD 守护进程</h3><p>Intel MPI 库使用 Multi-Purpose Daemon (MPD) 任务调度机制。为运行使用 mpiicc 编译的程序，首先需要设置好 MPD 守护进程。</p>
+<p>与系统管理员为系统中所有用户启动一次 MPD 守护进程不同，用户需要启动和维护自己的一组 MPD 守护进程。这种设置增强了系统安全性，并为控制可执行程序的环境提供了更强的灵活性。</p>
+<p>设置MPD的步骤如下：</p>
+<ul>
+<li>设置相应的环境变量和目录。比如，在 .zshrc 或 .bashrc 文件中：<ul>
+<li>保证 PATH 变量中包含有<code>&lt;installdir&gt;/bin</code>或者Intel 64 位架构对应的<code>&lt;installdir&gt;/bin64</code>目录，其中<code>&lt;installdir&gt;</code>指的是 MPI 的安装路径。可使用 Intel MPI 库中带有的 mpivars.[c]sh 来设置此变量。</li>
+<li>确保 PATH 中包含有的 Python 至少为 2.2 或以上版本。</li>
+<li>如果使用 Intel 编译器，确保<code>LD_LIBRARY_PATH</code>变量包含有编译器的库目录。可使用编译器中带有的 {icc,ifort}*vars.[c]sh 脚本来设置。</li>
+<li>设置应用程序所需要的其它环境变量。</li>
+</ul>
+</li>
+<li>创建 $HOME/.mpd.conf 文件，设置 MPD 密码，需要在文件中写入一行：<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">secretword=&lt;mpd secret word&gt;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>不要使用 Linux 登陆密码。<code>&lt;mpd secret word&gt;</code>可为任意字符串，它仅仅在不同的集群用户对 MPD 守护进程进行控制时有用。</p>
+<ul>
+<li><p>使用 chmod 设置 $HOME/.mpd.conf 文件的权限</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ chmod 600 $HOME/.mpd.conf</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>保证你在集群的所有节点上 rsh 命令看到同样的 PATH 和 .mpd.conf 内容。 比如在集群的所有节点上执行下面的命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ rsh &lt;node&gt; env</span><br><span class="line">$ rsh &lt;node&gt; cat $HOME/.mpd.conf</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>保证每个节点都能够与其它任意节点连接。可使用安装中提供的 sshconnectivity 脚本。该脚本使用提供所有节点列表的文件作为参数，每个节点一行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ sshconnectivity.exp machines.LINUX</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>集群使用的是 ssh 而不是 rsh:</p>
+<pre><code>- 需要确保任一节点与其它节点连 接时都不需要密码。这需要参照系统管理手册。
+- 在启动 mpdboot 时需要加上调 用参数 -r ssh 或 --rsh=ssh
+</code></pre><ul>
+<li><p>创建文本文件 mpd.hosts , 其中列出了集群中所有的节点，每行一个主机名。比如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ cat &gt; mpd.hosts</span><br><span class="line">node1</span><br><span class="line">node2</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用 mpdallexit 命令关闭上一次的 MPD 守护进程。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ mpdallexit</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用 mpdboot 命令启动 MPD 守护进程。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ mpdboot -n &lt;#nodes&gt;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>如果文件 $PWD/mpd.hosts 存在，则会被用作默认参数。如果没有主机名文件，启用 mpdboot 只会在本地机器上运行 MPD 守护进程。</p>
+</li>
+<li>使用 mpdtrace 命令检查 MPD 守护进程的状态：<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ mpdtrace</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>其输出结果应该为当前进行 MPD 守护进程的节点列表。该列表应该与 mpd.hosts 文件中节点列表符合。</p>
+<h1 id="网络结构选择"><a href="#网络结构选择" class="headerlink" title="网络结构选择"></a>网络结构选择</h1><p>Intel MPI 库会动态选择大部分适用的网络结构以便 MPI 进程之间进行通讯。设置环境变量<code>I_MPI_DEVICE</code>为下表中的某个值：</p>
+<table>
+<thead>
+<tr>
+<th>I_MPI_DEVICE 值</th>
+<th>支持的结构</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>sock</td>
+<td>TCP/Ethernet/sockets</td>
+</tr>
+<tr>
+<td>shm</td>
+<td>Shared memory only (no sockets)</td>
+</tr>
+<tr>
+<td>ssm</td>
+<td>TCP + shared memory</td>
+</tr>
+<tr>
+<td>rdma[:]</td>
+<td>InfiniBand, Myrinet (via specified DAPL provider)</td>
+</tr>
+<tr>
+<td>rdssm[:]</td>
+<td>TCP + shared memory + DAPL</td>
+</tr>
+</tbody>
+</table>
+<p>要保证所选择的网络结构可用。比如，使用 shm 只有当所有进程可以通过共享内存进 行通讯时才行；使用 rdma 只有当所有进程可以通过单一的 DAPL 相互通讯时才行。</p>
+<h1 id="运行MPI程序-1"><a href="#运行MPI程序-1" class="headerlink" title="运行MPI程序"></a>运行MPI程序</h1><p>运行使用 Intel MPI 库连接的程序，使用 mpiexec 命令：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ mpiexec -n &lt;# of processes&gt; ./myprog</span><br></pre></td></tr></table></figure></p>
+<p>使用 -n 参数设置进程数，这是 mpiexec 唯一需要明显指定的选项。如果使用的网络结构与默认的不同，需要使用 -genv 选项来提供一个可以赋给 I_MPI_DEVICE 变量的值。</p>
+<p>比如使用 shm 结构来运行 MPI 程序，可执行如下命令：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ mpiexec -genv I_MPI_DEVICE shm -n &lt;# of processes&gt; ./myprog</span><br></pre></td></tr></table></figure></p>
+<p>比如使用 rdma 结构来运行 MPI 程序，可执行如下命令：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ mpiexec -genv I_MPI_DEVICE rdma -n &lt;# of processes&gt; ./myprog</span><br></pre></td></tr></table></figure></p>
+<p>可以通过命令选择任何支持的设备。</p>
+<p>如果应用程序运行成功，可将其移动到使用不同结构的集群中，不需要重新链接程序。</p>
+<h1 id="MPI错误代码对照表"><a href="#MPI错误代码对照表" class="headerlink" title="MPI错误代码对照表"></a>MPI错误代码对照表</h1><ul>
+<li>00CA : no resources available　　</li>
+<li>00CB : configuration error　　</li>
+<li>00CD : illegal call　　</li>
+<li>00CE : module not found　　</li>
+<li>00CF : driver not loaded　　</li>
+<li>00D0 : hardware fault　　</li>
+<li>00D1 : software fault　　</li>
+<li>00D2 : memory fault　　</li>
+<li>00D7 : no me age　　</li>
+<li>00D8 : storage fault　　</li>
+<li>00DB : internal timeout　　</li>
+<li>00E1 : too many cha els open　　</li>
+<li>00E2 : internal fault　　</li>
+<li>00E7 : hardware fault　　</li>
+<li>00E9 : sin_serv.exe not started　　</li>
+<li>00EA : protected　　</li>
+<li>00F0 : scp db file does not exist　　</li>
+<li>00F1 : no global dos storage available　　</li>
+<li>00F2 : error during tra mi ion　　</li>
+<li>00F2 : error during reception　　</li>
+<li>00F4 : device does not exist　　</li>
+<li>00F5 : incorrect sub system　　</li>
+<li>00F6 : unknown code　　</li>
+<li>00F7 : buffer too small　　</li>
+<li>00F8 : buffer too small　　</li>
+<li>00F9 : incorrect protocol　　</li>
+<li>00FB : reception error　　</li>
+<li>00FC : licence error　　</li>
+<li>0101 : co ection not established / parameterised　　</li>
+<li>010A : negative acknowledgement received / timeout error　　</li>
+<li>010C : data does not exist or disabled　　</li>
+<li>012A : system storage no longer available　　</li>
+<li>012E : incorrect parameter　　</li>
+<li>0132 : no memory in DPRAM　　</li>
+<li>0201 : incorrect interface  ecified　　</li>
+<li>0202 : maximum amount of interfaces exceeded　　</li>
+<li>0203 : PRODAVE already initialised　　</li>
+<li>0204 : wrong parameter list　</li>
+<li>0205 : PRODAVE not initialised　</li>
+<li>0206 : handle ca ot be set　</li>
+<li>0207 : data segment ca ot be disabled　</li>
+<li>0300 : initialisiation error　</li>
+<li>0301 : initialisiation error　</li>
+<li>0302 : block too small, DW does not exist　</li>
+<li>0303 : block limit exceeded, correct amount</li>
+<li>0310 : no HW found　</li>
+<li>0311 : HW defective　</li>
+<li>0312 : incorrect config param　</li>
+<li>0313 : incorrect baud rate / interrupt vector　</li>
+<li>0314 : HSA parameterised incorrectly　</li>
+<li>0315 : MPI addre  error　</li>
+<li>0316 : HW device already allocated　</li>
+<li>0317 : interrupt not available　</li>
+<li>0318 : interrupt occupied　</li>
+<li>0319 : sap not occupied　</li>
+<li>031A : no remote station found　</li>
+<li>031B : internal error　</li>
+<li>031C : system error　</li>
+<li>031D : error buffer size　</li>
+<li>0320 : hardware fault　</li>
+<li>0321 : DLL function error　</li>
+<li>0330 : version conflict　</li>
+<li>0331 : error com config　</li>
+<li>0332 : hardware fault　</li>
+<li>0333 : com not configured　</li>
+<li>0334 : com not available　</li>
+<li>0335 : serial drv in use　</li>
+<li>0336 : no co ection　</li>
+<li>0337 : job rejected　</li>
+<li>0380 : internal error　</li>
+<li>0381 : hardware fault　</li>
+<li>0382 : no driver or device found　</li>
+<li>0384 : no driver or device found　</li>
+<li>03FF : system fault　</li>
+<li>0800 : toolbox occupied　</li>
+<li>4001 : co ection not known　</li>
+<li>4002 : co ection not established　</li>
+<li>4003 : co ection is being established　</li>
+<li>4004 : co ection broken down　</li>
+<li>8000 : function already actively occupied　</li>
+<li>8001 : not allowed in this operating status　</li>
+<li>8101 : hardware fault　</li>
+<li>8103 : object acce  not allowed　</li>
+<li>8104 : context is not su orted　</li>
+<li>8105 : invalid addre 　</li>
+<li>8106 : type (data type) not su orted　</li>
+<li>8107 : type (data type) not co istent　</li>
+<li>810A : object does not exist　</li>
+<li>8301 : memory slot on CPU not sufficient　</li>
+<li>8404 : grave error　　8500 : incorrect PDU size　</li>
+<li>8702 : addre  invalid　</li>
+<li>D201 : syntax error block name　</li>
+<li>D202 : syntax error function parameter　</li>
+<li>D203 : syntax error block type　</li>
+<li>D204 : no linked block in storage medium　</li>
+<li>D205 : object already exists　</li>
+<li>D206 : object already exists　</li>
+<li>D207 : block exists in EPROM　</li>
+<li>D209 : block does not exist　</li>
+<li>D20E : no block available　</li>
+<li>D210 : block number too big　</li>
+<li>D241 : protection level of function not sufficient　</li>
+<li>D406 : information not available　</li>
+<li>EF01 : incorrect ID2　</li>
+<li>FFFB : TeleService Library not found　</li>
+<li>FFFE : unknown error FFFE hex　</li>
+<li>FFFF : timeout error. Check interfac</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/积累/" rel="tag"># 积累</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/09/14/cpp中constexpr作用/" rel="next" title="C++中constexpr作用">
+                <i class="fa fa-chevron-left"></i> C++中constexpr作用
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/09/23/IntelMPI配置与基本使用/" rel="prev" title>
+                 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">261</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/xiaomeihao.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#安装"><span class="nav-number">1.</span> <span class="nav-text">安装</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#设置"><span class="nav-number">1.1.</span> <span class="nav-text">设置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编译链接"><span class="nav-number">1.2.</span> <span class="nav-text">编译链接</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#运行MPI程序"><span class="nav-number">1.3.</span> <span class="nav-text">运行MPI程序</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#设置-MPD-守护进程"><span class="nav-number">1.3.1.</span> <span class="nav-text">设置 MPD 守护进程</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#网络结构选择"><span class="nav-number">2.</span> <span class="nav-text">网络结构选择</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#运行MPI程序-1"><span class="nav-number">3.</span> <span class="nav-text">运行MPI程序</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#MPI错误代码对照表"><span class="nav-number">4.</span> <span class="nav-text">MPI错误代码对照表</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<span id="busuanzi_container_site_uv"> 
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":false},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
