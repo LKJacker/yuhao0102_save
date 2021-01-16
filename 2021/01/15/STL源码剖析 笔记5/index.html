@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="C++,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="仿函数仿函数概述仿函数也叫作函数对象，是一种具有函数特质的对象，调用者可以像函数一样地调用这些对象，被调用者则以对象所定义的function call operator扮演函数的实质角色。就实现观点而言，仿函数其实上就是一个“行为类似函数”的对象。为了“行为类似函数”，其类别定义中必须自定义function call 运算子（operator()）。STL中仿函数代替函数指针的原因在于函数指针不能">
+<meta name="keywords" content="C++">
+<meta property="og:type" content="article">
+<meta property="og:title" content="STL 源码剖析 笔记5">
+<meta property="og:url" content="http://yoursite.com/2021/01/15/STL源码剖析 笔记5/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="仿函数仿函数概述仿函数也叫作函数对象，是一种具有函数特质的对象，调用者可以像函数一样地调用这些对象，被调用者则以对象所定义的function call operator扮演函数的实质角色。就实现观点而言，仿函数其实上就是一个“行为类似函数”的对象。为了“行为类似函数”，其类别定义中必须自定义function call 运算子（operator()）。STL中仿函数代替函数指针的原因在于函数指针不能">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/1610763366.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1610775737.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1610775889.jpg">
+<meta property="og:image" content="http://yoursite.com/img/1610775917.jpg">
+<meta property="og:updated_time" content="2021-01-16T05:48:11.918Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="STL 源码剖析 笔记5">
+<meta name="twitter:description" content="仿函数仿函数概述仿函数也叫作函数对象，是一种具有函数特质的对象，调用者可以像函数一样地调用这些对象，被调用者则以对象所定义的function call operator扮演函数的实质角色。就实现观点而言，仿函数其实上就是一个“行为类似函数”的对象。为了“行为类似函数”，其类别定义中必须自定义function call 运算子（operator()）。STL中仿函数代替函数指针的原因在于函数指针不能">
+<meta name="twitter:image" content="http://yoursite.com/img/1610763366.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2021/01/15/STL源码剖析 笔记5/">
+
+
+
+
+
+  <title>STL 源码剖析 笔记5 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-mybetterhalf">
+          <a href="/mybetterhalf/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            mybetterhalf
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/01/15/STL源码剖析 笔记5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">STL 源码剖析 笔记5</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-01-15T09:13:00+08:00">
+                2021-01-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="仿函数"><a href="#仿函数" class="headerlink" title="仿函数"></a>仿函数</h1><h2 id="仿函数概述"><a href="#仿函数概述" class="headerlink" title="仿函数概述"></a>仿函数概述</h2><p>仿函数也叫作函数对象，是一种<strong>具有函数特质的对象</strong>，调用者可以像函数一样地调用这些对象，被调用者则以对象所定义的function call operator扮演函数的实质角色。就实现观点而言，仿函数其实上就是一个“行为类似函数”的对象。为了“行为类似函数”，其类别定义中必须自定义function call 运算子（<code>operator()</code>）。STL中仿函数代替函数指针的原因在于函数指针不能满足STL对抽象性的要求，也不能满足软件积木的要求，函数指针无法与STL其他组件搭配。</p>
+<p>STL仿函数的分类，若以操作数的个数划分，可以分为一元和二元仿函数；若以功能划分，可以分为算术运算（Arithmetic）、关系运算（Rational）、逻辑运算（Logical）三大类。其头文件为<code>&lt;functional&gt;</code>。</p>
+<h2 id="可配接的关键"><a href="#可配接的关键" class="headerlink" title="可配接的关键"></a>可配接的关键</h2><p>STL仿函数应该有能力被函数适配器修饰，就像积木一样串接，然而，为了拥有配接能力，每个仿函数都必须定义自己的associative types（主要用来表示函数参数类型和返回值类型），就想迭代器如果要融入整个STL大家庭，也必须按照规定定义自己的5个相应的类型一样，这些assocaiative type是为了让配接器可以取得仿函数的某些信息，当然，这些associative type都只是一些typedef，所有必要操作在编译器就全部完成了，对程序的执行效率没有任何影响，不会带来额外的负担。</p>
+<p>仿函数的相应类型主要用来表现函数参数类型和传回值类型，为了方便起见<code>&lt;stl_functional.h&gt;</code>定义了两个类classes，分别代表一元仿函数和二元仿函数。其中没有任何data members或member functions，唯有一些类型定义，任何仿函数只要依个人需求选择继承其中一个class，便自动拥有了那些相应类型，也自动拥有了配接能力。</p>
+<h3 id="unary-function"><a href="#unary-function" class="headerlink" title="unary_function"></a>unary_function</h3><p><code>unary_function</code>用来呈现一元函数的参数类型和返回值类型。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//STL规定，每一个Adaptable Unary Function都应继承此类别</span></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">Arg</span>, <span class="title">class</span> <span class="title">Result</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">unary_function</span> &#123;</span></span><br><span class="line">	<span class="keyword">typedef</span> Arg argument_type;</span><br><span class="line">	<span class="keyword">typedef</span> Result result_type;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>一旦某个仿函数继承了<code>unary_function</code>，其用户便可以这样取得仿函数的参数类型：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">negate</span> :</span> <span class="keyword">public</span> unary_function&lt;T, T&gt; &#123;</span><br><span class="line">  <span class="function">T <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">const</span> T&amp; x)</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> -x; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 以下配接器用来表示某个仿函数的逻辑负值</span></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">Predicate</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">class</span> <span class="title">unary_negate</span></span></span><br><span class="line"><span class="class">  ...</span></span><br><span class="line"><span class="class"><span class="title">public</span>:</span></span><br><span class="line">  <span class="function"><span class="keyword">bool</span> <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">const</span> <span class="keyword">typename</span> Predicate::argument_type&amp; x)</span> <span class="keyword">const</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<h3 id="binary-function"><a href="#binary-function" class="headerlink" title="binary_function"></a>binary_function</h3><p><code>binary_function</code>用来呈现二元函数的第一参数型别、第二参数型别及返回值型别。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//STL规定，每一个Adaptable Binary Function都应继承此类别</span></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">Arg1</span>, <span class="title">class</span> <span class="title">Arg2</span>, <span class="title">class</span> <span class="title">Result</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">binary_function</span> &#123;</span></span><br><span class="line">	<span class="keyword">typedef</span> Arg1 first_argument_type;</span><br><span class="line">	<span class="keyword">typedef</span> Arg2 second_argument_type;</span><br><span class="line">	<span class="keyword">typedef</span> Result result_type;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>一旦某个仿函数继承了<code>binary_function</code>，其用户便可以这样取得仿函数的参数类型：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">plus</span> :</span> <span class="keyword">public</span> binary_function&lt;T, T, T&gt; &#123;</span><br><span class="line">  <span class="function">T <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">const</span> T&amp; x, <span class="keyword">const</span> T&amp; y)</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> x+y; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 以下配接器用来表示某个仿函数的逻辑负值</span></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">Operation</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">class</span> <span class="title">binder1st</span></span></span><br><span class="line"><span class="class">  ...</span></span><br><span class="line"><span class="class"><span class="title">protected</span>:</span></span><br><span class="line">  Operation op;</span><br><span class="line">  <span class="keyword">typename</span> Operation::first_argument_type value;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">  <span class="keyword">typename</span> Operation::<span class="function">result_type <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">const</span> <span class="keyword">typename</span> Operation::second_argument_type&amp; x)</span> <span class="keyword">const</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<h2 id="算术类仿函数"><a href="#算术类仿函数" class="headerlink" title="算术类仿函数"></a>算术类仿函数</h2><p>STL内建算术类仿函数：加法：<code>plus&lt;T&gt;</code>，减法：<code>minus&lt;T&gt;</code>，乘法：<code>multiplies&lt;T&gt;</code>，除法：<code>divides&lt;T&gt;</code>，取模：<code>modulus&lt;T&gt;</code>，取反：<code>negate&lt;T&gt;</code>。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">plus</span> :</span> <span class="keyword">public</span> binary_function&lt;T,T,T&gt; &#123;</span><br><span class="line">  <span class="function">T <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">const</span> T&amp; x, <span class="keyword">const</span> T&amp; y)</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> x + y; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">minus</span> :</span> <span class="keyword">public</span> binary_function&lt;T,T,T&gt; &#123;</span><br><span class="line">  <span class="function">T <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">const</span> T&amp; x, <span class="keyword">const</span> T&amp; y)</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> x - y; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">multiplies</span> :</span> <span class="keyword">public</span> binary_function&lt;T,T,T&gt; &#123;</span><br><span class="line">  <span class="function">T <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">const</span> T&amp; x, <span class="keyword">const</span> T&amp; y)</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> x * y; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">divides</span> :</span> <span class="keyword">public</span> binary_function&lt;T,T,T&gt; &#123;</span><br><span class="line">  <span class="function">T <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">const</span> T&amp; x, <span class="keyword">const</span> T&amp; y)</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> x / y; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">modulus</span> :</span> <span class="keyword">public</span> binary_function&lt;T,T,T&gt; </span><br><span class="line">&#123;</span><br><span class="line">  <span class="function">T <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">const</span> T&amp; x, <span class="keyword">const</span> T&amp; y)</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> x % y; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">negate</span> :</span> <span class="keyword">public</span> unary_function&lt;T,T&gt; </span><br><span class="line">&#123;</span><br><span class="line">  <span class="function">T <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">const</span> T&amp; x)</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> -x; &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>测试程序：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;functional&gt;</span></span></span><br><span class="line"> </span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 产生仿函数实体</span></span><br><span class="line">    plus&lt;<span class="keyword">int</span>&gt; plusobj;</span><br><span class="line">    minus&lt;<span class="keyword">int</span>&gt; minusobj;</span><br><span class="line">    multiplies&lt;<span class="keyword">int</span>&gt; multipliesobj;</span><br><span class="line">    divides&lt;<span class="keyword">int</span>&gt; dividesobj;</span><br><span class="line">    modulus&lt;<span class="keyword">int</span>&gt; modulusobj;</span><br><span class="line">    negate&lt;<span class="keyword">int</span>&gt; negateobj;</span><br><span class="line"> </span><br><span class="line">    <span class="comment">// 使用对象完成函数功能</span></span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; plusobj(<span class="number">3</span>, <span class="number">5</span>) &lt;&lt; <span class="built_in">endl</span>; 		 <span class="comment">//8</span></span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; minusobj(<span class="number">3</span>, <span class="number">5</span>) &lt;&lt; <span class="built_in">endl</span>;		 <span class="comment">//-2</span></span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; multipliesobj(<span class="number">3</span>, <span class="number">5</span>) &lt;&lt; <span class="built_in">endl</span>; <span class="comment">//15</span></span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; dividesobj(<span class="number">3</span>, <span class="number">5</span>) &lt;&lt; <span class="built_in">endl</span>;    <span class="comment">//0</span></span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; modulusobj(<span class="number">3</span>, <span class="number">5</span>) &lt;&lt; <span class="built_in">endl</span>;    <span class="comment">//3</span></span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; negateobj(<span class="number">3</span>) &lt;&lt; <span class="built_in">endl</span>;		 <span class="comment">//-3</span></span><br><span class="line"> </span><br><span class="line">    <span class="comment">// 直接使用仿函数的临时对象完成函数功能</span></span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; plus&lt;<span class="keyword">int</span>&gt;()(<span class="number">3</span>, <span class="number">5</span>) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; minus&lt;<span class="keyword">int</span>&gt;()(<span class="number">3</span>, <span class="number">5</span>) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; multiplies&lt;<span class="keyword">int</span>&gt;()(<span class="number">3</span>, <span class="number">5</span>) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; divides&lt;<span class="keyword">int</span>&gt;()(<span class="number">3</span>, <span class="number">5</span>) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; modulus&lt;<span class="keyword">int</span>&gt;()(<span class="number">3</span>, <span class="number">5</span>) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; negate&lt;<span class="keyword">int</span>&gt;()(<span class="number">3</span>) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>不会这么单纯的使用仿函数，主要用途是搭配STL算法，以下式子表示要以1为基本元素，对vector iv中的每个元素进行乘法操作：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">accumulate(iv.begin(), iv.end(), <span class="number">1</span>, multiplies&lt;<span class="keyword">int</span>&gt;());</span><br></pre></td></tr></table></figure></p>
+<h3 id="证同元素-identity-element"><a href="#证同元素-identity-element" class="headerlink" title="证同元素(identity element)"></a>证同元素(identity element)</h3><p>所谓“运算op的证同元素(identity element)”，意思是数值A若与该元素做op运算会得到A自己。加法的证同元素为0，因为任何元素加上0仍为自己。乘法的证同元素为1,因为任何元素乘以1仍为自己。</p>
+<p>请注意，这些函数并非STL标准规格中的一员。但许多STL实现都有它们：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt; </span></span><br><span class="line"><span class="class"><span class="title">inline</span> <span class="title">T</span> <span class="title">identity_element</span>(<span class="title">plus</span>&lt;T&gt;) &#123;</span> <span class="keyword">return</span> T(<span class="number">0</span>);&#125; <span class="comment">//SGI STL并未实际运用这个函数</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt; </span></span><br><span class="line"><span class="class"><span class="title">inline</span> <span class="title">T</span> <span class="title">identity_element</span>(<span class="title">muitiplies</span>&lt;T&gt;) &#123;</span> <span class="keyword">return</span> T(<span class="number">1</span>);&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="关系运算类仿函数"><a href="#关系运算类仿函数" class="headerlink" title="关系运算类仿函数"></a>关系运算类仿函数</h2><p>STL内建关系类仿函数：等于：<code>equal_to&lt;T&gt;</code>，不等于：<code>not_equal_to&lt;T&gt;</code>，大于：<code>greater&lt;T&gt;</code>，大于等于：<code>greater_equal&lt;T&gt;</code>，小于：<code>less&lt;T&gt;</code>，小于等于：<code>less_equal&lt;T&gt;</code>。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">equal_to</span> :</span> <span class="keyword">public</span> binary_function&lt;T,T,<span class="keyword">bool</span>&gt; </span><br><span class="line">&#123;</span><br><span class="line">  <span class="function"><span class="keyword">bool</span> <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">const</span> T&amp; x, <span class="keyword">const</span> T&amp; y)</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> x == y; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">not_equal_to</span> :</span> <span class="keyword">public</span> binary_function&lt;T,T,<span class="keyword">bool</span>&gt; </span><br><span class="line">&#123;</span><br><span class="line">  <span class="function"><span class="keyword">bool</span> <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">const</span> T&amp; x, <span class="keyword">const</span> T&amp; y)</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> x != y; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">greater</span> :</span> <span class="keyword">public</span> binary_function&lt;T,T,<span class="keyword">bool</span>&gt; </span><br><span class="line">&#123;</span><br><span class="line">  <span class="function"><span class="keyword">bool</span> <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">const</span> T&amp; x, <span class="keyword">const</span> T&amp; y)</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> x &gt; y; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">less</span> :</span> <span class="keyword">public</span> binary_function&lt;T,T,<span class="keyword">bool</span>&gt; </span><br><span class="line">&#123;</span><br><span class="line">  <span class="function"><span class="keyword">bool</span> <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">const</span> T&amp; x, <span class="keyword">const</span> T&amp; y)</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> x &lt; y; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">greater_equal</span> :</span> <span class="keyword">public</span> binary_function&lt;T,T,<span class="keyword">bool</span>&gt;</span><br><span class="line">&#123;</span><br><span class="line">  <span class="function"><span class="keyword">bool</span> <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">const</span> T&amp; x, <span class="keyword">const</span> T&amp; y)</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> x &gt;= y; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">less_equal</span> :</span> <span class="keyword">public</span> binary_function&lt;T,T,<span class="keyword">bool</span>&gt; </span><br><span class="line">&#123;</span><br><span class="line">  <span class="function"><span class="keyword">bool</span> <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">const</span> T&amp; x, <span class="keyword">const</span> T&amp; y)</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> x &lt;= y; &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>测试程序：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;functional&gt;</span></span></span><br><span class="line"> </span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 产生仿函数实体</span></span><br><span class="line">    equal_to&lt;<span class="keyword">int</span>&gt; equal_to_obj;</span><br><span class="line">    not_equal_to&lt;<span class="keyword">int</span>&gt; not_equal_to_obj;</span><br><span class="line">    greater&lt;<span class="keyword">int</span>&gt; greater_obj;</span><br><span class="line">    greater_equal&lt;<span class="keyword">int</span>&gt; greater_equal_obj;</span><br><span class="line">    less&lt;<span class="keyword">int</span>&gt; less_obj;</span><br><span class="line">    less_equal&lt;<span class="keyword">int</span>&gt; less_equal_obj;</span><br><span class="line"> </span><br><span class="line">    <span class="comment">// 使用对象完成函数功能</span></span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; equal_to_obj(<span class="number">3</span>, <span class="number">5</span>) &lt;&lt; <span class="built_in">endl</span>;			<span class="comment">//0</span></span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; not_equal_to_obj(<span class="number">3</span>, <span class="number">5</span>) &lt;&lt; <span class="built_in">endl</span>;		<span class="comment">//1</span></span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; greater_obj(<span class="number">3</span>, <span class="number">5</span>) &lt;&lt; <span class="built_in">endl</span>;			<span class="comment">//0</span></span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; greater_equal_obj(<span class="number">3</span>, <span class="number">5</span>) &lt;&lt; <span class="built_in">endl</span>;	<span class="comment">//0</span></span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; less_obj(<span class="number">3</span>, <span class="number">5</span>) &lt;&lt; <span class="built_in">endl</span>;				<span class="comment">//1</span></span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; less_equal_obj(<span class="number">3</span>, <span class="number">5</span>) &lt;&lt; <span class="built_in">endl</span>;		<span class="comment">//1</span></span><br><span class="line"> </span><br><span class="line">    <span class="comment">// 直接使用仿函数的临时对象完成函数功能</span></span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; equal_to&lt;<span class="keyword">int</span>&gt;()(<span class="number">3</span>, <span class="number">5</span>) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; not_equal_to&lt;<span class="keyword">int</span>&gt;()(<span class="number">3</span>, <span class="number">5</span>) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; greater&lt;<span class="keyword">int</span>&gt;()(<span class="number">3</span>, <span class="number">5</span>) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; greater_equal&lt;<span class="keyword">int</span>&gt;()(<span class="number">3</span>, <span class="number">5</span>) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; less&lt;<span class="keyword">int</span>&gt;()(<span class="number">3</span>, <span class="number">5</span>) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; less_equal&lt;<span class="keyword">int</span>&gt;()(<span class="number">3</span>, <span class="number">5</span>) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>不会这么单纯的使用仿函数，主要用途是搭配STL算法，以下式子表示要以递增次序对vector iv排序：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sort(iv.begin(), iv.end(), greater&lt;<span class="keyword">int</span>&gt;());</span><br></pre></td></tr></table></figure></p>
+<h2 id="逻辑运算类仿函数"><a href="#逻辑运算类仿函数" class="headerlink" title="逻辑运算类仿函数"></a>逻辑运算类仿函数</h2><p>STL内建逻辑类仿函数：逻辑运算And：<code>logical_and&lt;T&gt;</code>，逻辑运算Or：<code>logical_or&lt;T&gt;</code>，逻辑运算Not：<code>logical_not&lt;T&gt;</code>。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">logical_and</span> :</span> <span class="keyword">public</span> binary_function&lt;T,T,<span class="keyword">bool</span>&gt;</span><br><span class="line">&#123;</span><br><span class="line">  <span class="function"><span class="keyword">bool</span> <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">const</span> T&amp; x, <span class="keyword">const</span> T&amp; y)</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> x &amp;&amp; y; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">logical_or</span> :</span> <span class="keyword">public</span> binary_function&lt;T,T,<span class="keyword">bool</span>&gt;</span><br><span class="line">&#123;</span><br><span class="line">  <span class="function"><span class="keyword">bool</span> <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">const</span> T&amp; x, <span class="keyword">const</span> T&amp; y)</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> x || y; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">logical_not</span> :</span> <span class="keyword">public</span> unary_function&lt;T,<span class="keyword">bool</span>&gt;</span><br><span class="line">&#123;</span><br><span class="line">  <span class="function"><span class="keyword">bool</span> <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">const</span> T&amp; x)</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> !x; &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>测试程序：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;functional&gt;</span></span></span><br><span class="line"> </span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 产生仿函数实体</span></span><br><span class="line">    logical_and&lt;<span class="keyword">int</span>&gt; and_obj;</span><br><span class="line">    logical_or&lt;<span class="keyword">int</span>&gt; or_obj;</span><br><span class="line">    logical_not&lt;<span class="keyword">int</span>&gt; not_obj;</span><br><span class="line"> </span><br><span class="line">    <span class="comment">// 使用对象完成函数功能</span></span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; and_obj(<span class="literal">true</span>, <span class="literal">true</span>) &lt;&lt; <span class="built_in">endl</span>;	<span class="comment">//1</span></span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; or_obj(<span class="literal">true</span>, <span class="literal">false</span>) &lt;&lt; <span class="built_in">endl</span>;	<span class="comment">//1</span></span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; not_obj(<span class="literal">true</span>) &lt;&lt; <span class="built_in">endl</span>;			<span class="comment">//0</span></span><br><span class="line"> </span><br><span class="line">    <span class="comment">// 直接使用仿函数的临时对象完成函数功能</span></span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; logical_and&lt;<span class="keyword">int</span>&gt;()(<span class="literal">true</span>, <span class="literal">true</span>) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; logical_or&lt;<span class="keyword">int</span>&gt;()(<span class="literal">true</span>, <span class="literal">false</span>) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; logical_not&lt;<span class="keyword">int</span>&gt;()(<span class="literal">true</span>) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>不会这么单纯的使用仿函数，主要用途是搭配STL算法。</p>
+<h2 id="证同、选择、投射"><a href="#证同、选择、投射" class="headerlink" title="证同、选择、投射"></a>证同、选择、投射</h2><p>以下介绍的仿函数，都只是将其参数原封不动地传回。其中某些仿函数对传回的参数有刻意的选择，或者刻意的忽略。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 证同函数，任何函数经过后不会改变，用于set rb_tree keyOfValue op</span></span><br><span class="line"><span class="comment">// identity is an extensions: it is not part of the standard.</span></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> _<span class="title">Tp</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> _<span class="title">Identity</span> :</span> <span class="keyword">public</span> unary_function&lt;_Tp,_Tp&gt; &#123;</span><br><span class="line">  <span class="keyword">const</span> _<span class="function">Tp&amp; <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">const</span> _Tp&amp; __x)</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> __x; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> _<span class="title">Tp</span>&gt; <span class="title">struct</span> <span class="title">identity</span> :</span> <span class="keyword">public</span> _Identity&lt;_Tp&gt; &#123;&#125;;</span><br><span class="line"> </span><br><span class="line"><span class="comment">// 选择函数，返回pair第一元素，用于map rb_tree keyOfValue op</span></span><br><span class="line"><span class="comment">// select1st and select2nd are extensions: they are not part of the standard.</span></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> _<span class="title">Pair</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> _<span class="title">Select1st</span> :</span> <span class="keyword">public</span> unary_function&lt;_Pair, <span class="keyword">typename</span> _Pair::first_type&gt; &#123;</span><br><span class="line">  <span class="keyword">const</span> <span class="keyword">typename</span> _Pair::<span class="function">first_type&amp; <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">const</span> _Pair&amp; __x)</span> <span class="keyword">const</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> __x.first;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line"><span class="comment">// 选择函数，返回pair第二元素</span></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> _<span class="title">Pair</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> _<span class="title">Select2nd</span> :</span> <span class="keyword">public</span> unary_function&lt;_Pair, <span class="keyword">typename</span> _Pair::second_type&gt;</span><br><span class="line">&#123;</span><br><span class="line">  <span class="keyword">const</span> <span class="keyword">typename</span> _Pair::<span class="function">second_type&amp; <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">const</span> _Pair&amp; __x)</span> <span class="keyword">const</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> __x.second;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> _<span class="title">Pair</span>&gt; <span class="title">struct</span> <span class="title">select1st</span> :</span> <span class="keyword">public</span> _Select1st&lt;_Pair&gt; &#123;&#125;;</span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> _<span class="title">Pair</span>&gt; <span class="title">struct</span> <span class="title">select2nd</span> :</span> <span class="keyword">public</span> _Select2nd&lt;_Pair&gt; &#123;&#125;;</span><br><span class="line"> </span><br><span class="line"><span class="comment">// 传回一个忽略另一个</span></span><br><span class="line"><span class="comment">// project1st and project2nd are extensions: they are not part of the standard</span></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> _<span class="title">Arg1</span>, <span class="title">class</span> _<span class="title">Arg2</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> _<span class="title">Project1st</span> :</span> <span class="keyword">public</span> binary_function&lt;_Arg1, _Arg2, _Arg1&gt; &#123;</span><br><span class="line">  _<span class="function">Arg1 <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">const</span> _Arg1&amp; __x, <span class="keyword">const</span> _Arg2&amp;)</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> __x; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> _<span class="title">Arg1</span>, <span class="title">class</span> _<span class="title">Arg2</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> _<span class="title">Project2nd</span> :</span> <span class="keyword">public</span> binary_function&lt;_Arg1, _Arg2, _Arg2&gt; &#123;</span><br><span class="line">  _<span class="function">Arg2 <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">const</span> _Arg1&amp;, <span class="keyword">const</span> _Arg2&amp; __y)</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> __y; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> _<span class="title">Arg1</span>, <span class="title">class</span> _<span class="title">Arg2</span>&gt; </span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">project1st</span> :</span> <span class="keyword">public</span> _Project1st&lt;_Arg1, _Arg2&gt; &#123;&#125;;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> _<span class="title">Arg1</span>, <span class="title">class</span> _<span class="title">Arg2</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">project2nd</span> :</span> <span class="keyword">public</span> _Project2nd&lt;_Arg1, _Arg2&gt; &#123;&#125;;</span><br></pre></td></tr></table></figure></p>
+<h1 id="配接器"><a href="#配接器" class="headerlink" title="配接器"></a>配接器</h1><p>配接器（adapters）在 STL 组件的灵活组合运用功能上，扮演着轴承、转换器的角色。Adapter 这个概念，事实上是一种设计模式。《Design Patterns》一书提到 23 个最普及的设计模式，其中对 adapter 样式的定义如下：将一个 class 的接口转换为另一个 class 的接口，使原本因接口不兼容而不能合作的 classes，可以一起运作。</p>
+<h2 id="配接器之概观与分类"><a href="#配接器之概观与分类" class="headerlink" title="配接器之概观与分类"></a>配接器之概观与分类</h2><p>STL 所提供的各种配接器中，改变容器（containers）接口者，我们称为 container adapter，改变迭代器（iterators）接口者，我们称之为 iterator adapter，改变仿函数（functors）接口者，我们称为 function adapter。</p>
+<h3 id="容器配接器"><a href="#容器配接器" class="headerlink" title="容器配接器"></a>容器配接器</h3><p>STL 提供的两个容器 queue 和 stack，其实都只不过是一种配接器，底层由deque构成。stack和queue是两个容器配接器，底层默认由deque构成。stack封住了所有的deque对外接口，只开放符合stack原则的几个函数；queue封住了所有的deque对外接口，只开放符合queue原则的几个函数。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span> ,<span class="title">class</span> <span class="title">Sequence</span> = <span class="title">deque</span>&lt;T&gt;&gt;</span></span><br><span class="line"><span class="class"><span class="title">class</span> <span class="title">stack</span> &#123;</span></span><br><span class="line"><span class="keyword">protected</span>:</span><br><span class="line">    Sequence  c ; <span class="comment">//底层容器</span></span><br><span class="line">    ...</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span> ,<span class="title">class</span> <span class="title">Sequence</span> = <span class="title">deque</span>&lt;T&gt;&gt;</span></span><br><span class="line"><span class="class"><span class="title">class</span> <span class="title">queue</span>&#123;</span></span><br><span class="line"><span class="keyword">protected</span>:</span><br><span class="line">    Sequence  c ; <span class="comment">//底层容器</span></span><br><span class="line">    ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<h3 id="迭代器配接器"><a href="#迭代器配接器" class="headerlink" title="迭代器配接器"></a>迭代器配接器</h3><p>STL 提供了许多应用于迭代器身上的配接器，包括 insert iterators，reverse iterators，iostream iterators。</p>
+<h4 id="insert-iterators"><a href="#insert-iterators" class="headerlink" title="insert iterators"></a>insert iterators</h4><p><code>insert iterators</code>包括尾端插入的<code>back_insert_iterator</code>，头端插入的<code>front_insert_iterator</code>和可任意位置插入的<code>insert_iterator</code>。主要观念是，每个insert iterators内部都维护有一个容器；容器有自己的迭代器，当客户端对insert iterators做赋值操作时，就在insert iterators中转为对该容器的迭代器做插入操作，其他的迭代器功能则被关闭（例如operator++、operator–、operator*）。<br><img src="/img/1610763366.jpg" alt></p>
+<p>迭代器源码如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 迭代器配接器，用来将迭代器的赋值操作替换为插入操作</span></span><br><span class="line"><span class="comment">// 从容器尾端插入</span></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> _<span class="title">Container</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">class</span> <span class="title">back_insert_iterator</span> &#123;</span></span><br><span class="line"><span class="keyword">protected</span>:</span><br><span class="line">  _Container* container; <span class="comment">// 底层容器</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">  <span class="keyword">typedef</span> _Container          container_type;</span><br><span class="line">  <span class="keyword">typedef</span> output_iterator_tag iterator_category; <span class="comment">// 注意类型，只写</span></span><br><span class="line">  <span class="keyword">typedef</span> <span class="keyword">void</span>                value_type;</span><br><span class="line">  <span class="keyword">typedef</span> <span class="keyword">void</span>                difference_type;</span><br><span class="line">  <span class="keyword">typedef</span> <span class="keyword">void</span>                pointer;</span><br><span class="line">  <span class="keyword">typedef</span> <span class="keyword">void</span>                reference;</span><br><span class="line"> </span><br><span class="line">  <span class="comment">// 与容器绑定起来</span></span><br><span class="line">  explicit back_insert_iterator(_Container&amp; __x) : container(&amp;__x) &#123;&#125;</span><br><span class="line">  back_insert_iterator&lt;_Container&gt;&amp;</span><br><span class="line">  <span class="keyword">operator</span>=(<span class="keyword">const</span> <span class="keyword">typename</span> _Container::value_type&amp; __value) &#123; </span><br><span class="line">    container-&gt;push_back(__value); <span class="comment">// 这里是替换成插入操作</span></span><br><span class="line">    <span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 以下不起作用，关闭功能</span></span><br><span class="line">  back_insert_iterator&lt;_Container&gt;&amp; <span class="keyword">operator</span>*() &#123; <span class="keyword">return</span> *<span class="keyword">this</span>; &#125;</span><br><span class="line">  back_insert_iterator&lt;_Container&gt;&amp; <span class="keyword">operator</span>++() &#123; <span class="keyword">return</span> *<span class="keyword">this</span>; &#125;</span><br><span class="line">  back_insert_iterator&lt;_Container&gt;&amp; <span class="keyword">operator</span>++(<span class="keyword">int</span>) &#123; <span class="keyword">return</span> *<span class="keyword">this</span>; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifndef</span> __STL_CLASS_PARTIAL_SPECIALIZATION</span></span><br><span class="line"> </span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> _<span class="title">Container</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">inline</span> <span class="title">output_iterator_tag</span></span></span><br><span class="line"><span class="class"><span class="title">iterator_category</span>(<span class="title">const</span> <span class="title">back_insert_iterator</span>&lt;_Container&gt;&amp;)</span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  <span class="keyword">return</span> output_iterator_tag();</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span> <span class="comment">/* __STL_CLASS_PARTIAL_SPECIALIZATION */</span></span></span><br><span class="line"> </span><br><span class="line"><span class="comment">// 辅助函数</span></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> _<span class="title">Container</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">inline</span> <span class="title">back_insert_iterator</span>&lt;_Container&gt; <span class="title">back_inserter</span>(_<span class="title">Container</span>&amp; __<span class="title">x</span>) &#123;</span></span><br><span class="line">  <span class="keyword">return</span> back_insert_iterator&lt;_Container&gt;(__x);</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="comment">// 迭代器配接器，用来将迭代器的赋值操作替换为插入操作</span></span><br><span class="line"><span class="comment">// 从容器头端插入</span></span><br><span class="line"><span class="comment">// 不适用于vector，因为vector没有push_front</span></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> _<span class="title">Container</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">class</span> <span class="title">front_insert_iterator</span> &#123;</span></span><br><span class="line"><span class="keyword">protected</span>:</span><br><span class="line">  _Container* container;  <span class="comment">// 底层容器</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">  <span class="keyword">typedef</span> _Container          container_type;</span><br><span class="line">  <span class="keyword">typedef</span> output_iterator_tag iterator_category; <span class="comment">// 注意类型，只写</span></span><br><span class="line">  <span class="keyword">typedef</span> <span class="keyword">void</span>                value_type;</span><br><span class="line">  <span class="keyword">typedef</span> <span class="keyword">void</span>                difference_type;</span><br><span class="line">  <span class="keyword">typedef</span> <span class="keyword">void</span>                pointer;</span><br><span class="line">  <span class="keyword">typedef</span> <span class="keyword">void</span>                reference;</span><br><span class="line"> </span><br><span class="line">  explicit front_insert_iterator(_Container&amp; __x) : container(&amp;__x) &#123;&#125;</span><br><span class="line">  front_insert_iterator&lt;_Container&gt;&amp;</span><br><span class="line">  <span class="keyword">operator</span>=(<span class="keyword">const</span> <span class="keyword">typename</span> _Container::value_type&amp; __value) &#123; </span><br><span class="line">    container-&gt;push_front(__value); <span class="comment">// 替换成插入操作</span></span><br><span class="line">    <span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 关闭以下功能</span></span><br><span class="line">  front_insert_iterator&lt;_Container&gt;&amp; <span class="keyword">operator</span>*() &#123; <span class="keyword">return</span> *<span class="keyword">this</span>; &#125;</span><br><span class="line">  front_insert_iterator&lt;_Container&gt;&amp; <span class="keyword">operator</span>++() &#123; <span class="keyword">return</span> *<span class="keyword">this</span>; &#125;</span><br><span class="line">  front_insert_iterator&lt;_Container&gt;&amp; <span class="keyword">operator</span>++(<span class="keyword">int</span>) &#123; <span class="keyword">return</span> *<span class="keyword">this</span>; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifndef</span> __STL_CLASS_PARTIAL_SPECIALIZATION</span></span><br><span class="line"> </span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> _<span class="title">Container</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">inline</span> <span class="title">output_iterator_tag</span></span></span><br><span class="line"><span class="class"><span class="title">iterator_category</span>(<span class="title">const</span> <span class="title">front_insert_iterator</span>&lt;_Container&gt;&amp;)</span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  <span class="keyword">return</span> output_iterator_tag();</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span> <span class="comment">/* __STL_CLASS_PARTIAL_SPECIALIZATION */</span></span></span><br><span class="line"> </span><br><span class="line"><span class="comment">// 辅助函数</span></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> _<span class="title">Container</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">inline</span> <span class="title">front_insert_iterator</span>&lt;_Container&gt; <span class="title">front_inserter</span>(_<span class="title">Container</span>&amp; __<span class="title">x</span>) &#123;</span></span><br><span class="line">  <span class="keyword">return</span> front_insert_iterator&lt;_Container&gt;(__x);</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="comment">// 迭代器配接器，用来将迭代器的赋值操作替换为插入操作</span></span><br><span class="line"><span class="comment">// 从容器随机插入</span></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> _<span class="title">Container</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">class</span> <span class="title">insert_iterator</span> &#123;</span></span><br><span class="line"><span class="keyword">protected</span>:</span><br><span class="line">  _Container* container;  <span class="comment">// 底层容器</span></span><br><span class="line">  <span class="keyword">typename</span> _Container::iterator iter;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">  <span class="keyword">typedef</span> _Container          container_type;</span><br><span class="line">  <span class="keyword">typedef</span> output_iterator_tag iterator_category; <span class="comment">// 类型只写</span></span><br><span class="line">  <span class="keyword">typedef</span> <span class="keyword">void</span>                value_type;</span><br><span class="line">  <span class="keyword">typedef</span> <span class="keyword">void</span>                difference_type;</span><br><span class="line">  <span class="keyword">typedef</span> <span class="keyword">void</span>                pointer;</span><br><span class="line">  <span class="keyword">typedef</span> <span class="keyword">void</span>                reference;</span><br><span class="line"> </span><br><span class="line">  insert_iterator(_Container&amp; __x, <span class="keyword">typename</span> _Container::iterator __i) </span><br><span class="line">    : container(&amp;__x), iter(__i) &#123;&#125;</span><br><span class="line">  insert_iterator&lt;_Container&gt;&amp;</span><br><span class="line">  <span class="keyword">operator</span>=(<span class="keyword">const</span> <span class="keyword">typename</span> _Container::value_type&amp; __value) &#123; </span><br><span class="line">    iter = container-&gt;insert(iter, __value); <span class="comment">// 调用insert</span></span><br><span class="line">    ++iter; <span class="comment">// 使insert iterator永远随其目标贴身移动</span></span><br><span class="line">    <span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 关闭功能</span></span><br><span class="line">  insert_iterator&lt;_Container&gt;&amp; <span class="keyword">operator</span>*() &#123; <span class="keyword">return</span> *<span class="keyword">this</span>; &#125;</span><br><span class="line">  insert_iterator&lt;_Container&gt;&amp; <span class="keyword">operator</span>++() &#123; <span class="keyword">return</span> *<span class="keyword">this</span>; &#125;</span><br><span class="line">  insert_iterator&lt;_Container&gt;&amp; <span class="keyword">operator</span>++(<span class="keyword">int</span>) &#123; <span class="keyword">return</span> *<span class="keyword">this</span>; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifndef</span> __STL_CLASS_PARTIAL_SPECIALIZATION</span></span><br><span class="line"> </span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> _<span class="title">Container</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">inline</span> <span class="title">output_iterator_tag</span></span></span><br><span class="line"><span class="class"><span class="title">iterator_category</span>(<span class="title">const</span> <span class="title">insert_iterator</span>&lt;_Container&gt;&amp;)</span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  <span class="keyword">return</span> output_iterator_tag();</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span> <span class="comment">/* __STL_CLASS_PARTIAL_SPECIALIZATION */</span></span></span><br><span class="line"> </span><br><span class="line"><span class="comment">// 辅助函数</span></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> _<span class="title">Container</span>, <span class="title">class</span> _<span class="title">Iterator</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">inline</span> </span></span><br><span class="line"><span class="class"><span class="title">insert_iterator</span>&lt;_Container&gt; <span class="title">inserter</span>(_<span class="title">Container</span>&amp; __<span class="title">x</span>, _<span class="title">Iterator</span> __<span class="title">i</span>)</span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  <span class="keyword">typedef</span> <span class="keyword">typename</span> _Container::iterator __iter;</span><br><span class="line">  <span class="keyword">return</span> insert_iterator&lt;_Container&gt;(__x, __iter(__i));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h4 id="reverse-iterators"><a href="#reverse-iterators" class="headerlink" title="reverse iterators"></a>reverse iterators</h4><p>reverse iterators将迭代器的移动行为倒转。 当迭代器被逆转，虽然实体位置不变，但逻辑位置必须改变，主要是为了配合迭代器区间的“前闭后开“习惯。</p>
+<p>源码如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> _<span class="title">Iterator</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">class</span> <span class="title">reverse_iterator</span> </span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">protected</span>:</span><br><span class="line">  _Iterator current;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">  <span class="keyword">typedef</span> <span class="keyword">typename</span> iterator_traits&lt;_Iterator&gt;::iterator_category</span><br><span class="line">          iterator_category;</span><br><span class="line">  <span class="keyword">typedef</span> <span class="keyword">typename</span> iterator_traits&lt;_Iterator&gt;::value_type</span><br><span class="line">          value_type;</span><br><span class="line">  <span class="keyword">typedef</span> <span class="keyword">typename</span> iterator_traits&lt;_Iterator&gt;::difference_type</span><br><span class="line">          difference_type;</span><br><span class="line">  <span class="keyword">typedef</span> <span class="keyword">typename</span> iterator_traits&lt;_Iterator&gt;::pointer</span><br><span class="line">          pointer;</span><br><span class="line">  <span class="keyword">typedef</span> <span class="keyword">typename</span> iterator_traits&lt;_Iterator&gt;::reference</span><br><span class="line">          reference;</span><br><span class="line"> </span><br><span class="line">  <span class="keyword">typedef</span> _Iterator iterator_type;</span><br><span class="line">  <span class="keyword">typedef</span> reverse_iterator&lt;_Iterator&gt; _Self;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">  reverse_iterator() &#123;&#125;</span><br><span class="line">  explicit reverse_iterator(iterator_type __x) : current(__x) &#123;&#125;</span><br><span class="line"> </span><br><span class="line">  reverse_iterator(<span class="keyword">const</span> _Self&amp; __x) : current(__x.current) &#123;&#125;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> __STL_MEMBER_TEMPLATES</span></span><br><span class="line">  <span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> _<span class="title">Iter</span>&gt;</span></span><br><span class="line"><span class="class">  <span class="title">reverse_iterator</span>(<span class="title">const</span> <span class="title">reverse_iterator</span>&lt;_Iter&gt;&amp; __<span class="title">x</span>)</span></span><br><span class="line"><span class="class">    :</span> current(__x.base()) &#123;&#125;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span> <span class="comment">/* __STL_MEMBER_TEMPLATES */</span></span></span><br><span class="line">    </span><br><span class="line">  <span class="function">iterator_type <span class="title">base</span><span class="params">()</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> current; &#125;</span><br><span class="line">  reference <span class="keyword">operator</span>*() <span class="keyword">const</span> &#123;</span><br><span class="line">    _Iterator __tmp = current;</span><br><span class="line">    <span class="keyword">return</span> *--__tmp;</span><br><span class="line">  &#125;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifndef</span> __SGI_STL_NO_ARROW_OPERATOR</span></span><br><span class="line">  pointer <span class="keyword">operator</span>-&gt;() <span class="keyword">const</span> &#123; <span class="keyword">return</span> &amp;(<span class="keyword">operator</span>*()); &#125;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span> <span class="comment">/* __SGI_STL_NO_ARROW_OPERATOR */</span></span></span><br><span class="line"> </span><br><span class="line">  _Self&amp; <span class="keyword">operator</span>++() &#123;</span><br><span class="line">    --current;</span><br><span class="line">    <span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  _Self <span class="keyword">operator</span>++(<span class="keyword">int</span>) &#123;</span><br><span class="line">    _Self __tmp = *<span class="keyword">this</span>;</span><br><span class="line">    --current;</span><br><span class="line">    <span class="keyword">return</span> __tmp;</span><br><span class="line">  &#125;</span><br><span class="line">  _Self&amp; <span class="keyword">operator</span>--() &#123;</span><br><span class="line">    ++current;</span><br><span class="line">    <span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  _Self <span class="keyword">operator</span>--(<span class="keyword">int</span>) &#123;</span><br><span class="line">    _Self __tmp = *<span class="keyword">this</span>;</span><br><span class="line">    ++current;</span><br><span class="line">    <span class="keyword">return</span> __tmp;</span><br><span class="line">  &#125;</span><br><span class="line"> </span><br><span class="line">  _Self <span class="keyword">operator</span>+(difference_type __n) <span class="keyword">const</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> _Self(current - __n);</span><br><span class="line">  &#125;</span><br><span class="line">  _Self&amp; <span class="keyword">operator</span>+=(difference_type __n) &#123;</span><br><span class="line">    current -= __n;</span><br><span class="line">    <span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  _Self <span class="keyword">operator</span>-(difference_type __n) <span class="keyword">const</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> _Self(current + __n);</span><br><span class="line">  &#125;</span><br><span class="line">  _Self&amp; <span class="keyword">operator</span>-=(difference_type __n) &#123;</span><br><span class="line">    current += __n;</span><br><span class="line">    <span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  reference <span class="keyword">operator</span>[](difference_type __n) <span class="keyword">const</span> &#123; <span class="keyword">return</span> *(*<span class="keyword">this</span> + __n); &#125;  </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<h4 id="stream-iterators"><a href="#stream-iterators" class="headerlink" title="stream iterators"></a>stream iterators</h4><p>stream iterators可以将迭代器绑定到某个stream对象身上。绑定一个istream object，其实就是在istream iterator内部维护一个istream member，客户端对这个迭代器做的operator++操作，会被导引调用内部所含的那个istream member的输入操作。绑定一个ostream object，就是在ostream iterator内部维护一个ostream member，客户端对这个迭代器做的operator=操作，会被导引调用内部所含的那个ostream member的输出操作。</p>
+<p>源码如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> _<span class="title">Tp</span>, </span></span><br><span class="line"><span class="class">          <span class="title">class</span> _<span class="title">CharT</span> = <span class="title">char</span>, <span class="title">class</span> _<span class="title">Traits</span> = <span class="title">char_traits</span>&lt;_CharT&gt;,</span></span><br><span class="line"><span class="class">          <span class="title">class</span> _<span class="title">Dist</span> = <span class="title">ptrdiff_t</span>&gt; </span></span><br><span class="line"><span class="class"><span class="title">class</span> <span class="title">istream_iterator</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">  <span class="keyword">typedef</span> _CharT                         char_type;</span><br><span class="line">  <span class="keyword">typedef</span> _Traits                        traits_type;</span><br><span class="line">  <span class="keyword">typedef</span> basic_istream&lt;_CharT, _Traits&gt; istream_type;</span><br><span class="line"> </span><br><span class="line">  <span class="keyword">typedef</span> input_iterator_tag             iterator_category;</span><br><span class="line">  <span class="keyword">typedef</span> _Tp                            value_type;</span><br><span class="line">  <span class="keyword">typedef</span> _Dist                          difference_type;</span><br><span class="line">  <span class="keyword">typedef</span> <span class="keyword">const</span> _Tp*                     pointer;</span><br><span class="line">  <span class="keyword">typedef</span> <span class="keyword">const</span> _Tp&amp;                     reference;</span><br><span class="line"> </span><br><span class="line">  istream_iterator() : _M_stream(<span class="number">0</span>), _M_ok(<span class="literal">false</span>) &#123;&#125;</span><br><span class="line">  istream_iterator(istream_type&amp; __s) : _M_stream(&amp;__s) &#123; _M_read(); &#125;</span><br><span class="line"> </span><br><span class="line">  reference <span class="keyword">operator</span>*() <span class="keyword">const</span> &#123; <span class="keyword">return</span> _M_value; &#125;</span><br><span class="line">  pointer <span class="keyword">operator</span>-&gt;() <span class="keyword">const</span> &#123; <span class="keyword">return</span> &amp;(<span class="keyword">operator</span>*()); &#125;</span><br><span class="line"> </span><br><span class="line">  istream_iterator&amp; <span class="keyword">operator</span>++() &#123; </span><br><span class="line">    _M_read(); </span><br><span class="line">    <span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  istream_iterator <span class="keyword">operator</span>++(<span class="keyword">int</span>)  &#123;</span><br><span class="line">    istream_iterator __tmp = *<span class="keyword">this</span>;</span><br><span class="line">    _M_read();</span><br><span class="line">    <span class="keyword">return</span> __tmp;</span><br><span class="line">  &#125;</span><br><span class="line"> </span><br><span class="line">  <span class="keyword">bool</span> _M_equal(<span class="keyword">const</span> istream_iterator&amp; __x) <span class="keyword">const</span></span><br><span class="line">    &#123; <span class="keyword">return</span> (_M_ok == __x._M_ok) &amp;&amp; (!_M_ok || _M_stream == __x._M_stream); &#125;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">  istream_type* _M_stream;</span><br><span class="line">  _Tp _M_value;</span><br><span class="line">  <span class="keyword">bool</span> _M_ok;</span><br><span class="line"> </span><br><span class="line">  <span class="keyword">void</span> _M_read() &#123;</span><br><span class="line">    _M_ok = (_M_stream &amp;&amp; *_M_stream) ? <span class="literal">true</span> : <span class="literal">false</span>;</span><br><span class="line">    <span class="keyword">if</span> (_M_ok) &#123;</span><br><span class="line">      *_M_stream &gt;&gt; _M_value;</span><br><span class="line">      _M_ok = *_M_stream ? <span class="literal">true</span> : <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> _<span class="title">Tp</span>,</span></span><br><span class="line"><span class="class">          <span class="title">class</span> _<span class="title">CharT</span> = <span class="title">char</span>, <span class="title">class</span> _<span class="title">Traits</span> = <span class="title">char_traits</span>&lt;_CharT&gt; &gt;</span></span><br><span class="line"><span class="class"><span class="title">class</span> <span class="title">ostream_iterator</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">  <span class="keyword">typedef</span> _CharT                         char_type;</span><br><span class="line">  <span class="keyword">typedef</span> _Traits                        traits_type;</span><br><span class="line">  <span class="keyword">typedef</span> basic_ostream&lt;_CharT, _Traits&gt; ostream_type;</span><br><span class="line"> </span><br><span class="line">  <span class="keyword">typedef</span> output_iterator_tag            iterator_category;</span><br><span class="line">  <span class="keyword">typedef</span> <span class="keyword">void</span>                           value_type;</span><br><span class="line">  <span class="keyword">typedef</span> <span class="keyword">void</span>                           difference_type;</span><br><span class="line">  <span class="keyword">typedef</span> <span class="keyword">void</span>                           pointer;</span><br><span class="line">  <span class="keyword">typedef</span> <span class="keyword">void</span>                           reference;</span><br><span class="line"> </span><br><span class="line">  ostream_iterator(ostream_type&amp; __s) : _M_stream(&amp;__s), _M_string(<span class="number">0</span>) &#123;&#125;</span><br><span class="line">  ostream_iterator(ostream_type&amp; __s, <span class="keyword">const</span> _CharT* __c) </span><br><span class="line">    : _M_stream(&amp;__s), _M_string(__c)  &#123;&#125;</span><br><span class="line">  ostream_iterator&lt;_Tp&gt;&amp; <span class="keyword">operator</span>=(<span class="keyword">const</span> _Tp&amp; __value) &#123; </span><br><span class="line">    *_M_stream &lt;&lt; __value;</span><br><span class="line">    <span class="keyword">if</span> (_M_string) *_M_stream &lt;&lt; _M_string;</span><br><span class="line">    <span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  ostream_iterator&lt;_Tp&gt;&amp; <span class="keyword">operator</span>*() &#123; <span class="keyword">return</span> *<span class="keyword">this</span>; &#125;</span><br><span class="line">  ostream_iterator&lt;_Tp&gt;&amp; <span class="keyword">operator</span>++() &#123; <span class="keyword">return</span> *<span class="keyword">this</span>; &#125; </span><br><span class="line">  ostream_iterator&lt;_Tp&gt;&amp; <span class="keyword">operator</span>++(<span class="keyword">int</span>) &#123; <span class="keyword">return</span> *<span class="keyword">this</span>; &#125; </span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">  ostream_type* _M_stream;</span><br><span class="line">  <span class="keyword">const</span> _CharT* _M_string;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<h4 id="测试程序"><a href="#测试程序" class="headerlink" title="测试程序"></a>测试程序</h4><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iterator&gt; // for iterator adapters</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;deque&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;algorithm&gt; // for copy()</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"> </span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 将outite绑定到cout，每次对outite指派一个元素，就后接一个“ ”</span></span><br><span class="line">    ostream_iterator&lt;<span class="keyword">int</span>&gt; outite(<span class="built_in">cout</span>, <span class="string">" "</span>);</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">int</span> ia[] = &#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>&#125;;</span><br><span class="line">    <span class="built_in">deque</span>&lt;<span class="keyword">int</span>&gt; id(ia, ia + <span class="number">6</span>);</span><br><span class="line"> </span><br><span class="line">    <span class="comment">// 将所有元素拷贝到outite，即cout</span></span><br><span class="line">    copy(id.begin(), id.end(), outite);</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"> </span><br><span class="line">    <span class="comment">// 将ia[]的部分元素拷贝到id内，使用front_insert_iterator</span></span><br><span class="line">    <span class="comment">// front_insert_iterator会将assign操作给push_front操作</span></span><br><span class="line">    <span class="comment">// vector不支持push_front操作，所以不以vector做示范对象</span></span><br><span class="line">    copy(ia + <span class="number">1</span>, ia + <span class="number">2</span>, front_inserter(id));</span><br><span class="line">    copy(id.begin(), id.end(), outite);</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"> </span><br><span class="line">    <span class="comment">// 将ia[]的部分元素拷贝到id内，使用back_insert_iterator</span></span><br><span class="line">    copy(ia + <span class="number">1</span>, ia + <span class="number">2</span>, back_inserter(id));</span><br><span class="line">    copy(id.begin(), id.end(), outite);</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"> </span><br><span class="line">    <span class="comment">// 搜寻元素5所在位置</span></span><br><span class="line">    <span class="built_in">deque</span>&lt;<span class="keyword">int</span>&gt;::iterator ite = find(id.begin(), id.end(), <span class="number">5</span>);</span><br><span class="line">    <span class="comment">// 将ia[]的部分元素拷贝到id内，使用insert_iterator</span></span><br><span class="line">    copy(ia + <span class="number">1</span>, ia + <span class="number">2</span>, inserter(id, ite));</span><br><span class="line">    copy(id.begin(), id.end(), outite);</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"> </span><br><span class="line">    <span class="comment">// 将所有元素逆向拷贝到outite</span></span><br><span class="line">    <span class="comment">// rbegin()和rend()与reverse_iterator有关</span></span><br><span class="line">    copy(id.rbegin(), id.rend(), outite);</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"> </span><br><span class="line">    <span class="comment">// 将inite绑定到cin，将元素拷贝到inite，知道eos出现</span></span><br><span class="line">    istream_iterator&lt;<span class="keyword">int</span>&gt; inite(<span class="built_in">cin</span>), eos; <span class="comment">// eos: end-of-stream</span></span><br><span class="line">    copy(inite, eos, inserter(id, id.begin()));</span><br><span class="line">    <span class="comment">// 输入数字，停止时可以输入任意字符</span></span><br><span class="line"> </span><br><span class="line">    copy(id.begin(), id.end(), outite);</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>执行结果：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[root@192 8_STL_adapter]# ./8_1_2_iterator-adapter</span><br><span class="line">0 1 2 3 4 5</span><br><span class="line">1 0 1 2 3 4 5</span><br><span class="line">1 0 1 2 3 4 5 1</span><br><span class="line">1 0 1 2 3 4 1 5 1</span><br><span class="line">1 5 1 4 3 2 1 0 1</span><br><span class="line">1 2 3 e // 输入数字，停止时可以输入任意字符</span><br><span class="line">1 2 3 1 0 1 2 3 4 1 5 1</span><br></pre></td></tr></table></figure></p>
+<h4 id="function-adapter"><a href="#function-adapter" class="headerlink" title="function adapter"></a>function adapter</h4><p>仿函数配接操作包括绑定(bind)、否定(negate)、组合(compose)、以及对一般函数或成员函数的修饰。仿函数配接器的价值在于，通过它们之间的绑定、组合、修饰能力，几乎可以创造出各种可能的表达式，配合STL算法。例如，我们可能希望找出某个序列中所有不小于12的元素个数。虽然“不小于” 就是“大于或等于”，我们因此可以选择STL内建的仿函数<code>greater_equal</code>。但如果希望完全遵循题目语意（在某些更复杂的情况下，这可能是必要的），坚持找出“不小于”12的元素个数，可以这么做：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">not1(bind2nd(less&lt;<span class="keyword">int</span>&gt;(), <span class="number">12</span>))</span><br></pre></td></tr></table></figure></p>
+<p>这个式子将<code>less&lt;int&gt;()</code>的第二参数系结（绑定）为12，再加上否定操作，便形成了“不小于12”的语意，整个凑和成为一个表达式（expression），可与任何 “可接受表达式为参数”之算法搭配。</p>
+<p>再举一个例子，假设我们希望对序列中的每一个元素都做某个特殊运算，这个运算的数学表达式为：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">f(g(elem))</span><br></pre></td></tr></table></figure></p>
+<p>其中f和g都是数学函数，那么可以这么写：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">compose(f(x), g(y));</span><br></pre></td></tr></table></figure></p>
+<p>例如我们希望将容器内的每一个元素v进行<code>(v+2)*3</code>的操作，我们可以令<code>f(x)=x*3, g(y)=y+2</code>，并写下这样的式子：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">compose1(bind2nd(multiplies&lt;<span class="keyword">int</span>&gt;(), <span class="number">3</span>), bind2nd(plus&lt;<span class="keyword">int</span>&gt;(), <span class="number">2</span>));</span><br></pre></td></tr></table></figure></p>
+<p>由于仿函数就是“将function call操作符重载”的一种class，而任何算法接受一个仿函数时，总是在其演算过程中调用该仿函数的operator()，这使得不具备仿函数之形、却有真函数之实的飞一般函数”和“成员函数（member functions）”感到为难。STL又提供了为数众多的配接器，使“一般函数”和“成员函数”得以无缝隙地与其它配接器或算法结合起。</p>
+<p>请注意，所有期望获得配接能力的组件，本身都必须是可配接的。换句话说，一元仿函数必须继承自unary_function，二元仿函数必须继承自binary_function，成员函数必须以mem_fun处理过，一般函数必须以ptr_fun处理过。<br><img src="/img/1610775737.jpg" alt></p>
+<p><img src="/img/1610775889.jpg" alt></p>
+<p><img src="/img/1610775917.jpg" alt></p>
+<p>每一个仿函数配接器内藏了一个member object，其型别等同于它所要配接的对象。</p>
+<p>使用场景：</p>
+<ul>
+<li>对返回值进行逻辑否定：not1，not2</li>
+<li>对参数进行绑定：bind1st，bind2nd</li>
+<li>用于函数合成：compose1，compose2</li>
+<li>用于函数指针：ptr_fun</li>
+<li>用于成员函数指针：mem_fun，mem_fun_ref</li>
+</ul>
+<p>count_if的实例测试程序：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;algorithm&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;functional&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;vector&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iterator&gt;</span></span></span><br><span class="line"> </span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"> </span><br><span class="line"><span class="comment">// compose1在mingw中没有，所以把定义搬了过来</span></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> _<span class="title">Operation1</span>, <span class="title">class</span> _<span class="title">Operation2</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">class</span> <span class="title">unary_compose</span></span></span><br><span class="line"><span class="class">  :</span> <span class="keyword">public</span> unary_function&lt;<span class="keyword">typename</span> _Operation2::argument_type,</span><br><span class="line">                          <span class="keyword">typename</span> _Operation1::result_type&gt; </span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">protected</span>:</span><br><span class="line">  _Operation1 _M_fn1;</span><br><span class="line">  _Operation2 _M_fn2;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">  unary_compose(<span class="keyword">const</span> _Operation1&amp; __x, <span class="keyword">const</span> _Operation2&amp; __y) </span><br><span class="line">    : _M_fn1(__x), _M_fn2(__y) &#123;&#125;</span><br><span class="line">  <span class="keyword">typename</span> _Operation1::result_type</span><br><span class="line">  <span class="keyword">operator</span>()(<span class="keyword">const</span> <span class="keyword">typename</span> _Operation2::argument_type&amp; __x) <span class="keyword">const</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> _M_fn1(_M_fn2(__x));</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> _<span class="title">Operation1</span>, <span class="title">class</span> _<span class="title">Operation2</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">inline</span> <span class="title">unary_compose</span>&lt;_Operation1,_Operation2&gt; </span></span><br><span class="line"><span class="class"><span class="title">compose1</span>(<span class="title">const</span> _<span class="title">Operation1</span>&amp; __<span class="title">fn1</span>, <span class="title">const</span> _<span class="title">Operation2</span>&amp; __<span class="title">fn2</span>)</span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  <span class="keyword">return</span> unary_compose&lt;_Operation1,_Operation2&gt;(__fn1, __fn2);</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">print</span><span class="params">(<span class="keyword">int</span> i)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; i &lt;&lt; <span class="string">" "</span>;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Int</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>: </span><br><span class="line">    <span class="comment">// explicit 只能修改只有一个参数的类构造函数，</span></span><br><span class="line">    <span class="comment">// 或是除了第一个参数外其他参数都有默认值的情况</span></span><br><span class="line">    <span class="comment">// 表明该构造函数是显示的而非隐式的</span></span><br><span class="line">    <span class="comment">// 作用是禁止类构造函数的隐式自动转换</span></span><br><span class="line">    <span class="comment">// implicit 表示隐式，类构造函数默认声明为隐式</span></span><br><span class="line">    <span class="comment">// google c++规范与effective c++都推荐使用explicit声明</span></span><br><span class="line">    explicit Int(int i) : m_i(i) &#123;&#125;</span><br><span class="line"> </span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">print1</span><span class="params">()</span> <span class="keyword">const</span> </span>&#123;</span><br><span class="line">        <span class="built_in">cout</span> &lt;&lt; <span class="string">"["</span> &lt;&lt; m_i &lt;&lt; <span class="string">"]"</span>;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="keyword">int</span> m_i;</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 将outite绑定到cout，每次对outite指派一个元素，就后接一个“ ”</span></span><br><span class="line">    ostream_iterator&lt;<span class="keyword">int</span>&gt; outite(<span class="built_in">cout</span>, <span class="string">" "</span>);</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">int</span> ia[<span class="number">6</span>] = &#123;<span class="number">2</span>, <span class="number">21</span>, <span class="number">12</span>, <span class="number">7</span>, <span class="number">19</span>, <span class="number">23</span>&#125;;</span><br><span class="line">    <span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; iv(ia, ia + <span class="number">6</span>);</span><br><span class="line"> </span><br><span class="line">    <span class="comment">// 找出不小于12的元素个数</span></span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; count_if(iv.begin(), iv.end(),</span><br><span class="line">                     not1(bind2nd(less&lt;<span class="keyword">int</span>&gt;(), <span class="number">12</span>)));</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"> </span><br><span class="line">    <span class="comment">// 令每个元素v执行(v+2)*3然后输往outite</span></span><br><span class="line">    transform(iv.begin(), iv.end(), outite,</span><br><span class="line">              compose1(bind2nd(multiplies&lt;<span class="keyword">int</span>&gt;(), <span class="number">3</span>),</span><br><span class="line">                       bind2nd(plus&lt;<span class="keyword">int</span>&gt;(), <span class="number">2</span>)));</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"> </span><br><span class="line">    <span class="comment">// 将所有元素拷贝到outite</span></span><br><span class="line">    copy(iv.begin(), iv.end(), outite);</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    <span class="comment">// 1. 使用函数指针搭配stl算法</span></span><br><span class="line">    for_each(iv.begin(), iv.end(), print);</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"> </span><br><span class="line">    <span class="comment">// 2. 以修饰过的一般函数搭配stl算法</span></span><br><span class="line">    for_each(iv.begin(), iv.end(), ptr_fun(print));</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"> </span><br><span class="line">    Int t1(3), t2(7), t3(20), t4(14), t5(68);</span><br><span class="line">    <span class="built_in">vector</span>&lt;Int&gt; Iv;</span><br><span class="line">    Iv.push_back(t1);</span><br><span class="line">    Iv.push_back(t2);</span><br><span class="line">    Iv.push_back(t3);</span><br><span class="line">    Iv.push_back(t4);</span><br><span class="line">    Iv.push_back(t5);</span><br><span class="line">    <span class="comment">// 3. 以修饰过的成员函数搭配stl算法</span></span><br><span class="line">    for_each(Iv.begin(), Iv.end(), mem_fun_ref(&amp;Int::print1));</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>执行结果：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[root@192 8_STL_adapter]# ./8_1_3_functor-adapter</span><br><span class="line">4</span><br><span class="line">12 69 42 27 63 75</span><br><span class="line">2 21 12 7 19 23</span><br><span class="line">2 21 12 7 19 23</span><br><span class="line">2 21 12 7 19 23</span><br><span class="line">[3][7][20][14][68][</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/C/" rel="tag"># C++</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/01/11/STL源码剖析 笔记4/" rel="next" title="STL 源码剖析 笔记4">
+                <i class="fa fa-chevron-left"></i> STL 源码剖析 笔记4
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">281</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/xiaomeihao.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#仿函数"><span class="nav-number">1.</span> <span class="nav-text">仿函数</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#仿函数概述"><span class="nav-number">1.1.</span> <span class="nav-text">仿函数概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#可配接的关键"><span class="nav-number">1.2.</span> <span class="nav-text">可配接的关键</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#unary-function"><span class="nav-number">1.2.1.</span> <span class="nav-text">unary_function</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#binary-function"><span class="nav-number">1.2.2.</span> <span class="nav-text">binary_function</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#算术类仿函数"><span class="nav-number">1.3.</span> <span class="nav-text">算术类仿函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#证同元素-identity-element"><span class="nav-number">1.3.1.</span> <span class="nav-text">证同元素(identity element)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关系运算类仿函数"><span class="nav-number">1.4.</span> <span class="nav-text">关系运算类仿函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#逻辑运算类仿函数"><span class="nav-number">1.5.</span> <span class="nav-text">逻辑运算类仿函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#证同、选择、投射"><span class="nav-number">1.6.</span> <span class="nav-text">证同、选择、投射</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#配接器"><span class="nav-number">2.</span> <span class="nav-text">配接器</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#配接器之概观与分类"><span class="nav-number">2.1.</span> <span class="nav-text">配接器之概观与分类</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#容器配接器"><span class="nav-number">2.1.1.</span> <span class="nav-text">容器配接器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#迭代器配接器"><span class="nav-number">2.1.2.</span> <span class="nav-text">迭代器配接器</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#insert-iterators"><span class="nav-number">2.1.2.1.</span> <span class="nav-text">insert iterators</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#reverse-iterators"><span class="nav-number">2.1.2.2.</span> <span class="nav-text">reverse iterators</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#stream-iterators"><span class="nav-number">2.1.2.3.</span> <span class="nav-text">stream iterators</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#测试程序"><span class="nav-number">2.1.2.4.</span> <span class="nav-text">测试程序</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#function-adapter"><span class="nav-number">2.1.2.5.</span> <span class="nav-text">function adapter</span></a></li></ol></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<span id="busuanzi_container_site_uv"> 
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":false},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
