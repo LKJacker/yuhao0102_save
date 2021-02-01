@@ -263,12 +263,12 @@ if (false) {
 
     var isRuntime = (typeof loadRuntime === 'function');
     if (isRuntime) {
-        require('src/settings.js');
-        require('src/cocos2d-runtime.js');
+        require('/js/watermelon/settings.js');
+        require('/js/watermelon/cocos2d-runtime.js');
         require('jsb-adapter/engine/index.js');
     } else {
-        require('src/settings.js');
-        require('src/cocos2d-jsb.js');
+        require('/js/watermelon/settings.js');
+        require('/js/watermelon/cocos2d-jsb.js');
         require('jsb-adapter/jsb-engine.js');
     }
 
