@@ -239,7 +239,7 @@ window.boot = function() {
 
 // main.js is qqplay and jsb platform entry file, so we must leave platform init code here
 if (false) {
-    BK.Script.loadlib('GameRes://src/settings.js');
+    BK.Script.loadlib('GameRes://js/watermelon/settings.js');
     BK.Script.loadlib();
     BK.Script.loadlib('GameRes://libs/qqplay-downloader.js');
 
