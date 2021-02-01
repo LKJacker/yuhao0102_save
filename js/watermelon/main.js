@@ -202,10 +202,10 @@ window.boot = function() {
     if (false) {
         BK.Script.loadlib();
     } else {
-        var bundledScript = settings.debug ? 'src/project.dev.js' : 'src/project.js';
+        var bundledScript = settings.debug ? '/js/watermelon/project.dev.js' : '/js/watermelon/project.js';
         if (jsList) {
             jsList = jsList.map(function(x) {
-                return 'src/' + x;
+                return '/js/watermelon/' + x;
             });
             jsList.push(bundledScript);
         } else {
