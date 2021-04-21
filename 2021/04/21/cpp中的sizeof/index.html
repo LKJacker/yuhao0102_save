@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="C++,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="size_t在标准C库中的许多函数使用的参数或者返回值都是表示的用字节表示的对象大小，比如说malloc(n)函数的参数n指明了需要申请的空间大小，还有memcpy(s1, s2, n)的最后一个参数，表明需要复制的内存大小，strlen(s)函数的返回值表明了以’\0’结尾的字符串的长度（不包括’\0’），其返回值并不是该字符串的实际长度，因为要去掉’\0’。 或许你会认为这些参数或者返回值应该">
+<meta name="keywords" content="C++">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C++中的sizeof、size_t与内存对齐">
+<meta property="og:url" content="http://yoursite.com/2021/04/21/cpp中的sizeof/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="size_t在标准C库中的许多函数使用的参数或者返回值都是表示的用字节表示的对象大小，比如说malloc(n)函数的参数n指明了需要申请的空间大小，还有memcpy(s1, s2, n)的最后一个参数，表明需要复制的内存大小，strlen(s)函数的返回值表明了以’\0’结尾的字符串的长度（不包括’\0’），其返回值并不是该字符串的实际长度，因为要去掉’\0’。 或许你会认为这些参数或者返回值应该">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2021-04-21T06:56:50.941Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="C++中的sizeof、size_t与内存对齐">
+<meta name="twitter:description" content="size_t在标准C库中的许多函数使用的参数或者返回值都是表示的用字节表示的对象大小，比如说malloc(n)函数的参数n指明了需要申请的空间大小，还有memcpy(s1, s2, n)的最后一个参数，表明需要复制的内存大小，strlen(s)函数的返回值表明了以’\0’结尾的字符串的长度（不包括’\0’），其返回值并不是该字符串的实际长度，因为要去掉’\0’。 或许你会认为这些参数或者返回值应该">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2021/04/21/cpp中的sizeof/">
+
+
+
+
+
+  <title>C++中的sizeof、size_t与内存对齐 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-mybetterhalf">
+          <a href="/mybetterhalf/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            mybetterhalf
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/04/21/cpp中的sizeof/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">C++中的sizeof、size_t与内存对齐</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-04-21T14:02:00+08:00">
+                2021-04-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="size-t"><a href="#size-t" class="headerlink" title="size_t"></a>size_t</h1><p>在标准C库中的许多函数使用的参数或者返回值都是表示的用字节表示的对象大小，比如说<code>malloc(n)</code>函数的参数n指明了需要申请的空间大小，还有<code>memcpy(s1, s2, n)</code>的最后一个参数，表明需要复制的内存大小，<code>strlen(s)</code>函数的返回值表明了以’\0’结尾的字符串的长度（不包括’\0’），其返回值并不是该字符串的实际长度，因为要去掉’\0’。</p>
+<p>或许你会认为这些参数或者返回值应该被申明为int类型（或者long或者unsigned），但是事实上并不是。C标准中将他们定义为size_t。标准中记载malloc的申明应该出现在，定义为：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> *<span class="title">malloc</span><span class="params">(<span class="keyword">size_t</span> n)</span></span>;</span><br></pre></td></tr></table></figure></p>
+<p>memcpy和strlen的申明应该出现在中：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> *<span class="title">memcpy</span><span class="params">(<span class="keyword">void</span> *s1, <span class="keyword">void</span> <span class="keyword">const</span> *s2, <span class="keyword">size_t</span> n)</span></span>;</span><br><span class="line"><span class="keyword">size_t</span> <span class="built_in">strlen</span>(<span class="keyword">char</span> <span class="keyword">const</span> *s);</span><br></pre></td></tr></table></figure></p>
+<p>size_t还经常出现在C++标准库中，此外，C++库中经常会使用一个相似的类型size_type，用的可能比size_t还要多。</p>
+<h2 id="可移植性问题"><a href="#可移植性问题" class="headerlink" title="可移植性问题"></a>可移植性问题</h2><p>回忆memcpy(s1, s2, n)函数，它将s2指向地址开始的n个字节拷贝到s2指向的地址，返回s1，这个函数可以拷贝任何数据类型，所以参数和返回值的类型应该为可以指向任何类型的void<em>，同时，&gt;源地址不应该被改变，所以第二个参数s2类型应该为`const void</em>`，这些都不是问题。真正的问题在于我们如何申明第三个参数，它代表了源对象的大小，我相信大部分程序员都会选择int：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> *<span class="title">memcpy</span><span class="params">(<span class="keyword">void</span> *s1, <span class="keyword">void</span> <span class="keyword">const</span> *s2, <span class="keyword">int</span> n)</span></span>;</span><br></pre></td></tr></table></figure></p>
+<p>使用int类型在大部分情况下都是可以的，但是我们可以使用unsigned int代替它让第三个参数表示的范围更大。在大部分机器上，unsigned int的最大值要比int的最大值大两倍。使用unsigned int修饰第三个参数的代价与int是相同的：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> *<span class="title">memcpy</span><span class="params">(<span class="keyword">void</span> *s1, <span class="keyword">void</span> <span class="keyword">const</span> *s2, <span class="keyword">unsigned</span> <span class="keyword">int</span> n)</span></span>;</span><br></pre></td></tr></table></figure></p>
+<p>这样似乎没有问题了，unsigned int可以表示最大类型的对象大小了，这种情况只有在整形和指针类型具有相同大小的情况下，比如说在IP16中，整形和指针都占2个字节（16位），而在IP32上面，整形和指针都占4个字节（32位）。</p>
+<h2 id="使用size-t"><a href="#使用size-t" class="headerlink" title="使用size_t"></a>使用size_t</h2><p>size_t是一种数据相关的无符号类型，它被设计得足够大以便能够内存中任意对象的大小。在C++中，设计 size_t 就是为了适应多个平台的。ize_t的引入增强了程序在不同平台上的可移植性。</p>
+<p>size_t的定义在<code>&lt;stddef.h&gt;</code>,<code>&lt;stdio.h&gt;</code>,<code>&lt;stdlib.h&gt;</code>,<code>&lt;string.h&gt;</code>, <code>&lt;time.h&gt;</code>和<code>&lt;wchar.h&gt;</code>这些标准C头文件中，也出现在相应的C++头文件, 等等中，你应该在你的头文件中至少包含一个这样的头文件在使用size_t之前。包含以上任何C头文件（由C或C++编译的程序）表明将size_t作为全局关键字。根据定义，size_t是sizeof关键字（注：sizeof是关键字，并非运算符）运算结果的类型。所以，应当通过适当的方式声明n来完成赋值：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">n = <span class="keyword">sizeof</span>(thing);</span><br></pre></td></tr></table></figure></p>
+<p>考虑到可移植性和程序效率，n应该被申明为size_t类型。类似的，下面的foo函数的参数也应当被申明为sizeof：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">foo(<span class="keyword">sizeof</span>(thing));</span><br></pre></td></tr></table></figure></p>
+<p>参数中带有size_t的函数通常会含有局部变量用来对数组的大小或者索引进行计算，在这种情况下，size_t是个不错的选择。</p>
+<p>size_t的大小并非像很多网上描述的那样，其大小是由系统的位数决定的。size_t的大小是由你生成的程序类型决定的，只是生成的程序类型与系统的类型有一定关系。32bits的程序既可以在64bits的系统上运行，也可以在32bits的系统上运行。但是64bits的程序只能在64bits的系统上运行。然而我们编译的程序一般是32bits的，因此size_t的大小也就变成了4个字节。</p>
+<h1 id="内存对齐"><a href="#内存对齐" class="headerlink" title="内存对齐"></a>内存对齐</h1><p>struct/class/union内存对齐原则有四个：</p>
+<ol>
+<li>数据成员对齐规则：结构(struct)(或联合(union))的数据成员，第一个数据成员放在offset为0的地方，以后每个数据成员存储的起始位置要从该成员大小或者成员的子成员大小（只要该成员&gt;有子成员，比如说是数组，结构体等）的整数倍开始(比如int在３２位机为４字节, 则要从４的整数倍地址开始存储),基本类型不包括struct/class/uinon。</li>
+<li>结构体作为成员:如果一个结构里有某些结构体成员,则结构体成员要从其内部”最宽基本类型成员”的整数倍地址开始存储.(struct a里存有struct b,b里有char,int ,double等元素,那b应该从8的整数倍开始存储.)。</li>
+<li>收尾工作:结构体的总大小,也就是sizeof的结果,.必须是其内部最大成员的”最宽基本类型成员”的整数倍.不足的要补齐.(基本类型不包括struct/class/uinon)。</li>
+<li>sizeof(union)，以结构里面size最大元素为union的size,因为在某一时刻，union只有一个成员真正存储于该地址。</li>
+</ol>
+<p>实例解释：下面以class为代表<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">No. <span class="number">1</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Data</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    <span class="keyword">char</span> c;</span><br><span class="line">    <span class="keyword">int</span> a;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; <span class="keyword">sizeof</span>(Data) &lt;&lt; <span class="built_in">endl</span>;</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">No. <span class="number">2</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Data</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    <span class="keyword">char</span> c;</span><br><span class="line">    <span class="keyword">double</span> a;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; <span class="keyword">sizeof</span>(Data) &lt;&lt; <span class="built_in">endl</span>;</span><br></pre></td></tr></table></figure>
+<p>显然程序No.1 输出的结果为 8， No.2 输出的结果为 16。No.1最大的数据成员是4bytes，1+4=5，补齐为4的倍数，也就是8。而No.2为8bytes，1+8=9，补齐为8的倍数，也就是16。</p>
+<p>内存对齐的主要作用是：</p>
+<ol>
+<li>平台原因(移植原因)：不是所有的硬件平台都能访问任意地址上的任意数据的；某些硬件平台只能在某些地址处取某些特定类型的数据，否则抛出硬件异常。</li>
+<li>性能原因：经过内存对齐后，CPU的内存访问速度大大提升。具体原因稍后解释。</li>
+</ol>
+<h1 id="strlen和sizeof区别？"><a href="#strlen和sizeof区别？" class="headerlink" title="strlen和sizeof区别？"></a>strlen和sizeof区别？</h1><p>sizeof是运算符，并不是函数，结果在编译时得到而非运行中获得；strlen是字符处理的库函数。</p>
+<p>sizeof参数可以是任何数据的类型或者数据（sizeof参数不退化）；strlen的参数只能是字符指针且结尾是’\0’的字符串。</p>
+<p>因为sizeof值在编译时确定，所以不能用来得到动态分配（运行时分配）存储空间的大小。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> <span class="keyword">const</span> *argv[])</span></span>&#123;   </span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span>* str = <span class="string">"name"</span>;</span><br><span class="line">    <span class="keyword">sizeof</span>(str); <span class="comment">// 取的是指针str的长度，是8</span></span><br><span class="line">    <span class="built_in">strlen</span>(str); <span class="comment">// 取的是这个字符串的长度，不包含结尾的 \0。大小是4</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>数组在内存中是连续存放的，开辟一块连续的内存空间；数组所占存储空间：sizeof（数组名）；数组大小：sizeof(数组名)/sizeof(数组元素数据类型)；用运算符sizeof 可以计算出数组的容量（字节数）。sizeof(p),p 为指针得到的是一个指针变量的字节数，而不是p 所指的内存容量。</p>
+<h1 id="OFFSETOF"><a href="#OFFSETOF" class="headerlink" title="OFFSETOF"></a>OFFSETOF</h1><p>OFFSETOF(s, m)的宏定义，s是结构类型，m是s的成员，求m在s中的偏移量。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> OFFSETOF（s, m） size_t（&amp;((s*)0)-&gt;m）</span></span><br></pre></td></tr></table></figure></p>
+<h1 id="sizeof"><a href="#sizeof" class="headerlink" title="sizeof"></a>sizeof</h1><p>sizeof一个类求大小（注意成员变量，函数，虚函数，继承等等对大小的影响）以下运行环境都是一般的，在32位编译环境中。</p>
+<p>基本数据类型的sizeof<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cout</span>&lt;&lt;<span class="keyword">sizeof</span>(<span class="keyword">char</span>)&lt;&lt;<span class="built_in">endl</span>;                     结果是<span class="number">1</span></span><br><span class="line"><span class="built_in">cout</span>&lt;&lt;<span class="keyword">sizeof</span>(<span class="keyword">int</span>)&lt;&lt;<span class="built_in">endl</span>;                        结果是<span class="number">4</span></span><br><span class="line"><span class="built_in">cout</span>&lt;&lt;<span class="keyword">sizeof</span>(<span class="keyword">unsigned</span> <span class="keyword">int</span>)&lt;&lt;<span class="built_in">endl</span>; 结果是<span class="number">4</span> </span><br><span class="line"><span class="built_in">cout</span>&lt;&lt;<span class="keyword">sizeof</span>(<span class="keyword">long</span> <span class="keyword">int</span>)&lt;&lt;<span class="built_in">endl</span>;                结果是<span class="number">4</span></span><br><span class="line"><span class="built_in">cout</span>&lt;&lt;<span class="keyword">sizeof</span>(<span class="keyword">short</span> <span class="keyword">int</span>)&lt;&lt;<span class="built_in">endl</span>;               结果是<span class="number">2</span></span><br><span class="line"><span class="built_in">cout</span>&lt;&lt;<span class="keyword">sizeof</span>(<span class="keyword">float</span>)&lt;&lt;<span class="built_in">endl</span>;                     结果是<span class="number">4</span></span><br><span class="line"><span class="built_in">cout</span>&lt;&lt;<span class="keyword">sizeof</span>(<span class="keyword">double</span>)&lt;&lt;<span class="built_in">endl</span>;                 结果是<span class="number">8</span></span><br></pre></td></tr></table></figure></p>
+<p>指针变量的sizeof<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">char</span> *pc =<span class="string">"abc"</span>;</span><br><span class="line"><span class="keyword">sizeof</span>( pc ); <span class="comment">// 结果为4</span></span><br><span class="line"><span class="keyword">sizeof</span>(*pc);     <span class="comment">// 结果为1</span></span><br><span class="line"><span class="keyword">int</span> *pi;</span><br><span class="line"><span class="keyword">sizeof</span>( pi ); <span class="comment">//结果为4</span></span><br><span class="line"><span class="keyword">sizeof</span>(*pi);     <span class="comment">//结果为4</span></span><br><span class="line"><span class="keyword">char</span> **ppc = &amp;pc;  </span><br><span class="line"><span class="keyword">sizeof</span>( ppc ); <span class="comment">// 结果为4   </span></span><br><span class="line"><span class="keyword">sizeof</span>( *ppc ); <span class="comment">// 结果为4     </span></span><br><span class="line"><span class="keyword">sizeof</span>( **ppc ); <span class="comment">// 结果为1</span></span><br><span class="line"><span class="keyword">void</span> (*pf)();<span class="comment">// 函数指针</span></span><br><span class="line"><span class="keyword">sizeof</span>( pf );<span class="comment">// 结果为4</span></span><br></pre></td></tr></table></figure></p>
+<p>数组的sizeof数组的sizeof值等于数组所占用的内存字节数，如：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">char</span> a1[] = <span class="string">"abc"</span>;</span><br><span class="line"><span class="keyword">int</span> a2[<span class="number">3</span>];</span><br><span class="line"><span class="keyword">sizeof</span>( a1 ); <span class="comment">// 结果为4，字符 末尾还存在一个NULL终止符</span></span><br><span class="line"><span class="keyword">sizeof</span>( a2 ); <span class="comment">// 结果为3*4=12（依赖于int）</span></span><br></pre></td></tr></table></figure></p>
+<p>写到这里，提一问，下面的c3，c4值应该是多少呢<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">foo3</span><span class="params">(<span class="keyword">char</span> a3[<span class="number">3</span>])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> c3 = <span class="keyword">sizeof</span>( a3 ); <span class="comment">// c3 == 4</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">foo4</span><span class="params">(<span class="keyword">char</span> a4[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> c4 = <span class="keyword">sizeof</span>( a4 ); <span class="comment">// c4 == 4</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>也许当你试图回答c4的值时已经意识到c3答错了，是的，c3!=3。这里函数参数a3已不再是数组类型，而是蜕变成指针，相当于<code>char* a3</code>，为什么仔细想想就不难明白，我们调用函数foo1时，程序会在栈上分配一个大小为3的数组吗不会！数组是“传址”的，调用者只需将实参的地址传递过去，所以a3自然为指针类型<code>char*</code>，c3的值也就为4。</p>
+<p>结构体的sizeof<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">MyStruct</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">	<span class="keyword">double</span> dda1;</span><br><span class="line">	<span class="keyword">char</span> dda;</span><br><span class="line">	<span class="keyword">int</span> type</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>结果为16，为上面的结构分配空间的时候，VC根据成员变量出现的顺序和对齐方式，先为第一个成员dda1分配空间，其起始地址跟结构的起始地址相同（刚好偏移量0刚好为sizeof(double)的倍数），该成员变量占用sizeof(double)=8个字节；接下来为第二个成员dda分配空间，这时下一个可以分配的地址对于结构的起始地址的偏移量为8，是sizeof(char)的倍数，所以把dda存放在偏移量为8的地方满足对齐方式，该成员变量占用sizeof(char)=1个字节；接下来为第三个成员type分配空间，这时下一个可以分配的地址对于结构的起始地址的偏移量为9，不是sizeof(int)=4的倍数，为了满足对齐方式对偏移量的约束问题，VC自动填充3个字节（这三个字节没有放什么东西），这时下一个可以分配的地址对于结构的起始地址的偏移量为12，刚好是sizeof(int)=4的倍数，所以把type存放在偏移量为12的地方，该成员变量占用sizeof(int)=4个字节；这时整个结构的成员变量已经都分配了空间，总的占用的空间大小为：8+1+3+4=16，刚好为结构的字节边界数（即结构中占用最大空间的类型所占用的字节数sizeof(double)=8）的倍数，所以没有空缺的字节需要填充。</p>
+<p>含位域结构体的sizeof<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">BF1</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">char</span> f1 : <span class="number">3</span>;</span><br><span class="line"><span class="keyword">char</span> f2 : <span class="number">4</span>;</span><br><span class="line"><span class="keyword">char</span> f3 : <span class="number">5</span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>位域类型为char，第1个字节仅能容纳下f1和f2，所以f2被压缩到第1个字节中，而f3只能从下一个字节开始。因此sizeof(BF1)的结果为2。</p>
+<p>含有联合体的结构体的sizeof<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">s1</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">	<span class="keyword">char</span> *ptr,ch;</span><br><span class="line">	<span class="keyword">union</span> A  </span><br><span class="line">	&#123;</span><br><span class="line">	    <span class="keyword">short</span> a,b;</span><br><span class="line">	    <span class="keyword">unsigned</span> <span class="keyword">int</span> c:<span class="number">2</span>, d:<span class="number">1</span>;</span><br><span class="line">	&#125;;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">s1</span>* <span class="title">next</span>;</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>这样是8＋4＝12个字节<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">s1</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">	<span class="keyword">char</span> *ptr,ch;                          </span><br><span class="line">	<span class="keyword">union</span>                      <span class="comment">//联合体是结构体的成员，占内存，并且最大类型是unsigned int，占4</span></span><br><span class="line">	&#123;</span><br><span class="line">	     <span class="keyword">short</span> a,b;</span><br><span class="line">	     <span class="keyword">unsigned</span> <span class="keyword">int</span> c:<span class="number">2</span>, d:<span class="number">1</span>;</span><br><span class="line">	&#125;;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">s1</span>* <span class="title">next</span>;</span>                        </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>这样是8＋4＋4＝16个字节</p>
+<p>结构体体含有结构体的sizeof<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">S1</span></span></span><br><span class="line"><span class="class">    &#123;</span></span><br><span class="line">     <span class="keyword">char</span> c;</span><br><span class="line">     <span class="keyword">int</span> i;</span><br><span class="line">    &#125;;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">S3</span></span></span><br><span class="line"><span class="class">    &#123;</span></span><br><span class="line">     <span class="keyword">char</span> c1;</span><br><span class="line">     S1 s;</span><br><span class="line">     <span class="keyword">char</span> c2;</span><br><span class="line">    &#125;;</span><br><span class="line"><span class="built_in">cout</span>&lt;&lt;<span class="keyword">sizeof</span>(S3);      <span class="comment">//S3=16</span></span><br></pre></td></tr></table></figure></p>
+<p>S1的最宽简单成员的类型为int，S3在考虑最宽简单类型成员时是将S1“打散”看的，所以S3的最宽简单类型为int，这样，通过S3定义的变量，其存储空间首地址需要被4整除，整个sizeof(S3)的值也应该被4整除。</p>
+<p>c1的偏移量为0，s的偏移量呢这时s是一个整体，它作为结构体变量也满足前面三个准则，所以其大小为8，偏移量为4，c1与s之间便需要3个填充字节，而c2与s之间就不需要了，所以c2的偏移量为12，算上c2的大小为13，13是不能被4整除的，这样末尾还得补上3个填充字节。最后得到sizeof(S3)的值为16。</p>
+<p>带有#pragma pack的sizeof：它是用来调整结构体对齐方式的，不同编译器名称和用法略有不同，VC6中通过#pragma pack实现，也可以直接修改/Zp编译开关。<code>#pragma pack</code>的基本用法为：<code>#pragma pack(n)</code>，n为字节对齐数，其取值为1、2、4、8、16，默认是8，如果这个值比结构体成员的sizeof值小，那么该成员的偏移量应该以此值为准，即是说，结构体成员的偏移量应该取二者的最小值，</p>
+<p>再看示例：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> pack(push) <span class="comment">// 将当前pack设置压栈保存</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> pack(2)<span class="comment">// 必须在结构体定义之前使用</span></span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">S1</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">	<span class="keyword">char</span> c;</span><br><span class="line">	<span class="keyword">int</span> i;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">S3</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">	<span class="keyword">char</span> c1;</span><br><span class="line">	S1 s;</span><br><span class="line">	<span class="keyword">char</span> c2</span><br><span class="line">&#125;;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> pack(pop) <span class="comment">// 恢复先前的pack设置</span></span></span><br></pre></td></tr></table></figure></p>
+<p>计算sizeof(S1)时，min(2, sizeof(i))的值为2，所以i的偏移量为2，加上sizeof(i)等于6，能够被2整除，所以整个S1的大小为6。</p>
+<p>同样，对于sizeof(S3)，s的偏移量为2，c2的偏移量为8，加上sizeof(c2)等于9，不能被2整除，添加一个填充字节，所以sizeof(S3)等于10。</p>
+<p>空结构体的sizeof<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">S5</span> &#123;</span> &#125;;</span><br><span class="line"><span class="keyword">sizeof</span>( S5 ); <span class="comment">// 结果为1</span></span><br></pre></td></tr></table></figure></p>
+<p>类的sizeof<br>类的sizeof值等于类中成员变量所占用的内存字节数。如：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="keyword">int</span> b;</span><br><span class="line">	<span class="keyword">float</span> c;</span><br><span class="line">	<span class="keyword">char</span> d;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	A object;</span><br><span class="line">	<span class="built_in">cout</span> &lt;&lt; <span class="string">"sizeof(object) is "</span> &lt;&lt; <span class="keyword">sizeof</span>(object) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span> ;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>输出结果为12（我的机器上sizeof(float)值为4，字节对其前面已经讲过）。</p>
+<p>不过需要注意的是，如果类中存在静态成员变量，结果又会是什么样子呢？<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="keyword">static</span> <span class="keyword">int</span> a;</span><br><span class="line">	<span class="keyword">int</span> b;</span><br><span class="line">	<span class="keyword">float</span> c;</span><br><span class="line">	<span class="keyword">char</span> d;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	A object;</span><br><span class="line">	<span class="built_in">cout</span> &lt;&lt; <span class="string">"sizeof(object) is "</span> &lt;&lt; <span class="keyword">sizeof</span>(object) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span> ;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>16？不对。结果仍然是12.</p>
+<p>因为在程序编译期间，就已经为static变量在静态存储区域分配了内存空间，并且这块内存在程序的整个运行期间都存在。而每次声明了类A的一个对象的时候，为该对象在堆上，根据对象的大小分配内存。</p>
+<p>如果类A中包含成员函数，那么又会是怎样的情况呢？看下面的例子<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="keyword">static</span> <span class="keyword">int</span> a;</span><br><span class="line">	<span class="keyword">int</span> b;</span><br><span class="line">	<span class="keyword">float</span> c;</span><br><span class="line">	<span class="keyword">char</span> d;</span><br><span class="line">	<span class="function"><span class="keyword">int</span> <span class="title">add</span><span class="params">(<span class="keyword">int</span> x,<span class="keyword">int</span> y)</span></span></span><br><span class="line"><span class="function">	</span>&#123;</span><br><span class="line">		<span class="keyword">return</span> x+y;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	A object;</span><br><span class="line">	<span class="built_in">cout</span> &lt;&lt; <span class="string">"sizeof(object) is "</span> &lt;&lt; <span class="keyword">sizeof</span>(object) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">	b = object.add(<span class="number">3</span>,<span class="number">4</span>);</span><br><span class="line">	<span class="built_in">cout</span> &lt;&lt; <span class="string">"sizeof(object) is "</span> &lt;&lt; <span class="keyword">sizeof</span>(object) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span> ;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>结果仍为12。 </p>
+<p>因为只有非静态类成员变量在新生成一个object的时候才需要自己的副本。所以每个非静态成员变量在生成新object需要内存，而function是不需要的。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/C/" rel="tag"># C++</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/04/21/cpp中的inline和union和assert/" rel="next" title="C++中的inline和union和assert">
+                <i class="fa fa-chevron-left"></i> C++中的inline和union和assert
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/04/21/cpp中static关键字/" rel="prev" title="C++中static关键字">
+                C++中static关键字 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">289</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/xiaomeihao.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#size-t"><span class="nav-number">1.</span> <span class="nav-text">size_t</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#可移植性问题"><span class="nav-number">1.1.</span> <span class="nav-text">可移植性问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用size-t"><span class="nav-number">1.2.</span> <span class="nav-text">使用size_t</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#内存对齐"><span class="nav-number">2.</span> <span class="nav-text">内存对齐</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#strlen和sizeof区别？"><span class="nav-number">3.</span> <span class="nav-text">strlen和sizeof区别？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#OFFSETOF"><span class="nav-number">4.</span> <span class="nav-text">OFFSETOF</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#sizeof"><span class="nav-number">5.</span> <span class="nav-text">sizeof</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<span id="busuanzi_container_site_uv"> 
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
