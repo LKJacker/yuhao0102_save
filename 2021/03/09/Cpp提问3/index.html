@@ -94,7 +94,7 @@
 <meta property="og:site_name" content="Hao Yu&#39;s blog">
 <meta property="og:description" content="什么情况会自动生成默认构造函数？ 带有默认构造函数的类成员对象，如果一个类没有任何构造函数，但它含有一个成员对象，而后者有默认构造函数，那么编译器就为该类合成出一个默认构造函数。 不过这个合成操作只有在构造函数真正被需要的时候才会发生； 如果一个类A含有多个成员类对象的话，那么类A的每一个构造函数必须调用每一个成员对象的默认构造函数而且必须按照类对象在类A中的声明顺序进行；   带有默认构造函数的">
 <meta property="og:locale" content="zn-ch">
-<meta property="og:updated_time" content="2021-04-20T16:32:36.274Z">
+<meta property="og:updated_time" content="2021-04-21T05:34:43.237Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="《逆袭进大厂》之C++篇 3">
 <meta name="twitter:description" content="什么情况会自动生成默认构造函数？ 带有默认构造函数的类成员对象，如果一个类没有任何构造函数，但它含有一个成员对象，而后者有默认构造函数，那么编译器就为该类合成出一个默认构造函数。 不过这个合成操作只有在构造函数真正被需要的时候才会发生； 如果一个类A含有多个成员类对象的话，那么类A的每一个构造函数必须调用每一个成员对象的默认构造函数而且必须按照类对象在类A中的声明顺序进行；   带有默认构造函数的">
@@ -371,48 +371,6 @@
 <li>带有一个虚基类的类</li>
 <li>合成的默认构造函数中，只有基类子对象和成员类对象会被初始化。所有其他的非静态数据成员都不会被初始化。</li>
 </ul>
-<h1 id="抽象基类为什么不能创建对象？"><a href="#抽象基类为什么不能创建对象？" class="headerlink" title="抽象基类为什么不能创建对象？"></a>抽象基类为什么不能创建对象？</h1><p>抽象类是一种特殊的类，它是为了抽象和设计的目的为建立的，它处于继承层次结构的较上层。</p>
-<p>（1）抽象类的定义：称带有纯虚函数的类为抽象类。</p>
-<p>（2）抽象类的作用：抽象类的主要作用是将有关的操作作为结果接口组织在一个继承层次结构中，由它来为派生类提供一个公共的根，派生类将具体实现在其基类中作为接口的操作。</p>
-<p>所以派生类实际上刻画了一组子类的操作接口的通用语义，这些语义也传给子类，子类可以具体实现这些语义，也可以再将这些语义传给自己的子类。</p>
-<p>（3）使用抽象类时注意：抽象类只能作为基类来使用，其纯虚函数的实现由派生类给出。如果派生类中没有重新定义纯虚函数，而只是继承基类的纯虚函数，则这个派生类仍然还是一个抽象类。如果派生类中给出了基类纯虚函数的实现，则该派生类就不再是抽象类了，它是一个可以建立对象的具体的类。</p>
-<p>抽象类是不能定义对象的。一个纯虚函数不需要（但是可以）被定义。</p>
-<h2 id="纯虚函数定义"><a href="#纯虚函数定义" class="headerlink" title="纯虚函数定义"></a>纯虚函数定义</h2><p>纯虚函数是一种特殊的虚函数，它的一般格式如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"> 　<span class="class"><span class="keyword">class</span> &lt;类名&gt;</span></span><br><span class="line"><span class="class"> 　&#123;</span></span><br><span class="line"> 　<span class="keyword">virtual</span> &lt;类型&gt;&lt;函数名&gt;(&lt;参数表&gt;)=<span class="number">0</span>;</span><br><span class="line"> 　…</span><br><span class="line"> 　&#125;;</span><br></pre></td></tr></table></figure></p>
-<p>在许多情况下，在基类中不能对虚函数给出有意义的实现，而把它声明为纯虚函数，它的实现留给该基类的派生类去做。这就是纯虚函数的作用。<br>　纯虚函数可以让类先具有一个操作名称，而没有操作内容，让派生类在继承时再去具体地给出定义。</p>
-<p>凡是含有纯虚函数的类叫做抽象类。这种类不能声明对象，只是作为基类为派生类服务。除非在派生类中完全实现基类中所有的的纯虚函数，否则，派生类也变成了抽象类，不能实例化对象。</p>
-<h2 id="纯虚函数引入原因"><a href="#纯虚函数引入原因" class="headerlink" title="纯虚函数引入原因"></a>纯虚函数引入原因</h2><ol>
-<li>为了方便使用多态特性，我们常常需要在基类中定义虚拟函数。</li>
-<li>在很多情况下，基类本身生成对象是不合情理的。例如，动物作为一个基类可以派生出老虎、孔 雀等子类，但动物本身生成对象明显不合常理。</li>
-</ol>
-<p>为了解决上述问题，引入了纯虚函数的概念，将函数定义为纯虚函数（方法：virtual ReturnType Function()= 0;）。若要使派生类为非抽象类，则编译器要求在派生类中，必须对纯虚函数予以重载以实现多态性。同时含有纯虚函数的类称为抽象类，它不能生成对象。这样就很好地解决了上述两个问题。<br>例如，绘画程序中，shape作为一个基类可以派生出圆形、矩形、正方形、梯形等， 如果我要求面积总和的话，那么会可以使用一个 shape * 的数组，只要依次调用派生类的area()函数了。如果不用接口就没法定义成数组，因为既可以是circle ,也可以是square ,而且以后还可能加上rectangle，等等.</p>
-<h2 id="相似概念"><a href="#相似概念" class="headerlink" title="相似概念"></a>相似概念</h2><h3 id="多态性"><a href="#多态性" class="headerlink" title="多态性"></a>多态性</h3><p>指相同对象收到不同消息或不同对象收到相同消息时产生不同的实现动作。C++支持两种多态性：编译时多态性，运行时多态性。</p>
-<ul>
-<li>编译时多态性：通过重载函数实现</li>
-<li>运行时多态性：通过虚函数实现。</li>
-</ul>
-<h3 id="虚函数"><a href="#虚函数" class="headerlink" title="虚函数"></a>虚函数</h3><p>　虚函数是在基类中被声明为virtual，并在派生类中重新定义的成员函数，可实现成员函数的动态重载。</p>
-<h3 id="抽象类"><a href="#抽象类" class="headerlink" title="抽象类"></a>抽象类</h3><p>　包含纯虚函数的类称为抽象类。由于抽象类包含了没有定义的纯虚函数，所以不能定义抽象类的对象。</p>
-<h1 id="继承机制中对象之间如何转换？指针和引用之间如何转换？"><a href="#继承机制中对象之间如何转换？指针和引用之间如何转换？" class="headerlink" title="继承机制中对象之间如何转换？指针和引用之间如何转换？"></a>继承机制中对象之间如何转换？指针和引用之间如何转换？</h1><p>1) 向上类型转换</p>
-<p>将派生类指针或引用转换为基类的指针或引用被称为向上类型转换，向上类型转换会自动进行，而且向上类型转换是安全的。</p>
-<p>2) 向下类型转换</p>
-<p>将基类指针或引用转换为派生类指针或引用被称为向下类型转换，向下类型转换不会自动进行，因为一个基类对应几个派生类，所以向下类型转换时不知道对应哪个派生类，所以在向下类型转换时必须加动态类型识别技术。RTTI技术，用dynamic_cast进行向下类型转换。</p>
-<h1 id="知道C-中的组合吗？它与继承相比有什么优缺点吗？"><a href="#知道C-中的组合吗？它与继承相比有什么优缺点吗？" class="headerlink" title="知道C++中的组合吗？它与继承相比有什么优缺点吗？"></a>知道C++中的组合吗？它与继承相比有什么优缺点吗？</h1><p>一：继承</p>
-<p>继承是Is a 的关系，比如说Student继承Person,则说明Student is a Person。继承的优点是子类可以重写父类的方法来方便地实现对父类的扩展。</p>
-<p>继承的缺点有以下几点：</p>
-<ul>
-<li>父类的内部细节对子类是可见的。</li>
-<li>子类从父类继承的方法在编译时就确定下来了，所以无法在运行期间改变从父类继承的方法的行为。</li>
-<li>如果对父类的方法做了修改的话（比如增加了一个参数），则子类的方法必须做出相应的修改。所以说子类与父类是一种高耦合，违背了面向对象思想。</li>
-</ul>
-<p>二：组合</p>
-<p>组合也就是设计类的时候把要组合的类的对象加入到该类中作为自己的成员变量。</p>
-<p>组合的优点：</p>
-<ul>
-<li>当前对象只能通过所包含的那个对象去调用其方法，所以所包含的对象的内部细节对当前对象时不可见的。</li>
-<li>当前对象与包含的对象是一个低耦合关系，如果修改包含对象的类中代码不需要修改当前对象类的代码。</li>
-<li>当前对象可以在运行时动态的绑定所包含的对象。可以通过set方法给所包含对象赋值。</li>
-</ul>
-<p>组合的缺点：①：容易产生过多的对象。②：为了能组合多个对象，必须仔细对接口进行定义。</p>
 <h1 id="函数指针？"><a href="#函数指针？" class="headerlink" title="函数指针？"></a>函数指针？</h1><ul>
 <li>什么是函数指针?</li>
 </ul>
@@ -435,31 +393,6 @@
 </li>
 </ul>
 <p>指针名 = 函数名； 指针名 = &amp;函数名</p>
-<h1 id="内存泄漏的后果？如何监测？解决方法？"><a href="#内存泄漏的后果？如何监测？解决方法？" class="headerlink" title="内存泄漏的后果？如何监测？解决方法？"></a>内存泄漏的后果？如何监测？解决方法？</h1><ul>
-<li>内存泄漏</li>
-</ul>
-<p>内存泄漏是指由于疏忽或错误造成了程序未能释放掉不再使用的内存的情况。内存泄漏并非指内存在物理上消失，而是应用程序分配某段内存后，由于设计错误，失去了对该段内存的控制；</p>
-<ul>
-<li>后果</li>
-</ul>
-<p>只发生一次小的内存泄漏可能不被注意，但泄漏大量内存的程序将会出现各种证照：性能下降到内存逐渐用完，导致另一个程序失败；</p>
-<ul>
-<li>如何排除</li>
-</ul>
-<p>使用工具软件BoundsChecker，BoundsChecker是一个运行时错误检测工具，它主要定位程序运行时期发生的各种错误；</p>
-<p>调试运行DEBUG版程序，运用以下技术：CRT(C run-time libraries)、运行时函数调用堆栈、内存泄漏时提示的内存分配序号(集成开发环境OUTPUT窗口)，综合分析内存泄漏的原因，排除内存泄漏。</p>
-<ul>
-<li>解决方法</li>
-</ul>
-<p>智能指针。</p>
-<ul>
-<li>检查、定位内存泄漏</li>
-</ul>
-<p>检查方法：在main函数最后面一行，加上一句_CrtDumpMemoryLeaks()。调试程序，自然关闭程序让其退出，查看输出：</p>
-<p>输出这样的格式{453}normal block at 0x02432CA8,868 bytes long</p>
-<p>被{}包围的453就是我们需要的内存泄漏定位值，868 bytes long就是说这个地方有868比特内存没有释放。</p>
-<p>定位代码位置</p>
-<p>在main函数第一行加上_CrtSetBreakAlloc(453);意思就是在申请453这块内存的位置中断。然后调试程序，程序中断了，查看调用堆栈。加上头文件#include</p>
 <h1 id="使用智能指针管理内存资源，RAII是怎么回事？"><a href="#使用智能指针管理内存资源，RAII是怎么回事？" class="headerlink" title="使用智能指针管理内存资源，RAII是怎么回事？"></a>使用智能指针管理内存资源，RAII是怎么回事？</h1><ul>
 <li>RAII全称是“Resource Acquisition is Initialization”，直译过来是“资源获取即初始化”，也就是说在构造函数中申请分配资源，在析构函数中释放资源。</li>
 </ul>
@@ -633,14 +566,6 @@
 <p>3、 基本数据类型 基本数据类型的转换以取值范围的作为转换基础（保证精度不丢失）。隐式转换发生在从小-&gt;大的转换中。比如从char转换为int。从int-&gt;long。自定义对象 子类对象可以隐式的转换为父类对象。</p>
 <p>4、 C++中提供了explicit关键字，在构造函数声明的时候加上explicit关键字，能够禁止隐式转换。</p>
 <p>5、如果构造函数只接受一个参数，则它实际上定义了转换为此类类型的隐式转换机制。可以通过将构造函数声明为explicit加以制止隐式类型转换，关键字explicit只对一个实参的构造函数有效，需要多个实参的构造函数不能用于执行隐式转换，所以无需将这些构造函数指定为explicit。</p>
-<h1 id="虚函数的内存结构，那菱形继承的虚函数内存结构呢"><a href="#虚函数的内存结构，那菱形继承的虚函数内存结构呢" class="headerlink" title="虚函数的内存结构，那菱形继承的虚函数内存结构呢"></a>虚函数的内存结构，那菱形继承的虚函数内存结构呢</h1><p>菱形继承的定义是：两个子类继承同一父类，而又有子类同时继承这两个子类。例如a,b两个类同时继承c，但是又有一个d类同时继承a,b类。</p>
-<h1 id="多继承的优缺点，作为一个开发者怎么看待多继承"><a href="#多继承的优缺点，作为一个开发者怎么看待多继承" class="headerlink" title="多继承的优缺点，作为一个开发者怎么看待多继承"></a>多继承的优缺点，作为一个开发者怎么看待多继承</h1><ul>
-<li>C++允许为一个派生类指定多个基类，这样的继承结构被称做多重继承。</li>
-<li>多重继承的优点很明显，就是对象可以调用多个基类中的接口；</li>
-<li>如果派生类所继承的多个基类有相同的基类，而派生类对象需要调用这个祖先类的接口方法，就会容易出现二义性</li>
-<li>加上全局符确定调用哪一份拷贝。比如pa.Author::eat()调用属于Author的拷贝。</li>
-<li>使用虚拟继承，使得多重继承类Programmer_Author只拥有Person类的一份拷贝。</li>
-</ul>
 <h1 id="迭代器：-it、it-哪个好，为什么"><a href="#迭代器：-it、it-哪个好，为什么" class="headerlink" title="迭代器：++it、it++哪个好，为什么"></a>迭代器：++it、it++哪个好，为什么</h1><ul>
 <li>前置返回一个引用，后置返回一个对象</li>
 </ul>
@@ -742,29 +667,6 @@
 <li>带有虚函数的C++类大小不为1，因为每一个对象会有一个vptr指向虚函数表，具体大小根据指针大小确定；</li>
 <li>C++中要求对于类的每个实例都必须有独一无二的地址,那么编译器自动为空类分配一个字节大小，这样便保证了每个实例均有独一无二的内存地址。</li>
 </ul>
-<h1 id="你什么情况用指针当参数，什么时候用引用，为什么？"><a href="#你什么情况用指针当参数，什么时候用引用，为什么？" class="headerlink" title="你什么情况用指针当参数，什么时候用引用，为什么？"></a>你什么情况用指针当参数，什么时候用引用，为什么？</h1><ul>
-<li>使用引用参数的主要原因有两个：</li>
-</ul>
-<p>程序员能修改调用函数中的数据对象</p>
-<p>通过传递引用而不是整个数据–对象，可以提高程序的运行速度</p>
-<ul>
-<li>一般的原则：<br>对于使用引用的值而不做修改的函数：</li>
-</ul>
-<p>如果数据对象很小，如内置数据类型或者小型结构，则按照值传递；</p>
-<p>如果数据对象是数组，则使用指针（唯一的选择），并且指针声明为指向const的指针；</p>
-<p>如果数据对象是较大的结构，则使用const指针或者引用，已提高程序的效率。这样可以节省结构所需的时间和空间；</p>
-<p>如果数据对象是类对象，则使用const引用（传递类对象参数的标准方式是按照引用传递）；</p>
-<ul>
-<li>对于修改函数中数据的函数：</li>
-</ul>
-<p>如果数据是内置数据类型，则使用指针</p>
-<p>如果数据对象是数组，则只能使用指针</p>
-<p>如果数据对象是结构，则使用引用或者指针</p>
-<p>如果数据是类对象，则使用引用</p>
-<h1 id="静态函数能定义为虚函数吗？常函数呢？说说你的理解"><a href="#静态函数能定义为虚函数吗？常函数呢？说说你的理解" class="headerlink" title="静态函数能定义为虚函数吗？常函数呢？说说你的理解"></a>静态函数能定义为虚函数吗？常函数呢？说说你的理解</h1><p>1、static成员不属于任何类对象或类实例，所以即使给此函数加上virutal也是没有任何意义的。</p>
-<p>2、静态与非静态成员函数之间有一个主要的区别，那就是静态成员函数没有this指针。</p>
-<p>虚函数依靠vptr和vtable来处理。vptr是一个指针，在类的构造函数中创建生成，并且只能用this指针来访问它，因为它是类的一个成员，并且vptr指向保存虚函数地址的vtable.对于静态成员函数，它没有this指针，所以无法访问vptr。</p>
-<p>这就是为何static函数不能为virtual，虚函数的调用关系：this -&gt; vptr -&gt; vtable -&gt;virtual function</p>
 <h1 id="this指针调用成员变量时，堆栈会发生什么变化？"><a href="#this指针调用成员变量时，堆栈会发生什么变化？" class="headerlink" title="this指针调用成员变量时，堆栈会发生什么变化？"></a>this指针调用成员变量时，堆栈会发生什么变化？</h1><p>当在类的非静态成员函数访问类的非静态成员时，编译器会自动将对象的地址传给作为隐含参数传递给函数，这个隐含参数就是this指针。</p>
 <p>即使你并没有写this指针，编译器在链接时也会加上this的，对各成员的访问都是通过this的。</p>
 <p>例如你建立了类的多个对象时，在调用类的成员函数时，你并不知道具体是哪个对象在调用，此时你可以通过查看this指针来查看具体是哪个对象在调用。This指针首先入栈，然后成员函数的参数从右向左进行入栈，最后函数返回地址入栈。</p>
@@ -789,11 +691,6 @@
 <h1 id="怎么快速定位错误出现的地方"><a href="#怎么快速定位错误出现的地方" class="headerlink" title="怎么快速定位错误出现的地方"></a>怎么快速定位错误出现的地方</h1><p>1、如果是简单的错误，可以直接双击错误列表里的错误项或者生成输出的错误信息中带行号的地方就可以让编辑窗口定位到错误的位置上。</p>
 <p>2、对于复杂的模板错误，最好使用生成输出窗口。</p>
 <p>多数情况下出发错误的位置是最靠后的引用位置。如果这样确定不了错误，就需要先把自己写的代码里的引用位置找出来，然后逐个分析了。</p>
-<h1 id="虚函数的代价？"><a href="#虚函数的代价？" class="headerlink" title="虚函数的代价？"></a>虚函数的代价？</h1><ol>
-<li>带有虚函数的类，每一个类会产生一个虚函数表，用来存储指向虚成员函数的指针，增大类；</li>
-<li>带有虚函数的类的每一个对象，都会有有一个指向虚表的指针，会增加对象的空间大小；</li>
-<li>不能再是内敛的函数，因为内敛函数在编译阶段进行替代，而虚函数表示等待，在运行阶段才能确定到低是采用哪种函数，虚函数不能是内敛函数。</li>
-</ol>
 <h1 id="类对象的大小受哪些因素影响？"><a href="#类对象的大小受哪些因素影响？" class="headerlink" title="类对象的大小受哪些因素影响？"></a>类对象的大小受哪些因素影响？</h1><ul>
 <li>类的非静态成员变量大小，静态成员不占据类的空间，成员函数也不占据类的空间大小；</li>
 <li>内存对齐另外分配的空间大小，类内的数据也是需要进行内存对齐操作的；</li>
@@ -851,13 +748,6 @@
 <li>所有上一层的基类构造函数必须被调用；</li>
 <li>所有虚基类的构造函数必须被调用。</li>
 </ul>
-<h1 id="哪些函数不能是虚函数？把你知道的都说一说"><a href="#哪些函数不能是虚函数？把你知道的都说一说" class="headerlink" title="哪些函数不能是虚函数？把你知道的都说一说"></a>哪些函数不能是虚函数？把你知道的都说一说</h1><ul>
-<li>构造函数，构造函数初始化对象，派生类必须知道基类函数干了什么，才能进行构造；当有虚函数时，每一个类有一个虚表，每一个对象有一个虚表指针，虚表指针在构造函数中初始化；</li>
-<li>内联函数，内联函数表示在编译阶段进行函数体的替换操作，而虚函数意味着在运行期间进行类型确定，所以内联函数不能是虚函数；</li>
-<li>静态函数，静态函数不属于对象属于类，静态成员函数没有this指针，因此静态函数设置为虚函数没有任何意义。</li>
-<li>友元函数，友元函数不属于类的成员函数，不能被继承。对于没有继承特性的函数没有虚函数的说法。</li>
-<li>普通函数，普通函数不属于类的成员函数，不具有继承特性，因此普通函数没有虚函数。</li>
-</ul>
 <h1 id="说一说strcpy、sprintf与memcpy这三个函数的不同之处"><a href="#说一说strcpy、sprintf与memcpy这三个函数的不同之处" class="headerlink" title="说一说strcpy、sprintf与memcpy这三个函数的不同之处"></a>说一说strcpy、sprintf与memcpy这三个函数的不同之处</h1><ul>
 <li>操作对象不同<ul>
 <li>strcpy的两个操作对象均为字符串</li>
@@ -901,22 +791,8 @@
 <li>将类定义为抽象基类或者将构造函数声明为private；</li>
 <li>不允许类外部创建类对象，只能在类内部创建对象</li>
 </ul>
-<h1 id="如何禁止程序自动生成拷贝构造函数？"><a href="#如何禁止程序自动生成拷贝构造函数？" class="headerlink" title="如何禁止程序自动生成拷贝构造函数？"></a>如何禁止程序自动生成拷贝构造函数？</h1><ul>
-<li>为了阻止编译器默认生成拷贝构造函数和拷贝赋值函数，我们需要手动去重写这两个函数，某些情况﻿下，为了避免调用拷贝构造函数和﻿拷贝赋值函数，我们需要将他们设置成private，防止被调用。</li>
-<li>类的成员函数和friend函数还是可以调用private函数，如果这个private函数只声明不定义，则会产生一个连接错误；</li>
-<li>针对上述两种情况，我们可以定一个base类，在base类中将拷贝构造函数和拷贝赋值函数设置成private,那么派生类中编译器将不会自动生成这两个函数，且由于base类中该函数是私有的，因此，派生类将阻止编译器执行相关的操作。</li>
-</ul>
-<h1 id="你知道Denug和release的区别是什么吗？"><a href="#你知道Denug和release的区别是什么吗？" class="headerlink" title="你知道Denug和release的区别是什么吗？"></a>你知道Denug和release的区别是什么吗？</h1><ul>
-<li>调试版本，包含调试信息，所以容量比Release大很多，并且不进行任何优化（优化会使调试复杂化，因为源代码和生成的指令间关系会更复杂），便于程序员调试。<ul>
-<li>Debug模式下生成两个文件，除了.exe或.dll文件外，还有一个.pdb文件，该文件记录了代码中断点等调试信息；</li>
-</ul>
-</li>
-<li>发布版本，不对源代码进行调试，编译时对应用程序的速度进行优化，使得程序在代码大小和运行速度上都是最优的。（调试信息可在单独的PDB文件中生成）。Release模式下生成一个文件.exe或.dll文件。</li>
-<li>实际上，Debug 和 Release 并没有本质的界限，他们只是一组编译选项的集合，编译器只是按照预定的选项行动。事实上，我们甚至可以修改这些选项，从而得到优化过的调试版本或是带跟踪语句的发布版本。</li>
-</ul>
 <h1 id="main函数的返回值有什么值得考究之处吗？"><a href="#main函数的返回值有什么值得考究之处吗？" class="headerlink" title="main函数的返回值有什么值得考究之处吗？"></a>main函数的返回值有什么值得考究之处吗？</h1><p>程序运行过程入口点main函数，main（）函数返回值类型必须是int，这样返回值才能传递给程序激活者（如操作系统）表示程序正常退出。</p>
 <p>main（int args, char **argv） 参数的传递。参数的处理，一般会调用getopt（）函数处理，但实践中，这仅仅是一部分，不会经常用到的技能点。</p>
-<h1 id="模板会写吗？写一个比较大小的模板函数"><a href="#模板会写吗？写一个比较大小的模板函数" class="headerlink" title="模板会写吗？写一个比较大小的模板函数"></a>模板会写吗？写一个比较大小的模板函数</h1><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;iostream&gt; </span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>; </span><br><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> type1,<span class="keyword">typename</span> type2&gt;<span class="comment">//函数模板 </span></span><br><span class="line"></span><br><span class="line"><span class="function">ype1 <span class="title">Max</span><span class="params">(type1 a,type2 b)</span> </span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"> </span>&#123; </span><br><span class="line"></span><br><span class="line">   <span class="keyword">return</span> a &gt; b ? a : b; </span><br><span class="line"></span><br><span class="line">&#125; </span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">main</span><span class="params">()</span> </span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"> </span>&#123; </span><br><span class="line"></span><br><span class="line">  <span class="built_in">cout</span>&lt;&lt;<span class="string">"Max = "</span>&lt;&lt;Max(<span class="number">5.5</span>,<span class="string">'a'</span>)&lt;&lt;<span class="built_in">endl</span>; </span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h1 id="智能指针出现循环引用怎么解决？"><a href="#智能指针出现循环引用怎么解决？" class="headerlink" title="智能指针出现循环引用怎么解决？"></a>智能指针出现循环引用怎么解决？</h1><p>弱指针用于专门解决shared_ptr循环引用的问题，weak_ptr不会修改引用计数，即其存在与否并不影响对象的引用计数器。循环引用就是：两个对象互相使用一个shared_ptr成员变量指向对方。</p>
 <p>弱引用并不对对象的内存进行管理，在功能上类似于普通指针，然而一个比较大的区别是，弱引用能检测到所管理的对象是否已经被释放，从而避免访问非法内存。</p>
 <h1 id="strcpy函数和strncpy函数的区别？哪个函数更安全？"><a href="#strcpy函数和strncpy函数的区别？哪个函数更安全？" class="headerlink" title="strcpy函数和strncpy函数的区别？哪个函数更安全？"></a>strcpy函数和strncpy函数的区别？哪个函数更安全？</h1><ul>
@@ -928,57 +804,12 @@
 <li><p>如果目标长&gt;指定长&gt;源长，则将源长全部拷贝到目标长，自动加上’\0’<br>如果指定长&lt;源长，则将源长中按指定长度拷贝到目标字符串，不包括’\0’  如果指定长&gt;目标长，运行时错误 ；</p>
 </li>
 </ul>
-<h1 id="static-cast比C语言中的转换强在哪里？"><a href="#static-cast比C语言中的转换强在哪里？" class="headerlink" title="static_cast比C语言中的转换强在哪里？"></a>static_cast比C语言中的转换强在哪里？</h1><ul>
-<li>更加安全；</li>
-<li>更直接明显，能够一眼看出是什么类型转换为什么类型，容易找出程序中的错误；可清楚地辨别代码中每个显式的强制转；可读性更好，能体现程序员的意图</li>
-</ul>
-<h1 id="成员函数里memset-this-0-sizeof-this-会发生什么"><a href="#成员函数里memset-this-0-sizeof-this-会发生什么" class="headerlink" title="成员函数里memset(this,0,sizeof(*this))会发生什么"></a>成员函数里memset(this,0,sizeof(*this))会发生什么</h1><ul>
-<li>有时候类里面定义了很多int,char,struct等c语言里的那些类型的变量，我习惯在构造函数中将它们初始化为0，但是一句句的写太麻烦，所以直接就memset(this, 0, sizeof *this);将整个对象的内存全部置为0。</li>
-</ul>
-<p>对于这种情形可以很好的工作，但是下面几种情形是不可以这么使用的；</p>
-<ul>
-<li>类含有虚函数表：这么做会破坏虚函数表，后续对虚函数的调用都将出现异常；</li>
-<li>类中含有C++类型的对象：例如，类中定义了一个list的对象，由于在构造函数体的代码执行之前就对list对象完成了初始化，假设list在它的构造函数里分配了内存，那么我们这么一做就破坏了list对象的内存。</li>
-</ul>
 <h1 id="你知道回调函数吗？它的作用？"><a href="#你知道回调函数吗？它的作用？" class="headerlink" title="你知道回调函数吗？它的作用？"></a>你知道回调函数吗？它的作用？</h1><ul>
 <li>当发生某种事件时，系统或其他函数将会自动调用你定义的一段函数；</li>
 <li>回调函数就相当于一个中断处理函数，由系统在符合你设定的条件时自动调用。为此，你需要做三件事：1，声明；2，定义；3，设置触发条件，就是在你的函数中把你的回调函数名称转化为地址作为一个参数，以便于系统调用；</li>
 <li>回调函数就是一个通过函数指针调用的函数。如果你把函数的指针（地址）作为参数传递给另一个函数，当这个指针被用为调用它所指向的函数时，我们就说这是回调函数；</li>
 <li>因为可以把调用者与被调用者分开。调用者不关心谁是被调用者，所有它需知道的，只是存在一个具有某种特定原型、某些限制条件（如返回值为int）的被调用函数。</li>
 </ul>
-<h1 id="什么是纯虚函数，与虚函数的区别"><a href="#什么是纯虚函数，与虚函数的区别" class="headerlink" title="什么是纯虚函数，与虚函数的区别"></a>什么是纯虚函数，与虚函数的区别</h1><p>虚函数和纯虚函数区别？</p>
-<p>虚函数是为了实现动态编联产生的，目的是通过基类类型的指针指向不同对象时，自动调用相应的、和基类同名的函数（使用同一种调用形式，既能调用派生类又能调用基类的同名函数）。虚函数需要在基类中加上virtual修饰符修饰，因为virtual会被隐式继承，所以子类中相同函数都是虚函数。当一个成员函数被声明为虚函数之后，其派生类中同名函数自动成为虚函数，在派生类中重新定义此函数时要求函数名、返回值类型、参数个数和类型全部与基类函数相同。</p>
-<p>纯虚函数只是相当于一个接口名，但含有纯虚函数的类不能够实例化。</p>
-<p>纯虚函数首先是虚函数，其次它没有函数体，取而代之的是用“=0”。</p>
-<p>既然是虚函数，它的函数指针会被存在虚函数表中，由于纯虚函数并没有具体的函数体，因此它在虚函数表中的值就为0，而具有函数体的虚函数则是函数的具体地址。</p>
-<p>一个类中如果有纯虚函数的话，称其为抽象类。抽象类不能用于实例化对象，否则会报错。抽象类一般用于定义一些公有的方法。子类继承抽象类也必须实现其中的纯虚函数才能实例化对象。</p>
-<p>举个例子：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Base</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">fun1</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="built_in">cout</span> &lt;&lt; <span class="string">"普通虚函数"</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">fun2</span><span class="params">()</span> </span>= <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">virtual</span> ~Base() &#123;&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Son</span> :</span> <span class="keyword">public</span> Base</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">fun2</span><span class="params">()</span> </span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="built_in">cout</span> &lt;&lt; <span class="string">"子类实现的纯虚函数"</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    Base* b = <span class="keyword">new</span> Son;</span><br><span class="line">    b-&gt;fun1(); <span class="comment">//普通虚函数</span></span><br><span class="line">    b-&gt;fun2(); <span class="comment">//子类实现的纯虚函数</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h1 id="C-从代码到可执行程序经历了什么？"><a href="#C-从代码到可执行程序经历了什么？" class="headerlink" title="C++从代码到可执行程序经历了什么？"></a>C++从代码到可执行程序经历了什么？</h1><h2 id="预编译"><a href="#预编译" class="headerlink" title="预编译"></a>预编译</h2><p>主要处理源代码文件中的以“#”开头的预编译指令。处理规则见下：</p>
-<p>删除所有的#define，展开所有的宏定义。</p>
-<p>处理所有的条件预编译指令，如“#if”、“#endif”、“#ifdef”、“#elif”和“#else”。</p>
-<p>处理“#include”预编译指令，将文件内容替换到它的位置，这个过程是递归进行的，文件中包含其他<br>文件。</p>
-<p>删除所有的注释，“//”和“/**/”。</p>
-<p>保留所有的#pragma 编译器指令，编译器需要用到他们，如：#pragma once 是为了防止有文件被重<br>复引用。</p>
-<p>添加行号和文件标识，便于编译时编译器产生调试用的行号信息，和编译时产生编译错误或警告是<br>能够显示行号。</p>
-<h2 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h2><p>把预编译之后生成的xxx.i或xxx.ii文件，进行一系列词法分析、语法分析、语义分析及优化后，生成相应<br>的汇编代码文件。</p>
-<p>词法分析：利用类似于“有限状态机”的算法，将源代码程序输入到扫描机中，将其中的字符序列分<br>割成一系列的记号。</p>
-<p>语法分析：语法分析器对由扫描器产生的记号，进行语法分析，产生语法树。由语法分析器输出的<br>语法树是一种以表达式为节点的树。</p>
-<p>语义分析：语法分析器只是完成了对表达式语法层面的分析，语义分析器则对表达式是否有意义进<br>行判断，其分析的语义是静态语义——在编译期能分期的语义，相对应的动态语义是在运行期才能确定<br>的语义。</p>
-<p>优化：源代码级别的一个优化过程。</p>
-<p>目标代码生成：由代码生成器将中间代码转换成目标机器代码，生成一系列的代码序列——汇编语言<br>表示。</p>
-<p>目标代码优化：目标代码优化器对上述的目标机器代码进行优化：寻找合适的寻址方式、使用位移<br>来替代乘法运算、删除多余的指令等。</p>
-<h2 id="汇编"><a href="#汇编" class="headerlink" title="汇编"></a>汇编</h2><p>将汇编代码转变成机器可以执行的指令(机器码文件)。汇编器的汇编过程相对于编译器来说更简单，没<br>有复杂的语法，也没有语义，更不需要做指令优化，只是根据汇编指令和机器指令的对照表一一翻译过<br>来，汇编过程有汇编器as完成。经汇编之后，产生目标文件(与可执行文件格式几乎一样)xxx.o(Windows<br>下)、xxx.obj(Linux下)。</p>
-<h2 id="链接"><a href="#链接" class="headerlink" title="链接"></a>链接</h2><p>将不同的源文件产生的目标文件进行链接，从而形成一个可以执行的程序。链接分为静态链接和动态链<br>接：<br>静态链接<br>函数和数据被编译进一个二进制文件。在使用静态库的情况下，在编译链接可执行文件时，链接器从库<br>中复制这些函数和数据并把它们和应用程序的其它模块组合起来创建最终的可执行文件。</p>
-<p>空间浪费：因为每个可执行程序中对所有需要的目标文件都要有一份副本，所以如果多个程序对同一个<br>目标文件都有依赖，会出现同一个目标文件都在内存存在多个副本；</p>
-<p>更新困难：每当库函数的代码修改了，这个时候就需要重新进行编译链接形成可执行程序。</p>
-<p>运行速度快：但是静态链接的优点就是，在可执行程序中已经具备了所有执行程序所需要的任何东西，<br>在执行的时候运行速度快。</p>
-<p>动态链接<br>动态链接的基本思想是把程序按照模块拆分成各个相对独立部分，在程序运行时才将它们链接在一起形<br>成一个完整的程序，而不是像静态链接一样把所有程序模块都链接成一个单独的可执行文件。</p>
-<p>共享库：就是即使需要每个程序都依赖同一个库，但是该库不会像静态链接那样在内存中存在多分，副<br>本，而是这多个程序在执行时共享同一份副本；</p>
-<p>更新方便：更新时只需要替换原来的目标文件，而无需将所有的程序再重新链接一遍。当程序下一次运<br>行时，新版本的目标文件会被自动加载到内存并且链接起来，程序就完成了升级的目标。</p>
-<p>性能损耗：因为把链接推迟到了程序运行时，所以每次执行程序都需要进行链接，所以性能会有一定损<br>失。</p>
-<h1 id="为什么友元函数必须在类内部声明？"><a href="#为什么友元函数必须在类内部声明？" class="headerlink" title="为什么友元函数必须在类内部声明？"></a>为什么友元函数必须在类内部声明？</h1><p>因为编译器必须能够读取这个结构的声明以理解这个数据类型的大、行为等方面的所有规则。</p>
-<p>有一条规则在任何关系中都很重要，那就是谁可以访问我的私有部分。</p>
-<h1 id="用C语言实现C-的继承"><a href="#用C语言实现C-的继承" class="headerlink" title="用C语言实现C++的继承"></a>用C语言实现C++的继承</h1><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//C++中的继承与多态</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">A</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">fun</span><span class="params">()</span>  <span class="comment">//C++中的多态:通过虚函数实现</span></span></span><br><span class="line"><span class="function">  </span>&#123;</span><br><span class="line">   <span class="built_in">cout</span>&lt;&lt;<span class="string">"A:fun()"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">int</span> a;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">B</span>:</span><span class="keyword">public</span> A     <span class="comment">//C++中的继承:B类公有继承A类</span></span><br><span class="line">&#123;</span><br><span class="line"> <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">fun</span><span class="params">()</span>  <span class="comment">//C++中的多态:通过虚函数实现（子类的关键字virtual可加可不加）</span></span></span><br><span class="line"><span class="function">  </span>&#123;</span><br><span class="line">   <span class="built_in">cout</span>&lt;&lt;<span class="string">"B:fun()"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">int</span> b;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">//C语言模拟C++的继承与多态</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">void</span> <span class="params">(*FUN)</span><span class="params">()</span></span>;   <span class="comment">//定义一个函数指针来实现对成员函数的继承</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> _<span class="title">A</span>    //父类</span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  FUN _fun;  <span class="comment">//由于C语言中结构体不能包含函数，故只能用函数指针在外面实现</span></span><br><span class="line">  <span class="keyword">int</span> _a;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> _<span class="title">B</span>     //子类</span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  _A _a_;   <span class="comment">//在子类中定义一个基类的对象即可实现对父类的继承</span></span><br><span class="line">  <span class="keyword">int</span> _b;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> _fA()    <span class="comment">//父类的同名函数</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">"_A:_fun()\n"</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> _fB()    <span class="comment">//子类的同名函数</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">"_B:_fun()\n"</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Test</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="comment">//测试C++中的继承与多态</span></span><br><span class="line">  A a;  <span class="comment">//定义一个父类对象a</span></span><br><span class="line">  B b;  <span class="comment">//定义一个子类对象b</span></span><br><span class="line"></span><br><span class="line">  A* p1 = &amp;a;  <span class="comment">//定义一个父类指针指向父类的对象</span></span><br><span class="line">  p1-&gt;fun();  <span class="comment">//调用父类的同名函数</span></span><br><span class="line">  p1 = &amp;b;   <span class="comment">//让父类指针指向子类的对象</span></span><br><span class="line">  p1-&gt;fun();  <span class="comment">//调用子类的同名函数</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">//C语言模拟继承与多态的测试</span></span><br><span class="line">  _A _a;  <span class="comment">//定义一个父类对象_a</span></span><br><span class="line">  _B _b;  <span class="comment">//定义一个子类对象_b</span></span><br><span class="line">  _a._fun = _fA;    <span class="comment">//父类的对象调用父类的同名函数</span></span><br><span class="line">  _b._a_._fun = _fB;  <span class="comment">//子类的对象调用子类的同名函数</span></span><br><span class="line"></span><br><span class="line">  _A* p2 = &amp;_a;  <span class="comment">//定义一个父类指针指向父类的对象</span></span><br><span class="line">  p2-&gt;_fun();   <span class="comment">//调用父类的同名函数</span></span><br><span class="line">  p2 = (_A*)&amp;_b; <span class="comment">//让父类指针指向子类的对象,由于类型不匹配所以要进行强转</span></span><br><span class="line">  p2-&gt;_fun();   <span class="comment">//调用子类的同名函数</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h1 id="动态编译与静态编译"><a href="#动态编译与静态编译" class="headerlink" title="动态编译与静态编译"></a>动态编译与静态编译</h1><ul>
 <li><p>静态编译，编译器在编译可执行文件时，把需要用到的对应动态链接库中的部分提取出来，连接到可执行文件中去，使可执行文件在运行时不需要依赖于动态链接库；</p>
 </li>
@@ -986,64 +817,6 @@
 </li>
 </ul>
 <p>缺点是哪怕是很简单的程序，只用到了链接库的一两条命令，也需要附带一个相对庞大的链接库；二是如果其他计算机上没有安装对应的运行库，则用动态编译的可执行文件就不能运行。</p>
-<h1 id="hello-c-程序的编译过程"><a href="#hello-c-程序的编译过程" class="headerlink" title="hello.c 程序的编译过程"></a>hello.c 程序的编译过程</h1><ul>
-<li>预处理<ul>
-<li>读取c源程序，对其中的伪指令（以#开头的指令）和特殊符号进行处理。包括宏定义替换、条件编译指令、头文件包含指令、特殊符号。预编译程序所完成的基本上是对源程序的“替代”工作。经过此种替代，生成一个没有宏定义、没有条件编译指令、没有特殊符号的输出文件。.i预处理后的c文件，.ii预处理后的C++文件。</li>
-</ul>
-</li>
-<li>编译阶段<ul>
-<li>编译程序所要作得工作就是通过词法分析和语法分析，在确认所有的指令都符合语法规则之后，将其翻译成等价的中间代码表示或汇编代码。.s文件</li>
-</ul>
-</li>
-<li>汇编过程<ul>
-<li>汇编过程实际上指把汇编语言代码翻译成目标机器指令的过程。对于被翻译系统处理的每一个C语言源程序，都将最终经过这一处理而得到相应的目标文件。目标文件中所存放的也就是与源程序等效的目标的机器语言代码。.o目标文件</li>
-</ul>
-</li>
-<li>链接阶段<ul>
-<li>链接程序的主要工作就是将有关的目标文件彼此相连接，也即将在一个文件中引用的符号同该符号在另外一个文件中的定义连接起来，使得所有的这些目标文件成为一个能够诶操作系统装入执行的统一整体。</li>
-</ul>
-</li>
-</ul>
-<h1 id="介绍一下几种典型的锁"><a href="#介绍一下几种典型的锁" class="headerlink" title="介绍一下几种典型的锁"></a>介绍一下几种典型的锁</h1><h2 id="读写锁"><a href="#读写锁" class="headerlink" title="读写锁"></a>读写锁</h2><p>多个读者可以同时进行读</p>
-<p>写者必须互斥（只允许一个写者写，也不能读者写者同时进行）</p>
-<p>写者优先于读者（一旦有写者，则后续读者必须等待，唤醒时优先考虑写者）</p>
-<h2 id="互斥锁"><a href="#互斥锁" class="headerlink" title="互斥锁"></a>互斥锁</h2><p>一次只能一个线程拥有互斥锁，其他线程只有等待</p>
-<p>互斥锁是在抢锁失败的情况下主动放弃CPU进入睡眠状态直到锁的状态改变时再唤醒，而操作系统负责线程调度，为了实现锁的状态发生改变时唤醒阻塞的线程或者进程，需要把锁交给操作系统管理，所以互斥锁在加锁操作时涉及上下文的切换。</p>
-<p>互斥锁实际的效率还是可以让人接受的，加锁的时间大概100ns左右，而实际上互斥锁的一种可能的实现是先自旋一段时间，当自旋的时间超过阀值之后再将线程投入睡眠中，因此在并发运算中使用互斥锁（每次占用锁的时间很短）的效果可能不亚于使用自旋锁</p>
-<h2 id="条件变量"><a href="#条件变量" class="headerlink" title="条件变量"></a>条件变量</h2><p>互斥锁一个明显的缺点是他只有两种状态：锁定和非锁定。而条件变量通过允许线程阻塞和等待另一个线程发送信号的方法弥补了互斥锁的不足，他常和互斥锁一起使用，以免出现竞态条件。当条件不满足时，线程往往解开相应的互斥锁并阻塞线程然后等待条件发生变化。</p>
-<p>一旦其他的某个线程改变了条件变量，他将通知相应的条件变量唤醒一个或多个正被此条件变量阻塞的线程。总的来说互斥锁是线程间互斥的机制，条件变量则是同步机制。</p>
-<h2 id="自旋锁"><a href="#自旋锁" class="headerlink" title="自旋锁"></a>自旋锁</h2><p>如果进线程无法取得锁，进线程不会立刻放弃CPU时间片，而是一直循环尝试获取锁，直到获取为止。如果别的线程长时期占有锁那么自旋就是在浪费CPU做无用功，但是自旋锁一般应用于加锁时间很短的场景，这个时候效率比较高。</p>
-<h1 id="说一下C-左值引用和右值引用"><a href="#说一下C-左值引用和右值引用" class="headerlink" title="说一下C++左值引用和右值引用"></a>说一下C++左值引用和右值引用</h1><p>C++11正是通过引入右值引用来优化性能，具体来说是通过移动语义来避免无谓拷贝的问题，通过move语义来将临时生成的左值中的资源无代价的转移到另外一个对象中去，通过完美转发来解决不能按照参数实际类型来转发的问题（同时，完美转发获得的一个好处是可以实现移动语义）。</p>
-<ul>
-<li>在C++11中所有的值必属于左值、右值两者之一，右值又可以细分为纯右值、将亡值。在C++11中可以取地址的、有名字的就是左值，反之，不能取地址的、没有名字的就是右值（将亡值或纯右值）。<ul>
-<li>举个例子，int a = b+c, a 就是左值，其有变量名为a，通过&amp;a可以获取该变量的地址；表达式b+c、函数int func()的返回值是右值，在其被赋值给某一变量前，我们不能通过变量名找到它，＆(b+c)这样的操作则不会通过编译。</li>
-</ul>
-</li>
-<li>C++11对C++98中的右值进行了扩充。在C++11中右值又分为纯右值（prvalue，Pure Rvalue）和将亡值（xvalue，eXpiring Value）。<ul>
-<li>其中纯右值的概念等同于我们在C++98标准中右值的概念，指的是临时变量和不跟对象关联的字面量值；将亡值则是C++11新增的跟右值引用相关的表达式，这样表达式通常是将要被移动的对象（移为他用），比如返回右值引用T&amp;&amp;的函数返回值、std::move的返回值，或者转换为T&amp;&amp;的类型转换函数的返回值。</li>
-<li>将亡值可以理解为通过“盗取”其他变量内存空间的方式获取到的值。在确保其他变量不再被使用、或即将被销毁时，通过“盗取”的方式可以避免内存空间的释放和分配，能够延长变量值的生命期。</li>
-</ul>
-</li>
-<li>左值引用就是对一个左值进行引用的类型。右值引用就是对一个右值进行引用的类型，事实上，由于右值通常不具有名字，我们也只能通过引用的方式找到它的存在。<ul>
-<li>右值引用和左值引用都是属于引用类型。无论是声明一个左值引用还是右值引用，都必须立即进行初始化。而其原因可以理解为是引用类型本身自己并不拥有所绑定对象的内存，只是该对象的一个别名。左值引用是具名变量值的别名，而右值引用则是不具名（匿名）变量的别名。</li>
-<li>左值引用通常也不能绑定到右值，但常量左值引用是个“万能”的引用类型。它可以接受非常量左值、常量左值、右值对其进行初始化。不过常量左值所引用的右值在它的“余生”中只能是只读的。相对地，非常量左值只能接受非常量左值对其进行初始化。</li>
-</ul>
-</li>
-<li>右值值引用通常不能绑定到任何的左值，要想绑定一个左值到右值引用，通常需要std::move()将左值强制转换为右值。</li>
-</ul>
-<h2 id="左值和右值"><a href="#左值和右值" class="headerlink" title="左值和右值"></a>左值和右值</h2><p>左值：表示的是可以获取地址的表达式，它能出现在赋值语句的左边，对该表达式进行赋值。但是修饰符const的出现使得可以声明如下的标识符，它可以取得地址，但是没办法对其进行赋值<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="keyword">int</span>&amp; a = <span class="number">10</span>;</span><br></pre></td></tr></table></figure></p>
-<p>右值：表示无法获取地址的对象，有常量值、函数返回值、lambda表达式等。无法获取地址，但不表示其不可改变，当定义了右值的右值引用时就可以更改右值。</p>
-<h2 id="左值引用和右值引用"><a href="#左值引用和右值引用" class="headerlink" title="左值引用和右值引用"></a>左值引用和右值引用</h2><ul>
-<li>左值引用：传统的C++中引用被称为左值引用</li>
-<li>右值引用：C++11中增加了右值引用，右值引用关联到右值时，右值被存储到特定位置，右值引用指向该特定位置，也就是说，右值虽然无法获取地址，但是右值引用是可以获取地址的，该地址表示临时对象的存储位置</li>
-</ul>
-<p>这里主要说一下右值引用的特点：</p>
-<ul>
-<li>特点1：通过右值引用的声明，右值又“重获新生”，其生命周期与右值引用类型变量的生命周期一样长，只要该变量还活着，该右值临时量将会一直存活下去</li>
-<li>特点2：右值引用独立于左值和右值。意思是右值引用类型的变量可能是左值也可能是右值</li>
-<li>特点3：T&amp;&amp; t在发生自动类型推断的时候，它是左值还是右值取决于它的初始化。</li>
-</ul>
-<p>举个例子：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;bits/stdc++.h&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">fun</span><span class="params">(T&amp;&amp; t)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; t &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">getInt</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">5</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> a = <span class="number">10</span>;</span><br><span class="line">    <span class="keyword">int</span>&amp; b = a;  <span class="comment">//b是左值引用</span></span><br><span class="line">    <span class="keyword">int</span>&amp; c = <span class="number">10</span>;  <span class="comment">//错误，c是左值不能使用右值初始化</span></span><br><span class="line">    <span class="keyword">int</span>&amp;&amp; d = <span class="number">10</span>;  <span class="comment">//正确，右值引用用右值初始化</span></span><br><span class="line">    <span class="keyword">int</span>&amp;&amp; e = a;  <span class="comment">//错误，e是右值引用不能使用左值初始化</span></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">int</span>&amp; f = a; <span class="comment">//正确，左值常引用相当于是万能型，可以用左值或者右值初始化</span></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">int</span>&amp; g = <span class="number">10</span>;<span class="comment">//正确，左值常引用相当于是万能型，可以用左值或者右值初始化</span></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">int</span>&amp;&amp; h = <span class="number">10</span>; <span class="comment">//正确，右值常引用</span></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">int</span>&amp; aa = h;<span class="comment">//正确</span></span><br><span class="line">    <span class="keyword">int</span>&amp; i = getInt();  <span class="comment">//错误，i是左值引用不能使用临时变量（右值）初始化</span></span><br><span class="line">    <span class="keyword">int</span>&amp;&amp; j = getInt();  <span class="comment">//正确，函数返回值是右值</span></span><br><span class="line">    fun(<span class="number">10</span>); <span class="comment">//此时fun函数的参数t是右值</span></span><br><span class="line">    fun(a); <span class="comment">//此时fun函数的参数t是左值</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 
       
     </div>
@@ -1074,8 +847,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2021/03/09/Cpp提问2/" rel="next" title="《逆袭进大厂》之C++篇 2">
-                <i class="fa fa-chevron-left"></i> 《逆袭进大厂》之C++篇 2
+              <a href="/2021/01/15/STL源码剖析 笔记5/" rel="next" title="STL 源码剖析 笔记5">
+                <i class="fa fa-chevron-left"></i> STL 源码剖析 笔记5
               </a>
             
           </div>
@@ -1164,7 +937,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">287</span>
+                  <span class="site-state-item-count">283</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -1177,7 +950,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-count">12</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
@@ -1227,7 +1000,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#什么情况会自动生成默认构造函数？"><span class="nav-number">1.</span> <span class="nav-text">什么情况会自动生成默认构造函数？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#抽象基类为什么不能创建对象？"><span class="nav-number">2.</span> <span class="nav-text">抽象基类为什么不能创建对象？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#纯虚函数定义"><span class="nav-number">2.1.</span> <span class="nav-text">纯虚函数定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#纯虚函数引入原因"><span class="nav-number">2.2.</span> <span class="nav-text">纯虚函数引入原因</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#相似概念"><span class="nav-number">2.3.</span> <span class="nav-text">相似概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#多态性"><span class="nav-number">2.3.1.</span> <span class="nav-text">多态性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#虚函数"><span class="nav-number">2.3.2.</span> <span class="nav-text">虚函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#抽象类"><span class="nav-number">2.3.3.</span> <span class="nav-text">抽象类</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#继承机制中对象之间如何转换？指针和引用之间如何转换？"><span class="nav-number">3.</span> <span class="nav-text">继承机制中对象之间如何转换？指针和引用之间如何转换？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#知道C-中的组合吗？它与继承相比有什么优缺点吗？"><span class="nav-number">4.</span> <span class="nav-text">知道C++中的组合吗？它与继承相比有什么优缺点吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#函数指针？"><span class="nav-number">5.</span> <span class="nav-text">函数指针？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#内存泄漏的后果？如何监测？解决方法？"><span class="nav-number">6.</span> <span class="nav-text">内存泄漏的后果？如何监测？解决方法？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#使用智能指针管理内存资源，RAII是怎么回事？"><span class="nav-number">7.</span> <span class="nav-text">使用智能指针管理内存资源，RAII是怎么回事？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#手写实现智能指针类"><span class="nav-number">8.</span> <span class="nav-text">手写实现智能指针类</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#说一说你理解的内存对齐以及原因"><span class="nav-number">9.</span> <span class="nav-text">说一说你理解的内存对齐以及原因</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#结构体变量比较是否相等"><span class="nav-number">10.</span> <span class="nav-text">结构体变量比较是否相等</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#函数调用过程栈的变化，返回值和参数变量哪个先入栈？"><span class="nav-number">11.</span> <span class="nav-text">函数调用过程栈的变化，返回值和参数变量哪个先入栈？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#define、const、typedef、inline的使用方法？他们之间有什么区别？"><span class="nav-number">12.</span> <span class="nav-text">define、const、typedef、inline的使用方法？他们之间有什么区别？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#const与-define的区别："><span class="nav-number">12.1.</span> <span class="nav-text">const与#define的区别：</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道printf函数的实现原理是什么吗？"><span class="nav-number">13.</span> <span class="nav-text">你知道printf函数的实现原理是什么吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#说一说你了解的关于lambda函数的全部知识"><span class="nav-number">14.</span> <span class="nav-text">说一说你了解的关于lambda函数的全部知识</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#将字符串“hello-world”从开始到打印到屏幕上的全过程"><span class="nav-number">15.</span> <span class="nav-text">将字符串“hello world”从开始到打印到屏幕上的全过程?</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#模板类和模板函数的区别是什么？"><span class="nav-number">16.</span> <span class="nav-text">模板类和模板函数的区别是什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#为什么模板类一般都是放在一个h文件中"><span class="nav-number">17.</span> <span class="nav-text">为什么模板类一般都是放在一个h文件中</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#C-中类成员的访问权限和继承权限问题"><span class="nav-number">18.</span> <span class="nav-text">C++中类成员的访问权限和继承权限问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#cout和printf有什么区别？"><span class="nav-number">19.</span> <span class="nav-text">cout和printf有什么区别？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道重载运算符吗？"><span class="nav-number">20.</span> <span class="nav-text">你知道重载运算符吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#当程序中有函数重载时，函数的匹配原则和顺序是什么？"><span class="nav-number">21.</span> <span class="nav-text">当程序中有函数重载时，函数的匹配原则和顺序是什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#定义和声明的区别"><span class="nav-number">22.</span> <span class="nav-text">定义和声明的区别</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#全局变量和static变量的区别"><span class="nav-number">23.</span> <span class="nav-text">全局变量和static变量的区别</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#静态成员与普通成员的区别是什么？"><span class="nav-number">24.</span> <span class="nav-text">静态成员与普通成员的区别是什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#说一下你理解的-ifdef-endif代表着什么？"><span class="nav-number">25.</span> <span class="nav-text">说一下你理解的 ifdef   endif代表着什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#隐式转换，如何消除隐式转换？"><span class="nav-number">26.</span> <span class="nav-text">隐式转换，如何消除隐式转换？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#虚函数的内存结构，那菱形继承的虚函数内存结构呢"><span class="nav-number">27.</span> <span class="nav-text">虚函数的内存结构，那菱形继承的虚函数内存结构呢</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#多继承的优缺点，作为一个开发者怎么看待多继承"><span class="nav-number">28.</span> <span class="nav-text">多继承的优缺点，作为一个开发者怎么看待多继承</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#迭代器：-it、it-哪个好，为什么"><span class="nav-number">29.</span> <span class="nav-text">迭代器：++it、it++哪个好，为什么</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#C-如何处理多个异常的？"><span class="nav-number">30.</span> <span class="nav-text">C++如何处理多个异常的？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#模板和实现可不可以不写在一个文件里面？为什么？"><span class="nav-number">31.</span> <span class="nav-text">模板和实现可不可以不写在一个文件里面？为什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#在成员函数中调用delete-this会出现什么问题？对象还可以使用吗？"><span class="nav-number">32.</span> <span class="nav-text">在成员函数中调用delete this会出现什么问题？对象还可以使用吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#如何在不使用额外空间的情况下，交换两个数？你有几种方法"><span class="nav-number">33.</span> <span class="nav-text">如何在不使用额外空间的情况下，交换两个数？你有几种方法</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道strcpy和memcpy的区别是什么吗？"><span class="nav-number">34.</span> <span class="nav-text">你知道strcpy和memcpy的区别是什么吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#程序在执行int-main-int-argc-char-argv-时的内存结构，你了解吗？"><span class="nav-number">35.</span> <span class="nav-text">程序在执行int main(int argc, char *argv[])时的内存结构，你了解吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#volatile关键字的作用？"><span class="nav-number">36.</span> <span class="nav-text">volatile关键字的作用？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#如果有一个空类，它会默认添加哪些函数？"><span class="nav-number">37.</span> <span class="nav-text">如果有一个空类，它会默认添加哪些函数？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#C-中标准库是什么？"><span class="nav-number">38.</span> <span class="nav-text">C++中标准库是什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道const-char-与string之间的关系是什么吗？"><span class="nav-number">39.</span> <span class="nav-text">你知道const char* 与string之间的关系是什么吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#为什么拷贝构造函数必须传引用不能传值？"><span class="nav-number">40.</span> <span class="nav-text">为什么拷贝构造函数必须传引用不能传值？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道空类的大小是多少吗？"><span class="nav-number">41.</span> <span class="nav-text">你知道空类的大小是多少吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你什么情况用指针当参数，什么时候用引用，为什么？"><span class="nav-number">42.</span> <span class="nav-text">你什么情况用指针当参数，什么时候用引用，为什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#静态函数能定义为虚函数吗？常函数呢？说说你的理解"><span class="nav-number">43.</span> <span class="nav-text">静态函数能定义为虚函数吗？常函数呢？说说你的理解</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#this指针调用成员变量时，堆栈会发生什么变化？"><span class="nav-number">44.</span> <span class="nav-text">this指针调用成员变量时，堆栈会发生什么变化？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道静态绑定和动态绑定吗？讲讲？"><span class="nav-number">45.</span> <span class="nav-text">你知道静态绑定和动态绑定吗？讲讲？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#如何设计一个类计算子类的个数？"><span class="nav-number">46.</span> <span class="nav-text">如何设计一个类计算子类的个数？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#怎么快速定位错误出现的地方"><span class="nav-number">47.</span> <span class="nav-text">怎么快速定位错误出现的地方</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#虚函数的代价？"><span class="nav-number">48.</span> <span class="nav-text">虚函数的代价？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#类对象的大小受哪些因素影响？"><span class="nav-number">49.</span> <span class="nav-text">类对象的大小受哪些因素影响？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#移动构造函数听说过吗？说说"><span class="nav-number">50.</span> <span class="nav-text">移动构造函数听说过吗？说说</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#什么时候合成构造函数？都说一说，你知道的都说一下"><span class="nav-number">51.</span> <span class="nav-text">什么时候合成构造函数？都说一说，你知道的都说一下</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#那什么时候需要合成拷贝构造函数呢？"><span class="nav-number">52.</span> <span class="nav-text">那什么时候需要合成拷贝构造函数呢？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#成员初始化列表会在什么时候用到？它的调用过程是什么？"><span class="nav-number">53.</span> <span class="nav-text">成员初始化列表会在什么时候用到？它的调用过程是什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#构造函数的执行顺序是什么？"><span class="nav-number">54.</span> <span class="nav-text">构造函数的执行顺序是什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#一个类中的全部构造函数的扩展过程是什么？"><span class="nav-number">55.</span> <span class="nav-text">一个类中的全部构造函数的扩展过程是什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#哪些函数不能是虚函数？把你知道的都说一说"><span class="nav-number">56.</span> <span class="nav-text">哪些函数不能是虚函数？把你知道的都说一说</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#说一说strcpy、sprintf与memcpy这三个函数的不同之处"><span class="nav-number">57.</span> <span class="nav-text">说一说strcpy、sprintf与memcpy这三个函数的不同之处</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#将引用作为函数参数有哪些好处？"><span class="nav-number">58.</span> <span class="nav-text">将引用作为函数参数有哪些好处？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道数组和指针的区别吗？"><span class="nav-number">59.</span> <span class="nav-text">你知道数组和指针的区别吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#如何阻止一个类被实例化？有哪些方法？"><span class="nav-number">60.</span> <span class="nav-text">如何阻止一个类被实例化？有哪些方法？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#如何禁止程序自动生成拷贝构造函数？"><span class="nav-number">61.</span> <span class="nav-text">如何禁止程序自动生成拷贝构造函数？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道Denug和release的区别是什么吗？"><span class="nav-number">62.</span> <span class="nav-text">你知道Denug和release的区别是什么吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#main函数的返回值有什么值得考究之处吗？"><span class="nav-number">63.</span> <span class="nav-text">main函数的返回值有什么值得考究之处吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#模板会写吗？写一个比较大小的模板函数"><span class="nav-number">64.</span> <span class="nav-text">模板会写吗？写一个比较大小的模板函数</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#智能指针出现循环引用怎么解决？"><span class="nav-number">65.</span> <span class="nav-text">智能指针出现循环引用怎么解决？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#strcpy函数和strncpy函数的区别？哪个函数更安全？"><span class="nav-number">66.</span> <span class="nav-text">strcpy函数和strncpy函数的区别？哪个函数更安全？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#static-cast比C语言中的转换强在哪里？"><span class="nav-number">67.</span> <span class="nav-text">static_cast比C语言中的转换强在哪里？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#成员函数里memset-this-0-sizeof-this-会发生什么"><span class="nav-number">68.</span> <span class="nav-text">成员函数里memset(this,0,sizeof(*this))会发生什么</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道回调函数吗？它的作用？"><span class="nav-number">69.</span> <span class="nav-text">你知道回调函数吗？它的作用？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#什么是纯虚函数，与虚函数的区别"><span class="nav-number">70.</span> <span class="nav-text">什么是纯虚函数，与虚函数的区别</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#C-从代码到可执行程序经历了什么？"><span class="nav-number">71.</span> <span class="nav-text">C++从代码到可执行程序经历了什么？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#预编译"><span class="nav-number">71.1.</span> <span class="nav-text">预编译</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编译"><span class="nav-number">71.2.</span> <span class="nav-text">编译</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#汇编"><span class="nav-number">71.3.</span> <span class="nav-text">汇编</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#链接"><span class="nav-number">71.4.</span> <span class="nav-text">链接</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#为什么友元函数必须在类内部声明？"><span class="nav-number">72.</span> <span class="nav-text">为什么友元函数必须在类内部声明？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#用C语言实现C-的继承"><span class="nav-number">73.</span> <span class="nav-text">用C语言实现C++的继承</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#动态编译与静态编译"><span class="nav-number">74.</span> <span class="nav-text">动态编译与静态编译</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#hello-c-程序的编译过程"><span class="nav-number">75.</span> <span class="nav-text">hello.c 程序的编译过程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#介绍一下几种典型的锁"><span class="nav-number">76.</span> <span class="nav-text">介绍一下几种典型的锁</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#读写锁"><span class="nav-number">76.1.</span> <span class="nav-text">读写锁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#互斥锁"><span class="nav-number">76.2.</span> <span class="nav-text">互斥锁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#条件变量"><span class="nav-number">76.3.</span> <span class="nav-text">条件变量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#自旋锁"><span class="nav-number">76.4.</span> <span class="nav-text">自旋锁</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#说一下C-左值引用和右值引用"><span class="nav-number">77.</span> <span class="nav-text">说一下C++左值引用和右值引用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#左值和右值"><span class="nav-number">77.1.</span> <span class="nav-text">左值和右值</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#左值引用和右值引用"><span class="nav-number">77.2.</span> <span class="nav-text">左值引用和右值引用</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#什么情况会自动生成默认构造函数？"><span class="nav-number">1.</span> <span class="nav-text">什么情况会自动生成默认构造函数？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#函数指针？"><span class="nav-number">2.</span> <span class="nav-text">函数指针？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#使用智能指针管理内存资源，RAII是怎么回事？"><span class="nav-number">3.</span> <span class="nav-text">使用智能指针管理内存资源，RAII是怎么回事？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#手写实现智能指针类"><span class="nav-number">4.</span> <span class="nav-text">手写实现智能指针类</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#说一说你理解的内存对齐以及原因"><span class="nav-number">5.</span> <span class="nav-text">说一说你理解的内存对齐以及原因</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#结构体变量比较是否相等"><span class="nav-number">6.</span> <span class="nav-text">结构体变量比较是否相等</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#函数调用过程栈的变化，返回值和参数变量哪个先入栈？"><span class="nav-number">7.</span> <span class="nav-text">函数调用过程栈的变化，返回值和参数变量哪个先入栈？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#define、const、typedef、inline的使用方法？他们之间有什么区别？"><span class="nav-number">8.</span> <span class="nav-text">define、const、typedef、inline的使用方法？他们之间有什么区别？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#const与-define的区别："><span class="nav-number">8.1.</span> <span class="nav-text">const与#define的区别：</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道printf函数的实现原理是什么吗？"><span class="nav-number">9.</span> <span class="nav-text">你知道printf函数的实现原理是什么吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#说一说你了解的关于lambda函数的全部知识"><span class="nav-number">10.</span> <span class="nav-text">说一说你了解的关于lambda函数的全部知识</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#将字符串“hello-world”从开始到打印到屏幕上的全过程"><span class="nav-number">11.</span> <span class="nav-text">将字符串“hello world”从开始到打印到屏幕上的全过程?</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#模板类和模板函数的区别是什么？"><span class="nav-number">12.</span> <span class="nav-text">模板类和模板函数的区别是什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#为什么模板类一般都是放在一个h文件中"><span class="nav-number">13.</span> <span class="nav-text">为什么模板类一般都是放在一个h文件中</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#C-中类成员的访问权限和继承权限问题"><span class="nav-number">14.</span> <span class="nav-text">C++中类成员的访问权限和继承权限问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#cout和printf有什么区别？"><span class="nav-number">15.</span> <span class="nav-text">cout和printf有什么区别？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道重载运算符吗？"><span class="nav-number">16.</span> <span class="nav-text">你知道重载运算符吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#当程序中有函数重载时，函数的匹配原则和顺序是什么？"><span class="nav-number">17.</span> <span class="nav-text">当程序中有函数重载时，函数的匹配原则和顺序是什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#定义和声明的区别"><span class="nav-number">18.</span> <span class="nav-text">定义和声明的区别</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#全局变量和static变量的区别"><span class="nav-number">19.</span> <span class="nav-text">全局变量和static变量的区别</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#静态成员与普通成员的区别是什么？"><span class="nav-number">20.</span> <span class="nav-text">静态成员与普通成员的区别是什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#说一下你理解的-ifdef-endif代表着什么？"><span class="nav-number">21.</span> <span class="nav-text">说一下你理解的 ifdef   endif代表着什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#隐式转换，如何消除隐式转换？"><span class="nav-number">22.</span> <span class="nav-text">隐式转换，如何消除隐式转换？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#迭代器：-it、it-哪个好，为什么"><span class="nav-number">23.</span> <span class="nav-text">迭代器：++it、it++哪个好，为什么</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#C-如何处理多个异常的？"><span class="nav-number">24.</span> <span class="nav-text">C++如何处理多个异常的？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#模板和实现可不可以不写在一个文件里面？为什么？"><span class="nav-number">25.</span> <span class="nav-text">模板和实现可不可以不写在一个文件里面？为什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#在成员函数中调用delete-this会出现什么问题？对象还可以使用吗？"><span class="nav-number">26.</span> <span class="nav-text">在成员函数中调用delete this会出现什么问题？对象还可以使用吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#如何在不使用额外空间的情况下，交换两个数？你有几种方法"><span class="nav-number">27.</span> <span class="nav-text">如何在不使用额外空间的情况下，交换两个数？你有几种方法</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道strcpy和memcpy的区别是什么吗？"><span class="nav-number">28.</span> <span class="nav-text">你知道strcpy和memcpy的区别是什么吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#程序在执行int-main-int-argc-char-argv-时的内存结构，你了解吗？"><span class="nav-number">29.</span> <span class="nav-text">程序在执行int main(int argc, char *argv[])时的内存结构，你了解吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#volatile关键字的作用？"><span class="nav-number">30.</span> <span class="nav-text">volatile关键字的作用？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#如果有一个空类，它会默认添加哪些函数？"><span class="nav-number">31.</span> <span class="nav-text">如果有一个空类，它会默认添加哪些函数？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#C-中标准库是什么？"><span class="nav-number">32.</span> <span class="nav-text">C++中标准库是什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道const-char-与string之间的关系是什么吗？"><span class="nav-number">33.</span> <span class="nav-text">你知道const char* 与string之间的关系是什么吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#为什么拷贝构造函数必须传引用不能传值？"><span class="nav-number">34.</span> <span class="nav-text">为什么拷贝构造函数必须传引用不能传值？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道空类的大小是多少吗？"><span class="nav-number">35.</span> <span class="nav-text">你知道空类的大小是多少吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#this指针调用成员变量时，堆栈会发生什么变化？"><span class="nav-number">36.</span> <span class="nav-text">this指针调用成员变量时，堆栈会发生什么变化？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道静态绑定和动态绑定吗？讲讲？"><span class="nav-number">37.</span> <span class="nav-text">你知道静态绑定和动态绑定吗？讲讲？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#如何设计一个类计算子类的个数？"><span class="nav-number">38.</span> <span class="nav-text">如何设计一个类计算子类的个数？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#怎么快速定位错误出现的地方"><span class="nav-number">39.</span> <span class="nav-text">怎么快速定位错误出现的地方</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#类对象的大小受哪些因素影响？"><span class="nav-number">40.</span> <span class="nav-text">类对象的大小受哪些因素影响？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#移动构造函数听说过吗？说说"><span class="nav-number">41.</span> <span class="nav-text">移动构造函数听说过吗？说说</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#什么时候合成构造函数？都说一说，你知道的都说一下"><span class="nav-number">42.</span> <span class="nav-text">什么时候合成构造函数？都说一说，你知道的都说一下</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#那什么时候需要合成拷贝构造函数呢？"><span class="nav-number">43.</span> <span class="nav-text">那什么时候需要合成拷贝构造函数呢？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#成员初始化列表会在什么时候用到？它的调用过程是什么？"><span class="nav-number">44.</span> <span class="nav-text">成员初始化列表会在什么时候用到？它的调用过程是什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#构造函数的执行顺序是什么？"><span class="nav-number">45.</span> <span class="nav-text">构造函数的执行顺序是什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#一个类中的全部构造函数的扩展过程是什么？"><span class="nav-number">46.</span> <span class="nav-text">一个类中的全部构造函数的扩展过程是什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#说一说strcpy、sprintf与memcpy这三个函数的不同之处"><span class="nav-number">47.</span> <span class="nav-text">说一说strcpy、sprintf与memcpy这三个函数的不同之处</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#将引用作为函数参数有哪些好处？"><span class="nav-number">48.</span> <span class="nav-text">将引用作为函数参数有哪些好处？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道数组和指针的区别吗？"><span class="nav-number">49.</span> <span class="nav-text">你知道数组和指针的区别吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#如何阻止一个类被实例化？有哪些方法？"><span class="nav-number">50.</span> <span class="nav-text">如何阻止一个类被实例化？有哪些方法？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#main函数的返回值有什么值得考究之处吗？"><span class="nav-number">51.</span> <span class="nav-text">main函数的返回值有什么值得考究之处吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#智能指针出现循环引用怎么解决？"><span class="nav-number">52.</span> <span class="nav-text">智能指针出现循环引用怎么解决？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#strcpy函数和strncpy函数的区别？哪个函数更安全？"><span class="nav-number">53.</span> <span class="nav-text">strcpy函数和strncpy函数的区别？哪个函数更安全？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道回调函数吗？它的作用？"><span class="nav-number">54.</span> <span class="nav-text">你知道回调函数吗？它的作用？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#动态编译与静态编译"><span class="nav-number">55.</span> <span class="nav-text">动态编译与静态编译</span></a></li></ol></div>
             
 
           </div>
