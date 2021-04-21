@@ -94,7 +94,7 @@
 <meta property="og:site_name" content="Hao Yu&#39;s blog">
 <meta property="og:description" content="函数重载只会发生在同一个类中，函数名相同，只能通过参数类型，参数个数或者有无const来区分。不能通过返回值类型区分，而且virtual也是可有可无的，即虚函数和普通函数在同一类中也可以构成函数重载。 基类和派生类中只能是隐藏或者覆盖。  隐藏是指派生类中有函数与基类中函数同名，但是没有构成虚函数覆盖，就是隐藏。隐藏的表现：若基类中函数func()被派生类中函数func()隐藏，那么无法通过派生类">
 <meta property="og:locale" content="zn-ch">
-<meta property="og:updated_time" content="2019-05-19T16:12:56.000Z">
+<meta property="og:updated_time" content="2021-04-20T11:07:09.049Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="C++类中函数的重载、隐藏和覆盖">
 <meta name="twitter:description" content="函数重载只会发生在同一个类中，函数名相同，只能通过参数类型，参数个数或者有无const来区分。不能通过返回值类型区分，而且virtual也是可有可无的，即虚函数和普通函数在同一类中也可以构成函数重载。 基类和派生类中只能是隐藏或者覆盖。  隐藏是指派生类中有函数与基类中函数同名，但是没有构成虚函数覆盖，就是隐藏。隐藏的表现：若基类中函数func()被派生类中函数func()隐藏，那么无法通过派生类">
@@ -384,6 +384,22 @@
 <p>虚函数要求返回值类型也一样，但是有一种情况允许虚函数返回值时本类对象的引用或者指针，也可以构成覆盖。这个是“协变”规则，具体协变看例子：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">class A:</span><br><span class="line">&#123;</span><br><span class="line">public:</span><br><span class="line">       virtual  A* func()</span><br><span class="line">       &#123;</span><br><span class="line">          cout&lt;&lt;&quot;A&quot;&lt;&lt;endl;</span><br><span class="line">          return this;</span><br><span class="line">       &#125;  </span><br><span class="line">&#125;;</span><br><span class="line">class B:public A</span><br><span class="line">&#123;</span><br><span class="line">public:</span><br><span class="line">       virtual  B* func()</span><br><span class="line">       &#123;</span><br><span class="line">          cout&lt;&lt;&quot;B&quot;&lt;&lt;endl;</span><br><span class="line">          return this;</span><br><span class="line">       &#125;</span><br><span class="line">&#125;;</span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">    A *pa=new B;</span><br><span class="line">    B* pb=pa-&gt;func();//编译无法通过，因为pa是A*类型指针，编译时，对于pa-&gt;func()翻译成调用的是A类的函数，返回值为 A*类型。而A*类型无法赋值给派生类指针</span><br><span class="line">    B* pb=(B*)pa-&gt;func();//正确</span><br><span class="line">    B* pb=(B*)(pa-&gt;func());//正确</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>A *pa=new B;对于虚函数将基类指针指向派生类对象，调用派生类的虚函数。该基类指针能解引用的内存空间是继承到派生类中的基类的内存空间。基类指针调用派生类的虚函数，在虚函数中，this指针指向的是派生类本身，也就是在虚函数中将基类指针强制转换成了派生类指针。其实基类指针pa和派生类中的this指针值相同，都是派生类对象的地址。</p>
 <p>协变的存在是为了解决返回值的强制类型转换，真正用途是，通过派生类对象调用虚函数，直接返回派生类指针。若无协变，则会返回基类指针，需要再将基类指针强制转换成派生类指针。具体的意思看例子：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">若没有协变，那么上述的代码中派生类中虚函数需要改成以下形式：</span><br><span class="line">class B :public A</span><br><span class="line">&#123;</span><br><span class="line">public:</span><br><span class="line">    virtual  A* func()</span><br><span class="line">    &#123;</span><br><span class="line">        cout&lt;&lt;&quot;B&quot;&lt;&lt;endl;</span><br><span class="line">        return this;//返回值this为B*类型指针，但是因为没有协变，返回的时候将B*类型赋值给了A*类型，然后以A*类型返回到main函数中</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">    B b;</span><br><span class="line">    A *pa=b.func();</span><br><span class="line">    B *pb=dynamic&lt;B*&gt; (pa);//将返回的A*类型强制转换成B*类型</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>编译器总是根据类型来调用类成员函数。但是一个派生类的指针可以安全地转化为一个基类的指针。这样删除一个基类的指针的时候，C++不管这个指针指向一个基类对象还是一个派生类的对象，调用的都是基类的析构函数而不是派生类的。如果你依赖于派生类的析构函数的代码来释放资源，而没有重载析构函数，那么会有资源泄漏。所以建议的方式是将<strong>析构函数声明为虚函数</strong>。</p>
+<p>也就是<code>delete a</code>的时候，也会执行派生类的析构函数。</p>
+<p>一个函数一旦声明为虚函数，那么不管你是否加上virtual修饰符，它在所有派生类中都成为虚函数。但是由于理解明确起见，建议的方式还是加上<code>virtual</code>修饰符。</p>
+<p>构造方法用来初始化类的对象，与父类的其它成员不同，它不能被子类继承（子类可以继承父类所有的成员变量和成员方法，但不继承父类的构造方法）。因此，在创建子类对象时，为了初始化从父类继承来的数据成员，系统需要调用其父类的构造方法。</p>
+<p>如果没有显式的构造函数，编译器会给一个默认的构造函数，并且该默认的构造函数仅仅在没有显式地声明构造函数情况下创建。</p>
+<p>构造原则如下：</p>
+<ol>
+<li>如果子类没有定义构造方法，则调用父类的无参数的构造方法。</li>
+<li>如果子类定义了构造方法，不论是无参数还是带参数，在创建子类的对象的时候,首先执行父类无参数的构造方法，然后执行自己的构造方法。</li>
+<li>在创建子类对象时候，如果子类的构造函数没有显示调用父类的构造函数，则会调用父类的默认无参构造函数。</li>
+<li>在创建子类对象时候，如果子类的构造函数没有显示调用父类的构造函数且父类自己提供了无参构造函数，则会调用父类自己的无参构造函数。</li>
+<li>在创建子类对象时候，如果子类的构造函数没有显示调用父类的构造函数且父类只定义了自己的有参构造函数，则会出错（如果父类只有有参数的构造方法，则子类必须显示调用此带参构造方法）。</li>
+<li>如果子类调用父类带参数的构造方法，需要用初始化父类成员对象的方式，比如：</li>
+</ol>
+<p><code></code>C++</p>
+<p>#include &lt;iostream.h&gt;<br>class animal<br>{<br>    public:<br>    animal(int height, int weight)<br>    {<br>            cout&lt;&lt;”animal construct”&lt;&lt;endl;<br>        }<br>};<br>class fish:public animal<br>{<br>    public:<br>    int a;<br>    fish() : animal(400,300), a(1)<br>    {<br>            cout&lt;&lt;”fish construct”&lt;&lt;endl;<br>        }<br>};<br>void main()<br>{<br>    fish fh;<br>}<br><code>`</code></p>
 
       
     </div>
@@ -495,7 +511,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">288</span>
+                  <span class="site-state-item-count">287</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
