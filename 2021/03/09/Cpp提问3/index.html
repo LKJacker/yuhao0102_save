@@ -94,7 +94,7 @@
 <meta property="og:site_name" content="Hao Yu&#39;s blog">
 <meta property="og:description" content="什么情况会自动生成默认构造函数？ 带有默认构造函数的类成员对象，如果一个类没有任何构造函数，但它含有一个成员对象，而后者有默认构造函数，那么编译器就为该类合成出一个默认构造函数。 不过这个合成操作只有在构造函数真正被需要的时候才会发生； 如果一个类A含有多个成员类对象的话，那么类A的每一个构造函数必须调用每一个成员对象的默认构造函数而且必须按照类对象在类A中的声明顺序进行；   带有默认构造函数的">
 <meta property="og:locale" content="zn-ch">
-<meta property="og:updated_time" content="2021-04-22T08:13:44.201Z">
+<meta property="og:updated_time" content="2021-04-24T00:23:13.690Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="《逆袭进大厂》之C++篇 3">
 <meta name="twitter:description" content="什么情况会自动生成默认构造函数？ 带有默认构造函数的类成员对象，如果一个类没有任何构造函数，但它含有一个成员对象，而后者有默认构造函数，那么编译器就为该类合成出一个默认构造函数。 不过这个合成操作只有在构造函数真正被需要的时候才会发生； 如果一个类A含有多个成员类对象的话，那么类A的每一个构造函数必须调用每一个成员对象的默认构造函数而且必须按照类对象在类A中的声明顺序进行；   带有默认构造函数的">
@@ -393,22 +393,6 @@
 </li>
 </ul>
 <p>指针名 = 函数名； 指针名 = &amp;函数名</p>
-<h1 id="使用智能指针管理内存资源，RAII是怎么回事？"><a href="#使用智能指针管理内存资源，RAII是怎么回事？" class="headerlink" title="使用智能指针管理内存资源，RAII是怎么回事？"></a>使用智能指针管理内存资源，RAII是怎么回事？</h1><ul>
-<li>RAII全称是“Resource Acquisition is Initialization”，直译过来是“资源获取即初始化”，也就是说在构造函数中申请分配资源，在析构函数中释放资源。</li>
-</ul>
-<p>因为C++的语言机制保证了，当一个对象创建的时候，自动调用构造函数，当对象超出作用域的时候会自动调用析构函数。所以，在RAII的指导下，我们应该使用类来管理资源，将资源和对象的生命周期绑定。</p>
-<ul>
-<li>智能指针（std::shared_ptr和std::unique_ptr）即RAII最具代表的实现，使用智能指针，可以实现自动的内存管理，再也不需要担心忘记delete造成的内存泄漏。</li>
-</ul>
-<p>毫不夸张的来讲，有了智能指针，代码中几乎不需要再出现delete了。</p>
-<h1 id="手写实现智能指针类"><a href="#手写实现智能指针类" class="headerlink" title="手写实现智能指针类"></a>手写实现智能指针类</h1><ul>
-<li>智能指针是一个数据类型，一般用模板实现，模拟指针行为的同时还提供自动垃圾回收机制。它会自动记录SmartPointer对象的引用计数，一旦T类型对象的引用计数为0，就释放该对象。</li>
-</ul>
-<p>除了指针对象外，我们还需要一个引用计数的指针设定对象的值，并将引用计数计为1，需要一个构造函数。新增对象还需要一个构造函数，析构函数负责引用计数减少和释放内存。</p>
-<p>通过覆写赋值运算符，才能将一个旧的智能指针赋值给另一个指针，同时旧的引用计数减1，新的引用计数加1</p>
-<ul>
-<li>一个构造函数、拷贝构造函数、复制构造函数、析构函数、移走函数；</li>
-</ul>
 <h1 id="函数调用过程栈的变化，返回值和参数变量哪个先入栈？"><a href="#函数调用过程栈的变化，返回值和参数变量哪个先入栈？" class="headerlink" title="函数调用过程栈的变化，返回值和参数变量哪个先入栈？"></a>函数调用过程栈的变化，返回值和参数变量哪个先入栈？</h1><ol>
 <li>调用者函数把被调函数所需要的参数按照与被调函数的形参顺序相反的顺序压入栈中,即:从右向左依次把被调函数所需要的参数压入栈;</li>
 <li>调用者函数使用call指令调用被调函数,并把call指令的下一条指令的地址当成返回地址压入栈中(这个压栈操作隐含在call指令中);</li>
@@ -596,26 +580,6 @@
 <li>如果一个类没有拷贝构造函数，但是该类声明或继承了虚函数，此时编译器会为该类合成一个拷贝构造函数；</li>
 <li>如果一个类没有拷贝构造函数，但是该类含有虚基类，此时编译器会为该类合成一个拷贝构造函数；</li>
 </ul>
-<h1 id="成员初始化列表会在什么时候用到？它的调用过程是什么？"><a href="#成员初始化列表会在什么时候用到？它的调用过程是什么？" class="headerlink" title="成员初始化列表会在什么时候用到？它的调用过程是什么？"></a>成员初始化列表会在什么时候用到？它的调用过程是什么？</h1><ul>
-<li>当初始化一个引用成员变量时；</li>
-<li>初始化一个const成员变量时；</li>
-<li>当调用一个基类的构造函数，而构造函数拥有一组参数时；</li>
-<li>当调用一个成员类的构造函数，而他拥有一组参数；</li>
-<li>编译器会一一操作初始化列表，以适当顺序在构造函数之内安插初始化操作，并且在任何显示用户代码前。list中的项目顺序是由类中的成员声明顺序决定的，不是初始化列表中的排列顺序决定的。</li>
-</ul>
-<h1 id="构造函数的执行顺序是什么？"><a href="#构造函数的执行顺序是什么？" class="headerlink" title="构造函数的执行顺序是什么？"></a>构造函数的执行顺序是什么？</h1><ul>
-<li>在派生类构造函数中，所有的虚基类及上一层基类的构造函数调用；</li>
-<li>对象的vptr被初始化；</li>
-<li>如果有成员初始化列表，将在构造函数体内扩展开来，这必须在vptr被设定之后才做；</li>
-<li>执行程序员所提供的代码；</li>
-</ul>
-<h1 id="一个类中的全部构造函数的扩展过程是什么？"><a href="#一个类中的全部构造函数的扩展过程是什么？" class="headerlink" title="一个类中的全部构造函数的扩展过程是什么？"></a>一个类中的全部构造函数的扩展过程是什么？</h1><ul>
-<li>记录在成员初始化列表中的数据成员初始化操作会被放在构造函数的函数体内，并与成员的声明顺序为顺序；</li>
-<li>如果一个成员并没有出现在成员初始化列表中，但它有一个默认构造函数，那么默认构造函数必须被调用；</li>
-<li>如果class有虚表，那么它必须被设定初值；</li>
-<li>所有上一层的基类构造函数必须被调用；</li>
-<li>所有虚基类的构造函数必须被调用。</li>
-</ul>
 <h1 id="说一说strcpy、sprintf与memcpy这三个函数的不同之处"><a href="#说一说strcpy、sprintf与memcpy这三个函数的不同之处" class="headerlink" title="说一说strcpy、sprintf与memcpy这三个函数的不同之处"></a>说一说strcpy、sprintf与memcpy这三个函数的不同之处</h1><ul>
 <li>操作对象不同<ul>
 <li>strcpy的两个操作对象均为字符串</li>
@@ -652,10 +616,6 @@
 <li>将类定义为抽象基类或者将构造函数声明为private；</li>
 <li>不允许类外部创建类对象，只能在类内部创建对象</li>
 </ul>
-<h1 id="main函数的返回值有什么值得考究之处吗？"><a href="#main函数的返回值有什么值得考究之处吗？" class="headerlink" title="main函数的返回值有什么值得考究之处吗？"></a>main函数的返回值有什么值得考究之处吗？</h1><p>程序运行过程入口点main函数，main（）函数返回值类型必须是int，这样返回值才能传递给程序激活者（如操作系统）表示程序正常退出。</p>
-<p>main（int args, char **argv） 参数的传递。参数的处理，一般会调用getopt（）函数处理，但实践中，这仅仅是一部分，不会经常用到的技能点。</p>
-<h1 id="智能指针出现循环引用怎么解决？"><a href="#智能指针出现循环引用怎么解决？" class="headerlink" title="智能指针出现循环引用怎么解决？"></a>智能指针出现循环引用怎么解决？</h1><p>弱指针用于专门解决shared_ptr循环引用的问题，weak_ptr不会修改引用计数，即其存在与否并不影响对象的引用计数器。循环引用就是：两个对象互相使用一个shared_ptr成员变量指向对方。</p>
-<p>弱引用并不对对象的内存进行管理，在功能上类似于普通指针，然而一个比较大的区别是，弱引用能检测到所管理的对象是否已经被释放，从而避免访问非法内存。</p>
 <h1 id="strcpy函数和strncpy函数的区别？哪个函数更安全？"><a href="#strcpy函数和strncpy函数的区别？哪个函数更安全？" class="headerlink" title="strcpy函数和strncpy函数的区别？哪个函数更安全？"></a>strcpy函数和strncpy函数的区别？哪个函数更安全？</h1><ul>
 <li><p>函数原型</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">char</span>* <span class="title">strcpy</span><span class="params">(<span class="keyword">char</span>* strDest, <span class="keyword">const</span> <span class="keyword">char</span>* strSrc)</span></span></span><br><span class="line"><span class="function"><span class="keyword">char</span>* <span class="title">strncpy</span><span class="params">(<span class="keyword">char</span>* strDest, <span class="keyword">const</span> <span class="keyword">char</span>* strSrc, <span class="keyword">int</span> pos)</span></span></span><br></pre></td></tr></table></figure>
@@ -708,8 +668,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2021/03/09/Cpp提问1/" rel="next" title="《逆袭进大厂》之C++篇 1">
-                <i class="fa fa-chevron-left"></i> 《逆袭进大厂》之C++篇 1
+              <a href="/2021/03/09/Cpp提问2/" rel="next" title="《逆袭进大厂》之C++篇 2">
+                <i class="fa fa-chevron-left"></i> 《逆袭进大厂》之C++篇 2
               </a>
             
           </div>
@@ -718,8 +678,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2021/03/09/Cpp提问2/" rel="prev" title="《逆袭进大厂》之C++篇 2">
-                《逆袭进大厂》之C++篇 2 <i class="fa fa-chevron-right"></i>
+              <a href="/2021/03/09/Cpp提问1/" rel="prev" title="《逆袭进大厂》之C++篇 1">
+                《逆袭进大厂》之C++篇 1 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -861,7 +821,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#什么情况会自动生成默认构造函数？"><span class="nav-number">1.</span> <span class="nav-text">什么情况会自动生成默认构造函数？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#函数指针？"><span class="nav-number">2.</span> <span class="nav-text">函数指针？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#使用智能指针管理内存资源，RAII是怎么回事？"><span class="nav-number">3.</span> <span class="nav-text">使用智能指针管理内存资源，RAII是怎么回事？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#手写实现智能指针类"><span class="nav-number">4.</span> <span class="nav-text">手写实现智能指针类</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#函数调用过程栈的变化，返回值和参数变量哪个先入栈？"><span class="nav-number">5.</span> <span class="nav-text">函数调用过程栈的变化，返回值和参数变量哪个先入栈？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道printf函数的实现原理是什么吗？"><span class="nav-number">6.</span> <span class="nav-text">你知道printf函数的实现原理是什么吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#说一说你了解的关于lambda函数的全部知识"><span class="nav-number">7.</span> <span class="nav-text">说一说你了解的关于lambda函数的全部知识</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#为什么模板类一般都是放在一个h文件中"><span class="nav-number">8.</span> <span class="nav-text">为什么模板类一般都是放在一个h文件中</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#cout和printf有什么区别？"><span class="nav-number">9.</span> <span class="nav-text">cout和printf有什么区别？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#当程序中有函数重载时，函数的匹配原则和顺序是什么？"><span class="nav-number">10.</span> <span class="nav-text">当程序中有函数重载时，函数的匹配原则和顺序是什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#定义和声明的区别"><span class="nav-number">11.</span> <span class="nav-text">定义和声明的区别</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#说一下你理解的-ifdef-endif代表着什么？"><span class="nav-number">12.</span> <span class="nav-text">说一下你理解的 ifdef   endif代表着什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#隐式转换，如何消除隐式转换？"><span class="nav-number">13.</span> <span class="nav-text">隐式转换，如何消除隐式转换？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#迭代器：-it、it-哪个好，为什么"><span class="nav-number">14.</span> <span class="nav-text">迭代器：++it、it++哪个好，为什么</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#C-如何处理多个异常的？"><span class="nav-number">15.</span> <span class="nav-text">C++如何处理多个异常的？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#模板和实现可不可以不写在一个文件里面？为什么？"><span class="nav-number">16.</span> <span class="nav-text">模板和实现可不可以不写在一个文件里面？为什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#在成员函数中调用delete-this会出现什么问题？对象还可以使用吗？"><span class="nav-number">17.</span> <span class="nav-text">在成员函数中调用delete this会出现什么问题？对象还可以使用吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#如何在不使用额外空间的情况下，交换两个数？你有几种方法"><span class="nav-number">18.</span> <span class="nav-text">如何在不使用额外空间的情况下，交换两个数？你有几种方法</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道strcpy和memcpy的区别是什么吗？"><span class="nav-number">19.</span> <span class="nav-text">你知道strcpy和memcpy的区别是什么吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#程序在执行int-main-int-argc-char-argv-时的内存结构，你了解吗？"><span class="nav-number">20.</span> <span class="nav-text">程序在执行int main(int argc, char *argv[])时的内存结构，你了解吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道const-char-与string之间的关系是什么吗？"><span class="nav-number">21.</span> <span class="nav-text">你知道const char* 与string之间的关系是什么吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#为什么拷贝构造函数必须传引用不能传值？"><span class="nav-number">22.</span> <span class="nav-text">为什么拷贝构造函数必须传引用不能传值？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道空类的大小是多少吗？"><span class="nav-number">23.</span> <span class="nav-text">你知道空类的大小是多少吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#this指针调用成员变量时，堆栈会发生什么变化？"><span class="nav-number">24.</span> <span class="nav-text">this指针调用成员变量时，堆栈会发生什么变化？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道静态绑定和动态绑定吗？讲讲？"><span class="nav-number">25.</span> <span class="nav-text">你知道静态绑定和动态绑定吗？讲讲？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#如何设计一个类计算子类的个数？"><span class="nav-number">26.</span> <span class="nav-text">如何设计一个类计算子类的个数？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#怎么快速定位错误出现的地方"><span class="nav-number">27.</span> <span class="nav-text">怎么快速定位错误出现的地方</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#类对象的大小受哪些因素影响？"><span class="nav-number">28.</span> <span class="nav-text">类对象的大小受哪些因素影响？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#移动构造函数听说过吗？说说"><span class="nav-number">29.</span> <span class="nav-text">移动构造函数听说过吗？说说</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#什么时候合成构造函数？都说一说，你知道的都说一下"><span class="nav-number">30.</span> <span class="nav-text">什么时候合成构造函数？都说一说，你知道的都说一下</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#那什么时候需要合成拷贝构造函数呢？"><span class="nav-number">31.</span> <span class="nav-text">那什么时候需要合成拷贝构造函数呢？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#成员初始化列表会在什么时候用到？它的调用过程是什么？"><span class="nav-number">32.</span> <span class="nav-text">成员初始化列表会在什么时候用到？它的调用过程是什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#构造函数的执行顺序是什么？"><span class="nav-number">33.</span> <span class="nav-text">构造函数的执行顺序是什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#一个类中的全部构造函数的扩展过程是什么？"><span class="nav-number">34.</span> <span class="nav-text">一个类中的全部构造函数的扩展过程是什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#说一说strcpy、sprintf与memcpy这三个函数的不同之处"><span class="nav-number">35.</span> <span class="nav-text">说一说strcpy、sprintf与memcpy这三个函数的不同之处</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#将引用作为函数参数有哪些好处？"><span class="nav-number">36.</span> <span class="nav-text">将引用作为函数参数有哪些好处？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#如何阻止一个类被实例化？有哪些方法？"><span class="nav-number">37.</span> <span class="nav-text">如何阻止一个类被实例化？有哪些方法？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#main函数的返回值有什么值得考究之处吗？"><span class="nav-number">38.</span> <span class="nav-text">main函数的返回值有什么值得考究之处吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#智能指针出现循环引用怎么解决？"><span class="nav-number">39.</span> <span class="nav-text">智能指针出现循环引用怎么解决？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#strcpy函数和strncpy函数的区别？哪个函数更安全？"><span class="nav-number">40.</span> <span class="nav-text">strcpy函数和strncpy函数的区别？哪个函数更安全？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道回调函数吗？它的作用？"><span class="nav-number">41.</span> <span class="nav-text">你知道回调函数吗？它的作用？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#动态编译与静态编译"><span class="nav-number">42.</span> <span class="nav-text">动态编译与静态编译</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#什么情况会自动生成默认构造函数？"><span class="nav-number">1.</span> <span class="nav-text">什么情况会自动生成默认构造函数？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#函数指针？"><span class="nav-number">2.</span> <span class="nav-text">函数指针？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#函数调用过程栈的变化，返回值和参数变量哪个先入栈？"><span class="nav-number">3.</span> <span class="nav-text">函数调用过程栈的变化，返回值和参数变量哪个先入栈？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道printf函数的实现原理是什么吗？"><span class="nav-number">4.</span> <span class="nav-text">你知道printf函数的实现原理是什么吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#说一说你了解的关于lambda函数的全部知识"><span class="nav-number">5.</span> <span class="nav-text">说一说你了解的关于lambda函数的全部知识</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#为什么模板类一般都是放在一个h文件中"><span class="nav-number">6.</span> <span class="nav-text">为什么模板类一般都是放在一个h文件中</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#cout和printf有什么区别？"><span class="nav-number">7.</span> <span class="nav-text">cout和printf有什么区别？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#当程序中有函数重载时，函数的匹配原则和顺序是什么？"><span class="nav-number">8.</span> <span class="nav-text">当程序中有函数重载时，函数的匹配原则和顺序是什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#定义和声明的区别"><span class="nav-number">9.</span> <span class="nav-text">定义和声明的区别</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#说一下你理解的-ifdef-endif代表着什么？"><span class="nav-number">10.</span> <span class="nav-text">说一下你理解的 ifdef   endif代表着什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#隐式转换，如何消除隐式转换？"><span class="nav-number">11.</span> <span class="nav-text">隐式转换，如何消除隐式转换？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#迭代器：-it、it-哪个好，为什么"><span class="nav-number">12.</span> <span class="nav-text">迭代器：++it、it++哪个好，为什么</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#C-如何处理多个异常的？"><span class="nav-number">13.</span> <span class="nav-text">C++如何处理多个异常的？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#模板和实现可不可以不写在一个文件里面？为什么？"><span class="nav-number">14.</span> <span class="nav-text">模板和实现可不可以不写在一个文件里面？为什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#在成员函数中调用delete-this会出现什么问题？对象还可以使用吗？"><span class="nav-number">15.</span> <span class="nav-text">在成员函数中调用delete this会出现什么问题？对象还可以使用吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#如何在不使用额外空间的情况下，交换两个数？你有几种方法"><span class="nav-number">16.</span> <span class="nav-text">如何在不使用额外空间的情况下，交换两个数？你有几种方法</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道strcpy和memcpy的区别是什么吗？"><span class="nav-number">17.</span> <span class="nav-text">你知道strcpy和memcpy的区别是什么吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#程序在执行int-main-int-argc-char-argv-时的内存结构，你了解吗？"><span class="nav-number">18.</span> <span class="nav-text">程序在执行int main(int argc, char *argv[])时的内存结构，你了解吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道const-char-与string之间的关系是什么吗？"><span class="nav-number">19.</span> <span class="nav-text">你知道const char* 与string之间的关系是什么吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#为什么拷贝构造函数必须传引用不能传值？"><span class="nav-number">20.</span> <span class="nav-text">为什么拷贝构造函数必须传引用不能传值？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道空类的大小是多少吗？"><span class="nav-number">21.</span> <span class="nav-text">你知道空类的大小是多少吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#this指针调用成员变量时，堆栈会发生什么变化？"><span class="nav-number">22.</span> <span class="nav-text">this指针调用成员变量时，堆栈会发生什么变化？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道静态绑定和动态绑定吗？讲讲？"><span class="nav-number">23.</span> <span class="nav-text">你知道静态绑定和动态绑定吗？讲讲？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#如何设计一个类计算子类的个数？"><span class="nav-number">24.</span> <span class="nav-text">如何设计一个类计算子类的个数？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#怎么快速定位错误出现的地方"><span class="nav-number">25.</span> <span class="nav-text">怎么快速定位错误出现的地方</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#类对象的大小受哪些因素影响？"><span class="nav-number">26.</span> <span class="nav-text">类对象的大小受哪些因素影响？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#移动构造函数听说过吗？说说"><span class="nav-number">27.</span> <span class="nav-text">移动构造函数听说过吗？说说</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#什么时候合成构造函数？都说一说，你知道的都说一下"><span class="nav-number">28.</span> <span class="nav-text">什么时候合成构造函数？都说一说，你知道的都说一下</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#那什么时候需要合成拷贝构造函数呢？"><span class="nav-number">29.</span> <span class="nav-text">那什么时候需要合成拷贝构造函数呢？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#说一说strcpy、sprintf与memcpy这三个函数的不同之处"><span class="nav-number">30.</span> <span class="nav-text">说一说strcpy、sprintf与memcpy这三个函数的不同之处</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#将引用作为函数参数有哪些好处？"><span class="nav-number">31.</span> <span class="nav-text">将引用作为函数参数有哪些好处？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#如何阻止一个类被实例化？有哪些方法？"><span class="nav-number">32.</span> <span class="nav-text">如何阻止一个类被实例化？有哪些方法？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#strcpy函数和strncpy函数的区别？哪个函数更安全？"><span class="nav-number">33.</span> <span class="nav-text">strcpy函数和strncpy函数的区别？哪个函数更安全？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#你知道回调函数吗？它的作用？"><span class="nav-number">34.</span> <span class="nav-text">你知道回调函数吗？它的作用？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#动态编译与静态编译"><span class="nav-number">35.</span> <span class="nav-text">动态编译与静态编译</span></a></li></ol></div>
             
 
           </div>
