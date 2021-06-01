@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="积累,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="析构函数可以抛出异常吗？为什么不能抛出异常？除了资源泄露，还有其他需考虑的因素吗？C++标准指明析构函数不能、也不应该抛出异常。C++异常处理模型最大的特点和优势就是对C++中的面向对象提供了最强大的无缝支持。那么如果对象在运行期间出现了异常，C++异常处理模型有责任清除那些由于出现异常所导致的已经失效了的对象(也即对象超出了它原来的作用域)，并释放对象原来所分配的资源， 这就是调用这些对象的析构">
+<meta name="keywords" content="积累">
+<meta property="og:type" content="article">
+<meta property="og:title" content="牛客网做题笔记">
+<meta property="og:url" content="http://yoursite.com/2021/04/10/牛客笔记/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="析构函数可以抛出异常吗？为什么不能抛出异常？除了资源泄露，还有其他需考虑的因素吗？C++标准指明析构函数不能、也不应该抛出异常。C++异常处理模型最大的特点和优势就是对C++中的面向对象提供了最强大的无缝支持。那么如果对象在运行期间出现了异常，C++异常处理模型有责任清除那些由于出现异常所导致的已经失效了的对象(也即对象超出了它原来的作用域)，并释放对象原来所分配的资源， 这就是调用这些对象的析构">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/20210411112600.png">
+<meta property="og:image" content="http://yoursite.com/img/20210411102900.jpg">
+<meta property="og:updated_time" content="2021-05-17T09:44:47.483Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="牛客网做题笔记">
+<meta name="twitter:description" content="析构函数可以抛出异常吗？为什么不能抛出异常？除了资源泄露，还有其他需考虑的因素吗？C++标准指明析构函数不能、也不应该抛出异常。C++异常处理模型最大的特点和优势就是对C++中的面向对象提供了最强大的无缝支持。那么如果对象在运行期间出现了异常，C++异常处理模型有责任清除那些由于出现异常所导致的已经失效了的对象(也即对象超出了它原来的作用域)，并释放对象原来所分配的资源， 这就是调用这些对象的析构">
+<meta name="twitter:image" content="http://yoursite.com/img/20210411112600.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2021/04/10/牛客笔记/">
+
+
+
+
+
+  <title>牛客网做题笔记 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-mybetterhalf">
+          <a href="/mybetterhalf/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            mybetterhalf
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/04/10/牛客笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">牛客网做题笔记</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-04-10T23:29:00+08:00">
+                2021-04-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="析构函数可以抛出异常吗？为什么不能抛出异常？除了资源泄露，还有其他需考虑的因素吗？"><a href="#析构函数可以抛出异常吗？为什么不能抛出异常？除了资源泄露，还有其他需考虑的因素吗？" class="headerlink" title="析构函数可以抛出异常吗？为什么不能抛出异常？除了资源泄露，还有其他需考虑的因素吗？"></a>析构函数可以抛出异常吗？为什么不能抛出异常？除了资源泄露，还有其他需考虑的因素吗？</h1><p>C++标准指明析构函数不能、也不应该抛出异常。C++异常处理模型最大的特点和优势就是对C++中的面向对象提供了最强大的无缝支持。那么如果对象在运行期间出现了异常，C++异常处理模型有责任清除那些由于出现异常所导致的已经失效了的对象(也即对象超出了它原来的作用域)，并释放对象原来所分配的资源， 这就是调用这些对象的析构函数来完成释放资源的任务，所以从这个意义上说，析构函数已经变成了异常处理的一部分。</p>
+<p>1）如果析构函数抛出异常，则异常点之后的程序不会执行，如果析构函数在异常点之后执行了某些必要的动作比如释放某些资源，则这些动作不会执行，会造成诸如资源泄漏的问题。</p>
+<p>2）通常异常发生时，c++的机制会调用已经构造对象的析构函数来释放资源，此时若析构函数本身也抛出异常，则前一个异常尚未处理，又有新的异常，会造成程序崩溃的问题。</p>
+<h1 id="拷贝构造函数作用及用途？什么时候需要自定义拷贝构造函数？"><a href="#拷贝构造函数作用及用途？什么时候需要自定义拷贝构造函数？" class="headerlink" title="拷贝构造函数作用及用途？什么时候需要自定义拷贝构造函数？"></a>拷贝构造函数作用及用途？什么时候需要自定义拷贝构造函数？</h1><p>一般如果构造函数中存在动态内存分配，则必须定义拷贝构造函数。否则，可能会导致两个对象成员指向同一地址，出现“指针悬挂问题”。</p>
+<h1 id="统计一个数字的二进制表示有多少个1"><a href="#统计一个数字的二进制表示有多少个1" class="headerlink" title="统计一个数字的二进制表示有多少个1"></a>统计一个数字的二进制表示有多少个1</h1><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">func</span><span class="params">(<span class="keyword">int</span> x)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> countx = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">while</span>(x) &#123;</span><br><span class="line">        countx++;</span><br><span class="line">        x = x&amp;(x<span class="number">-1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> countx;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>每执行一次<code>x = x&amp;(x-1)</code>，会将x用二进制表示时最右边的一个1变为0，因为x-1将会将该位（x用二进制表示时最右边的一个1）变为0。</p>
+<h1 id="线程安全和线程不安全"><a href="#线程安全和线程不安全" class="headerlink" title="线程安全和线程不安全"></a>线程安全和线程不安全</h1><p>线程安全就是多线程访问时，采用了加锁机制，当一个线程访问该类的某个数据时，进行保护，其他线程不能进行访问直到该线程读取完，其他线程才可使用。不会出现数据不一致或者数据污染。</p>
+<p>线程不安全就是不提供数据访问保护，有可能出现多个线程先后更改数据造成所得到的数据是脏数据</p>
+<h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p>如果你的代码所在的进程中有多个线程在同时运行，而这些线程可能会同时运行这段代码。如果每次运行结果和 单线程运行的结果是一样的，而且其他的 变量的值也和预期的是一样的，就是线程安全的。</p>
+<p>或者说:一个类或者程序所提供的接口对于线程来说是 原子操作或者多个线程之间的切换不会导致该接口的执行结果存在二义性,也就是说我们不用考虑同步的问题。</p>
+<p>线程安全问题都是由 全局变量及 静态变量引起的。</p>
+<p>若每个线程中对全局变量、 静态变量只有读操作，而无写操作，一般来说，这个全局变量是线程安全的；若有多个线程同时执行写操作，一般都需要考虑 线程同步，否则的话就可能影响线程安全。</p>
+<h2 id="安全性"><a href="#安全性" class="headerlink" title="安全性"></a>安全性</h2><p>比如一个 ArrayList 类，在添加一个元素的时候，它可能会有两步来完成：1. 在 Items[Size] 的位置存放此元素；2. 增大 Size 的值。在 单线程运行的情况下，如果 Size = 0，添加一个元素后，此元素在位置 0，而且 Size=1；</p>
+<p>而如果是在 多线程情况下，比如有两个线程，线程 A 先将元素存放在位置 0。但是此时 CPU 调度线程A暂停，线程 B 得到运行的机会。线程B也向此 ArrayList 添加元素，因为此时 Size 仍然等于 0 （注意哦，我们假设的是添加一个元素是要两个步骤哦，而线程A仅仅完成了步骤1），所以线程B也将元素存放在位置0。然后线程A和线程B都继续运行，都增加 Size 的值。</p>
+<p>那好，我们来看看 ArrayList 的情况，元素实际上只有一个，存放在位置 0，而 Size 却等于 2。这就是“线程不安全”了。</p>
+<p>线程安全性不是一个非真即假的命题。 Vector 的方法都是同步的，并且 Vector 明确地设计为在 多线程环境中工作。但是它的 线程安全性是有限制的，即在某些方法之间有状态依赖(类似地，如果在迭代过程中 Vector 被其他线程修改，那么由 Vector.iterator() 返回的 iterator会抛出ConcurrentModifiicationException)。</p>
+<p>对于 Java 类中常见的 线程安全性级别，没有一种 分类系统可被广泛接受，不过重要的是在编写类时尽量记录下它们的线程安全行为。</p>
+<p>Bloch 给出了描述五类线程安全性的分类方法：不可变、线程安全、有条件线程安全、线程兼容和线程对立。只要明确地记录下线程安全特性，那么您是否使用这种系统都没关系。这种系统有其局限性 – 各类之间的界线不是百分之百地明确，而且有些情况它没照顾到 – 但是这套系统是一个很好的起点。这种 分类系统的核心是调用者是否可以或者必须用外部同步包围操作(或者一系列操作)。下面几节分别描述了 线程安全性的这五种类别。</p>
+<h2 id="不可变"><a href="#不可变" class="headerlink" title="不可变"></a>不可变</h2><p>不可变的对象一定是线程安全的，并且永远也不需要额外的同步 [1]  。因为一个不可变的对象只要构建正确，其外部可见状态永远也不会改变，永远也不会看到它处于不一致的状态。Java 类库中大多数基本数值类如 Integer 、 String 和 BigInteger 都是不可变的。</p>
+<p>需要注意的是，对于Integer，该类不提供add方法，加法是使用+来直接操作。而+操作是不具线程安全的。这是提供原子操作类AtomicInteger的原。</p>
+<h2 id="线程安全"><a href="#线程安全" class="headerlink" title="线程安全"></a>线程安全</h2><p>线程安全的对象具有在上面“线程安全”一节中描述的属性 – 由类的规格说明所规定的约束在对象被多个线程访问时仍然有效，不管运行时环境如何排线程都不需要任何额外的同步。这种 线程安全性保证是很严格的 – 许多类，如 Hashtable 或者 Vector 都不能满足这种严格的定义。</p>
+<h2 id="有条件的"><a href="#有条件的" class="headerlink" title="有条件的"></a>有条件的</h2><p>有条件的线程安全类对于单独的操作可以是线程安全的，但是某些操作序列可能需要外部同步。条件线程安全的最常见的例子是遍历由 Hashtable 或者 Vector 或者返回的 迭代器 – 由这些类返回的 fail-fast 迭代器假定在迭代器进行遍历的时候底层集合不会有变化。为了保证其他线程不会在遍历的时候改变集合，进行迭代的线程应该确保它是独占性地访问集合以实现遍历的完整性。通常，独占性的访问是由对锁的同步保证的 – 并且类的文档应该说明是哪个锁(通常是对象的内部 监视器(intrinsic monitor))。</p>
+<p>如果对一个有条件线程安全类进行记录，那么您应该不仅要记录它是有条件线程安全的，而且还要记录必须防止哪些操作序列的并发访问。用户可以合理地假设其他操作序列不需要任何额外的同步。</p>
+<h2 id="线程兼容"><a href="#线程兼容" class="headerlink" title="线程兼容"></a>线程兼容</h2><p>线程兼容类不是线程安全的，但是可以通过正确使用同步而在并发环境中安全地使用。这可能意味着用一个 synchronized 块包围每一个方法调用，或者创建一个包装器对象，其中每一个方法都是同步的(就像 Collections.synchronizedList() 一样)。也可能意味着用 synchronized 块包围某些操作序列。为了最大程度地利用线程兼容类，如果所有调用都使用同一个块，那么就不应该要求调用者对该块同步。这样做会使线程兼容的对象作为 变量实例包含在其他线程安全的对象中，从而可以利用其所有者对象的同步。许多常见的类是线程兼容的，如集合类 ArrayList 和 HashMap 、 java.text.SimpleDateFormat 、或者 JDBC 类 Connection 和 ResultSet 。</p>
+<h2 id="线程对立"><a href="#线程对立" class="headerlink" title="线程对立"></a>线程对立</h2><p>线程对立类是那些不管是否调用了外部同步都不能在并发使用时安全地呈现的类。线程对立很少见，当类修改静态数据，而静态数据会影响在其他线程中执行的其他类的行为，这时通常会出现线程对立。线程对立类的一个例子是调用 System.setOut() 的类。</p>
+<h1 id="报文等网络中的数据结构"><a href="#报文等网络中的数据结构" class="headerlink" title="报文等网络中的数据结构"></a>报文等网络中的数据结构</h1><ol>
+<li>报文(message)：报文是网络中交换与传输的数据单元，也是网络传输的单元。报文包含了将要发送的完整的数据信息，其长短不需一致。报文在传输过程中会不断地封装成分组、包、帧来传输，封装的方式就是添加一些控制信息组成的首部，那些就是报文头。</li>
+<li>分组(packet)：分组是在网络中传输的二进制格式的单元，为了提供通信性能和可靠性，每个用户发送的数据会被分成多个更小的部分。在每个部分的前面加上一些必要的控制信息组成的首部，有时也会加上尾部，就构成了一个分组。</li>
+<li>数据包(data packet)：数据包是TCP/IP协议通信传输中的数据单元，也称为“包”。是指自包含的，带有足够寻址信息，可独立地从源主机传输到目的主机，而不需要依赖早期的源主机和目的主机之间交换信息以及传输网络的数据包。</li>
+<li>数据报(datagram)：面向无连接的数据传输，其工作过程类似于报文交换。采用数据报方式传输时，被传输的分组称为数据报。</li>
+<li>帧(frame)：帧是数据链路层的传输单元。它将上层传入的数据添加一个头部和尾部，组成了帧。</li>
+</ol>
+<h1 id="NAT"><a href="#NAT" class="headerlink" title="NAT"></a>NAT</h1><p>在计算机网络中，网络地址转换（英语：Network Address Translation，缩写为NAT），也叫做网络掩蔽或者IP掩蔽（IP masquerading），是一种在IP封包通过路由器或防火墙时重写源IP地址或目的IP地址的技术。这种技术被普遍使用在有多台主机但只通过一个公有IP地址访问因特网的私有网络中。</p>
+<p>NAT是作为一种解决IPv4地址短缺以避免保留IP地址困难的方案而流行起来的。</p>
+<p>支持端口转换的NAT又可以分为两类：源地址转换和目的地址转换NAT。前一种情形下发起连接的计算机的IP地址将会被重写，使得内网主机发出的数据包能够到达外网主机。后一种情况下被连接计算机的IP地址将被重写，使得外网主机发出的数据包能够到达内网主机。实际上，以上两种方式通常会一起使用以支持双向通信。</p>
+<h1 id="微程序和微指令"><a href="#微程序和微指令" class="headerlink" title="微程序和微指令"></a>微程序和微指令</h1><ul>
+<li>一条机器指令对应一个微程序，这个微程序是由若干条微指令构成的。<ul>
+<li>因此，一条机器指令的功能是若干条微指令组成的序列来实现的。简而言之，一条机器指令所完成的操作划分成若干条微指令来完成，</li>
+<li>由微指令进行解释和执行。</li>
+</ul>
+</li>
+<li>从指令与微指令，程序与微程序，地址与微地址的一一对应关系上看，前者与内存储器有关，<ul>
+<li>而后者与控制存储器（它是微程序控制器的一部分。微程序控制器主要由控制存储器、微指令寄存器和地址转移逻辑三部分组成。</li>
+<li>其中，微指令寄存器又分为微地址寄存器和微命令寄存器两部分）有关，与此相关也有相对应的硬设备。</li>
+</ul>
+</li>
+<li>从一般指令的微程序执行流程图可以看出。每个CPU周期就对于一条微指令。<ul>
+<li>这就告诉我们怎么设计微程序，也将使得我们进一步体验到机器指令很微指令的关系。</li>
+</ul>
+</li>
+</ul>
+<h1 id="连续ARQ协议"><a href="#连续ARQ协议" class="headerlink" title="连续ARQ协议"></a>连续ARQ协议</h1><p>这个协议会连续发送一组数据包，然后再等待这些数据包的ACK。发送方采用流水线传输。流水线传输就是发送方可以连续发送多个分组，不必每发完一个分组就停下来等待对方确认。</p>
+<p>停止等待协议：是指发送完一个分组就停止发送，等待对方的确认，只有对方确认过，才发送下一个分组.</p>
+<h1 id="同步传输与异步传输的区别"><a href="#同步传输与异步传输的区别" class="headerlink" title="同步传输与异步传输的区别"></a>同步传输与异步传输的区别</h1><p>同步传输与异步传输的区别如下</p>
+<ul>
+<li>异步传输是面向字符的传输，而同步传输是面向比特的传输。</li>
+<li>异步传输的单位是字符，而同步传输的单位是帧。</li>
+<li>异步传输通过字符起止的开始码和停止码调整再同步的机会，而同步传输则是从数据中抽取同步信息。</li>
+<li>异步传输对时序的要求较低，同步传输往往通过特定的时钟线路协调时序。</li>
+<li>异步传输相对于同步传输效率较低</li>
+</ul>
+<h1 id="通道"><a href="#通道" class="headerlink" title="通道"></a>通道</h1><ol>
+<li>通道是一种通过执行通道程序管理I/O操作的控制器，它使主机（CPU和内存）与I/O操作之间达到更高的并行程度。由于它的任务是管理实现输入/输出操作，提供一种传送通道，所以将这种部件称作“通道”。</li>
+<li>CPU把数据传输功能下放给通道，通道与CPU分时使用内存，就可以实现CPU与外设的并行工作。</li>
+<li>在采用通道方式的指令系统中，除了供CPU编程使用的机器指令系统外，还设置另外供通道专用的一组通道指令，用通道指令编制通道程序，存入存储器。</li>
+<li>当需要进行I/O操作时，CPU只需启动通道，然后可以继续执行自身程序，通道则执行通道程序，管理与实现I/O操作。</li>
+<li>整个系统分为二级管理，一级是CPU对通道的管理，二级是通道对设备控制的管理。</li>
+</ol>
+<h1 id="SPOOLing-系统的特点"><a href="#SPOOLing-系统的特点" class="headerlink" title="SPOOLing 系统的特点"></a>SPOOLing 系统的特点</h1><p>SPOOLing 系统具有如下主要特点：</p>
+<ol>
+<li>提高了 I/O 的速度。这里，对数据所进行的 I/O 操作，已从对低速 I/O 设备进行的I/O 操作，演变为对输入井或输出井中数据的存取，如同脱机输入输出一样，提高了 I/O 速度，缓和了 CPU 与低速 I/O 设备之间速度不匹配的矛盾。</li>
+<li>将独占设备改造为共享设备。因为在 SPOOLing 系统中，实际上并没为任何进程分配设备，而只是在输入井或输出井中为进程分配一个存储区和建立一张 I/O 请求表。这样，便把独占设备改造为共享设备。</li>
+<li>实现了虚拟设备功能。宏观上，虽然是多个进程在同时使用一个设备，而对于每一个进程而言，他们都会认为自己是独占了一个设备。当然，该设备只是逻辑上的设备。SPOOLing 系统实现了将独占设备变换为若干台对应的逻辑设备的功能。</li>
+</ol>
+<h1 id="死锁必要条件"><a href="#死锁必要条件" class="headerlink" title="死锁必要条件"></a>死锁必要条件</h1><ul>
+<li>互斥条件：指进程对所分配的资源进行排它性使用，也就是说在某一段时间内，某资源只被一个进程占用，如果还有其它进程请求该资源，则请求的进程只能等待，直到该资源被释放。</li>
+<li>请求和保持条件：指一个进程已经拥有了某些资源，但是它还需要其它资源，于是又提出新的申请，而该资源又偏偏被其它进程占用，此时该申请资源的进程产生了阻塞，它又不释放自己已占有的资源。</li>
+<li>不剥夺条件：指进程已获得的资源不能被剥夺，只有自己使用完之后才释放</li>
+<li>环路等待条件：指发生死锁的时候，一定存在一个环路</li>
+</ul>
+<h1 id="进程同步和进程互斥"><a href="#进程同步和进程互斥" class="headerlink" title="进程同步和进程互斥"></a>进程同步和进程互斥</h1><p>进程同步：进程同步也是进程之间直接的制约关系，是为完成某种任务而建立的两个或多个线程，这个线程需要在某些位置上协调他们的工作次序而等待、传递信息所产生的制约关系。进程间的直接制约关系来源于他们之间的合作。</p>
+<p>比如说进程A需要从缓冲区读取进程B产生的信息，当缓冲区为空时，进程B因为读取不到信息而被阻塞。而当进程A产生信息放入缓冲区时，进程B才会被唤醒。概念如图所示。</p>
+<p>进程互斥：进程互斥是进程之间的间接制约关系。当一个进程进入临界区使用临界资源时，另一个进程必须等待。只有当使用临界资源的进程退出临界区后，这个进程才会解除阻塞状态。</p>
+<p>比如进程B需要访问打印机，但此时进程A占有了打印机，进程B会被阻塞，直到进程A释放了打印机资源，进程B才可以继续执行。概念如图所示。</p>
+<h1 id="进程上下文"><a href="#进程上下文" class="headerlink" title="进程上下文"></a>进程上下文</h1><p>进程上下文保存的是进程的状态，也就是进程用到的寄存器、内存中的数据，包括通用目的寄存器、浮点寄存器、程序计数器、用户栈、状态寄存器、内核栈和各种内核数据结构，比如页表、进程表、文件表。上下文切换时候需要保存进程上下文，继续执行被抢占的进程时，恢复的内容就是上下文。</p>
+<h1 id="操作系统"><a href="#操作系统" class="headerlink" title="操作系统"></a>操作系统</h1><p>操作系统是一种系统软件，但与其他的系统软件和应用软件有很大的不同，它有自己的特殊性即基本特征。操作系统的基本特征包括并发、共享、虚拟和异步。</p>
+<ul>
+<li>并发(Concurrence)：并发是指两个或多个事件在同一时间间隔内发生。操作系统的并发性是指计算机系统中同时存在多个运行着的程序，因此它具有处理和调度多个程序同时执行的能力。在操作系统中，引入进程的目的是使程序能并发执行。</li>
+<li>共享（Sharing)：资源共享是指系统中的资源可供内存中多个并发执行的进程共同使用。共享可分为以下两种资源共享方式：<ul>
+<li>互斥共享方式：系统中的某些资源，如打印机、磁带机，虽然它们可以提供给多个进程使用，但为使所打印或记录的结果不致造成混淆，应规定在一段时间内只允许一个进程访问该资源。</li>
+<li>同时访问方式：系统中还有另一类资源，允许在一段时间内由多个进程同时对它们进行访问。这里所谓的“同时”往往是宏观上的，而在微观上，这些进程可能是交替地对该资源进行访问即 “分时共享”。典型的可供多个进程“同时”访问的资源是磁盘设备，一些用重入码编写的文件也可以被“同时”共享，即若干个用户同时访问该文件。</li>
+</ul>
+</li>
+<li>虛拟（Virtual)：虚拟是指把一个物理上的实体变为若干个逻辑上的对应物。物理实体（前者）是实的，即实际存在的；而后者是虚的，是用户感觉上的事物。用于实现虚拟的技术，称为虚拟技术。在操作系统中利用了多种虚拟技术，分别用来实现虚拟处理器、虚拟内存和虚拟外部设备等。</li>
+<li>异步(Asynchronism)：在多道程序环境下，允许多个程序并发执行，但由于资源有限，进程的执行不是一贯到底，而是走走停停，以不可预知的速度向前推进，这就是进程的异步性。异步性使得操作系统运行在一种随机的环境下，可能导致进程产生与时间有关的错误 (就像对全局变量的访问顺序不当会导致程序出错一样）。但是只要运行环境相同，操作系统必须保证多次运行进程，都获得相同的结果。</li>
+</ul>
+<h1 id="卡特兰数"><a href="#卡特兰数" class="headerlink" title="卡特兰数"></a>卡特兰数</h1><p>卡特兰数是组合数学中一个常出现在各种计数问题中的数列。</p>
+<p>卡特兰数的公式：<code>h(0)=1,h(1)=1,h(n)= h(0)*h(n-1)+h(1)*h(n-2) + ... + h(n-1)*h(0)</code> (n&gt;=2)</p>
+<p>即<code>h(n)=h(n-1)*(4*n-2)/(n+1)</code>，即<code>h(n)=C(2n,n)/(n+1)</code>;</p>
+<p>卡特兰数可以运用的地方有：</p>
+<ol>
+<li>括号化：矩阵连乘： P=a1×a2×a3×……×an，依据乘法结合律，不改变其顺序，只用括号表示成对的乘积，试问有几种括号化的方案；</li>
+<li>出栈次序：一个栈(无穷大)的进栈序列为1，2，3，…，n，有多少个不同的出栈序列；</li>
+<li>凸多边形三角划分：在一个凸多边形中，通过若干条互不相交的对角线，把这个多边形划分成了若干个三角形。任务是键盘上输入凸多边形的边数n，求不同划分的方案数f（n）？在圆上选择2n个点，将这些点成对连接起来使得所得到的n条线段不相交的方法数；</li>
+<li>给定节点组成二叉搜索树：给定N个节点，能构成多少种不同的二叉搜索树；</li>
+<li>n对括号正确匹配数目：给定n对括号，求括号正确配对的字符串数。</li>
+</ol>
+<h1 id="关系的完整性"><a href="#关系的完整性" class="headerlink" title="关系的完整性"></a>关系的完整性</h1><p>关系的完整性主要包括域完整性、实体完整性和参照完整性三种。</p>
+<ul>
+<li>域（列）完整性  <ul>
+<li>域完整性是对数据表中字段属性的约束，通常指数据的有效性，它包括字段的值域、字段的类型及字段的有效规则等约束，它是由确定关系结构时所定义的字段的属性决定的。限制数据类型，缺省值，规则，约束，是否可以为空，域完整性可以确保不会输入无效的值.。</li>
+</ul>
+</li>
+<li>实体（行）完整性<ul>
+<li>实体完整性是对关系中的记录唯一性，也就是主键的约束。准确地说，实体完整性是指关系中的主属性值不能为Null且不能有相同值。定义表中的所有行能唯一的标识，一般用主键，唯一索引 unique关键字，及identity属性比如说我们的身份证号码，可以唯一标识一个人. </li>
+</ul>
+</li>
+<li>参照完整性<ul>
+<li>参照完整性是对关系数据库中建立关联关系的数据表间数据参照引用的约束，也就是对外键的约束。准确地说，参照完整性是指关系中的外键必须是另一个关系的主键有效值，或者是NULL。参考完整性维护表间数据的有效性，完整性，通常通过建立外部键联系另一表的主键实现，还可以用触发器来维护参考完整性</li>
+</ul>
+</li>
+</ul>
+<h1 id="五大约束"><a href="#五大约束" class="headerlink" title="五大约束"></a>五大约束</h1><ol>
+<li>主键约束（Primay Key Coustraint） 唯一性，非空性</li>
+<li>唯一约束 （Unique Counstraint）唯一性，可以空，但只能有一个</li>
+<li>检查约束 (Check Counstraint) 对该列数据的范围、格式的限制（如：年龄、性别等）</li>
+<li>默认约束 (Default Counstraint) 该数据的默认值</li>
+<li>外键约束 (Foreign Key Counstraint) 需要建立两表间的关系并引用主表的列</li>
+</ol>
+<h1 id="三大范式"><a href="#三大范式" class="headerlink" title="三大范式"></a>三大范式</h1><ul>
+<li>第1范式：每个表中都有1列，并且该列是不可拆分的最小单元</li>
+<li>第2范式：1张表只描述一件事情</li>
+<li>第3范式：用外键做表的关联</li>
+</ul>
+<h1 id="重定位"><a href="#重定位" class="headerlink" title="重定位"></a>重定位</h1><ul>
+<li>重定位：就是把作业地址空间中使用的逻辑地址变换为存储空间的物理地址的过程，又称为地址映射</li>
+<li>动态重定位：程序在执行的过程中还可以重定位，由地址变换机构进行地址变换，有以下两种实现方式：</li>
+<li>重定位寄存器（一般用在段页式存储中）：即基址寄存器，将指令中的有效地址与重定位寄存器中的基址相加得到访问地址，从而实现地址动态修改；</li>
+<li>采用页表描述虚、实页面的对应关系。</li>
+<li>关于目标程序，既然是“程序在执行的过程中， 将 指令中的有效地址 与 重定位寄存器中的基址 相加得到 访问地址 ，从而实现地址动态修改”，那么就是说在 程序在执行的过程中，对目标程序的指令和数据做一个修改，从而实现地址映射（重定位）。</li>
+</ul>
+<h1 id="可剥夺资源"><a href="#可剥夺资源" class="headerlink" title="可剥夺资源"></a>可剥夺资源</h1><p>系统中的资源可以分为两类，一类是可剥夺资源，是指某进程在获得这类资源后，该资源可以再被其他进程或系统剥夺。例如，优先权高的进程可以剥夺优先权低的进程的 处理机 。又如，内存区可由 存储器管理 程序，把一个进程从一个存储区移到另一个存储区，此即剥夺了该进程原来占有的存储区，甚至可将一进程从内存调到外存上，可见， CPU 和 主存 均属于可剥夺性资源。另一类资源是不可剥夺资源，当系统把这类资源分配给某进程后，再不能强行收回，只能在进程用完后自行释放，如 磁带机 、打印机等。</p>
+<h1 id="打开文件权限"><a href="#打开文件权限" class="headerlink" title="打开文件权限"></a>打开文件权限</h1><p><img src="/img/20210411112600.png" alt></p>
+<h1 id="互联网分层"><a href="#互联网分层" class="headerlink" title="互联网分层"></a>互联网分层</h1><ul>
+<li>ICMP :   网络层协议</li>
+<li>TCP  :   传输层协议</li>
+<li>SNMP :   应用层协议</li>
+<li>NFS  :   会话层、应用层协议（NFS ，即网络文件系统，是应用层协议；但是 NFS 是基于 RPC 协议的，所以也把它纳入了会话层协议）</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>分层</th>
+<th>作用</th>
+<th>协议</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>物理层</td>
+<td>通过媒介传输比特，确定机械及电气规范（比特 Bit）</td>
+<td>RJ45、CLOCK、IEEE802.3（中继器，集线器）</td>
+</tr>
+<tr>
+<td>数据链路层</td>
+<td>将比特组装成帧和点到点的传递（帧 Frame）</td>
+<td>PPP、FR、HDLC、VLAN、MAC（网桥，交换机）</td>
+</tr>
+<tr>
+<td>网络层</td>
+<td>负责数据包从源到宿的传递和网际互连（包 Packet）</td>
+<td>IP、ICMP、ARP、RARP、OSPF、IPX、RIP、IGRP（路由器）</td>
+</tr>
+<tr>
+<td>运输层</td>
+<td>提供端到端的可靠报文传递和错误恢复（ 段Segment）</td>
+<td>TCP、UDP、SPX</td>
+</tr>
+<tr>
+<td>会话层</td>
+<td>建立、管理和终止会话（会话协议数据单元 SPDU）</td>
+<td>NFS、SQL、NETBIOS、RPC</td>
+</tr>
+<tr>
+<td>表示层</td>
+<td>对数据进行翻译、加密和压缩（表示协议数据单元 PPDU）</td>
+<td>JPEG、MPEG、ASII</td>
+</tr>
+<tr>
+<td>应用层</td>
+<td>允许访问OSI环境的手段（应用协议数据单元 APDU）</td>
+<td>FTP、DNS、Telnet、SMTP、HTTP、WWW、NFS</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>PPP是点对点协议，为在点对点连接上传输多协议数据包提供一个标准方法.</li>
+<li>ICMP是Internet控制管理协议，它是TCP/IP协议族的一个子协议，用于在IP主机、路由器之间传递控制消息。控制消息是指网络通不通、主机是否可达、路由是否可用等网络本身的消息，这些消息虽然不传递用户数据，但是对于用户数据的传递很重要。</li>
+<li>ARP协议是地址解析协议，是根据IP地址获取物理地址的一个TCP/IP协议。主机发送消息时将包含目标IP地址的ARP请求并广播到网络上的所有主机，并接受返回消息，一次确定目标的物理地址；收到返回消息后将该IP地址和物理地址存入本机ARP缓存中并保留一定时间，下次请求时直接查询ARP缓存以节约资源。 </li>
+<li>RARP协议（Reverse ARP，反向ARP协议），其功能是将MAC地址解析为对应的IP地址。 </li>
+<li>DHCP是动态主机配置协议，一个局域网的网络协议，使用UDP协议工作，主要是给内部网络或是网络服务供应商自动分配IP地址，给用户或者内部网络管理员作为对所有计算机管理的手段。</li>
+<li>RIP协议是一种内部网关协议（IGP），是一种动态路由选择协议，用于自治系统（AS）内的路由信息的传递。RIP协议基于距离矢量算法（DistanceVectorAlgorithms），使用“跳数”(即metric)来衡量到达目标地址的路由距离。</li>
+</ul>
+<h1 id="建堆有2种方法"><a href="#建堆有2种方法" class="headerlink" title="建堆有2种方法"></a>建堆有2种方法</h1><ul>
+<li>第一种方法：HeapInsert<ul>
+<li>它可以假定我们事先不知道有多少个元素，通过不断往堆里面插入元素进行调整来构建堆。这种插入建堆的时间复杂度是O(NlogN)</li>
+</ul>
+</li>
+<li>第二种方法：Heapify<ul>
+<li>从最后一个非叶子节点一直到根结点进行堆化的调整。如果当前节点小于某个自己的孩子节点（大根堆中），那么当前节点和这个孩子交换。这种建堆的时间复杂度是O(N)</li>
+</ul>
+</li>
+</ul>
+<p>Heapify是一种类似下沉的操作，HeapInsert是一种类似上浮的操作。</p>
+<h1 id="man命令"><a href="#man命令" class="headerlink" title="man命令"></a>man命令</h1><p>man的级别：</p>
+<ul>
+<li>1：查看命令的帮助</li>
+<li>2：查看可被内核调用的函数的帮助</li>
+<li>3：查看函数和函数库的帮助</li>
+<li>4：查看特殊文件的帮助（主要是/dev目录下的文件）</li>
+<li>5：查看配置文件的帮助</li>
+<li>6：查看游戏的帮助</li>
+<li>7：查看其它杂项的帮助</li>
+<li>8：查看系统管理员可用命令的帮助</li>
+</ul>
+<p>man -f 【命令】–可以查看这个命令有哪些级别</p>
+<p>man 5 passwd // 在入口为文件系统去查询passwd的帮助文档</p>
+<h1 id="红黑树和AVL树"><a href="#红黑树和AVL树" class="headerlink" title="红黑树和AVL树"></a>红黑树和AVL树</h1><p>好处及用途：红黑树 并不追求“完全平衡 ”——它只要求部分地达到平衡要求，降低了对旋转的要求，从而提高了性能。</p>
+<p>红黑树能够以 O(log2 n) 的时间复杂度进行搜索、插入、删除操作。此外，由于它的设计，任何不平衡都会在三次旋转之内解决。当然，还有一些更好的，但实现起来更复杂的数据结构 能够做到一步旋转之内达到平衡，但红黑树能够给我们一个比较“便宜”的解决方案。红黑树的算法时间复杂度和AVL相同，但统计性能比AVL树更高。</p>
+<p>当然，红黑树并不适应所有应用树的领域。如果数据基本上是静态的，那么让他们待在他们能够插入，并且不影响平衡的地方会具有更好的性能。如果数据完全是静态的，例如，做一个哈希表，性能可能会更好一些。</p>
+<p>AVL树是最先发明的自平衡二叉查找树。在AVL树中任何节点的两个儿子子树的高度最大差别为一，所以它也被称为高度平衡树。查找、插入和删除在平均和最坏情况下都是O(log n)。增加和删除可能需要通过一次或多次树旋转来重新平衡这个树。</p>
+<p>引入二叉树的目的是为了提高二叉树的搜索的效率，减少树的平均搜索长度。为此，就必须每向二叉树插入一个结点时调整树的结构，使得二叉树搜索保持平衡，从而可能降低树的高度，减少的平均树的搜索长度。</p>
+<p>一棵AVL树满足以下的条件: </p>
+<ol>
+<li>它的左子树和右子树都是AVL树 </li>
+<li>左子树和右子树的高度差不能超过1 </li>
+</ol>
+<p>性质: </p>
+<ol>
+<li>一棵n个结点的AVL树的其高度保持在O(log2(n))，不会超过3/2log2(n+1) </li>
+<li>一棵n个结点的AVL树的平均搜索长度保持在O(log2(n)). </li>
+<li>一棵n个结点的AVL树删除一个结点做平衡化旋转所需要的时间为0(log2(n)). </li>
+</ol>
+<p>从1这点来看红黑树是牺牲了严格的高度平衡的优越条件为代价。红黑树能够以O(log2 n)的时间复杂度进行搜索、插入、删除操作。此外，由于它的设计，任何不平衡都会在三次旋转之内解决。当然，还有一些更好的，但实现起来更复杂的数据结构 能够做到一步旋转之内达到平衡，但红黑树能够给我们一个比较“便宜”的解决方案。红黑树的算法时间复杂度和AVL相同，但统计性能比AVL树更高。</p>
+<h1 id="读写锁"><a href="#读写锁" class="headerlink" title="读写锁"></a>读写锁</h1><ol>
+<li>当读写锁是写加锁状态时，在这个锁被解锁之前，所有试图对这个锁加锁的线程都会被阻塞</li>
+<li>当读写锁在读加锁状态时，所有试图以读模式对它进行加锁的线程都可以得到访问权，但是以写模式对它进行加锁的线程将会被阻塞</li>
+<li>当读写锁在读模式的锁状态时，如果有另外的线程试图以写模式加锁，读写锁通常会阻塞随后的读模式锁的请求，这样可以避免读模式锁长期占用，而等待的写模式锁请求则长期阻塞。</li>
+</ol>
+<h1 id="运算符优先级"><a href="#运算符优先级" class="headerlink" title="运算符优先级"></a>运算符优先级</h1><p><img src="/img/20210411102900.jpg" alt></p>
+<h1 id="流水线阻塞"><a href="#流水线阻塞" class="headerlink" title="流水线阻塞"></a>流水线阻塞</h1><p>指令流水线概述：一种将多条指令执行的过程相互重叠的实现技巧，是CPU可以通过并行执行多条指令来提高吞吐率。</p>
+<p>流水线的三种冒险（阻塞）</p>
+<ul>
+<li>同一个部件同时被不同指令使用</li>
+<li>后面指令用到前面指令结果，但前面指令的结果还没有产生</li>
+<li>转移或异常改变指令流程，顺序执行指令在目标地址产生前已被取出</li>
+</ul>
+<p>解决流水线冒险（阻塞）的方法</p>
+<ul>
+<li>硬件阻塞（stall）</li>
+<li>软件插入“NOP”指令</li>
+<li>转发（Forwarding）或旁路（ByPassing）技术</li>
+<li>编译优化，调整指令顺序</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/积累/" rel="tag"># 积累</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/04/10/计算机体系结构_量化研究方法 笔记3/" rel="next" title="计算机体系结构 量化研究方法 笔记3">
+                <i class="fa fa-chevron-left"></i> 计算机体系结构 量化研究方法 笔记3
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/04/17/编译原理之代码优化/" rel="prev" title="编译原理之代码优化">
+                编译原理之代码优化 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">300</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/xiaomeihao.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#析构函数可以抛出异常吗？为什么不能抛出异常？除了资源泄露，还有其他需考虑的因素吗？"><span class="nav-number">1.</span> <span class="nav-text">析构函数可以抛出异常吗？为什么不能抛出异常？除了资源泄露，还有其他需考虑的因素吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#拷贝构造函数作用及用途？什么时候需要自定义拷贝构造函数？"><span class="nav-number">2.</span> <span class="nav-text">拷贝构造函数作用及用途？什么时候需要自定义拷贝构造函数？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#统计一个数字的二进制表示有多少个1"><span class="nav-number">3.</span> <span class="nav-text">统计一个数字的二进制表示有多少个1</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#线程安全和线程不安全"><span class="nav-number">4.</span> <span class="nav-text">线程安全和线程不安全</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#概念"><span class="nav-number">4.1.</span> <span class="nav-text">概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安全性"><span class="nav-number">4.2.</span> <span class="nav-text">安全性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#不可变"><span class="nav-number">4.3.</span> <span class="nav-text">不可变</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#线程安全"><span class="nav-number">4.4.</span> <span class="nav-text">线程安全</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#有条件的"><span class="nav-number">4.5.</span> <span class="nav-text">有条件的</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#线程兼容"><span class="nav-number">4.6.</span> <span class="nav-text">线程兼容</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#线程对立"><span class="nav-number">4.7.</span> <span class="nav-text">线程对立</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#报文等网络中的数据结构"><span class="nav-number">5.</span> <span class="nav-text">报文等网络中的数据结构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#NAT"><span class="nav-number">6.</span> <span class="nav-text">NAT</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#微程序和微指令"><span class="nav-number">7.</span> <span class="nav-text">微程序和微指令</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#连续ARQ协议"><span class="nav-number">8.</span> <span class="nav-text">连续ARQ协议</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#同步传输与异步传输的区别"><span class="nav-number">9.</span> <span class="nav-text">同步传输与异步传输的区别</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#通道"><span class="nav-number">10.</span> <span class="nav-text">通道</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#SPOOLing-系统的特点"><span class="nav-number">11.</span> <span class="nav-text">SPOOLing 系统的特点</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#死锁必要条件"><span class="nav-number">12.</span> <span class="nav-text">死锁必要条件</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#进程同步和进程互斥"><span class="nav-number">13.</span> <span class="nav-text">进程同步和进程互斥</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#进程上下文"><span class="nav-number">14.</span> <span class="nav-text">进程上下文</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#操作系统"><span class="nav-number">15.</span> <span class="nav-text">操作系统</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#卡特兰数"><span class="nav-number">16.</span> <span class="nav-text">卡特兰数</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#关系的完整性"><span class="nav-number">17.</span> <span class="nav-text">关系的完整性</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#五大约束"><span class="nav-number">18.</span> <span class="nav-text">五大约束</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#三大范式"><span class="nav-number">19.</span> <span class="nav-text">三大范式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#重定位"><span class="nav-number">20.</span> <span class="nav-text">重定位</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#可剥夺资源"><span class="nav-number">21.</span> <span class="nav-text">可剥夺资源</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#打开文件权限"><span class="nav-number">22.</span> <span class="nav-text">打开文件权限</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#互联网分层"><span class="nav-number">23.</span> <span class="nav-text">互联网分层</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#建堆有2种方法"><span class="nav-number">24.</span> <span class="nav-text">建堆有2种方法</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#man命令"><span class="nav-number">25.</span> <span class="nav-text">man命令</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#红黑树和AVL树"><span class="nav-number">26.</span> <span class="nav-text">红黑树和AVL树</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#读写锁"><span class="nav-number">27.</span> <span class="nav-text">读写锁</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#运算符优先级"><span class="nav-number">28.</span> <span class="nav-text">运算符优先级</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#流水线阻塞"><span class="nav-number">29.</span> <span class="nav-text">流水线阻塞</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<span id="busuanzi_container_site_uv"> 
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
