@@ -95,12 +95,12 @@
 <meta property="og:description" content="进程控制进程标识每个进程都有一个非负整型表示的唯一进程ID。因为进程ID标识符总是唯一的，常将其用作其他标识符的一部分以保证其唯一性。 进程ID是可复用的。当一个进程终止后，其进程ID就成为复用的候选者。大多数UNIX系统实现延迟复用算法，使得赋予新建进程的ID不同于最近终止进程所使用的ID。这防止了将新进程误认为是使用同一ID的某个已终止的先前进程。 系统中有一些专用进程，但具体细节随实现而不同">
 <meta property="og:locale" content="zn-ch">
 <meta property="og:image" content="http://yoursite.com/img/1621849003.jpg">
-<meta property="og:image" content="http://yoursite.com/img/20210524233035/png">
+<meta property="og:image" content="http://yoursite.com/img/20210524233035.png">
 <meta property="og:image" content="http://yoursite.com/img/20210525002706.png">
 <meta property="og:image" content="http://yoursite.com/img/1621926192.jpg">
 <meta property="og:image" content="http://yoursite.com/img/1621927476.jpg">
 <meta property="og:image" content="http://yoursite.com/img/20210525234012.png">
-<meta property="og:updated_time" content="2021-06-01T12:59:30.352Z">
+<meta property="og:updated_time" content="2021-06-01T13:24:44.591Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="UNIX高级编程 笔记3">
 <meta name="twitter:description" content="进程控制进程标识每个进程都有一个非负整型表示的唯一进程ID。因为进程ID标识符总是唯一的，常将其用作其他标识符的一部分以保证其唯一性。 进程ID是可复用的。当一个进程终止后，其进程ID就成为复用的候选者。大多数UNIX系统实现延迟复用算法，使得赋予新建进程的ID不同于最近终止进程所使用的ID。这防止了将新进程误认为是使用同一ID的某个已终止的先前进程。 系统中有一些专用进程，但具体细节随实现而不同">
@@ -650,7 +650,7 @@
 </ul>
 <p>对打开文件的处理与每个描述符的执行时关闭(close-on-exec)标志值有关。进程中每个打开描述符都有一个执行时关闭标志。若设置了此标志，则在执行<code>exec</code>时关闭该描述符；否则该描述符仍打开。除非特地用<code>fcntl</code>设置了该执行时关闭标志，否则系统的默认操作是在<code>exec</code>后仍保持这种描述符打开。</p>
 <p>注意，在<code>exec</code>前后实际用户ID和实际组ID保持不变，而有效ID是否改变则取决于所执行程序文件的设置用户ID位和设置组ID位是否设置。如果新程序的设置用户ID位已设置，则有效用户ID变成程序文件所有者的ID；否则有效用户ID不变。对组ID的处理方式与此相同。</p>
-<p>在很多UNIX实现中，这7个函数中只有<code>execve</code>是内核的系统调用。另外6个只是库函数，它们最终都要调用该系统调用。<br><img src="/img/20210524233035/png" alt></p>
+<p>在很多UNIX实现中，这7个函数中只有<code>execve</code>是内核的系统调用。另外6个只是库函数，它们最终都要调用该系统调用。<br><img src="/img/20210524233035.png" alt></p>
 <p>在这种安排中，库函数<code>execlp</code>和<code>execvp</code>使用PATH环境变量，查找第一个包含名为<code>filename</code>的可执行文件的路径名前缀。<code>fexecve</code>库函数使用<code>/proc</code>把文件措述符参数转换成路径名，<code>execve</code>用该路径名去执行程序。</p>
 <p>程序演示了exec函数。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"apue.h"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/wait.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">char</span>	*env_init[] = &#123; <span class="string">"USER=unknown"</span>, <span class="string">"PATH=/tmp"</span>, <span class="literal">NULL</span> &#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span></span><br><span class="line">main(<span class="keyword">void</span>)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">pid_t</span>	pid;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> ((pid = fork()) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">		err_sys(<span class="string">"fork error"</span>);</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> (pid == <span class="number">0</span>) &#123;	<span class="comment">/* specify pathname, specify environment */</span></span><br><span class="line">		<span class="keyword">if</span> (execle(<span class="string">"/home/sar/bin/echoall"</span>, <span class="string">"echoall"</span>, <span class="string">"myarg1"</span>,</span><br><span class="line">				<span class="string">"MY ARG2"</span>, (<span class="keyword">char</span> *)<span class="number">0</span>, env_init) &lt; <span class="number">0</span>)</span><br><span class="line">			err_sys(<span class="string">"execle error"</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (waitpid(pid, <span class="literal">NULL</span>, <span class="number">0</span>) &lt; <span class="number">0</span>)</span><br><span class="line">		err_sys(<span class="string">"wait error"</span>);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> ((pid = fork()) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">		err_sys(<span class="string">"fork error"</span>);</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> (pid == <span class="number">0</span>) &#123;	<span class="comment">/* specify filename, inherit environment */</span></span><br><span class="line">		<span class="keyword">if</span> (execlp(<span class="string">"echoall"</span>, <span class="string">"echoall"</span>, <span class="string">"only 1 arg"</span>, (<span class="keyword">char</span> *)<span class="number">0</span>) &lt; <span class="number">0</span>)</span><br><span class="line">			err_sys(<span class="string">"execlp error"</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>在该程序中先调用<code>execle</code>，它要求一个路径名和一个特定的环境。下一个调用的是<code>execlp</code>，它用一个文件名，并将调用者的环境传送给新程序。<code>execlp</code>在这里能够工作是因为目录<code>/home/sar/bin</code>是当前路径前缀之一。注意，我们将第一个参数(新程序中的<code>argv[0]</code>)设置为路径名的文件名分量。某些shell将此参数设置为完全的路径名。这只是一个惯例。我们可将<code>argv[0]</code>设置为任何字符串。当login命令执行shell时就是这样做的。在执行shell之前，login在<code>argv[0]</code>之前加一个<code>/</code>作为前缀，这向shell指明它是作为登录shell被调用的。登录shell将执行启动配置文件(start-up profile)命令，而非登录shell则不会执行这些命令。</p>
@@ -937,8 +937,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2021/05/24/UNIX高级编程 笔记4/" rel="next" title="UNIX高级编程 笔记4">
-                <i class="fa fa-chevron-left"></i> UNIX高级编程 笔记4
+              <a href="/2021/05/17/UNIX高级编程 笔记2/" rel="next" title="UNIX高级编程 笔记2">
+                <i class="fa fa-chevron-left"></i> UNIX高级编程 笔记2
               </a>
             
           </div>
@@ -947,8 +947,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2021/05/29/UNIX高级编程 笔记5/" rel="prev" title="UNIX高级编程 笔记5">
-                UNIX高级编程 笔记5 <i class="fa fa-chevron-right"></i>
+              <a href="/2021/05/24/UNIX高级编程 笔记4/" rel="prev" title="UNIX高级编程 笔记4">
+                UNIX高级编程 笔记4 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -1027,7 +1027,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">300</span>
+                  <span class="site-state-item-count">302</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
