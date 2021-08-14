@@ -86,18 +86,18 @@
 
 
 
-<meta name="description" content="netCDF4包的文档：http://unidata.github.io/netcdf4-python/netCDF4/index.html 因为要使用netCDF4格式的文件，所以学了一下如何把一个nc文件复制成另一个。在创建新文件时，format只能设置成“NETCDF3_CLASSIC”，否则在public2机器上无法读取，应该是HDF5的问题。下边的程序就比较齐全了，无论是维度的设置、变量">
+<meta name="description" content="netCDF4包的文档：http://unidata.github.io/netcdf4-python/netCDF4/index.html netCDF files come in five flavors.   NETCDF3_CLASSIC was the original netcdf binary format, and was limited to file sizes less th">
 <meta name="keywords" content="积累">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Python netcdf4包的使用">
 <meta property="og:url" content="http://yoursite.com/2019/07/08/python_netcdf的使用/index.html">
 <meta property="og:site_name" content="Hao Yu&#39;s blog">
-<meta property="og:description" content="netCDF4包的文档：http://unidata.github.io/netcdf4-python/netCDF4/index.html 因为要使用netCDF4格式的文件，所以学了一下如何把一个nc文件复制成另一个。在创建新文件时，format只能设置成“NETCDF3_CLASSIC”，否则在public2机器上无法读取，应该是HDF5的问题。下边的程序就比较齐全了，无论是维度的设置、变量">
+<meta property="og:description" content="netCDF4包的文档：http://unidata.github.io/netcdf4-python/netCDF4/index.html netCDF files come in five flavors.   NETCDF3_CLASSIC was the original netcdf binary format, and was limited to file sizes less th">
 <meta property="og:locale" content="zn-ch">
-<meta property="og:updated_time" content="2019-08-12T02:23:40.572Z">
+<meta property="og:updated_time" content="2021-07-31T01:59:12.138Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Python netcdf4包的使用">
-<meta name="twitter:description" content="netCDF4包的文档：http://unidata.github.io/netcdf4-python/netCDF4/index.html 因为要使用netCDF4格式的文件，所以学了一下如何把一个nc文件复制成另一个。在创建新文件时，format只能设置成“NETCDF3_CLASSIC”，否则在public2机器上无法读取，应该是HDF5的问题。下边的程序就比较齐全了，无论是维度的设置、变量">
+<meta name="twitter:description" content="netCDF4包的文档：http://unidata.github.io/netcdf4-python/netCDF4/index.html netCDF files come in five flavors.   NETCDF3_CLASSIC was the original netcdf binary format, and was limited to file sizes less th">
 
 
 
@@ -339,6 +339,15 @@
 
       
         <p>netCDF4包的文档：<a href="http://unidata.github.io/netcdf4-python/netCDF4/index.html" target="_blank" rel="noopener">http://unidata.github.io/netcdf4-python/netCDF4/index.html</a></p>
+<p>netCDF files come in five flavors. </p>
+<ul>
+<li>NETCDF3_CLASSIC was the original netcdf binary format, and was limited to file sizes less than 2 Gb. </li>
+<li>NETCDF3_64BIT_OFFSET was introduced in version 3.6.0 of the library, and extended the original binary format to allow for file sizes greater than 2 Gb. </li>
+<li>NETCDF3_64BIT_DATA is a new format that requires version 4.4.0 of the C library - it extends the NETCDF3_64BIT_OFFSET binary format to allow for unsigned/64 bit integer data types and 64-bit dimension sizes. </li>
+<li>NETCDF3_64BIT is an alias for NETCDF3_64BIT_OFFSET. </li>
+<li>NETCDF4_CLASSIC files use the version 4 disk format (HDF5), but omits features not found in the version 3 API. They can be read by netCDF 3 clients only if they have been relinked against the netCDF 4 library. They can also be read by HDF5 clients. NETCDF4 files use the version 4 disk format (HDF5) and use the new features of the version 4 API. The netCDF4 module can read and write files in any of these formats. When creating a new file, the format may be specified using the format keyword in the Dataset constructor. The default format is NETCDF4. To see how a given file is formatted, you can examine the data_model attribute. </li>
+</ul>
+<p>Closing the netCDF file is accomplished via the Dataset.close method of the Dataset instance.</p>
 <p>因为要使用netCDF4格式的文件，所以学了一下如何把一个nc文件复制成另一个。在创建新文件时，format只能设置成“NETCDF3_CLASSIC”，否则在public2机器上无法读取，应该是HDF5的问题。下边的程序就比较齐全了，无论是维度的设置、变量及其属性的设置、全局属性的设置等都有了。复制出来的两个nc文件是一样的。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">from netCDF4 import Dataset</span><br><span class="line"></span><br><span class="line">nc = Dataset(&quot;wind2018100700.nc&quot;)</span><br><span class="line">newnc = Dataset(&quot;new_wind.nc&quot;, &quot;w&quot;, format=&apos;NETCDF3_CLASSIC&apos;)</span><br><span class="line"></span><br><span class="line">ncdimensions = nc.dimensions</span><br><span class="line">for dim in nc.dimensions.values():</span><br><span class="line">    newncdim_sample = newnc.createDimension(dim.name, dim.size)</span><br><span class="line"></span><br><span class="line">for var in nc.variables.values():</span><br><span class="line">    print(var)</span><br><span class="line">    print(var.datatype)</span><br><span class="line">    print(var.ncattrs())</span><br><span class="line">    print(var.dimensions)</span><br><span class="line">    new_var = newnc.createVariable(var.name, var.datatype, var.dimensions, shuffle=False)</span><br><span class="line">    for attr in var.ncattrs():</span><br><span class="line">        new_var.setncattr(attr, var.getncattr(attr))</span><br><span class="line">    newnc[var.name][:] = nc[var.name][:]</span><br><span class="line"></span><br><span class="line">for attr in nc.ncattrs():</span><br><span class="line">    newnc.setncattr(attr,nc.getncattr(attr))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">nc.close()</span><br><span class="line">newnc.close()</span><br></pre></td></tr></table></figure>
 
