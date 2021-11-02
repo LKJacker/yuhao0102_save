@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="积累,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="使用c++编程的同学，经常会遇到诸如内存越界、重复释放等内存问题，大家比较习惯的追查这类问题的方式是，打开core文件的limit，生成core文件，用gdb进行分析； 但是，在实际的生产环境中。由于程序本省占用内存非常大，比如搜索的索引服务，进行core的dump不太现实，所以一般采用，在程序中捕获信号，之后打印进程的堆栈信息，再进行追查。 下面本文，就按照这种方式进行追查，首先，分析没有so的">
+<meta name="keywords" content="积累">
+<meta property="og:type" content="article">
+<meta property="og:title" content="性能优化-使用objdump分析core堆栈">
+<meta property="og:url" content="http://yoursite.com/2021/11/02/性能优化-使用objdump分析core堆栈/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="使用c++编程的同学，经常会遇到诸如内存越界、重复释放等内存问题，大家比较习惯的追查这类问题的方式是，打开core文件的limit，生成core文件，用gdb进行分析； 但是，在实际的生产环境中。由于程序本省占用内存非常大，比如搜索的索引服务，进行core的dump不太现实，所以一般采用，在程序中捕获信号，之后打印进程的堆栈信息，再进行追查。 下面本文，就按照这种方式进行追查，首先，分析没有so的">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2021-11-02T06:05:32.249Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="性能优化-使用objdump分析core堆栈">
+<meta name="twitter:description" content="使用c++编程的同学，经常会遇到诸如内存越界、重复释放等内存问题，大家比较习惯的追查这类问题的方式是，打开core文件的limit，生成core文件，用gdb进行分析； 但是，在实际的生产环境中。由于程序本省占用内存非常大，比如搜索的索引服务，进行core的dump不太现实，所以一般采用，在程序中捕获信号，之后打印进程的堆栈信息，再进行追查。 下面本文，就按照这种方式进行追查，首先，分析没有so的">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2021/11/02/性能优化-使用objdump分析core堆栈/">
+
+
+
+
+
+  <title>性能优化-使用objdump分析core堆栈 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/resume.pdf" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-mybetterhalf">
+          <a href="/mybetterhalf/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            mybetterhalf
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/11/02/性能优化-使用objdump分析core堆栈/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">性能优化-使用objdump分析core堆栈</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-11-02T09:34:00+08:00">
+                2021-11-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>使用c++编程的同学，经常会遇到诸如内存越界、重复释放等内存问题，大家比较习惯的追查这类问题的方式是，打开core文件的limit，生成core文件，用gdb进行分析； 但是，在实际的生产环境中。由于程序本省占用内存非常大，比如搜索的索引服务，进行core的dump不太现实，所以一般采用，在程序中捕获信号，之后打印进程的堆栈信息，再进行追查。 下面本文，就按照这种方式进行追查，首先，分析没有so的程序如何使用objdump与汇编进行分析程序的问题所在；接着分析有so的程序，如何使用objdump进行分析，希望对大家能有所帮助。</p>
+<h1 id="普通程序的core分析"><a href="#普通程序的core分析" class="headerlink" title="普通程序的core分析"></a>普通程序的core分析</h1><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;signal.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;execinfo.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">print_stack_fs</span><span class="params">(<span class="keyword">int</span> sig, FILE * output)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">fprintf</span>(output, <span class="string">"--------------------------------------\n"</span>);</span><br><span class="line"></span><br><span class="line"> <span class="keyword">char</span> pTime[<span class="number">256</span>];</span><br><span class="line"> <span class="comment">//getSafeNow(pTime, 256);</span></span><br><span class="line">    <span class="built_in">fprintf</span>(output, <span class="string">"[%s] received signal=%d, thread_id=%ld\n"</span>,</span><br><span class="line">      <span class="string">"now"</span>, sig, getpid());</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> *<span class="built_in">array</span>[<span class="number">128</span>]; <span class="comment">// 128 stacks at most</span></span><br><span class="line">    <span class="keyword">size_t</span> size = backtrace(<span class="built_in">array</span>, <span class="keyword">sizeof</span>(<span class="built_in">array</span>) / <span class="keyword">sizeof</span>(<span class="built_in">array</span>[<span class="number">0</span>]));</span><br><span class="line">    <span class="keyword">if</span> (size &gt; <span class="number">0</span> &amp;&amp; size &lt; <span class="number">128</span>) &#123;</span><br><span class="line">        <span class="keyword">char</span> ** stackLog = backtrace_symbols(<span class="built_in">array</span>, size);</span><br><span class="line">        <span class="keyword">if</span>(stackLog) &#123;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; size; i++) &#123;</span><br><span class="line">                <span class="built_in">fprintf</span>(output,<span class="string">"%s\n"</span>, stackLog[i]);</span><br><span class="line">            &#125;</span><br><span class="line">            fflush(output);</span><br><span class="line">            <span class="built_in">free</span>(stackLog);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">sig_handler</span><span class="params">(<span class="keyword">int</span> signo)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"> <span class="keyword">if</span> (signo == SIGSEGV ||</span><br><span class="line">        signo == SIGBUS  ||</span><br><span class="line">        signo == SIGABRT ||</span><br><span class="line">        signo == SIGFPE) &#123;</span><br><span class="line"></span><br><span class="line">        print_stack_fs(signo, <span class="built_in">stderr</span>);</span><br><span class="line"></span><br><span class="line">  <span class="built_in">exit</span>(<span class="number">-1</span>);</span><br><span class="line"> &#125;</span><br><span class="line"> <span class="keyword">else</span> <span class="keyword">if</span> (signo == SIGTERM || signo == SIGINT) &#123;</span><br><span class="line">  <span class="built_in">exit</span>(<span class="number">-1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">sig_register</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sigaction</span> <span class="title">sigac</span>;</span></span><br><span class="line">    sigemptyset(&amp;sigac.sa_mask);</span><br><span class="line">    sigac.sa_handler = sig_handler;</span><br><span class="line">    sigac.sa_flags = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    sigaction(SIGTERM, &amp;sigac, <span class="number">0</span>);</span><br><span class="line">    sigaction(SIGINT , &amp;sigac, <span class="number">0</span>);</span><br><span class="line">    sigaction(SIGQUIT, &amp;sigac, <span class="number">0</span>);</span><br><span class="line">    sigaction(SIGPIPE, &amp;sigac, <span class="number">0</span>);</span><br><span class="line">    sigaction(SIGBUS , &amp;sigac, <span class="number">0</span>);</span><br><span class="line">    sigaction(SIGABRT, &amp;sigac, <span class="number">0</span>);</span><br><span class="line">    sigaction(SIGFPE , &amp;sigac, <span class="number">0</span>);</span><br><span class="line">    sigaction(SIGSEGV, &amp;sigac, <span class="number">0</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">sig_register();</span><br><span class="line">    <span class="keyword">int</span> a = <span class="number">10</span>, b = <span class="number">-2</span>, c = <span class="number">100</span>;</span><br><span class="line">    <span class="keyword">char</span> * pstr = <span class="number">0x00</span>;</span><br><span class="line">    <span class="keyword">int</span> d = <span class="number">100</span>;</span><br><span class="line">    *pstr = <span class="number">0x00</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="执行程序"><a href="#执行程序" class="headerlink" title="执行程序"></a>执行程序</h1><p>关键地址：0x400add，指向出错的代码的具体的虚拟空间地址<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[now] received signal=11, thread_id=1852</span><br><span class="line">./a.out() [0x4008ab]</span><br><span class="line">./a.out() [0x400985]</span><br><span class="line">/lib64/libc.so.6(+0x362f0) [0x7fbc41a3d2f0]</span><br><span class="line">./a.out() [0x400add]</span><br><span class="line">/lib64/libc.so.6(__libc_start_main+0xf5) [0x7fbc41a29445]</span><br><span class="line">./a.out() [0x400769]</span><br></pre></td></tr></table></figure></p>
+<h1 id="使用objdump分析"><a href="#使用objdump分析" class="headerlink" title="使用objdump分析"></a>使用objdump分析</h1><p><code>objdump -d a.out</code>，分析-0x18(%rbp)的地址是变量pstr的地址，之后将pstr的放置到寄存器rax赋值，之后没有申请内存的空指针进行赋值出core，具体请看下面的汇编代码<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">321 0000000000400aa1 &lt;main&gt;:</span><br><span class="line">322   400aa1:   55                      push   %rbp</span><br><span class="line">323   400aa2:   48 89 e5                mov    %rsp,%rbp</span><br><span class="line">324   400aa5:   48 83 ec 30             sub    $0x30,%rsp</span><br><span class="line">325   400aa9:   89 7d dc                mov    %edi,-0x24(%rbp)</span><br><span class="line">326   400aac:   48 89 75 d0             mov    %rsi,-0x30(%rbp)</span><br><span class="line">327   400ab0:   e8 f2 fe ff ff          callq  4009a7 &lt;_ZL12sig_registerv&gt;</span><br><span class="line">328   400ab5:   c7 45 fc 0a 00 00 00    movl   $0xa,-0x4(%rbp)     // 变量a</span><br><span class="line">329   400abc:   c7 45 f8 fe ff ff ff    movl   $0xfffffffe,-0x8(%rbp)     // 变量b</span><br><span class="line">330   400ac3:   c7 45 f4 64 00 00 00    movl   $0x64,-0xc(%rbp)    // 变量c</span><br><span class="line">331   400aca:   48 c7 45 e8 00 00 00    movq   $0x0,-0x18(%rbp)    // 变量 pstr</span><br><span class="line">332   400ad1:   00</span><br><span class="line">333   400ad2:   c7 45 e4 64 00 00 00    movl   $0x64,-0x1c(%rbp)   // 变量d</span><br><span class="line">334   400ad9:   48 8b 45 e8             mov    -0x18(%rbp),%rax     // 将变量pstr放到rax寄存器</span><br><span class="line">335   400add:   c6 00 00                movb   $0x0,(%rax)        // 对pstr赋值，也就是对空指针赋值，找到问题</span><br><span class="line">336   400ae0:   b8 00 00 00 00          mov    $0x0,%eax</span><br><span class="line">337   400ae5:   c9                      leaveq</span><br><span class="line">338   400ae6:   c3                      retq</span><br><span class="line">339   400ae7:   66 0f 1f 84 00 00 00    nopw   0x0(%rax,%rax,1)</span><br></pre></td></tr></table></figure></p>
+<h1 id="core在so里面的objdump分析"><a href="#core在so里面的objdump分析" class="headerlink" title="core在so里面的objdump分析"></a>core在so里面的objdump分析</h1><p>max.h<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">ifndef</span> __MAX_H__</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> __MAX_H__</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">max</span><span class="params">(<span class="keyword">int</span> n1, <span class="keyword">int</span> n2, <span class="keyword">int</span> n3)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br></pre></td></tr></table></figure></p>
+<p>max.cpp<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"max.h"</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">max</span><span class="params">(<span class="keyword">int</span> n1, <span class="keyword">int</span> n2, <span class="keyword">int</span> n3)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> max_num = n1;</span><br><span class="line">    max_num = max_num &lt; n2? n2: max_num;</span><br><span class="line">    max_num = max_num &lt; n3? n3: max_num;</span><br><span class="line">    <span class="keyword">char</span> * pstr = <span class="number">0x00</span>;</span><br><span class="line">    *pstr = <span class="number">0x00</span>;</span><br><span class="line">    <span class="keyword">return</span> max_num;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>test.cpp<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;signal.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;execinfo.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"max.h"</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">print_stack_fs</span><span class="params">(<span class="keyword">int</span> sig, FILE * output)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">fprintf</span>(output, <span class="string">"--------------------------------------\n"</span>);</span><br><span class="line"></span><br><span class="line"> <span class="keyword">char</span> pTime[<span class="number">256</span>];</span><br><span class="line"> <span class="comment">//getSafeNow(pTime, 256);</span></span><br><span class="line">    <span class="built_in">fprintf</span>(output, <span class="string">"[%s] received signal=%d, thread_id=%ld\n"</span>,</span><br><span class="line">      <span class="string">"now"</span>, sig, getpid());</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> *<span class="built_in">array</span>[<span class="number">128</span>]; <span class="comment">// 128 stacks at most</span></span><br><span class="line">    <span class="keyword">size_t</span> size = backtrace(<span class="built_in">array</span>, <span class="keyword">sizeof</span>(<span class="built_in">array</span>) / <span class="keyword">sizeof</span>(<span class="built_in">array</span>[<span class="number">0</span>]));</span><br><span class="line">    <span class="keyword">if</span> (size &gt; <span class="number">0</span> &amp;&amp; size &lt; <span class="number">128</span>) &#123;</span><br><span class="line">        <span class="keyword">char</span> ** stackLog = backtrace_symbols(<span class="built_in">array</span>, size);</span><br><span class="line">        <span class="keyword">if</span>(stackLog) &#123;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; size; i++) &#123;</span><br><span class="line">                <span class="built_in">fprintf</span>(output,<span class="string">"%s\n"</span>, stackLog[i]);</span><br><span class="line">            &#125;</span><br><span class="line">            fflush(output);</span><br><span class="line">            <span class="built_in">free</span>(stackLog);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">sig_handler</span><span class="params">(<span class="keyword">int</span> signo)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"> <span class="keyword">if</span> (signo == SIGSEGV ||</span><br><span class="line">        signo == SIGBUS  ||</span><br><span class="line">        signo == SIGABRT ||</span><br><span class="line">        signo == SIGFPE) &#123;</span><br><span class="line"></span><br><span class="line">        print_stack_fs(signo, <span class="built_in">stderr</span>);</span><br><span class="line"></span><br><span class="line">  <span class="built_in">exit</span>(<span class="number">-1</span>);</span><br><span class="line"> &#125;</span><br><span class="line"> <span class="keyword">else</span> <span class="keyword">if</span> (signo == SIGTERM || signo == SIGINT) &#123;</span><br><span class="line">  <span class="built_in">exit</span>(<span class="number">-1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">sig_register</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sigaction</span> <span class="title">sigac</span>;</span></span><br><span class="line">    sigemptyset(&amp;sigac.sa_mask);</span><br><span class="line">    sigac.sa_handler = sig_handler;</span><br><span class="line">    sigac.sa_flags = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    sigaction(SIGTERM, &amp;sigac, <span class="number">0</span>);</span><br><span class="line">    sigaction(SIGINT , &amp;sigac, <span class="number">0</span>);</span><br><span class="line">    sigaction(SIGQUIT, &amp;sigac, <span class="number">0</span>);</span><br><span class="line">    sigaction(SIGPIPE, &amp;sigac, <span class="number">0</span>);</span><br><span class="line">    sigaction(SIGBUS , &amp;sigac, <span class="number">0</span>);</span><br><span class="line">    sigaction(SIGABRT, &amp;sigac, <span class="number">0</span>);</span><br><span class="line">    sigaction(SIGFPE , &amp;sigac, <span class="number">0</span>);</span><br><span class="line">    sigaction(SIGSEGV, &amp;sigac, <span class="number">0</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"> sig_register();</span><br><span class="line">    <span class="keyword">int</span> a = <span class="number">10</span>, b = <span class="number">-2</span>, c = <span class="number">100</span>;</span><br><span class="line">    <span class="keyword">int</span> d = <span class="number">100</span>;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"max among 10, -2 and 100 is %d.\n"</span>, max(a, b, c));</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="运行程序"><a href="#运行程序" class="headerlink" title="运行程序"></a>运行程序</h1><p>关键地址：<code>./libmax.so(_Z3maxiii+0x45) [0x7fb914d6868a]</code><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[now] received signal=11, thread_id=1893</span><br><span class="line">./a.out() [0x4009fb]</span><br><span class="line">./a.out() [0x400ad5]</span><br><span class="line">/lib64/libc.so.6(+0x362f0) [0x7fb9141b12f0]</span><br><span class="line">./libmax.so(_Z3maxiii+0x45) [0x7fb914d6868a]</span><br><span class="line">./a.out() [0x400c33]</span><br><span class="line">/lib64/libc.so.6(__libc_start_main+0xf5) [0x7fb91419d445]</span><br><span class="line">./a.out() [0x4008b9]</span><br></pre></td></tr></table></figure></p>
+<h1 id="objdump"><a href="#objdump" class="headerlink" title="objdump"></a>objdump</h1><p>针对so进行反编译，运行 <code>objdump -d libmax.so</code>，然后找搭配<code>_Z3maxiii</code>，地址是645，然后+上0x45，得到地址 68A 汇编代码：<code>movq $0x0,-0x10(%rbp)</code> 定义pstr，68A的地址同样是对未申请内存的地址进行赋值出错。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">106 0000000000000645 &lt;_Z3maxiii&gt;:</span><br><span class="line">107  645:   55                      push   %rbp</span><br><span class="line">108  646:   48 89 e5                mov    %rsp,%rbp</span><br><span class="line">109  649:   89 7d ec                mov    %edi,-0x14(%rbp)    // 参数1</span><br><span class="line">110  64c:   89 75 e8                mov    %esi,-0x18(%rbp)    // 参数2</span><br><span class="line">111  64f:   89 55 e4                mov    %edx,-0x1c(%rbp)    // 参数3</span><br><span class="line">112  652:   8b 45 ec                mov    -0x14(%rbp),%eax</span><br><span class="line">113  655:   89 45 fc                mov    %eax,-0x4(%rbp)</span><br><span class="line">114  658:   8b 45 fc                mov    -0x4(%rbp),%eax</span><br><span class="line">115  65b:   3b 45 e8                cmp    -0x18(%rbp),%eax</span><br><span class="line">116  65e:   7d 05                   jge    665 &lt;_Z3maxiii+0x20&gt;</span><br><span class="line">117  660:   8b 45 e8                mov    -0x18(%rbp),%eax</span><br><span class="line">118  663:   eb 03                   jmp    668 &lt;_Z3maxiii+0x23&gt;</span><br><span class="line">119  665:   8b 45 fc                mov    -0x4(%rbp),%eax</span><br><span class="line">120  668:   89 45 fc                mov    %eax,-0x4(%rbp)</span><br><span class="line">121  66b:   8b 45 fc                mov    -0x4(%rbp),%eax</span><br><span class="line">122  66e:   3b 45 e4                cmp    -0x1c(%rbp),%eax</span><br><span class="line">123  671:   7d 05                   jge    678 &lt;_Z3maxiii+0x33&gt;</span><br><span class="line">124  673:   8b 45 e4                mov    -0x1c(%rbp),%eax</span><br><span class="line">125  676:   eb 03                   jmp    67b &lt;_Z3maxiii+0x36&gt;</span><br><span class="line">126  678:   8b 45 fc                mov    -0x4(%rbp),%eax</span><br><span class="line">127  67b:   89 45 fc                mov    %eax,-0x4(%rbp)</span><br><span class="line">128  67e:   48 c7 45 f0 00 00 00    movq   $0x0,-0x10(%rbp)    // pstr</span><br><span class="line">129  685:   00</span><br><span class="line">130  686:   48 8b 45 f0             mov    -0x10(%rbp),%rax</span><br><span class="line">131  68a:   c6 00 00                movb   $0x0,(%rax)   // 对pstr赋值0，这个就是问题所在了</span><br><span class="line">132  68d:   8b 45 fc                mov    -0x4(%rbp),%eax</span><br><span class="line">133  690:   5d                      pop    %rbp</span><br></pre></td></tr></table></figure></p>
+<h1 id="使用addr2line定位问题的行数"><a href="#使用addr2line定位问题的行数" class="headerlink" title="使用addr2line定位问题的行数"></a>使用addr2line定位问题的行数</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[dubaokun@localhost so]$ addr2line -e libmax.so -ifC 68a</span><br><span class="line">max(int, int, int)</span><br><span class="line">/home/dubaokun/github/code/engine_code/compile/objdump/so/max.cpp:9 (discriminator 3)</span><br></pre></td></tr></table></figure>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>以上的程序较为简单，实际工作中的程序较为复杂，但是复杂都是由基础而来的，大家可以认真思考、仔细研究，对于汇编代码要有一定的理解。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/积累/" rel="tag"># 积累</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/10/15/glibc内存管理ptmalloc源代码分析1/" rel="next" title="glibc内存管理ptmalloc源代码分析1">
+                <i class="fa fa-chevron-left"></i> glibc内存管理ptmalloc源代码分析1
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/11/02/jemalloc介绍/" rel="prev" title>
+                 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">323</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/xiaomeihao.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#普通程序的core分析"><span class="nav-number">1.</span> <span class="nav-text">普通程序的core分析</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#执行程序"><span class="nav-number">2.</span> <span class="nav-text">执行程序</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#使用objdump分析"><span class="nav-number">3.</span> <span class="nav-text">使用objdump分析</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#core在so里面的objdump分析"><span class="nav-number">4.</span> <span class="nav-text">core在so里面的objdump分析</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#运行程序"><span class="nav-number">5.</span> <span class="nav-text">运行程序</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#objdump"><span class="nav-number">6.</span> <span class="nav-text">objdump</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#使用addr2line定位问题的行数"><span class="nav-number">7.</span> <span class="nav-text">使用addr2line定位问题的行数</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">8.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<span id="busuanzi_container_site_uv"> 
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
