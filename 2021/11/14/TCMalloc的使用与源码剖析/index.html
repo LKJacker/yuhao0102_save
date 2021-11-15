@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="C++,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="TCMalloc内存分配与管理简述TCMalloc给每个线程分配了一个线程局部缓存,小对象的分配是直接由线程局部缓存来完成的，这样就避免了多线程程序中的锁竞争情况。当线程局部缓存中的内存不够时，会将对象从中央数据结构移动到线程局部缓存中，同时定期的用垃圾收集器把内存从线程局部缓存迁移回中央数据结构中。 TCMalloc将尺寸小于等于256 * 1024字节的对象（“小”对象）和大对象区分开来。大对">
+<meta name="keywords" content="C++">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TCMalloc的使用与源码剖析">
+<meta property="og:url" content="http://yoursite.com/2021/11/14/TCMalloc的使用与源码剖析/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="TCMalloc内存分配与管理简述TCMalloc给每个线程分配了一个线程局部缓存,小对象的分配是直接由线程局部缓存来完成的，这样就避免了多线程程序中的锁竞争情况。当线程局部缓存中的内存不够时，会将对象从中央数据结构移动到线程局部缓存中，同时定期的用垃圾收集器把内存从线程局部缓存迁移回中央数据结构中。 TCMalloc将尺寸小于等于256 * 1024字节的对象（“小”对象）和大对象区分开来。大对">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/20161022102340793.png">
+<meta property="og:image" content="http://yoursite.com/img/20161022102359935.png">
+<meta property="og:image" content="http://yoursite.com/img/20161022102859452.png">
+<meta property="og:image" content="http://yoursite.com/img/20161022102915426.png">
+<meta property="og:image" content="http://yoursite.com/img/20161022103100584.png">
+<meta property="og:image" content="http://yoursite.com/img/20161022103142257.png">
+<meta property="og:image" content="http://yoursite.com/img/20161022103757266.png">
+<meta property="og:image" content="http://yoursite.com/img/20161022104539161.png">
+<meta property="og:image" content="http://yoursite.com/img/20161022104819952.png">
+<meta property="og:image" content="http://yoursite.com/img/20161022111651504.png">
+<meta property="og:updated_time" content="2021-11-14T10:40:20.180Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="TCMalloc的使用与源码剖析">
+<meta name="twitter:description" content="TCMalloc内存分配与管理简述TCMalloc给每个线程分配了一个线程局部缓存,小对象的分配是直接由线程局部缓存来完成的，这样就避免了多线程程序中的锁竞争情况。当线程局部缓存中的内存不够时，会将对象从中央数据结构移动到线程局部缓存中，同时定期的用垃圾收集器把内存从线程局部缓存迁移回中央数据结构中。 TCMalloc将尺寸小于等于256 * 1024字节的对象（“小”对象）和大对象区分开来。大对">
+<meta name="twitter:image" content="http://yoursite.com/img/20161022102340793.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2021/11/14/TCMalloc的使用与源码剖析/">
+
+
+
+
+
+  <title>TCMalloc的使用与源码剖析 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/resume.pdf" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-mybetterhalf">
+          <a href="/mybetterhalf/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            mybetterhalf
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/11/14/TCMalloc的使用与源码剖析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">TCMalloc的使用与源码剖析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-11-14T16:52:00+08:00">
+                2021-11-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="TCMalloc内存分配与管理简述"><a href="#TCMalloc内存分配与管理简述" class="headerlink" title="TCMalloc内存分配与管理简述"></a>TCMalloc内存分配与管理简述</h1><p>TCMalloc给每个线程分配了一个线程局部缓存,小对象的分配是直接由线程局部缓存来完成的，这样就避免了多线程程序中的锁竞争情况。当线程局部缓存中的内存不够时，会将对象从中央数据结构移动到线程局部缓存中，同时定期的用垃圾收集器把内存从线程局部缓存迁移回中央数据结构中。</p>
+<p>TCMalloc将尺寸小于等于256 * 1024字节的对象（“小”对象）和大对象区分开来。大对象直接使用页级分配器从中央页堆直接分配。即，一个大对象总是页对齐的并占据了整数个数的页。</p>
+<h2 id="小对象的分配"><a href="#小对象的分配" class="headerlink" title="小对象的分配"></a>小对象的分配</h2><p>每个小对象的大小都会被映射到与之接近的可分配的class中的一个。例如，所有大小在833到1024字节之间的小对象时，都会归整到1024字节。60个可分配的尺寸类别这样隔开：较小的尺寸相差8字节，较大的尺寸相差16字节，再大一点的尺寸差32字节，如此等等。最大的间隔是控制的，这样刚超过上一个级别被分配到下一个级别就不会有太多的内存被浪费。</p>
+<p>一个线程缓存包含了由各个尺寸内存的对象组成的单链表，如图所示：<br><img src="/img/20161022102340793.png" alt></p>
+<p>当分配一个小对象时：</p>
+<ol>
+<li>我们将其大小映射到对应的尺寸中。</li>
+<li>查找当前线程的线程缓存中相应的尺寸的内存链表。</li>
+<li>如果当前尺寸内存链表非空，那么从链表中移除的第一个对象并返回它。</li>
+</ol>
+<p>当我们按照这种方式分配时，TCMalloc不需要任何锁。这就可以极大提高分配的速度，因为锁/解锁操作在一个2.8GHzXeon上大约需要100纳秒的时间。</p>
+<p>如果当前尺寸内存链表为空：</p>
+<ol>
+<li>从Central Cache中取得一系列这种尺寸的对象（CentralCache是被所有线程共享的）。</li>
+<li>将他们放入该线程线程的缓冲区。</li>
+<li>返回一个新获取的对象给应用程序。</li>
+</ol>
+<p>如果CentralCache也为空：</p>
+<ol>
+<li>我们从中央页堆中分配一系列页面。</li>
+<li>将他们分割成该尺寸的一系列对象。</li>
+<li>将新分配的对象放入CentralCache的链表上 </li>
+<li>像前面一样，将部分对象移入线程局部的链表中。</li>
+</ol>
+<p>如果中央页堆也为空，那么就从系统中分配一系列的页面(使用sbrk、mmap或者通过在/dev/mem中进行映射)，把页面给中央页堆，然后继续上面的操作</p>
+<h2 id="大对象的分配"><a href="#大对象的分配" class="headerlink" title="大对象的分配"></a>大对象的分配</h2><p>一个大对象的尺寸会被中央页堆直接处理，被圆整到一个页面尺寸（4K）。中央页堆是由空闲内存列表组成的数组。对于i &lt; 256而言，数组的第k个元素是一个由每个单元是由k个页面组成的空闲内存链表。第256个条目则是一个包含了长度&gt;= 256个页面的空闲内存链表：<br><img src="/img/20161022102359935.png" alt></p>
+<p>k个页面的一次分配通过在第k个空闲内存链表中查找来完成。如果该空闲内存链表为空，那么我们则在下一个空闲内存链表中查找，如此继续。最终，如果必要的话，我们将在最后空闲内存链表中查找。如果这个动作也失败了，我们将向系统获取内存（使用sbrk、mmap或者通过在/dev/mem中进行映射）</p>
+<p>如果k个页面的分配是由连续的&gt; k个页面的空闲内存链表完成的，剩下的连续页面将被重新插回到与之页面大小接近的空闲内存链表中去。</p>
+<h1 id="TCMalloc的内存分配的主要层次"><a href="#TCMalloc的内存分配的主要层次" class="headerlink" title="TCMalloc的内存分配的主要层次"></a>TCMalloc的内存分配的主要层次</h1><h2 id="第一层"><a href="#第一层" class="headerlink" title="第一层"></a>第一层</h2><p>线程局部分配，ThreadCache包含了一个不同对象大小的空闲链表数组，其实现采用操作系统的线程局部存储功能。分配时几乎不需要用锁，除非触发CentralCache的操作。</p>
+<p>ThreadCache中的重要数据结构:<br><img src="/img/20161022102859452.png" alt></p>
+<ul>
+<li><code>pthread_t     tid_;</code>   绑定线程，达到每个线程有个缓冲池的目的</li>
+<li><code>FreeList      list_[kNumClasses];</code>  这个数组就是上图中的第一列，如下图</li>
+</ul>
+<p><img src="/img/20161022102915426.png" alt><br>数组中的每一个节点就是代表上图中的每一行，如下图</p>
+<p><img src="/img/20161022103100584.png" alt></p>
+<p>每个class对应多大的内存空间?这个表示每组的大小的变量在哪里？</p>
+<p>不存在这样的变量，但是通过映射关系可以达到一个class管一类size的作用，</p>
+<p>如下图所示，由<code>cl</code>得到<code>list_[cl]</code>，这也即是一个class。<br><img src="/img/20161022103142257.png" alt></p>
+<p>至于<code>cl</code>，是由<code>class_array_</code>得到的。</p>
+<p>若申请的内存是13字节，但分配的却是15字节，那么便会有2个字节的内存碎片（内部碎片）。</p>
+<h2 id="第二层"><a href="#第二层" class="headerlink" title="第二层"></a>第二层</h2><p>中心分配，Centralcache</p>
+<p>该层的分配需要锁。<code>CentralCache</code>和<code>ThreadCache</code>之间的空闲链表是一一对应的，以子链表为单位（<code>obj</code>个数很可能为<code>num_objects_to_move</code>（<code>cl</code>），见do_malloc与do_free流程图）进行互相交换。</p>
+<p><code>CentralCache</code>的内存从<code>PageHeap</code>里获得。从<code>PageHeap</code>获得的内存叫<code>Span</code>。一个<code>Span</code>在使用时只能用于同一大小的空闲链表，一但<code>CentralCache</code>从<code>PageHeap</code>中获取新的<code>Span</code>，这个<code>Span</code>就是一个串好的相同大小内存的空闲链表。</p>
+<p><code>Centralcache</code>中有几个重要数据结构:</p>
+<ul>
+<li><code>TCEntry  tc_slots_[kMaxNumTransferEntries];</code><ul>
+<li><code>tc_slots_</code>每个节点存放的是一组<code>obj</code>链表，这一组<code>obj</code>的个数为<code>num_objects_to_move</code>，TCEntry结构体有两指针，分别指向这个链表的头和尾。</li>
+<li><code>tc_slots_</code>存放的是<code>threadCache</code>向<code>CentralCache</code>归还的<code>obj</code>链表，并且只有当个数满足<code>num_objects_to_move</code>时，才会放入<code>tc_slots_</code>。否则归还的<code>obj</code>根据其所处的<code>span</code>，进行归还，若对应的<code>span</code>是<code>empty</code>，那么由于此时被归还内存了，所以其有空闲<code>obj</code>了，便把该<code>span</code>从<code>empty</code>队列清除，把其加入<code>nonempty</code>队列。</li>
+</ul>
+</li>
+<li><code>span empty</code><ul>
+<li><code>FetchFromSpans</code>函数把一个<code>obj</code>从<code>nonempty</code>队列中的一个<code>span</code>中切出，准备给<code>threadCache</code>。当切完这个<code>obj</code>后，如果该<code>span</code>已经没有内存空间了，那么便把该<code>span</code>从<code>nonempty</code>队列移除，并加入<code>empty</code>队列。</li>
+</ul>
+</li>
+<li><code>span nonempty</code><ul>
+<li><code>CentralCache</code>从中央页堆申请页面，中央页堆以<code>span</code>的形式返回。在<code>CentralCache</code>中会把该<code>span</code>切成大小为<code>class_to_size</code>的<code>obj</code>，并把所有的<code>obj</code>链接起来，链表头为<code>span-&gt;objects</code>。再把该链表加入<code>nonempty</code>队列。</li>
+<li><code>nonempty</code>队列另外一个被加入<code>span</code>的地方在内存从<code>threadCache</code>归还给<code>CentralCache</code>时，具体情况见上面<code>tc_slots_</code>这一数据结构的描述。</li>
+</ul>
+</li>
+</ul>
+<h2 id="第三层"><a href="#第三层" class="headerlink" title="第三层"></a>第三层</h2><p>中央页堆，PageHeap</p>
+<p>PageHeap以一定数量连续页面内存的形式提供内存。这组连续的页面由一个Span对象描述，Span对象和它描述的页面内存是独立的。Span对象保存了页面的id序列，页面id左移一个page就是内存的地址。由于页面和Span内存独立，需要用page id反向映射查找Span对象就需要单独的映射表。这个表用radix tree实现，兼顾效率和内存。PageHeap还负责合并和拆分相邻的Span。</p>
+<p>PageHeap重要数据结构:</p>
+<ul>
+<li><code>SpanList   large_;</code></li>
+<li><code>SpanList   free_[kMaxPages];</code></li>
+</ul>
+<p>中央页堆是由空闲内存列表组成的数组。对于i&lt; 256而言，数组的第k个元素是一个由每个单元是由k个页面组成的空闲内存链表(这也即是free_)。第256个条目（这即是large_）则是一个包含了长度&gt;= 256个页面的空闲内存链表：<br><img src="/img/20161022103757266.png" alt></p>
+<p>而<code>SpanList</code>为<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">SpanList</span> &#123;</span></span><br><span class="line">    Span       normal;</span><br><span class="line">    Span       returned;</span><br><span class="line">  &#125;;</span><br></pre></td></tr></table></figure></p>
+<p><code>Returned</code>代表的是已经归还给系统的<code>span</code></p>
+<h2 id="第四层"><a href="#第四层" class="headerlink" title="第四层"></a>第四层</h2><p>系统页面分配，这就是调用系统函数了。</p>
+<h1 id="内存在各层之间的传递"><a href="#内存在各层之间的传递" class="headerlink" title="内存在各层之间的传递"></a>内存在各层之间的传递</h1><h2 id="ThreadCache与CentralCache内存传递"><a href="#ThreadCache与CentralCache内存传递" class="headerlink" title="ThreadCache与CentralCache内存传递"></a>ThreadCache与CentralCache内存传递</h2><ol>
+<li><code>ThreadCache</code>内存不够时，要从<code>CentralCache</code>拿（<code>RemoveRange</code>），再把拿到的内存加入<code>ThreadCache</code>的<code>list_[cl]</code>链表队列。（PushRange）</li>
+<li><code>ThreadCache</code>从<code>CentralCache</code>拿或者返还给<code>CentralCache</code>的内存，是一种什么逻辑?</li>
+</ol>
+<p>当拿内存时，如果申请的内存大小是0.23kb，先是找到<code>ThreadCache</code>中对应给0.23kb的内存组的大小是多少，这里假设是0.3kb。然后根据<code>num_objects_to_move(0.3)</code>函数获得每次应该传递的obj的个数。<code>ThreadCache</code>还内存给<code>CentralCache</code>（<code>ReleaseToCentralCache</code>），一次也是还<code>num_objects_to_move(0.3)</code>个，把该<code>obj</code>全部放到<code>tc_slots</code>，但如果实在是不满足该条件，就把内存还给<code>Span</code>（<code>ReleaseListToSpans</code>）。</p>
+<p>正常情况肯定是申请<code>num_objects_to_move(cl)</code>个<code>obj</code>，除非<code>FreeList</code>本身能容纳的<code>obj</code>个数不够<code>num_objects_to_move(cl)</code>。</p>
+<p>当要归还的<code>obj</code>个数大于<code>num_objects_to_move(cl)</code>时，一次还<code>Static::sizemap()-&gt;num_objects_to_move(cl)</code>个<code>obj</code>，归还给<code>tc_slots_</code>数组。最后多余的不够<code>num_objects_to_move(cl)</code>个<code>obj</code>通过<code>ReleaseListToSpans</code>函数归还。</p>
+<h2 id="CentralCache与中央页堆的内存传递"><a href="#CentralCache与中央页堆的内存传递" class="headerlink" title="CentralCache与中央页堆的内存传递"></a>CentralCache与中央页堆的内存传递</h2><p><code>FetchFromSpansSafe()</code>首先会调用<code>FetchFromSpans</code>（从<code>Span</code>中切一个<code>obj</code>对应的内存片），当<code>FetchFromSpans</code>调用失败，也即<code>nonempty</code>队列中对应的<code>span</code>连一个<code>obj</code>的内存都切不出来时，便会调用<code>populate</code>函数从中央页堆中获取内存。倘若<code>FetchFromSpansSafe</code>中的<code>FetchFromSpans</code>能切除一个<code>obj</code>，就不从中央页堆申请内存，<code>RemoveRange</code>函数后续继续用<code>FetchFromSpans</code>切另外<code>N-1</code>个<code>obj</code>，倘若此时<code>nonempty</code>中内存只够<code>m</code>个<code>obj</code>的(<code>m&lt;N-1</code>)，那么此时就返回<code>m</code>个<code>obj</code>给<code>ThreadCache</code>。</p>
+<p>中央页堆每次传递给<code>CentralCache</code>的内存也是固定的，每次传递<code>class_to_pages(size_class_)</code>个页面。这<code>n</code>个页面就是一个<code>Span</code>，该<code>span</code>会被切成<code>obj</code>链接起来，然后把该<code>Span</code>插入<code>CentralCache</code>的<code>nonempty</code>中。</p>
+<p>从中央页堆拿<code>class_to_pages(size_class_)</code>个页面利用的是<code>New</code>函数，该函数首先是在中央页堆的<code>free_</code>或者<code>large_</code>队列中拿内存，如果这两都不符合条件，那么就要从系统内存拿啦(GrowHeap)</p>
+<h2 id="中央页堆与系统内存的内存传递"><a href="#中央页堆与系统内存的内存传递" class="headerlink" title="中央页堆与系统内存的内存传递"></a>中央页堆与系统内存的内存传递</h2><p>系统内存每次传递给中央页堆的页面数，与<code>populate</code>函数中传进来的页面数<code>n</code>以及系统参数<code>kMinSystemAlloc</code>有关，如下面的语句:<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Length ask =(n&gt;kMinSystemAlloc) ? n : <span class="keyword">static_cast</span>&lt;Length&gt;(kMinSystemAlloc)  (GrowHeap函数里)</span><br></pre></td></tr></table></figure></p>
+<p><code>GrowHeap</code>中利用<code>TCMalloc_SystemAlloc</code>向系统申请内存(其底层会调用<code>mmap</code>或者是<code>sbrk</code>)。把系统分配来的内存弄成<code>Span</code>，把生成的<code>Span</code>的信息记录进<code>radix tree</code>，日后通过页面ID便可通过get函数查找到其对应的<code>Span</code>对象，再通过<code>Delete</code>函数把新生成的<code>Span</code>加入中央页堆的<code>free_</code>或者<code>large_</code>的<code>normal</code>或者<code>returned</code>队列（在Delete函数里面，会合并相邻的Span）</p>
+<h1 id="TCMalloc中涉及到的几个重要的数据结构"><a href="#TCMalloc中涉及到的几个重要的数据结构" class="headerlink" title="TCMalloc中涉及到的几个重要的数据结构"></a>TCMalloc中涉及到的几个重要的数据结构</h1><p>在<code>initStaticVars()</code>里面首先会调用<code>SizeMap.init</code>。<code>SizeMap</code>是一个非常关键的数据结构，<code>SizeMap</code>里面涉及到几个关键的数据结构<code>class_array_</code>，<code>class_to_size_</code>，<code>class_to_pages_</code>，<code>num_objects_to_move_</code>。</p>
+<p>其中<code>class_array</code>将一个<code>size</code>映射成为一个<code>class num</code>，被映射的<code>class num</code>一共有<code>kNumClasses</code>个<code>num</code>，而<code>class_to_size_</code>，<code>class_to_pages_</code>，<code>num_objects_to_move_</code>这三个数组都是拥有<code>kNumClasses</code>个<code>num</code>的数组。所以根据<code>class_array</code>映射得到的<code>class num</code>，也即另外3个数组的索引号，就可以使用另外3个数组。</p>
+<p>根据这个索引号可以从<code>class_to_size</code>数组中得到基于这个索引(也即最开始的<code>size</code>)的可分配<code>obj</code>的最大<code>size</code>，假设这个大小的<code>size</code>叫做<code>Asize</code>；</p>
+<p>可以从<code>num_objects_to_move</code>数组中得到基于这个索引(也即最开始的<code>size</code>)的在<code>ThreadCache</code>和<code>CentralCache</code>之间移动的<code>obj</code>的数量，该<code>obj</code>的大小就是<code>Asize</code>。</p>
+<p>可以从<code>class_to_pages_</code>数组中得到基于这个索引(也即最开始的<code>size</code>)的在<code>CentralCache</code>和中央页堆之间移动的页面数量。</p>
+<p><code>class_to_size</code>数组，<code>num_objects_to_move</code>数组，<code>class_to_pages_</code>数组均是在<code>SizeMap::Init()</code>函数中被初始化。<code>class_to_size_</code>数组最终会被初始化为8,16,32,48(16递增，直到128字节)，128字节后，是另外一直形式的递增，一直到<code>kMaxSize</code>。到了<code>kMaxSize</code>后，又换一种形式的递增</p>
+<h1 id="TCMalloc中内存分配流程"><a href="#TCMalloc中内存分配流程" class="headerlink" title="TCMalloc中内存分配流程"></a>TCMalloc中内存分配流程</h1><p><img src="/img/20161022104539161.png" alt></p>
+<p>内存分配流程图如上图,具体流程如下：</p>
+<p>1、<code>Tcmalloc</code>首先判断<code>malloc</code>的<code>size</code>是否大于<code>kMaxSize</code>，如果小于这个值，那么将<code>size</code>转换为想的<code>obj class</code>，然后从当前<code>thread</code>私有的<code>cache</code>中<code>Allocate</code>，转至第2步。如果请求的<code>size</code>大于<code>kMaxSize</code>那么跳至第10。</p>
+<p>2、首先判断当前的<code>threadcache</code>中<code>obj calss</code>对应的<code>freelist</code>中是否包含有空闲的<code>obj</code>，如果有直接<code>pop</code>出来，否则从<code>CentralCache</code>中拿，转下一步。</p>
+<p>3、<code>CentralCache</code>和<code>ThreadCache</code>之间<code>obj</code>的转移采用<code>batch</code>方式，每次转移固定数量的<code>obj</code>，这个数量通过<code>Static::sizemap()-&gt;num_objects_to_move</code>定义，当然在决定最终转移数量时还是需要不能超过<code>ThreadCache</code>相应<code>list</code>的<code>maxlength</code>。然后通过<code>CentralCache</code>对应<code>freelist</code>的<code>RemoveRange</code>函数将确定大小的<code>obj</code>转移出来，并通过对应<code>list</code>的<code>PushRange</code>函数将这些<code>obj</code>插入<code>ThreadCache</code>对应的<code>freelist</code>。</p>
+<p>4、<code>CentralCache</code>通过<code>RemoveRange</code>将特定数量的<code>obj</code>移出，<code>CentralCache</code>将连续的内存看做一个<code>Span</code>，<code>Span</code>是<code>CentralCache</code>管理内存的一个主要数据结构。而<code>Span</code>又被切分成<code>N</code>个统一大小的<code>obj</code>。</p>
+<p>5、在<code>Allocate</code>的过程中，首先判断需要<code>Allocate</code>的<code>obj</code>数量是不是正好符合<code>num_objects_to_move</code>，如果是而且<code>CentralCache</code>用来存放<code>span</code>的<code>slots</code>不为空，那么直接从<code>slots</code>里面拿，否则从<code>nonempty</code>队列中的<code>Span</code>拿。</p>
+<p>6、<code>Nonempty</code>队列存放了所有可用的<code>Span</code>，那么从头开始一个个拿，如果拿光了还是不能满足要求，那么只能通过向<code>pageheap</code>要求一个<code>span</code>，这个<code>span</code>的<code>size</code>由<code>class_to_pages</code>决定，然后再将这个<code>Span</code>切成<code>obj</code>返回给<code>CentralCache</code>。然后再次尝试从<code>Span</code>分配。</p>
+<p>7、<code>Pageheap</code>管理整个系统<code>page</code>级别的<code>allocate</code>，他通过两个数据结构管理所有的<code>Span</code>（<code>free_</code>数组和<code>large_</code>列表），<code>free_</code>数组存放<code>size</code>小于<code>kMaxPages</code>的<code>Span</code>，而<code>large_</code>列表存放大于等于<code>kMaxPages</code>的<code>Span</code>。<code>PageHeap</code>首先判断要求的<code>pages</code>是否大于等于<code>kMaxPages</code>，如果小于那么先从<code>free</code>数组中找，从要求大小的位置开始往后找，先找<code>normal</code>队列再找<code>return</code>对队列。如果在<code>normal</code>队列中找到且找到的<code>Span</code>状态为<code>Span::ON_NORMAL_FREELIST</code>，那么直接从里面切出需要的<code>Span</code>返回给<code>CentralCache</code>。如果在<code>return</code>队列中找到且找到的<code>Span</code>状态为<code>Span::ON_RETURNED_FREELIST</code>那么直接从里面切出需要的<code>Span</code>返回给<code>CentralCache</code>。</p>
+<p>8、如果需要的<code>size</code>不符合上述要求或者在上述队列中没有找到那么将从<code>large_</code>队列中找。从<code>large_</code>队列中查找时，首先从<code>normal</code>队列入手，然后再从<code>return</code>队列找，他将找到<code>size</code>最符合且地址在空闲<code>Span</code>中最小的<code>Span</code>，然后切出来返回。</p>
+<p>9、如果<code>large_</code>队列中都没有找到合适的<code>Span</code>，那么将通过<code>GrowHeap</code>增长<code>Heap</code>的方式，通过<code>TCMalloc_SystemAlloc</code>向系统申请内存。并包装成<code>Span</code>，并插入<code>heap</code>中，然后再次进行分配。</p>
+<p>10、来到此处代表分配的内存是大于32k的，那么将向<code>heap</code>直接请求跳到第7步。</p>
+<h1 id="TCMalloc中内存释放流程"><a href="#TCMalloc中内存释放流程" class="headerlink" title="TCMalloc中内存释放流程"></a>TCMalloc中内存释放流程</h1><p><img src="/img/20161022104819952.png" alt></p>
+<h1 id="一些未解决的问题"><a href="#一些未解决的问题" class="headerlink" title="一些未解决的问题"></a>一些未解决的问题</h1><h2 id="线程缓冲区的大小的确定"><a href="#线程缓冲区的大小的确定" class="headerlink" title="线程缓冲区的大小的确定"></a>线程缓冲区的大小的确定</h2><p>Tcmallloc官方文档上说线程缓冲区的大小是慢启动的，在源码中找到了它的慢启动代码，但是还没有研究明白这个慢启动到底是一个什么逻辑。</p>
+<p>程序里有三处地方与该缓冲区大小确定有关，三处地方分别是FetchFromCentralCache，ListTooLong以及Scavenge。具体怎么确定的还没有研究，先做个备忘录而已。</p>
+<p>恰当线程缓冲区大小至关重要，如果缓冲区太小，我们需要经常去CentralHeap分配；如果线程缓冲区太大，又致使大量对象闲置而浪费内存。</p>
+<p>注意到恰当的线程缓冲区的大小对内存的释放一样重要。如果没有线程缓冲，每次内存释放都需要把内存移回到Central Heap。同样，一些线程有不对称的内存分配和释放行为（例如：生产者和消费者线程），所以确定恰当的缓冲区大小也很棘手。</p>
+<p>确定缓冲区大小，我们采用“慢开始”算法来确定每一个尺寸内存链表的最大长度。当某个链表使用更频繁，我们就扩大他的长度。如果我们某个链表上释放的操作比分配操作更多，它的最大长度将被增长到整个链表可以一次性有效的移动到Central Heap的长度。</p>
+<p>下面的伪代码说明了这种慢开始算法。注意到<code>num_objects_to_move</code>对每一个尺寸是不同的。通过移动特定长度的对象链表，中央缓冲可以高效的将链表在线程中传递。如果线程缓冲区的需要小于<code>num_objects_to_move</code>，在中央缓冲区上的这种操作具有线性的时间复杂度。使用<code>num_objects_to_move</code>作为从中央缓冲区传递的对象数量的缺点是，它将不需要的那部分对象浪费在线程缓冲区。</p>
+<p><img src="/img/20161022111651504.png" alt></p>
+<h1 id="TCMalloc与APR，ptmalloc的分析比较"><a href="#TCMalloc与APR，ptmalloc的分析比较" class="headerlink" title="TCMalloc与APR，ptmalloc的分析比较"></a>TCMalloc与APR，ptmalloc的分析比较</h1><h2 id="tcmalloc与APR，ptmalloc的不同点"><a href="#tcmalloc与APR，ptmalloc的不同点" class="headerlink" title="tcmalloc与APR，ptmalloc的不同点"></a>tcmalloc与APR，ptmalloc的不同点</h2><p>tcmalloc与APR初始化时都不会预先分配内存。但是tcmalloc申请一个小对象后(最开始时的申请，此时threadCache，CentralCache等结构中还没内存)，便会向系统申请几个页面的内存，中央页堆，CentralCache，threadCache会分别标记属于他们的内存。然后再从threadCache中分配一个obj给申请者。 </p>
+<p>而APR不一样，申请者申请内存(最开始时的申请)， 新分配的内存并不挂接到内存分配器链表中，而是在调用allocator_free进行内存释放的时候，内存才可能挂到内存分配器链表上。新分配的内存在内存池节点的active链表中。</p>
+<p>这也即是APR的一大缺点:apr_pool的一个大缺点就是从池中申请的内存不能归还给内存池，只能等pool销毁的时候才能归还。为了弥补这个缺点，apr_pool的实际使用中，可以申请拥有不同生命周期的内存池。</p>
+<p>Ptmalloc：在使用malloc之前，heap大小为0.若请求空间小于mmap分配阈值，主分配区会调用sbrk()增加一块大小为(128kb+chunk_size)align4KB的空间作为heap。非主分配区会调用一块大小为HEAP_MAX_SIZE(32位系统上默认为1M，64位系统上默认为64M)的空间作为sub_heap（3.2.3.4小节）,这就是ptmalloc维护的分配空间。</p>
+<p>当用户释放了heap中的chunk时，ptmalloc又会使用fastbins和bins来组织空闲chunk，以备下一次分配。</p>
+<p>所以三者对内存的维护处理各不相同，初始化时三者都不会预分配空间。但一旦有了malloc，tcmalloc与ptmalloc便会预先分配一块大内存加入内存池(应该可以称为内存池吧)，tcmalloc把内存分到各级，但是ptmalloc只是放在heap中。</p>
+<p>tcmalloc应该是只有一个内存池的概念，而APR则是多内存池概念。</p>
+<h2 id="各内存池的优缺点"><a href="#各内存池的优缺点" class="headerlink" title="各内存池的优缺点"></a>各内存池的优缺点</h2><p>Ptmalloc缺点:</p>
+<ol>
+<li>多线程由于锁冲突，所以慢</li>
+<li>容易造成内存暴增:因为ptmalloc的内存收缩是从topchunk开始，如果与topchunk相邻的那个chunk没有被释放，topchunk以下的空闲内存都无法返回给系统，即是这些空闲内存有几十个G也不行。（ptmalloc文档第4节）</li>
+<li>容易造成内存碎片(ptmalloc文档第4节第5点)，ptmalloc就不会存在这种大块内存碎片的问题，由于其内存管理机制。不过ptmalloc也会引起小的内存碎片，比如我申请的是13字节，对应的size是15字节，那么便会有2个自己的内存碎片。不过</li>
+</ol>
+<p>APR缺点：APR从系统申请来的内存先是放在内存池节点的active链表中链起来，并不会加入内存分配器的free链表数组。所以当内存中一直是在malloc，但是却没有free时，active链表链接了大量内存，而free链表数组一直没值，这样容易把系统内存耗尽</p>
+<p>APR优点：可以建立子内存池，这样建立不同周期的内存池。  比如连接内存池与请求内存池</p>
+<p>看这些个分配器的分配机制，可见这些内存管理机制都是针对小内存分配和管理。对大块内存还是直接用了系统调用。所以在程序中应该尽量避免大内存的malloc/new、free/delete操作。另外这个分配器的最小粒度都是以8字节为单位的，所以频繁分配小内存，像int啊bool啊什么的，仍然会浪费空间。经过测试无论是对bool、int、short进行new的时候，实际消耗的内存在ptmalloc和tcmalloc下64位系统地址间距都是32个字节。大量new测试的时候，ptmalloc平均每次new消耗32字节，tcmalloc消耗8字节（我想说ptmalloc弱爆啦，而且tcmalloc）。所以大量使用这些数据的时候不妨用数组自己维护一个内存池，可以减少很多的内存浪费。（原来STL的map和set一个节点要消耗近80个字节有这么多浪费在这里了啊）</p>
+<p>而多线程下对于比较大的数据结构，为了减少分配时的锁争用，最好是自己维护内存池。单线程的话无所谓了，呵呵。不过自己维护内存池是增加代码复杂度，减少 内存管理复杂度。但是我觉得，255个分页以下（1MB）的内存话，tcmalloc的分配和管理机制已经相当nice，没太大必要自己另写一个。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/C/" rel="tag"># C++</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/11/14/B树家族/" rel="next" title="B树家族">
+                <i class="fa fa-chevron-left"></i> B树家族
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">330</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/xiaomeihao.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#TCMalloc内存分配与管理简述"><span class="nav-number">1.</span> <span class="nav-text">TCMalloc内存分配与管理简述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#小对象的分配"><span class="nav-number">1.1.</span> <span class="nav-text">小对象的分配</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#大对象的分配"><span class="nav-number">1.2.</span> <span class="nav-text">大对象的分配</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#TCMalloc的内存分配的主要层次"><span class="nav-number">2.</span> <span class="nav-text">TCMalloc的内存分配的主要层次</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#第一层"><span class="nav-number">2.1.</span> <span class="nav-text">第一层</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#第二层"><span class="nav-number">2.2.</span> <span class="nav-text">第二层</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#第三层"><span class="nav-number">2.3.</span> <span class="nav-text">第三层</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#第四层"><span class="nav-number">2.4.</span> <span class="nav-text">第四层</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#内存在各层之间的传递"><span class="nav-number">3.</span> <span class="nav-text">内存在各层之间的传递</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#ThreadCache与CentralCache内存传递"><span class="nav-number">3.1.</span> <span class="nav-text">ThreadCache与CentralCache内存传递</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CentralCache与中央页堆的内存传递"><span class="nav-number">3.2.</span> <span class="nav-text">CentralCache与中央页堆的内存传递</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#中央页堆与系统内存的内存传递"><span class="nav-number">3.3.</span> <span class="nav-text">中央页堆与系统内存的内存传递</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#TCMalloc中涉及到的几个重要的数据结构"><span class="nav-number">4.</span> <span class="nav-text">TCMalloc中涉及到的几个重要的数据结构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#TCMalloc中内存分配流程"><span class="nav-number">5.</span> <span class="nav-text">TCMalloc中内存分配流程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#TCMalloc中内存释放流程"><span class="nav-number">6.</span> <span class="nav-text">TCMalloc中内存释放流程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#一些未解决的问题"><span class="nav-number">7.</span> <span class="nav-text">一些未解决的问题</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#线程缓冲区的大小的确定"><span class="nav-number">7.1.</span> <span class="nav-text">线程缓冲区的大小的确定</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#TCMalloc与APR，ptmalloc的分析比较"><span class="nav-number">8.</span> <span class="nav-text">TCMalloc与APR，ptmalloc的分析比较</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#tcmalloc与APR，ptmalloc的不同点"><span class="nav-number">8.1.</span> <span class="nav-text">tcmalloc与APR，ptmalloc的不同点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#各内存池的优缺点"><span class="nav-number">8.2.</span> <span class="nav-text">各内存池的优缺点</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<span id="busuanzi_container_site_uv"> 
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
