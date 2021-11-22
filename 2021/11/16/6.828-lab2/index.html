@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="原文：https://www.dingmos.com/index.php/archives/4/ 简介在本实验中，我们将编写操作系统的内存管理代码。 内存管理有两个组成部分。 第一个部分是内核的物理内存分配器，以致于内核可以分配和释放内存。 分配器将以4096字节为操作单位，称为一个页面。 我们的任务是维护一个数据结构，去记录哪些物理页面是空闲的，哪些是已分配的，以及共享每个已分配页面的进程数。">
+<meta name="keywords" content="Linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="6.828 lab2">
+<meta property="og:url" content="http://yoursite.com/2021/11/16/6.828-lab2/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="原文：https://www.dingmos.com/index.php/archives/4/ 简介在本实验中，我们将编写操作系统的内存管理代码。 内存管理有两个组成部分。 第一个部分是内核的物理内存分配器，以致于内核可以分配和释放内存。 分配器将以4096字节为操作单位，称为一个页面。 我们的任务是维护一个数据结构，去记录哪些物理页面是空闲的，哪些是已分配的，以及共享每个已分配页面的进程数。">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/v2-f322c1238767ca4ae172b69548bd4b08_720w.png">
+<meta property="og:image" content="http://yoursite.com/img/v2-e856328378b79f84cedece695adee101_b.gif">
+<meta property="og:image" content="http://yoursite.com/img/v2-9a1b68fd5f1fbcf1e163f4811ed576ad_b.gif">
+<meta property="og:image" content="http://yoursite.com/img/v2-480829b29d4400a2182dcb58f31603e7_b.gif">
+<meta property="og:image" content="http://yoursite.com/img/v2-f00aab967b70bdb3afd7743d902dfbdf_b.gif">
+<meta property="og:image" content="http://yoursite.com/img/v2-23f6d73c9f99f646458aac3b79e50e91_b.jpg">
+<meta property="og:image" content="http://yoursite.com/img/v2-57da610073dc97659f6a52683438bdd7_b.webp">
+<meta property="og:image" content="http://yoursite.com/img/v2-7645f7dc2a45edeef40540938cc55d8c_b.webp">
+<meta property="og:image" content="http://yoursite.com/img/4482847-1941fd6b845db3b5.webp">
+<meta property="og:updated_time" content="2021-11-22T12:33:31.728Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="6.828 lab2">
+<meta name="twitter:description" content="原文：https://www.dingmos.com/index.php/archives/4/ 简介在本实验中，我们将编写操作系统的内存管理代码。 内存管理有两个组成部分。 第一个部分是内核的物理内存分配器，以致于内核可以分配和释放内存。 分配器将以4096字节为操作单位，称为一个页面。 我们的任务是维护一个数据结构，去记录哪些物理页面是空闲的，哪些是已分配的，以及共享每个已分配页面的进程数。">
+<meta name="twitter:image" content="http://yoursite.com/img/v2-f322c1238767ca4ae172b69548bd4b08_720w.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2021/11/16/6.828-lab2/">
+
+
+
+
+
+  <title>6.828 lab2 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/resume.pdf" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-mybetterhalf">
+          <a href="/mybetterhalf/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            mybetterhalf
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/11/16/6.828-lab2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">6.828 lab2</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-11-16T14:18:00+08:00">
+                2021-11-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>原文：<a href="https://www.dingmos.com/index.php/archives/4/" target="_blank" rel="noopener">https://www.dingmos.com/index.php/archives/4/</a></p>
+<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>在本实验中，我们将编写操作系统的内存管理代码。 内存管理有两个组成部分。</p>
+<p>第一个部分是内核的物理内存分配器，以致于内核可以分配和释放内存。 分配器将以4096字节为操作单位，称为一个页面。 我们的任务是维护一个数据结构，去记录哪些物理页面是空闲的，哪些是已分配的，以及共享每个已分配页面的进程数。 我们还要编写例程来分配和释放内存页面。</p>
+<p>内存管理的第二个组件是虚拟内存，它将内核和用户软件使用的虚拟地址映射到物理内存中的地址。 当指令使用内存时，x86硬件的内存管理单元（MMU）执行映射，查询一组页表。 我们根据任务提供的规范修改JOS以设置MMU的页面表。</p>
+<p>lab2包含的新源文件：</p>
+<ul>
+<li>inc/memlayout.h</li>
+<li>kern/pmap.c</li>
+<li>kern/pmap.h</li>
+<li>kern/kclock.h</li>
+<li>kern/kclock.c</li>
+</ul>
+<p><code>memlayout.h</code>描述了虚拟地址空间的布局，这是我们需要通过修改<code>pmap.c</code>实现的。<code>memlayout.h</code>和<code>pmap.h</code>定义了<code>PageInfo</code>结构，可以通过这个结构来跟踪那个物理地址是空闲的。<code>kclock.c</code>和<code>kclock.h</code>操作系统的时钟。</p>
+<p><code>memlayout.h</code>给贴心的画了个图，很形象的表述了虚拟地址的分布。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">Virtual memory <span class="built_in">map</span>:                                Permissions</span><br><span class="line">                                                   kernel/user</span><br><span class="line"></span><br><span class="line">   <span class="number">4</span> Gig --------&gt;  +------------------------------+</span><br><span class="line">                    |                              | RW/--</span><br><span class="line">                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span><br><span class="line">                    :              .               :</span><br><span class="line">                    :              .               :</span><br><span class="line">                    :              .               :</span><br><span class="line">                    |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~| RW/--</span><br><span class="line">                    |                              | RW/--</span><br><span class="line">                    |   Remapped Physical Memory   | RW/--</span><br><span class="line">                    |                              | RW/--</span><br><span class="line">   KERNBASE, ----&gt;  +------------------------------+ <span class="number">0xf0000000</span>      --+</span><br><span class="line">   KSTACKTOP        |     CPU0's Kernel Stack      | RW/--  KSTKSIZE   |</span><br><span class="line">                    | - - - - - - - - - - - - - - -|                   |</span><br><span class="line">                    |      Invalid Memory (*)      | --/--  KSTKGAP    |</span><br><span class="line">                    +------------------------------+                   |</span><br><span class="line">                    |     CPU1's Kernel Stack      | RW/--  KSTKSIZE   |</span><br><span class="line">                    | - - - - - - - - - - - - - - -|                 PTSIZE</span><br><span class="line">                    |      Invalid Memory (*)      | --/--  KSTKGAP    |</span><br><span class="line">                    +------------------------------+                   |</span><br><span class="line">                    :              .               :                   |</span><br><span class="line">                    :              .               :                   |</span><br><span class="line">   MMIOLIM ------&gt;  +------------------------------+ <span class="number">0xefc00000</span>      --+</span><br><span class="line">                    |       Memory-mapped I/O      | RW/--  PTSIZE</span><br><span class="line">ULIM, MMIOBASE --&gt;  +------------------------------+ <span class="number">0xef800000</span></span><br><span class="line">                    |  Cur. Page Table (User R-)   | R-/R-  PTSIZE</span><br><span class="line">   UVPT      ----&gt;  +------------------------------+ <span class="number">0xef400000</span></span><br><span class="line">                    |          RO PAGES            | R-/R-  PTSIZE</span><br><span class="line">   UPAGES    ----&gt;  +------------------------------+ <span class="number">0xef000000</span></span><br><span class="line">                    |           RO ENVS            | R-/R-  PTSIZE</span><br><span class="line">UTOP,UENVS ------&gt;  +------------------------------+ <span class="number">0xeec00000</span></span><br><span class="line">UXSTACKTOP -/       |     User Exception Stack     | RW/RW  PGSIZE</span><br><span class="line">                    +------------------------------+ <span class="number">0xeebff000</span></span><br><span class="line">                    |       Empty Memory (*)       | --/--  PGSIZE</span><br><span class="line">   USTACKTOP  ---&gt;  +------------------------------+ <span class="number">0xeebfe000</span></span><br><span class="line">                    |      Normal User Stack       | RW/RW  PGSIZE</span><br><span class="line">                    +------------------------------+ <span class="number">0xeebfd000</span></span><br><span class="line">                    |                              |</span><br><span class="line">                    |                              |</span><br><span class="line">                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span><br><span class="line">                    .                              .</span><br><span class="line">                    .                              .</span><br><span class="line">                    .                              .</span><br><span class="line">                    |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|</span><br><span class="line">                    |     Program Data &amp; Heap      |</span><br><span class="line">   UTEXT --------&gt;  +------------------------------+ <span class="number">0x00800000</span></span><br><span class="line">   PFTEMP -------&gt;  |       Empty Memory (*)       |        PTSIZE</span><br><span class="line">                    |                              |</span><br><span class="line">   UTEMP --------&gt;  +------------------------------+ <span class="number">0x00400000</span>      --+</span><br><span class="line">                    |       Empty Memory (*)       |                   |</span><br><span class="line">                    | - - - - - - - - - - - - - - -|                   |</span><br><span class="line">                    |  User STAB Data (optional)   |                 PTSIZE</span><br><span class="line">   USTABDATA ----&gt;  +------------------------------+ <span class="number">0x00200000</span>        |</span><br><span class="line">                    |       Empty Memory (*)       |                   |</span><br><span class="line">   <span class="number">0</span> ------------&gt;  +------------------------------+                 --+</span><br><span class="line"></span><br><span class="line">(*) Note: The kernel ensures that <span class="string">"Invalid Memory"</span> is *never* mapped.</span><br><span class="line">    <span class="string">"Empty Memory"</span> is normally unmapped, but user programs may <span class="built_in">map</span> pages</span><br><span class="line">    there <span class="keyword">if</span> desired.  JOS user programs <span class="built_in">map</span> pages temporarily at UTEMP.</span><br></pre></td></tr></table></figure></p>
+<h2 id="回顾：未初始化完成的内存映射"><a href="#回顾：未初始化完成的内存映射" class="headerlink" title="回顾：未初始化完成的内存映射"></a>回顾：未初始化完成的内存映射</h2><p>在Lab 1中，我们做了一个虚拟内存映射，将0xf0000000-0xf0400000映射到物理地址0x00000000-00400000，总共大小为4MB。如果访问任何超出这个范围的虚拟地址，CPU都会出错。</p>
+<p>在之后写代码时，代码中的地址都是虚拟地址，翻译成物理地址的过程是硬件实现的，我们不应该想着如何直接操作物理地址。但是，有时将地址转化物理地址可以方便一些操作，在文件<code>inc/memlayout.h</code>和<code>kern/pmap.h</code>中提供了一些宏和函数，方便我们做这样的地址换算。</p>
+<p>首先提供了宏<code>KERNBASE</code>，注释说所有物理地址都被映射到这里，值为0xf0000000，正是我们映射的地址。所谓所有，就是已经映射过的地址，不包括还没映射的地址。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// All physical memory mapped at this address</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> KERNBASE        0xF0000000</span></span><br></pre></td></tr></table></figure></p>
+<p>宏函数<code>KADDR</code>调用了函数<code>_kaddr</code>，将物理地址转化成内核地址，或称虚拟地址，也就是在物理地址的数值上加上了<code>KERNBAE</code>。此时的“所有”物理地址，范围还很小，因为其它的内存映射还没有建立，故可以这样简单地操作。其它内存映射建立之后，物理地址转化为虚拟地址的过程将很复杂。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* This macro takes a physical address and returns the corresponding kernel</span></span><br><span class="line"><span class="comment"> * virtual address.  It panics if you pass an invalid physical address. */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> KADDR(pa) _kaddr(__FILE__, __LINE__, pa)</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">void</span>*</span><br><span class="line">_kaddr(<span class="keyword">const</span> <span class="keyword">char</span> *file, <span class="keyword">int</span> line, <span class="keyword">physaddr_t</span> pa)</span><br><span class="line">&#123;</span><br><span class="line">        <span class="keyword">if</span> (PGNUM(pa) &gt;= npages)</span><br><span class="line">                _panic(file, line, <span class="string">"KADDR called with invalid pa %08lx"</span>, pa);</span><br><span class="line">        <span class="keyword">return</span> (<span class="keyword">void</span> *)(pa + KERNBASE);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>相应的反向过程将虚拟地址转化为物理地址，宏函数<code>PADDR</code>做了这样的事情。也就是在输入的虚拟地址上减去<code>KERNBASE</code>，非常简单。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* This macro takes a kernel virtual address -- an address that points above</span></span><br><span class="line"><span class="comment"> * KERNBASE, where the machine's maximum 256MB of physical memory is mapped --</span></span><br><span class="line"><span class="comment"> * and returns the corresponding physical address.  It panics if you pass it a</span></span><br><span class="line"><span class="comment"> * non-kernel virtual address.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PADDR(kva) _paddr(__FILE__, __LINE__, kva)</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">physaddr_t</span></span><br><span class="line">_paddr(<span class="keyword">const</span> <span class="keyword">char</span> *file, <span class="keyword">int</span> line, <span class="keyword">void</span> *kva)</span><br><span class="line">&#123;</span><br><span class="line">        <span class="keyword">if</span> ((<span class="keyword">uint32_t</span>)kva &lt; KERNBASE)</span><br><span class="line">                _panic(file, line, <span class="string">"PADDR called with invalid kva %08lx"</span>, kva);</span><br><span class="line">        <span class="keyword">return</span> (<span class="keyword">physaddr_t</span>)kva - KERNBASE;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>以下为把页转换为物理地址和把物理地址转成页，或者把页转成虚拟地址。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">physaddr_t</span></span><br><span class="line">page2pa(struct PageInfo *pp)</span><br><span class="line">&#123;</span><br><span class="line">        <span class="keyword">return</span> (pp - pages) &lt;&lt; PGSHIFT;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="class"><span class="keyword">struct</span> <span class="title">PageInfo</span>*</span></span><br><span class="line"><span class="class"><span class="title">pa2page</span>(<span class="title">physaddr_t</span> <span class="title">pa</span>)</span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">        <span class="keyword">if</span> (PGNUM(pa) &gt;= npages)</span><br><span class="line">                panic(<span class="string">"pa2page called with invalid pa"</span>);</span><br><span class="line">        <span class="keyword">return</span> &amp;pages[PGNUM(pa)];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">void</span>*</span><br><span class="line">page2kva(struct PageInfo *pp)</span><br><span class="line">&#123;</span><br><span class="line">        <span class="keyword">return</span> KADDR(page2pa(pp));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="Part-1任务总览"><a href="#Part-1任务总览" class="headerlink" title="Part 1任务总览"></a>Part 1任务总览</h2><p>Lab 2 Part 1让我们完成内核内存初始化，而用户区User Level内存初始化在后面的part中完成。</p>
+<p>初始化操作集中在文件<code>kern/pmap.c</code>的函数<code>mem_init</code>中，在内核初始化函数<code>i386_init</code>中调用。在这个part中，我们开始写这个函数以及它将调用的函数，只需要写到<code>check_page_alloc</code>函数的调用之前即可。<code>check_page_alloc</code>这一行之上进行的操作汇总如下。</p>
+<ul>
+<li>直接调用硬件查看可以使用的内存大小，也就是函数i386_detect_memory。</li>
+<li>创建一个内核初始化时的page目录，并设置权限。</li>
+<li>创建用于管理page的数组，初始化page分配器组件。</li>
+<li>测试page分配器组件。</li>
+</ul>
+<p>需要我们写的函数有：</p>
+<ul>
+<li>boot_alloc，page未初始化时的分配器。</li>
+<li>page_init, page_alloc, page_free，page分配器组件。</li>
+<li>mem_init，总的内存初始化函数。</li>
+</ul>
+<p>完成分配器之后，我们的目标是让虚拟地址有基础。进程需要更多内存，向内核发出请求，内核利用分配器，将一个由分配器决定的物理地址和由进程决定的虚拟地址关联到一起，称为映射。这是后面的Lab的内容，本文只关心分配，不关心任何形式的映射。</p>
+<h2 id="va-list-va-start等等"><a href="#va-list-va-start等等" class="headerlink" title="va_list va_start等等"></a>va_list va_start等等</h2><p>VA函数（variable argument function），参数可变函数。理解这个操作，头脑中需要有栈的概念，参数按序（从右到左）压栈，第一个参数在低地址位置。函数原型为<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="keyword">char</span>* va_list;</span><br><span class="line"><span class="comment">// 以4字节为单位对齐</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _INTSIZEOF(n) (sizeof(n)+sizeof(int)-1)&amp; ~(sizeof(int)-1)</span></span><br><span class="line"><span class="comment">// 求得参数栈的第一个参数地址</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> va_start(ap, v) (ap = (va_list)&amp;v + _INTSIZEOF(v)) </span></span><br><span class="line"><span class="comment">// 这里很巧妙，ap+SIZE指向下一个参数地址，再返回总体减去size（即又指回了当前变量） </span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> va_arg(ap, t)   (*(t *) ((ap+=_INTSIZEOF(t)) - _INTSIZEOF(t)) )</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> va_end(ap)  (ap = (va_list) 0)</span></span><br></pre></td></tr></table></figure></p>
+<ul>
+<li><code>va_list ap</code>    定义一个变差变量ap</li>
+<li><code>va_start(ap, last)</code>    初始化ap,得到可变参数列表的第一个参数的确切地址。实际就是指向参数堆栈的栈顶</li>
+<li><code>va_arg(ap, type)</code>    已知变量类型为type的情况下，获得下一个变参变量</li>
+<li><code>va_end(ap)</code>    结束操作</li>
+</ul>
+<p><code>entry_pgdir</code>的写法也是内存映射的一个重要部分。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">__attribute__((__aligned__(PGSIZE)))</span><br><span class="line"><span class="keyword">pde_t</span> entry_pgdir[NPDENTRIES] = &#123;</span><br><span class="line">    <span class="comment">// Map VA's [0, 4MB) to PA's [0, 4MB)</span></span><br><span class="line">    <span class="comment">// 在数组定义中，这是什么写法？</span></span><br><span class="line">    [<span class="number">0</span>]</span><br><span class="line">        = ((<span class="keyword">uintptr_t</span>)entry_pgtable - KERNBASE) + PTE_P,</span><br><span class="line">    <span class="comment">// Map VA's [KERNBASE, KERNBASE+4MB) to PA's [0, 4MB)</span></span><br><span class="line">    [KERNBASE&gt;&gt;PDXSHIFT]</span><br><span class="line">        = ((<span class="keyword">uintptr_t</span>)entry_pgtable - KERNBASE) + PTE_P + PTE_W</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<h2 id="两个内存分配器"><a href="#两个内存分配器" class="headerlink" title="两个内存分配器"></a>两个内存分配器</h2><p>有两个分配器，一个是正式的Page分配器，在之后的所有情况下我们都使用这个。另一个是在Page分配器初始化完成之前使用的，更加原始、简单。</p>
+<p>在page分配器初始化完成之前，内核在初始化的过程中使用<code>boot_alloc</code>函数分配内存，也可称为boot分配器。这个分配器非常原始，在page分配器初始化完成后，务必不可调用<code>boot_alloc</code>分配内存，以免出现莫名其妙的错误。</p>
+<h2 id="page分配器"><a href="#page分配器" class="headerlink" title="page分配器"></a>page分配器</h2><p>Page分配器操作内存是以page为单位的，之后几乎所有管理内存的机制都是以page为单位。page就是将所有的内存地址分成长度相同的一个个区块，每个的长度都是4096Bytes。所有可以分配的内存都注册到一个链表中，通过分配器，可以方便地拿到一个未分配的page。</p>
+<p>内存管理组件维护一个链表，称为<code>free list</code>，这个链表将所有未分配的page连起来。需要分配内存时，将链表头部对应的page返回，并将链表头部更新为链表中的下一个元素。</p>
+<p>在<code>inc/memlayout.h</code>中定义了这样的结构体，<code>pp_ref</code>是指向这个页面的指针数量，指针<code>pp_link</code>就是链表中常用的next指针。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">PageInfo</span> &#123;</span></span><br><span class="line">    <span class="comment">// Next page on the free list.</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">PageInfo</span> *<span class="title">pp_link</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// pp_ref is the count of pointers (usually in page table entries)</span></span><br><span class="line">    <span class="comment">// to this page, for pages allocated using page_alloc.</span></span><br><span class="line">    <span class="comment">// Pages allocated at boot time using pmap.c's</span></span><br><span class="line">    <span class="comment">// boot_alloc do not have valid reference count fields.</span></span><br><span class="line">    <span class="keyword">uint16_t</span> pp_ref;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>创建了一个<code>struct PageInfo</code>的数组，数组中第i个成员代表内存中第i个<code>page</code>。故物理地址和数组索引很方便相换算。初始化时，形成一个链表，所有可分配的<code>page</code>都以<code>struct PageInfo</code>的形式存在于链表上。要通过分配器拿到一个<code>page</code>，也就是读取链表开头的节点，这个节点就对应一个<code>page</code>。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">extern</span> <span class="class"><span class="keyword">struct</span> <span class="title">PageInfo</span> *<span class="title">pages</span>;</span></span><br><span class="line"><span class="keyword">extern</span> <span class="keyword">size_t</span> npages;</span><br></pre></td></tr></table></figure></p>
+<p>初始化函数<code>page_init</code>将所有的<code>pp_link</code>初始化指向与自己相邻的<code>PageInfo</code>，如下，这是初步实现，后续还有更新：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// Initialize page structure and memory free list.</span></span><br><span class="line"><span class="comment">// After this is done, NEVER use boot_alloc again.  ONLY use the page</span></span><br><span class="line"><span class="comment">// allocator functions below to allocate and deallocate physical</span></span><br><span class="line"><span class="comment">// memory via the page_free_list.</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="keyword">void</span></span><br><span class="line">page_init(<span class="keyword">void</span>)</span><br><span class="line">&#123;</span><br><span class="line">        <span class="comment">// The example code here marks all physical pages as free.</span></span><br><span class="line">        <span class="comment">// However this is not truly the case.  What memory is free?</span></span><br><span class="line">        <span class="comment">//  1) Mark physical page 0 as in use.</span></span><br><span class="line">        <span class="comment">//     This way we preserve the real-mode IDT and BIOS structures</span></span><br><span class="line">        <span class="comment">//     in case we ever need them.  (Currently we don't, but...)</span></span><br><span class="line">        <span class="comment">//  2) The rest of base memory, [PGSIZE, npages_basemem * PGSIZE)</span></span><br><span class="line">        <span class="comment">//     is free.</span></span><br><span class="line">        <span class="comment">//  3) Then comes the IO hole [IOPHYSMEM, EXTPHYSMEM), which must</span></span><br><span class="line">        <span class="comment">//     never be allocated.</span></span><br><span class="line">        <span class="comment">//  4) Then extended memory [EXTPHYSMEM, ...).</span></span><br><span class="line">        <span class="comment">//     Some of it is in use, some is free. Where is the kernel</span></span><br><span class="line">        <span class="comment">//     in physical memory?  Which pages are already in use for</span></span><br><span class="line">        <span class="comment">//     page tables and other data structures?</span></span><br><span class="line">        <span class="comment">//</span></span><br><span class="line">        <span class="comment">// Change the code to reflect this.</span></span><br><span class="line">        <span class="comment">// NB: DO NOT actually touch the physical memory corresponding to</span></span><br><span class="line">        <span class="comment">// free pages!</span></span><br><span class="line">        <span class="keyword">size_t</span> i;</span><br><span class="line">        <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; npages; i++) &#123;</span><br><span class="line">                pages[i].pp_ref = <span class="number">0</span>;</span><br><span class="line">                pages[i].pp_link = page_free_list;</span><br><span class="line">                page_free_list = &amp;pages[i];</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这样初始化的操作是在<code>kern/pmap.c</code>中完成的。大概来说，初始化就是拉了这样一个链表，并且将指针<code>page_free_list</code>指向链表的开头。分配内存时，若读取<code>page_free_list</code>指针得到NULL，则说明分配器已经给完了它能够管理的内存，再也给不出来了。</p>
+<p>分配器组件的函数都是在操作<code>PageInfo</code>指针，也就是pages数组中的元素，而不是直接操作每个<code>page</code>的地址。如分配函数<code>page_alloc</code>返回的是一个<code>PageInfo</code>，释放<code>page</code>的函数<code>page_free</code>接受的也是一个<code>PageInfo</code>指针。将这个指针和<code>pages</code>数组开头地址做差，可以得到这个<code>PageInfo</code>在数组中的索引，也就可以换算出相应物理地址。</p>
+<p>在文件<code>kern/pmap.h</code>中，已经写好了一个函数<code>page2kva</code>，接受一个<code>PageInfo</code>指针，返回得到相应page的虚拟地址。我们可以直接使用这个函数进行换算，这样得到的是虚拟地址，要得到物理地址，还需要在此基础上将地址的数值减去<code>0xf0000000</code>，宏<code>PADDR</code>做了这件事情。</p>
+<p>内核的其他代码通过函数<code>page_alloc</code>从<code>free list</code>取出一个<code>page</code>，返回当前<code>page_free_list</code>指针，并令<code>page_free_list</code>指针指向原链表中的下一个元素。</p>
+<p>讲义中要求我们实现文件<code>kern/pmap.c</code>中的函数<code>page_alloc</code>，注释中写的比较清楚，分配一个物理页首先需要判断是否还有free的page，如果没有的话就返回NULL。之后从<code>page_free_list</code>中拿出一个page，因为page的指针还指向下一个<code>free_page</code>，所以<code>free_page_list</code>需要指向<code>target-&gt;pp_link</code>，同时<code>target-&gt;pp_link</code>置空。如果需要把页置为0的话，需要转成物理地址然后调用memset。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Allocates a physical page.  If (alloc_flags &amp; ALLOC_ZERO), fills the entire</span></span><br><span class="line"><span class="comment">// returned physical page with '\0' bytes.  Does NOT increment the reference</span></span><br><span class="line"><span class="comment">// count of the page - the caller must do these if necessary (either explicitly</span></span><br><span class="line"><span class="comment">// or via page_insert).</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// Be sure to set the pp_link field of the allocated page to NULL so</span></span><br><span class="line"><span class="comment">// page_free can check for double-free bugs.</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// Returns NULL if out of free memory.</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// Hint: use page2kva and memset</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">PageInfo</span> *</span></span><br><span class="line"><span class="class"><span class="title">page_alloc</span>(<span class="title">int</span> <span class="title">alloc_flags</span>)</span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// out of memory</span></span><br><span class="line">	<span class="keyword">if</span> (page_free_list == <span class="literal">NULL</span>) &#123;</span><br><span class="line">	    <span class="comment">// no changes made so far of course</span></span><br><span class="line">	    <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">PageInfo</span> *<span class="title">target</span> = <span class="title">page_free_list</span>;</span></span><br><span class="line">	page_free_list = page_free_list-&gt;pp_link;     <span class="comment">// update free list pointer</span></span><br><span class="line">    target-&gt;pp_link = <span class="literal">NULL</span>;                       <span class="comment">// set to NULL according to notes</span></span><br><span class="line">	<span class="keyword">char</span> *space_head = page2kva(target);          <span class="comment">// extract kernel virtual memory</span></span><br><span class="line">	<span class="keyword">if</span> (alloc_flags &amp; ALLOC_ZERO) &#123;</span><br><span class="line">        <span class="comment">// zero the page according to flags</span></span><br><span class="line">        <span class="built_in">memset</span>(space_head, <span class="number">0</span>, PGSIZE);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> target;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>要释放一个<code>page</code>，也就是将这个<code>page</code>放回链表。将<code>page_free_list</code>指针指向这个<code>PageInfo</code>结构体，并设置这个结构体的<code>pp_link</code>为之前的<code>page_free_list</code>指针。放回链表的这个<code>page</code>也就变成了<code>free list</code>的开头。</p>
+<p>讲义中要求我们实现文件<code>kern/pmap.c</code>中的函数<code>page_free</code>，给的提示足够多了：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Return a page to the free list.</span></span><br><span class="line"><span class="comment">// (This function should only be called when pp-&gt;pp_ref reaches 0.)</span></span><br><span class="line"><span class="keyword">void</span></span><br><span class="line">page_free(struct PageInfo *pp)</span><br><span class="line">&#123;</span><br><span class="line">        <span class="comment">// Fill this function in</span></span><br><span class="line">        <span class="comment">// Hint: You may want to panic if pp-&gt;pp_ref is nonzero or</span></span><br><span class="line">        <span class="comment">// pp-&gt;pp_link is not NULL.</span></span><br><span class="line">        <span class="keyword">if</span> (pp-&gt;pp_ref != <span class="number">0</span> || pp-&gt;pp_link != <span class="literal">NULL</span>)</span><br><span class="line">                panic(<span class="string">"Page double free or freeing a referenced page...\n"</span>);</span><br><span class="line">        pp-&gt;pp_link = page_free_list;</span><br><span class="line">        page_free_list = pp;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="page分配器boot-alloc"><a href="#page分配器boot-alloc" class="headerlink" title="page分配器boot_alloc"></a>page分配器boot_alloc</h2><p><code>page</code>分配组件完成初始化之前，使用<code>boot_alloc</code>函数分配内存，<code>pages</code>数组就是这个函数分配的。</p>
+<p>函数接受一个参数，代表要多少字节内存。函数将这个字节数上调到<code>page</code>大小的边界，也就是调整为离这个字节数最近的4096的整数倍，以求每次分配都是以<code>page</code>为单位的。这个分配器只能在<code>page</code>分配器初始化完成之前使用，之后一律使用<code>page</code>分配器。</p>
+<p>实现非常简单，如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">void</span> *</span><br><span class="line">boot_alloc(<span class="keyword">uint32_t</span> n)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">static</span> <span class="keyword">char</span> *nextfree;	<span class="comment">// virtual address of next byte of free memory</span></span><br><span class="line">	<span class="keyword">char</span> *result;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!nextfree) &#123;</span><br><span class="line">		<span class="keyword">extern</span> <span class="keyword">char</span> end[];</span><br><span class="line">		nextfree = ROUNDUP((<span class="keyword">char</span> *) end, PGSIZE);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// special case according to notes</span></span><br><span class="line">	<span class="keyword">if</span> (n == <span class="number">0</span>) &#123;</span><br><span class="line">	    <span class="keyword">return</span> nextfree;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// note before update</span></span><br><span class="line">	result = nextfree;</span><br><span class="line">	nextfree = ROUNDUP(n, PGSIZE) + nextfree;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// out of memory panic</span></span><br><span class="line">	<span class="keyword">if</span> (nextfree &gt; (<span class="keyword">char</span> *)<span class="number">0xf0400000</span>) &#123;</span><br><span class="line">	    panic(<span class="string">"boot_alloc: out of memory, nothing changed, returning NULL...\n"</span>);</span><br><span class="line">	    nextfree = result;    <span class="comment">// reset static data</span></span><br><span class="line">	    <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>第一次调用这个函数时，必须初始化nextfree指针。这个初始化也很简单，确定了内核本身在内存中的位置后，让<code>boot_alloc</code>函数在内核所占空间的内存之后的第一个<code>page</code>开始分配。表现为代码，就是从连接器中拿到内核的最后一个字节的地址<code>end</code>，将这个指针的数值上调到4096的整数倍。</p>
+<p>其中，需要注意的一个是<code>end</code>到底是什么，另一个是<code>ROUNDUP</code>这个宏。其中，<code>end</code>指向内核的<code>bss</code>段的末尾。利用<code>objdump -h kernel</code>可以看出，<code>bss</code>段已经是内核的最后一段。因此，end 指向的是第一个未使用的虚拟内存地址。而<code>ROUNDUP</code>定义在<code>inc/types.h</code>中。</p>
+<p>这个end指针是连接器产生的，可以看连接配置文件<code>kern/kernel.ld</code>的53行左右，end指向内核的最后一个字节的下一个字节。</p>
+<h2 id="内核内存布局和分配器初始化"><a href="#内核内存布局和分配器初始化" class="headerlink" title="内核内存布局和分配器初始化"></a>内核内存布局和分配器初始化</h2><p>这里正式讲解page分配器的初始化，也就是<code>page_init</code>函数的实现，正确初始化之后的分配器才可以正确使用<code>page_alloc</code>, <code>page_free</code>等函数。要知道分配器如何初始化，就要理解内核内存的布局Layout。</p>
+<h3 id="获得物理内存信息"><a href="#获得物理内存信息" class="headerlink" title="获得物理内存信息"></a>获得物理内存信息</h3><p>在初始化内存组件的函数<code>mem_init</code>中，首先调用了函数<code>i386_detect_memory</code>获得了内存硬件信息。追踪一下这个函数的调用，底层实现在<code>kern/kclock.c</code>中，通过一系列汇编指令向硬件要信息。汇编指令如何执行的，我们暂且不关心。</p>
+<p>最终得到的内存信息是两个整数<code>npages</code>, <code>npages_basemem</code>，分别代表现有内存的<code>page</code>个数，以及在拓展内存之前的<code>page</code>个数。这些属于原始硬件信息，获得这个信息是为了确定一段IO映射区的位置。</p>
+<p>接着研究现有内存布局。</p>
+<h3 id="内存布局"><a href="#内存布局" class="headerlink" title="内存布局"></a>内存布局</h3><p>在文件<code>kern/memlayout.h</code>中，有一个虚拟内存的布局示意图，这个示意图主要描绘用户区内存分配，而不是指出物理内存分布，故我们暂时不细看它。地址0xf0000000以上的区域，也就是我们现在已经映射的区域，是我们关心的区域。宏<code>KERNBASE</code>就是<code>0xf0000000</code>，同时这个地址也是内核栈的开端。以下为了讲述方便，所有地址都是物理内存。</p>
+<p>初始化的重要一步是弄清楚哪些物理地址可以分配，哪些不可以。这也就是弄清楚内存布局的意义所在。</p>
+<p>我们从KERNBASE开始想起。回顾Lab 1我们知道，内存0xf0000-0x100000是BIOS映射区，在这之前又是ROM映射区，这段空间不能使用，不能被分配器分配出去。查看讲义，我们知道，地址0xa0000-0x100000是ROM, BIOS等IO使用的内存，不可以被分配，初始化时应排除这部分空间。在文件inc/memlayout.h中，宏IOPHYSMEM定义了这段IO段内存的开头。</p>
+<p>在<code>IOPHYSMEM</code>之前还有一些内存没有分配，这部分内存是可以使用的。函数<code>i386_detect_memory</code>得到的<code>npages_basemem</code>就是这一段的长度，初始化<code>page</code>分配器时应该包含这一段。可以验证一下，<code>npages_basemem</code>的值为160，这么多个<code>page</code>总的大小为160 * 4096 = 655360 = 0xa0000，确实是<code>IOPHYSMEM</code></p>
+<p>从0x100000开始以上的内存就是内核，可以回顾Lab 1中探索内核结构的结果，内核的<code>.text</code>区的虚拟地址为0xf0100000，物理地址正是0x100000。文件<code>inc/memlayout.h</code>中定义的宏<code>EXTPHYSMEM</code>就是0x100000，意思是BIOS以上的内存，称为拓展区，其上限由RAM硬件大小决定。</p>
+<p>如果你不记得内核的装载方式，可以使用指令<code>objdump -h obj/kern/kernel</code>查看。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">% obj/kern/kernel:     file format elf32-i386</span><br><span class="line"></span><br><span class="line">Sections:</span><br><span class="line">Idx Name          Size      VMA       LMA       File off  Algn</span><br><span class="line">  0 .text         00002a4d  f0100000  00100000  00001000  2**4</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, READONLY, CODE</span><br><span class="line">  1 .rodata       00000bd0  f0102a60  00102a60  00003a60  2**5</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, READONLY, DATA</span><br><span class="line">  2 .stab         000050d1  f0103630  00103630  00004630  2**2</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, READONLY, DATA</span><br><span class="line">  3 .stabstr      00001bc3  f0108701  00108701  00009701  2**0</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, READONLY, DATA</span><br><span class="line">  4 .data         00009300  f010b000  0010b000  0000c000  2**12</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, DATA</span><br><span class="line">  5 .got          00000008  f0114300  00114300  00015300  2**2</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, DATA</span><br><span class="line">  6 .got.plt      0000000c  f0114308  00114308  00015308  2**2</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, DATA</span><br><span class="line">  7 .data.rel.local 00001000  f0115000  00115000  00016000  2**12</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, DATA</span><br><span class="line">  8 .data.rel.ro.local 00000060  f0116000  00116000  00017000  2**5</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, DATA</span><br><span class="line">  9 .bss          00000681  f0116060  00116060  00017060  2**5</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, DATA</span><br><span class="line"> 10 .comment      00000012  00000000  00000000  000176e1  2**0</span><br><span class="line">                  CONTENTS, READONLY</span><br></pre></td></tr></table></figure></p>
+<p>内核占用了拓展区的开头，这些空间不应该被分配器管辖，不应该初始化到链表上。在初始化<code>page</code>分配器之前，调用了几次<code>boot_alloc</code>，这是内核运行时重要数据，他们占用的空间也不应该被分配器管辖。</p>
+<p>分配器应该管辖最后一次调用<code>boot_alloc</code>分配的空间之后的空间，这个空间开头的地址可以直接通过<code>boot_alloc(0)</code>得到。</p>
+<p>剩余的内存可以自由使用，分配器初始化是应该把链表拉到剩余的空间去。</p>
+<h3 id="分配器初始化"><a href="#分配器初始化" class="headerlink" title="分配器初始化"></a>分配器初始化</h3><p><code>mem_init</code>函数中需要添加以下两行，为所有页分配空间：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//////////////////////////////////////////////////////////////////////</span></span><br><span class="line"><span class="comment">// Allocate an array of npages 'struct PageInfo's and store it in 'pages'.</span></span><br><span class="line"><span class="comment">// The kernel uses this array to keep track of physical pages: for</span></span><br><span class="line"><span class="comment">// each physical page, there is a corresponding struct PageInfo in this</span></span><br><span class="line"><span class="comment">// array.  'npages' is the number of physical pages in memory.  Use memset</span></span><br><span class="line"><span class="comment">// to initialize all fields of each struct PageInfo to 0.</span></span><br><span class="line"><span class="comment">// Your code goes here:</span></span><br><span class="line">pages = (struct PageInfo *) boot_alloc(npages * <span class="keyword">sizeof</span>(struct PageInfo));</span><br><span class="line"><span class="built_in">memset</span>(pages, <span class="number">0</span>, npages * <span class="keyword">sizeof</span>(struct PageInfo));</span><br></pre></td></tr></table></figure>
+<p>初始化就是拉链表，并注意排除不应该纳入分配器管辖的空间。总结上面对内存布局的研究，纳入分配器管辖的总共有两部分，分别是<code>basemem</code>部分，也就是0x0-0xa0000，和<code>boot_alloc</code>最后分配的空间的后面的部分，排除了内核，和一些<code>boot_alloc</code>取得的空间。</p>
+<p><code>boot_alloc</code>即将分配的空间可以给函数传0直接得到，这是函数的特殊处理。由于<code>boot_alloc</code>以<code>page</code>为单位分配，这样得到的地址是一个<code>page</code>的首地址，这个<code>page</code>的索引可以轻易获得：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">i = PADDR(boot_alloc(<span class="number">0</span>)) / PGSIZE;</span><br></pre></td></tr></table></figure></p>
+<p>最后分配得到的应该如下图所示，其中basemem部分省略了指针指向。<br><img src="/img/v2-f322c1238767ca4ae172b69548bd4b08_720w.png" alt></p>
+<p>完整实现如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 1.mark page 0 as in use</span></span><br><span class="line"><span class="comment">// 这样我们就可以保留实模式IDT和BIOS结构，以备不时之需。</span></span><br><span class="line">pages[<span class="number">0</span>].pp_ref = <span class="number">1</span>;</span><br><span class="line"><span class="comment">// pages[0].pp_link = NULL;</span></span><br><span class="line"><span class="comment">// page_free_lis = &amp;pages[0];</span></span><br><span class="line"><span class="comment">// 被注释掉的这两句不对，因为这个开头的页不能放到free_list中被分配。</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 2. The rest of base memory, [PGSIZE, npages_basemem * PGSIZE)is free.</span></span><br><span class="line"><span class="keyword">size_t</span> i;</span><br><span class="line"><span class="keyword">for</span> (i = <span class="number">1</span>; i &lt; npages_basemem; i++) &#123;</span><br><span class="line">    pages[i].pp_ref = <span class="number">0</span>;</span><br><span class="line">    pages[i].pp_link = page_free_list;</span><br><span class="line">    page_free_list = &amp;pages[i];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 3. Then comes the IO hole[IOPHYSMEM, EXTPHYSMEM), which must</span></span><br><span class="line"><span class="comment">//     never be allocated.</span></span><br><span class="line"><span class="keyword">for</span> (; i &lt; EXTPHYSMEM/PGSIZE; i ++) &#123;</span><br><span class="line">    pages[i].pp_ref = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 4. Then extended memory [EXTPHYSMEM, ...).</span></span><br><span class="line"><span class="comment">// 还要注意哪些内存已经被内核、页表使用了！</span></span><br><span class="line"><span class="comment">// first需要向上取整对齐。同时此时已经工作在虚拟地址模式（entry.S对内存进行了映射）下，</span></span><br><span class="line"><span class="comment">// 需要求得first的物理地址</span></span><br><span class="line"><span class="keyword">physaddr_t</span> first_free_addr = PADDR(boot_alloc(<span class="number">0</span>));</span><br><span class="line"><span class="keyword">size_t</span> first_free_page = first_free_addr/PGSIZE;</span><br><span class="line"><span class="keyword">for</span>(; i &lt; first_free_page; i ++) &#123;</span><br><span class="line">    pages[i].pp_ref = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// mark other pages as free</span></span><br><span class="line"><span class="keyword">for</span>(; i &lt; npages; i ++) &#123;</span><br><span class="line">    pages[i].pp_ref = <span class="number">0</span>;</span><br><span class="line">    pages[i].pp_link = page_free_list;</span><br><span class="line">    page_free_list = &amp;pages[i];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>可以在<code>inc/memlayout.h</code>中找到 IO hole 的定义，可回顾lab 1：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// At IOPHYSMEM (640K) there is a 384K hole for I/O.  From the kernel,</span></span><br><span class="line"><span class="comment">// IOPHYSMEM can be addressed at KERNBASE + IOPHYSMEM.  The hole ends</span></span><br><span class="line"><span class="comment">// at physical address EXTPHYSMEM.</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> IOPHYSMEM   0x0A0000</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> EXTPHYSMEM  0x100000</span></span><br></pre></td></tr></table></figure></p>
+<p>第四种情况略有难度，实际需要利用<code>boot_alloc</code>函数来找到第一个能分配的页面。相同的思想在已经写好的<code>check_free_page_list</code>函数中也可以找到。关键代码：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">size_t</span> first_free_address = PADDR(boot_alloc(<span class="number">0</span>));</span><br></pre></td></tr></table></figure></p>
+<p>尤其需要注意的是，由于<code>boot_alloc</code>返回的是内核虚拟地址 (kernel virtual address)，一定要利用 PADDR 转为物理地址。在 kern/pmap.h 中可以找到 PADDR 的定义，实际就是减了一个 F0000000。</p>
+<p>完成以上步骤，编译运行，看到<code>check_page_alloc() succeeded!</code>则成功。</p>
+<h1 id="Lab-2-Part-2：内核内存映射"><a href="#Lab-2-Part-2：内核内存映射" class="headerlink" title="Lab 2 Part 2：内核内存映射"></a>Lab 2 Part 2：内核内存映射</h1><p>上一篇Part 1实现了分配器，用的是非常简单的链表管理方式。分配器实现的是剩余空间管理Free Space Management，有了剩余空间管理，接下来就是实际使用这些空间了。</p>
+<p>这个part帮助我们正式建立虚拟内存Virtual Memory和物理内存Physical Memory之间的关系，明确了概念，完成了实现。在很多操作系统教材中，内存映射放在Free Space Management之前讲。在真正实现内存管理的时候，必须先有分配器、后有其它的，和讲解知识相反。</p>
+<h2 id="虚拟地址、线性地址和物理地址"><a href="#虚拟地址、线性地址和物理地址" class="headerlink" title="虚拟地址、线性地址和物理地址"></a>虚拟地址、线性地址和物理地址</h2><p>虚拟地址有段选择器和段内偏移组成，线性地址则是在段地址翻译之后、页地址翻译之前的地址，物理地址则是在段地址翻译、页地址翻译之后的最终的地址，是你从硬件中取数据的地址。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">           Selector  +--------------+         +-----------+</span><br><span class="line">          ----------&gt;|              |         |           |</span><br><span class="line">                     | Segmentation |         |  Paging   |</span><br><span class="line">Software             |              |--------&gt;|           |----------&gt;  RAM</span><br><span class="line">            Offset   |  Mechanism   |         | Mechanism |</span><br><span class="line">          ----------&gt;|              |         |           |</span><br><span class="line">                     +--------------+         +-----------+</span><br><span class="line">            Virtual                   Linear                Physical</span><br></pre></td></tr></table></figure></p>
+<p>C 指针是<strong>虚拟地址的“偏移量”</strong>组件。在<code>boot/boot.S</code>中，我们安装了一个全局描述符表 (GDT)，它通过将所有段基地址设置为 0 并将限制设置为 0xffffffff 来有效地禁用段转换。因此“选择器”不起作用，线性地址总是等于虚拟地址的偏移量。在实验 3 中，我们将不得不与分段进行更多交互以设置权限级别，但是对于记忆翻译，我们可以在整个 JOS 实验中忽略分段，而只关注页面翻译。</p>
+<p>回想一下，在实验 1 的第 3 部分中，我们安装了一个简单的页表，以便内核可以在其链接地址 0xf0100000 处运行，即使它实际上加载到 ROM BIOS 上方的物理内存中 0x00100000。这个页表只映射了 4MB 的内存。在本实验中您要为 JOS 设置的虚拟地址空间布局中，我们将扩展它以映射从虚拟地址 0xf0000000 开始的前 256MB 物理内存，并映射虚拟地址空间的许多其他区域。</p>
+<h2 id="x86内存管理机制"><a href="#x86内存管理机制" class="headerlink" title="x86内存管理机制"></a>x86内存管理机制</h2><h3 id="虚拟、线性和物理地址"><a href="#虚拟、线性和物理地址" class="headerlink" title="虚拟、线性和物理地址"></a>虚拟、线性和物理地址</h3><ul>
+<li>虚拟地址<ul>
+<li>最原始的地址，也是 C/C++ 指针使用的地址。由前 16bit 段 (segment) 选择器和后 32bit 段内的偏移 (offset) 组成，显然一个段大小为 4GB。通过虚拟地址可以获得线性地址。</li>
+</ul>
+</li>
+<li>线性地址<ul>
+<li>前 10bit 为页目录项(page directory entry, PDE)，即该地址在页目录中的索引。中间 10bit 为页表项(page table entry, PTE)，代表在页表中的索引，最后 12bit 为偏移，也就是每页 4kB。通过线性地址可以获得物理地址。</li>
+</ul>
+</li>
+<li>物理地址<ul>
+<li>经过段转换以及页面转换，最终在 RAM 的硬件总线上的地址。</li>
+</ul>
+</li>
+</ul>
+<h3 id="两步映射总览"><a href="#两步映射总览" class="headerlink" title="两步映射总览"></a>两步映射总览</h3><p>x86建立了两次映射，程序给出地址，经过这两次翻译之后，才输出从到总线交给内存芯片。这两次映射分别为Segment Translation和Page Translation。</p>
+<p>Segment Translation将虚拟地址转化为线性地址Linear Address，Page Translation将线性地址转化为物理地址，也就是真正用来索引内存的地址。</p>
+<p>在我们的项目中，还没有对Segment Translation做特殊处理。Lab讲义中说明了，Segment Translation没有映射虚拟地址，线性地址和虚拟地址相同。后文中统一使用“虚拟地址”同时代指虚拟地址和线性地址，因为它们就是一样的。</p>
+<p>我们暂时没有使用复杂的Segment Translation，所以Page Translation就是我们的重点，以下简单介绍Segment Translation，着重理解Page Translation。</p>
+<h3 id="Segment-Translation"><a href="#Segment-Translation" class="headerlink" title="Segment Translation"></a>Segment Translation</h3><p>Segment Translation的过程可以如下图表示：<br><img src="/img/v2-e856328378b79f84cedece695adee101_b.gif" alt></p>
+<p>由一个事先指定的selector选择器，从一个描述符表descriptor table中读出一个描述符descriptor。由这个描述符读出一个基地址base address，虚拟地址作为一种偏置offset，加到基地址上，就得到了linear address。</p>
+<h3 id="描述符表Descriptor-Table"><a href="#描述符表Descriptor-Table" class="headerlink" title="描述符表Descriptor Table"></a>描述符表Descriptor Table</h3><p>描述符表必须事先指定，虚拟地址中不包含关于描述符表的信息。</p>
+<p>有两种描述符表，分别为全局描述符表Global Descriptor Table (GDT)和本地描述符表Local Descriptor Table (LDT)，分别使用寄存器<code>GDTR</code>，<code>LDTR</code>获得。x86有访问这些寄存器的指令，我们没有直接使用，也就不关心了。</p>
+<h3 id="描述符Descriptor"><a href="#描述符Descriptor" class="headerlink" title="描述符Descriptor"></a>描述符Descriptor</h3><p>通过selector索引描述符表得到的描述符，除了基地址之外，也包含了其他信息，具体结构如下图：<br><img src="/img/v2-9a1b68fd5f1fbcf1e163f4811ed576ad_b.gif" alt></p>
+<p>这是两种不同的结构，其中的区别只有DPL和TYPE之间的那个bit，以及TYPE的位置，我们暂时不关心它们的区别。这里需要注意的是P域，也就是Segment Present bit，表示这个segment是否在内存中，之后的Page Translation也有类似机制。</p>
+<h3 id="选择符Selector"><a href="#选择符Selector" class="headerlink" title="选择符Selector"></a>选择符Selector</h3><p>选择符不但有描述符表的索引，还有选择描述符表GDT/LDT的bit，以及发出的请求所在的优先级，用于区分User Level Access和Kernel Level Access。我们也暂时不关心它们的区别。结构如下：<br><img src="/img/v2-480829b29d4400a2182dcb58f31603e7_b.gif" alt></p>
+<h3 id="和segment有关的寄存器"><a href="#和segment有关的寄存器" class="headerlink" title="和segment有关的寄存器"></a>和segment有关的寄存器</h3><p>虚拟地址只是一个segment的偏置，本身不包含和segment有关的信息。当前使用的描述符表、描述符选择符，都要另外存储在一些寄存器里面。当使用和跳转有关的指令call, jmp时，这些寄存器被隐式地访问了，从而帮助计算新的地址。</p>
+<p>segment寄存器有两个部分，可以直接操作和读取的是16bit的selector域，修改selector域之后，硬件自动将对应的描述符从描述符表中读取进不显示的descriptor域，这样就方便了后续操作。<br><img src="/img/v2-f00aab967b70bdb3afd7743d902dfbdf_b.gif" alt></p>
+<h2 id="Page-Translation"><a href="#Page-Translation" class="headerlink" title="Page Translation"></a>Page Translation</h2><p><img src="/img/v2-23f6d73c9f99f646458aac3b79e50e91_b.jpg" alt></p>
+<p>虚拟地址，也就是线性地址，被拆成了三部分，都是一种索引<code>index</code>，分别索引的是<code>Page Directory</code>, <code>Page Table</code>, <code>Page Frame</code>。从<code>page directory</code>中读出<code>page table</code>的地址，在从读到的<code>page table</code>地址中读到<code>page frame</code>的地址，索引<code>page frame</code>之后，就得到相应物理地址上的内容。</p>
+<p>对于开发者来说，<code>page directory</code>, <code>page table</code>都是两个数组，拿到<code>page directory</code>的头部指针，和虚拟地址一起，就可以确定物理地址。</p>
+<h3 id="每个域对应长度"><a href="#每个域对应长度" class="headerlink" title="每个域对应长度"></a>每个域对应长度</h3><p>线性地址，也就是虚拟地址，的格式如下：<br><img src="/img/v2-57da610073dc97659f6a52683438bdd7_b.webp" alt></p>
+<p>每个域包含bit的个数，也就是长度，决定了每个域对应的数组的长度。我们可以很方便地得到每个域对应的长度：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">page_len = <span class="number">2</span> ** <span class="number">12</span> = <span class="number">4096</span>            <span class="comment">// OFFSET</span></span><br><span class="line">page_table_len = <span class="number">2</span> ** <span class="number">10</span> = <span class="number">1024</span>      <span class="comment">// PAGE</span></span><br><span class="line">page_dir_len = <span class="number">2</span> ** <span class="number">10</span> = <span class="number">1024</span>        <span class="comment">// DIR</span></span><br></pre></td></tr></table></figure></p>
+<p>如果你不太理解这种计算方法，可以回到最开始的排列组合。每个bit代表两种状态，有n个bit也就有<code>2^n</code>种状态，也就是这个域可以产生多少索引。</p>
+<p>以上计算出了每个域的长度，单位不是字节，而是索引个数。</p>
+<p>这些长度应该这样看。一个<code>page directory</code>指向1024个<code>page directory entry</code>，一个<code>page directory entry</code>指向了1024个<code>page table</code>，一个<code>page table entry</code>指向了1024个<code>page frame</code>，一个<code>page frame</code>中包含4096Bytes。</p>
+<h3 id="Entry格式"><a href="#Entry格式" class="headerlink" title="Entry格式"></a>Entry格式</h3><p>page directory entry, page table entry具有相同格式，如下：<br><img src="/img/v2-7645f7dc2a45edeef40540938cc55d8c_b.webp" alt></p>
+<p><code>DIR</code>, <code>PAGE</code>域长度相同，而<code>entry</code>的格式也相同，说明<code>page directory</code>和<code>page table</code>其实是相同结构的嵌套。可以把<code>page directory</code>理解为高一级的<code>page table</code>，整个内存管理形成两个层级。一个<code>page table</code>自身就是一个<code>page</code>，是<code>page directory</code>管理的，而<code>page table</code>又管理了<code>page frame</code>。</p>
+<p>同理，我们可以把虚拟地址拆得更细，从而创造更多的层级，不过这是CPU设计的事情了。</p>
+<p>对于<code>page directory</code>来说，<code>entry</code>中12-31位上的<code>PAGE FRAME ADDRESS</code>就是一个<code>page table</code>的基地址。对于<code>page table</code>来说，这个地址是一个<code>page frame</code>的基地址。通过一个虚拟地址，获得3个索引，一次访问这3个结构，就可以得到物理地址了。</p>
+<p>这里还要注意一下，bit 0是Present Bit，表示当前entry中的信息是否可以用于映射。要是<code>Present Bit</code>设置为0，则这个entry不包含有效信息。索引各种<code>page directory/table</code>时，必须先检查这个bit。</p>
+<p>entry中的其他部分暂时不使用。</p>
+<h2 id="可以使用的工具代码"><a href="#可以使用的工具代码" class="headerlink" title="可以使用的工具代码"></a>可以使用的工具代码</h2><p>在开始写代码之前，需要看看项目中已经提供好了哪些可以使用的工具。</p>
+<p>首先是上个part中写好的分配器，<code>boot_alloc</code>已经不使用了，主要是<code>page_alloc/page_free</code>在使用。然后就是三个头文件<code>mmu.h</code>, <code>memlayout.h</code>, <code>pmap.h</code>中的各种小函数了</p>
+<p>在 JOS 中，由于只有一个段，所以虚拟地址数值上等于线性地址。</p>
+<p>JOS 内核常常需要读取或更改仅知道物理地址的内存。例如，添加一个到页表的映射要求分配物理内存来存储页目录并初始化内存。然而，内核和其他任何程序一样，无法绕过虚拟内存转换这个步骤，因此不能直接使用物理地址。JOS 将从 0x00000000 开始的物理内存映射到 0xf0000000 的其中一个原因就是需要使内核能读写仅知道物理地址的内存。为了把物理地址转为虚拟地址，内核需要给物理地址加上 0xf0000000。这就是 KADDR 函数做的事。</p>
+<p>同样，JOS 内核有时也需要从虚拟地址获得物理地址。内核的全局变量和由 boot_alloc 分配的内存都在内核被加载的区域，即从0xf0000000开始的地方。因此，若需要将虚拟地址转为物理地址，直接减去0xf0000000即可。这就是 PADDR 函数做的事。</p>
+<h3 id="mmu-h"><a href="#mmu-h" class="headerlink" title="mmu.h"></a>mmu.h</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 线性地址 'la' 可以被分成三块:</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// +--------10------+-------10-------+---------12----------+</span></span><br><span class="line"><span class="comment">// | Page Directory |   Page Table   | Offset within Page  |</span></span><br><span class="line"><span class="comment">// |      Index     |      Index     |                     |</span></span><br><span class="line"><span class="comment">// +----------------+----------------+---------------------+</span></span><br><span class="line"><span class="comment">//  \--- PDX(la) --/ \--- PTX(la) --/ \---- PGOFF(la) ----/</span></span><br><span class="line"><span class="comment">//  \---------- PGNUM(la) ----------/</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// PDX, PTX, PGOFF, 和 PGNUM 宏将线性地址进行切分</span></span><br><span class="line"><span class="comment">// 如果需要通过PDX(la), PTX(la), and PGOFF(la)组织一个线性地址la的话</span></span><br><span class="line"><span class="comment">// 使用 PGADDR(PDX(la), PTX(la), PGOFF(la)).</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// page number field of address</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PGNUM(la)       (((uintptr_t) (la)) &gt;&gt; PTXSHIFT)</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// page directory index</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PDX(la)         ((((uintptr_t) (la)) &gt;&gt; PDXSHIFT) &amp; 0x3FF)</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// page table index</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PTX(la)         ((((uintptr_t) (la)) &gt;&gt; PTXSHIFT) &amp; 0x3FF)</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// offset in page</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PGOFF(la)       (((uintptr_t) (la)) &amp; 0xFFF)</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// construct linear address from indexes and offset</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PGADDR(d, t, o) ((void*) ((d) &lt;&lt; PDXSHIFT | (t) &lt;&lt; PTXSHIFT | (o)))</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Page directory and page table constants.</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> NPDENTRIES      1024            <span class="comment">// page directory entries per page directory</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> NPTENTRIES      1024            <span class="comment">// page table entries per page table</span></span></span><br></pre></td></tr></table></figure>
+<p>还有一些页表以及页目录会用到的标识位，exercise 4 中用得到的用中文注释：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Page table/directory entry flags.</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PTE_P       0x001   <span class="comment">// 该项是否存在</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PTE_W       0x002   <span class="comment">// 可写入</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PTE_U       0x004   <span class="comment">// 用户有权限读取</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PTE_PWT     0x008   <span class="comment">// Write-Through</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PTE_PCD     0x010   <span class="comment">// Cache-Disable</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PTE_A       0x020   <span class="comment">// Accessed</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PTE_D       0x040   <span class="comment">// Dirty</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PTE_PS      0x080   <span class="comment">// Page Size</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PTE_G       0x100   <span class="comment">// Global</span></span></span><br></pre></td></tr></table></figure></p>
+<h2 id="根据虚拟地址取出Page-Table-Entry"><a href="#根据虚拟地址取出Page-Table-Entry" class="headerlink" title="根据虚拟地址取出Page Table Entry"></a>根据虚拟地址取出Page Table Entry</h2><p>这里开始实现Lab讲义中指定要实现的函数，先是<code>pgdir_walk</code>函数，在文件<code>kern/pmap.c</code>中。这个函数接受一个<code>page directory</code>和一个虚拟地址，要求得到虚拟地址在这个<code>page directory</code>下对应的<code>page table entry</code>。</p>
+<p>先拆分虚拟地址，根据虚拟地址取出<code>page directory/table/frame</code>中的索引。用到的三个宏函数在文件<code>mmu.h</code>中，也就是通过移位&gt;&gt;和与&amp;从一串bit中取出一些bit。需要完成如图的转换，返回对应的页表地址，即红圈圈出的部分的虚拟地址：<br><img src="/img/4482847-1941fd6b845db3b5.webp" alt></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pte_t</span> *</span><br><span class="line">pgdir_walk(<span class="keyword">pde_t</span> *pgdir, <span class="keyword">const</span> <span class="keyword">void</span> *va, <span class="keyword">int</span> create)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 参数1: 页目录项指针</span></span><br><span class="line">    <span class="comment">// 参数2: 线性地址，JOS 中等于虚拟地址</span></span><br><span class="line">    <span class="comment">// 参数3: 若页目录项不存在是否创建</span></span><br><span class="line">    <span class="comment">// 返回: 页表项指针</span></span><br><span class="line">    <span class="keyword">uint32_t</span> page_dir_idx = PDX(va);</span><br><span class="line">    <span class="keyword">uint32_t</span> page_tab_idx = PTX(va);</span><br><span class="line">    <span class="keyword">pte_t</span> *pgtab;</span><br><span class="line">    <span class="keyword">if</span> (pgdir[page_dir_idx] &amp; PTE_P) &#123;</span><br><span class="line">        pgtab = KADDR(PTE_ADDR(pgdir[page_dir_idx]));</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (create) &#123;</span><br><span class="line">            struct PageInfo *new_pageInfo = page_alloc(ALLOC_ZERO);</span><br><span class="line">            <span class="keyword">if</span> (new_pageInfo) &#123;</span><br><span class="line">                new_pageInfo-&gt;pp_ref += <span class="number">1</span>;</span><br><span class="line">                pgtab = (<span class="keyword">pte_t</span> *) page2kva(new_pageInfo);</span><br><span class="line">                <span class="comment">// 修改页目录的flag，根据 check_page 函数中用到的属性。</span></span><br><span class="line">                <span class="comment">// 因为分配以页为单位对齐，必然后 12bit 为0</span></span><br><span class="line">                pgdir[page_dir_idx] = PADDR(pgtab) | PTE_P | PTE_W | PTE_U;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> &amp;pgtab[page_tab_idx];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>需要将<code>PageInfo</code>结构体的指针转换为物理地址，而不是虚拟地址。这个操作的依据是80386 Programmer’s Reference Manual的规定，在<code>entry</code>中放置的一定是物理地址。更新完<code>page directory entry</code>之后，原函数<code>pgdir_walk</code>根据虚拟地址中的索引，从新的<code>page directory entry</code>中获得新的<code>page table</code>地址，并返回。</p>
+<p>通过宏函数<code>KADDR</code>转化为虚拟地址，而不是直接从page directory entry中读取出来的物理地址。</p>
+<h2 id="映射一段空间"><a href="#映射一段空间" class="headerlink" title="映射一段空间"></a>映射一段空间</h2><p>第二个要实现的函数是<code>boot_map_region</code>，这个函数将虚拟地址中的几个<code>page</code>映射到连续的物理地址上。代码很简单，利用刚刚写好的函数<code>pgdir_walk</code>，给参数<code>create</code>传1，就可以方便地建立<code>page table</code>。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">void</span></span><br><span class="line">boot_map_region(<span class="keyword">pde_t</span> *pgdir, <span class="keyword">uintptr_t</span> va, <span class="keyword">size_t</span> size, <span class="keyword">physaddr_t</span> pa, <span class="keyword">int</span> perm)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// Fill this function in</span></span><br><span class="line">    <span class="keyword">pte_t</span> *pgtab;</span><br><span class="line">    <span class="keyword">size_t</span> end_addr = va + size;</span><br><span class="line">    <span class="keyword">for</span> (;va &lt; end_addr; va += PGSIZE, pa += PGSIZE) &#123;</span><br><span class="line">        pgtab = pgdir_walk(pgdir, (<span class="keyword">void</span> *)va, <span class="number">1</span>);</span><br><span class="line">        <span class="keyword">if</span> (!pgtab) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        *pgtab = pa | perm | PTE_P;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><code>boot_map_region</code>中的 for 循环一开始就判断<code>va &gt; end_addr</code>。这是显然的，因为<code>end_addr = 0xf0000000 + 0x1000000 = 0x00000000</code>。因此，实际上<code>boot_map_region</code>的更佳实现是直接用页数，避免溢出。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">void</span></span><br><span class="line">boot_map_region(<span class="keyword">pde_t</span> *pgdir, <span class="keyword">uintptr_t</span> va, <span class="keyword">size_t</span> size, <span class="keyword">physaddr_t</span> pa, <span class="keyword">int</span> perm)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// Fill this function in</span></span><br><span class="line">    <span class="keyword">pte_t</span> *pgtab;</span><br><span class="line">    <span class="keyword">size_t</span> pg_num = PGNUM(size);</span><br><span class="line">    cprintf(<span class="string">"map region size = %d, %d pages\n"</span>,size, pg_num);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; pg_num; i ++) &#123;</span><br><span class="line">        pgtab = pgdir_walk(pgdir, (<span class="keyword">void</span> *)va, <span class="number">1</span>);</span><br><span class="line">        <span class="keyword">if</span> (!pgtab) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        *pgtab = pa | perm | PTE_P;</span><br><span class="line">        va += PGSIZE;</span><br><span class="line">        pa += PGSIZE;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>注释中提示我们，这是静态映射，不要增加每个<code>page</code>对应的<code>PageInfo</code>结构体的引用计数<code>pp_ref</code>。</p>
+<p>根据各个函数的依赖关系，下一个编写<code>page_lookup</code>函数。作用是查找虚拟地址对应的物理页描述。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">PageInfo</span> *</span></span><br><span class="line"><span class="class"><span class="title">page_lookup</span>(<span class="title">pde_t</span> *<span class="title">pgdir</span>, <span class="title">void</span> *<span class="title">va</span>, <span class="title">pte_t</span> **<span class="title">pte_store</span>)</span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    <span class="comment">// 参数1: 页目录指针</span></span><br><span class="line">    <span class="comment">// 参数2: 线性地址，JOS 中等于虚拟地址</span></span><br><span class="line">    <span class="comment">// 参数3: 指向页表指针的指针</span></span><br><span class="line">    <span class="comment">// 返回: 页描述结构体指针</span></span><br><span class="line">    <span class="keyword">pte_t</span> *pgtab = pgdir_walk(pgdir, va, <span class="number">0</span>);  <span class="comment">// 不创建，只查找</span></span><br><span class="line">    <span class="keyword">if</span> (!pgtab) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NULL</span>;  <span class="comment">// 未找到则返回 NULL</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (pte_store) &#123;</span><br><span class="line">        *pte_store = pgtab;  <span class="comment">// 附加保存一个指向找到的页表的指针</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> pa2page(PTE_ADDR(*pgtab));  <span class="comment">//  返回页面描述</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>此处再次用到了<code>PTE_ADDR</code>这个宏。其作用是将页表指针指向的内容转为物理地址。这里还是要注意，从<code>page table</code>中拿出<code>page frame</code>的为物理地址，不是虚拟地址。</p>
+<p><code>page_remove</code>函数作用是移除一个虚拟地址与对应的物理页的映射。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span></span><br><span class="line">page_remove(<span class="keyword">pde_t</span> *pgdir, <span class="keyword">void</span> *va)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// Fill this function in</span></span><br><span class="line">    <span class="keyword">pte_t</span> *pgtab;</span><br><span class="line">    <span class="keyword">pte_t</span> **pte_store = &amp;pgtab;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">PageInfo</span> *<span class="title">pInfo</span> = <span class="title">page_lookup</span>(<span class="title">pgdir</span>, <span class="title">va</span>, <span class="title">pte_store</span>);</span></span><br><span class="line">    <span class="keyword">if</span> (!pInfo) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    page_decref(pInfo);</span><br><span class="line">    *pgtab = <span class="number">0</span>;  <span class="comment">// 将内容清0，即无法再根据页表内容得到物理地址。</span></span><br><span class="line">    tlb_invalidate(pgdir, va);  <span class="comment">// 通知tlb失效。tlb是个高速缓存，用来缓存查找记录增加查找速度。</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>函数还减小了<code>PageInfo</code>结构体的引用计数<code>pp_ref</code>，并让TLB缓存失效了。</p>
+<p><code>page_insert</code>函数作用是建立一个虚拟地址与物理页的映射，与<code>page_remove</code>对应。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span></span><br><span class="line">page_insert(<span class="keyword">pde_t</span> *pgdir, struct PageInfo *pp, <span class="keyword">void</span> *va, <span class="keyword">int</span> perm)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 参数1: 页目录指针</span></span><br><span class="line">    <span class="comment">// 参数2: 页描述结构体指针</span></span><br><span class="line">    <span class="comment">// 参数3: 线性地址，JOS 中等于虚拟地址</span></span><br><span class="line">    <span class="comment">// 参数4: 权限</span></span><br><span class="line">    <span class="comment">// 返回: 成功(0)，失败(-E_NO_MEM)</span></span><br><span class="line">    <span class="keyword">pte_t</span> *pgtab = pgdir_walk(pgdir, va, <span class="number">1</span>);  <span class="comment">// 查找该虚拟地址对应的页表项，不存在则建立。</span></span><br><span class="line">    <span class="keyword">if</span> (!pgtab) &#123;</span><br><span class="line">        <span class="keyword">return</span> -E_NO_MEM;  <span class="comment">// 空间不足</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (*pgtab &amp; PTE_P) &#123;</span><br><span class="line">        <span class="comment">// 页表项已经存在，即该虚拟地址已经映射到物理页了</span></span><br><span class="line">        <span class="keyword">if</span> (page2pa(pp) == PTE_ADDR(*pgtab)) &#123;</span><br><span class="line">            <span class="comment">// 如果映射到与之前相同的页，仅更改权限，不增加引用</span></span><br><span class="line">            *pgtab = page2pa(pp) | perm | PTE_P;</span><br><span class="line">            <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// 如果是更新映射的物理页，则要删除之前的映射关系</span></span><br><span class="line">            page_remove(pgdir, va);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    *pgtab = page2pa(pp) | perm | PTE_P;</span><br><span class="line">    pp-&gt;pp_ref++;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>需要注意的是，如果同样的虚拟页映射到了同样的物理页，如果不做特殊处理仍然调用<code>page_remove</code>后再增加引用次数，可能会出现以下情况：</p>
+<ul>
+<li>当该物理页<code>ref = 1</code>，经过<code>page_remove</code>后会被加入空闲页链表。然而，在函数最后还需要增加其引用计数，导致<code>page_free_list</code>中出现了非空闲页。</li>
+</ul>
+<p>课程中希望尽量不要做特例处理，即避免使用if，于是可以这么改进：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> </span><br><span class="line">page_insert(<span class="keyword">pde_t</span> *pgdir, struct PageInfo *pp, <span class="keyword">void</span> *va, <span class="keyword">int</span> perm)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">pte_t</span> *pgtab = pgdir_walk(pgdir, va, <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">if</span> (!pgtab) &#123;</span><br><span class="line">        <span class="keyword">return</span> -E_NO_MEM;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 这里一定要提前增加引用 </span></span><br><span class="line">    pp-&gt;pp_ref++;</span><br><span class="line">    <span class="keyword">if</span> (*pgtab &amp; PTE_P) &#123;</span><br><span class="line">        page_remove(pgdir, va);</span><br><span class="line">    &#125;</span><br><span class="line">    *pgtab = page2pa(pp) | perm | PTE_P;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>以上只要区分开了entry中保存的都是物理地址就好弄了。</p>
+<h2 id="Page-Table组织总结"><a href="#Page-Table组织总结" class="headerlink" title="Page Table组织总结"></a>Page Table组织总结</h2><p>在Lab 2中，我们让代码跑过了各种<code>check_*</code>函数，但是没有对其中的原理充分深究。这里总结一下。</p>
+<p>内核的内存管理是以<code>page</code>为单位的，称为一个<code>Page Frame</code>，一个<code>page</code>的大小是4096Bytes，也就是4KB。内核使用<code>free list</code>链表的方式管理尚未分配的空间，实现非常简单。</p>
+<p>要使用内存，必须建立虚拟地址映射。无论是C代码还是汇编代码，要访问内存，都是通过虚拟地址。C代码中，所有指针的值都必须为虚拟地址，代码才能正确执行，否则<code>*</code>访问不到想要的地址。</p>
+<p>虚拟地址映射是通过一个<strong>二级table</strong>实现的，两个层级分别被称为<code>Page Directory</code>和<code>Page Table</code>。两者在结构上没有区别，只是相同结构的相互嵌套。虚拟地址不包含任何<code>table</code>的地址，只包含<code>table</code>的索引。必须事先指定好<code>Page Directory</code>的地址，利用这个地址得到<code>Page Directory Entry</code>，从而得到<code>Page Table</code>地址，从而得到<code>Page Frame</code>地址，需要且仅需要指定<code>Page Directory</code>地址。<code>Page Directory</code>地址是寄存器<code>cr3</code>，设置<code>cr3</code>的行为会导致硬件执行切换<code>Page Directory</code>配套的一系列操作。</p>
+<p>在函数<code>mem_init</code>之前，内核加载时简单地初始化了一个<code>Page Directory</code>，将<code>0xf0000000</code>开始的一段地址映射到<code>0x0</code>开始的一段地址，以方便正式初始化虚拟地址映射之前的操作。在<code>mem_init</code>函数的最后，我们需要初始化一个真正的<code>kern_pgdir</code>，并将寄存器<code>cr3</code>设置为它的地址。</p>
+<p>最终得到的虚拟地址布局为文件<code>memlayout.h</code>中的注释（再来一遍，这个图画的真的太好了）：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line"> * Virtual memory map:                                Permissions</span><br><span class="line"> *                                                    kernel/user</span><br><span class="line"> *</span><br><span class="line"> *    4 Gig --------&gt;  +------------------------------+</span><br><span class="line"> *                     |                              | RW/--</span><br><span class="line"> *                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span><br><span class="line"> *                     :              .               :</span><br><span class="line"> *                     :              .               :</span><br><span class="line"> *                     :              .               :</span><br><span class="line"> *                     |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~| RW/--</span><br><span class="line"> *                     |                              | RW/--</span><br><span class="line"> *                     |   Remapped Physical Memory   | RW/--</span><br><span class="line"> *                     |                              | RW/--</span><br><span class="line"> *    KERNBASE, ----&gt;  +------------------------------+ 0xf0000000      --+</span><br><span class="line"> *    KSTACKTOP        |     CPU0&apos;s Kernel Stack      | RW/--  KSTKSIZE   |</span><br><span class="line"> *                     | - - - - - - - - - - - - - - -|                   |</span><br><span class="line"> *                     |      Invalid Memory (*)      | --/--  KSTKGAP    |</span><br><span class="line"> *                     +------------------------------+                   |</span><br><span class="line"> *                     |     CPU1&apos;s Kernel Stack      | RW/--  KSTKSIZE   |</span><br><span class="line"> *                     | - - - - - - - - - - - - - - -|                 PTSIZE</span><br><span class="line"> *                     |      Invalid Memory (*)      | --/--  KSTKGAP    |</span><br><span class="line"> *                     +------------------------------+                   |</span><br><span class="line"> *                     :              .               :                   |</span><br><span class="line"> *                     :              .               :                   |</span><br><span class="line"> *    MMIOLIM ------&gt;  +------------------------------+ 0xefc00000      --+</span><br><span class="line"> *                     |       Memory-mapped I/O      | RW/--  PTSIZE</span><br><span class="line"> * ULIM, MMIOBASE --&gt;  +------------------------------+ 0xef800000</span><br><span class="line"> *                     |  Cur. Page Table (User R-)   | R-/R-  PTSIZE</span><br><span class="line"> *    UVPT      ----&gt;  +------------------------------+ 0xef400000</span><br><span class="line"> *                     |          RO PAGES            | R-/R-  PTSIZE</span><br><span class="line"> *    UPAGES    ----&gt;  +------------------------------+ 0xef000000</span><br><span class="line"> *                     |           RO ENVS            | R-/R-  PTSIZE</span><br><span class="line"> * UTOP,UENVS ------&gt;  +------------------------------+ 0xeec00000</span><br><span class="line"> * UXSTACKTOP -/       |     User Exception Stack     | RW/RW  PGSIZE</span><br><span class="line"> *                     +------------------------------+ 0xeebff000</span><br><span class="line"> *                     |       Empty Memory (*)       | --/--  PGSIZE</span><br><span class="line"> *    USTACKTOP  ---&gt;  +------------------------------+ 0xeebfe000</span><br><span class="line"> *                     |      Normal User Stack       | RW/RW  PGSIZE</span><br><span class="line"> *                     +------------------------------+ 0xeebfd000</span><br><span class="line"> *                     |                              |</span><br><span class="line"> *                     |                              |</span><br><span class="line"> *                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span><br><span class="line"> *                     .                              .</span><br><span class="line"> *                     .                              .</span><br><span class="line"> *                     .                              .</span><br><span class="line"> *                     |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|</span><br><span class="line"> *                     |     Program Data &amp; Heap      |</span><br><span class="line"> *    UTEXT --------&gt;  +------------------------------+ 0x00800000</span><br><span class="line"> *    PFTEMP -------&gt;  |       Empty Memory (*)       |        PTSIZE</span><br><span class="line"> *                     |                              |</span><br><span class="line"> *    UTEMP --------&gt;  +------------------------------+ 0x00400000      --+</span><br><span class="line"> *                     |       Empty Memory (*)       |                   |</span><br><span class="line"> *                     | - - - - - - - - - - - - - - -|                   |</span><br><span class="line"> *                     |  User STAB Data (optional)   |                 PTSIZE</span><br><span class="line"> *    USTABDATA ----&gt;  +------------------------------+ 0x00200000        |</span><br><span class="line"> *                     |       Empty Memory (*)       |                   |</span><br><span class="line"> *    0 ------------&gt;  +------------------------------+                 --+</span><br><span class="line"> *</span><br><span class="line"> * (*) Note: The kernel ensures that &quot;Invalid Memory&quot; is *never* mapped.</span><br><span class="line"> *     &quot;Empty Memory&quot; is normally unmapped, but user programs may map pages</span><br><span class="line"> *     there if desired.  JOS user programs map pages temporarily at UTEMP.</span><br><span class="line"> */</span><br></pre></td></tr></table></figure></p>
+<h2 id="建立映射的函数们"><a href="#建立映射的函数们" class="headerlink" title="建立映射的函数们"></a>建立映射的函数们</h2><p>我们已经写好了很多函数，在把它们用起来之前，再浏览一遍它们的目的。</p>
+<p>首先是分配器，对未分配的物理内存进行管理。在初始化函数<code>mem_init</code>中调用<code>page_init</code>初始化了这个分配器，之后通过<code>page_alloc</code>，<code>page_free</code>获取和释放<code>page</code>。</p>
+<p>要正确建立映射，首先需要正确方便地索引<code>Page Directory</code>，<code>Page Table</code>。函数<code>pgdir_walk</code>，根据指定<code>Page Directory</code>索引出<code>Page Table Entry</code>。函数<code>page_lookup</code>基于<code>pgdir_walk</code>，进一步得到这个<code>Page Table Entry</code>对应的物理地址。</p>
+<p>地址映射可以建立或移除，我们都写好了方便的函数。函数<code>boot_map_region</code>用于给内核做映射，只处理0xf0000000以上虚拟空间。函数<code>page_insert</code>，<code>page_remove</code>处理其他空间的映射，分别建立映射、移除映射。</p>
+<p>其他函数对以上起辅助作用。</p>
+<h2 id="为内核建立虚拟地址映射"><a href="#为内核建立虚拟地址映射" class="headerlink" title="为内核建立虚拟地址映射"></a>为内核建立虚拟地址映射</h2><p>Lab 2 Part 3要求我们补全函数<code>mem_init</code>后面的部分，也就是给内核配置好<code>kern_pgdir</code>，并设置寄存器<code>cr3</code>。在这里使用的函数都是<code>boot_map_region</code>。</p>
+<p>JOS 将处理器的 32 位线性地址空间分为两部分。我们将在 lab3 中开始加载和运行的用户环境（进程）将控制下部的布局和内容，而内核始终保持对上部的完全控制。分隔线由<code>inc/memlayout.h</code>中的符号<code>ULIM</code>随意定义，为内核保留大约 256MB 的虚拟地址空间。这就解释了为什么我们需要在实验室 1 中给内核一个如此高的链接地址：否则内核的虚拟地址空间将没有足够的空间同时映射到它下面的用户环境。</p>
+<h3 id="权限和故障隔离"><a href="#权限和故障隔离" class="headerlink" title="权限和故障隔离"></a>权限和故障隔离</h3><p>由于内核和用户内存都存在于每个环境的地址空间中，我们将不得不在 x86 页表中使用权限位来允许用户代码仅访问地址空间的用户部分。否则用户代码中的错误可能会覆盖内核数据，导致崩溃或更微妙的故障；用户代码也可能窃取其他环境的私人数据。请注意，可写权限位<code>PTE_W</code>会影响用户和内核代码！</p>
+<p>用户环境将无权访问<code>ULIM</code>之上的任何内存，而内核将能够读写此内存。对于地址范围<code>[UTOP,ULIM)</code>，内核和用户环境都有相同的权限：可以读但不能写这个地址范围。该地址范围用于向用户环境公开某些只读的内核数据结构。最后，UTOP下面的地址空间是供用户环境使用的；用户环境将设置访问此内存的权限。</p>
+<p>JOS 将处理器的 32 位线性地址分为用户环境（低位地址）以及内核环境（高位地址）。分界线在<code>inc/memlayout.h</code>中定义为<code>ULIM</code>：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> KERNBASE    0xF0000000</span></span><br><span class="line"><span class="comment">// Kernel stack.</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> KSTACKTOP   KERNBASE</span></span><br><span class="line"><span class="comment">// Memory-mapped IO.</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MMIOLIM     (KSTACKTOP - PTSIZE)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MMIOBASE    (MMIOLIM - PTSIZE)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ULIM        (MMIOBASE)</span></span><br></pre></td></tr></table></figure></p>
+<p>其中<code>PTSIZE</code>被定义为一个页目录项映射的 Byte，一个页目录中有1024个页表项，每个页表项可映射一个物理页。故为 4MB。可算得 ULIM = 0xf0000000 - 0x00400000 - 0x00400000 = 0xef800000，可通过查看<code>inc/memlayout</code>确认。</p>
+<p>我们还需要给物理页表设置权限以确保用户只能访问用户环境的地址空间。否则，用户的代码可能会覆盖内核数据，造成严重后果。用户环境应该在高于 ULIM 的内存中没有任何权限，而内核则可以读写着部分内存。在 UTOP( 0xeec00000) 到 ULIM 的 12MB 区间中，存储了一些内核数据结构。内核以及用户环境对这部分地址都只具有 read-only 权限。低于 UTOP 的内存则由用户环境自由设置权限使用。</p>
+<p>首先是分配器的<code>pages</code>数组，Hints中告诉我们这应该是对用户只读，并映射到<code>UPAGES</code>地址去。<code>UPAGES (0xef000000 ~ 0xef400000)</code>最多4MB，这是 JOS 记录物理页面使用情况的数据结构，即 exercise 1 中完成的东西，只有 kernel 能够访问。由于用户空间同样需要访问这个数据结构，我们将用户空间的一块内存映射到存储该数据结构的物理内存上。很自然联想到了<code>boot_map_region</code>这个函数。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Map 'pages' read-only by the user at linear address UPAGES</span></span><br><span class="line"><span class="comment">// Permissions:</span></span><br><span class="line"><span class="comment">//    - the new image at UPAGES -- kernel R, user R</span></span><br><span class="line"><span class="comment">//      (ie. perm = PTE_U | PTE_P)</span></span><br><span class="line"><span class="comment">//    - pages itself -- kernel RW, user NONE</span></span><br><span class="line"><span class="comment">// Your code goes here:</span></span><br><span class="line">boot_map_region(kern_pgdir, UPAGES, ROUNDUP((<span class="keyword">sizeof</span>(struct PageInfo)*npages), PGSIZE),PADDR(pages),PTE_U );</span><br></pre></td></tr></table></figure>
+<p>需要注意的是目前只建立了一个页目录，即<code>kernel_pgdir</code>，所以第一个参数显然为<code>kernel_pgdir</code>。第二个参数是虚拟地址，<code>UPAGES</code>本来就是以虚拟地址形式给出的。第三个参数是映射的内存块大小。第四个参数是映射到的物理地址，直接取 pages 的物理地址即可。权限<code>PTE_U</code>表示用户有权限读取。</p>
+<p>然后是内核的栈，用户不可读写，映射到<code>bootstack</code>地址。内核栈<code>0xefff8000 ~ 0xf0000000</code>为32kB。<code>bootstack</code>表示的是栈地最低地址，由于栈向低地址生长，实际是栈顶。常数<code>KSTACKTOP = 0xf0000000</code>，<code>KSTKSIZE = 32kB</code>。在此之下是一块未映射到物理内存的地址，所以如果栈溢出时，只会报错而不会覆盖数据。因此我们只用映射<code>[KSTACKTOP-KSTKSIZE, KSTACKTOP)</code>区间内的虚拟地址即可。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Use the physical memory that 'bootstack' refers to as the kernel</span></span><br><span class="line"><span class="comment">// stack.  The kernel stack grows down from virtual address KSTACKTOP.</span></span><br><span class="line"><span class="comment">// We consider the entire range from [KSTACKTOP-PTSIZE, KSTACKTOP)</span></span><br><span class="line"><span class="comment">// to be the kernel stack, but break this into two pieces:</span></span><br><span class="line"><span class="comment">//     * [KSTACKTOP-KSTKSIZE, KSTACKTOP) -- backed by physical memory</span></span><br><span class="line"><span class="comment">//     * [KSTACKTOP-PTSIZE, KSTACKTOP-KSTKSIZE) -- not backed; so if</span></span><br><span class="line"><span class="comment">//       the kernel overflows its stack, it will fault rather than</span></span><br><span class="line"><span class="comment">//       overwrite memory.  Known as a "guard page".</span></span><br><span class="line"><span class="comment">//     Permissions: kernel RW, user NONE</span></span><br><span class="line"><span class="comment">// Your code goes here:</span></span><br><span class="line">boot_map_region(kern_pgdir, KSTACKTOP-KSTKSIZE, KSTKSIZE,PADDR(bootstack),PTE_W );</span><br></pre></td></tr></table></figure></p>
+<p>这里设置了<code>PTE_W</code>开启了写权限，然而并没有开启<code>PTE_U</code>，于是仅有内核能够读写，用户没有任何权限。</p>
+<p>其余的地址全部映射到<code>KERNBASE</code>上，无论物理内存是否有这么大。用户不可读写。内核<code>( 0xf0000000 ~ 0xffffffff )</code>256MB。这里需要映射全部 0xf0000000 至 0xffffffff 共 256MB 的内存地址。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Map all of physical memory at KERNBASE.</span></span><br><span class="line"><span class="comment">// Ie.  the VA range [KERNBASE, 2^32) should map to</span></span><br><span class="line"><span class="comment">//      the PA range [0, 2^32 - KERNBASE)</span></span><br><span class="line"><span class="comment">// We might not have 2^32 - KERNBASE bytes of physical memory, but</span></span><br><span class="line"><span class="comment">// we just set up the mapping anyway.</span></span><br><span class="line"><span class="comment">// Permissions: kernel RW, user NONE</span></span><br><span class="line"><span class="comment">// Your code goes here:</span></span><br><span class="line">boot_map_region(kern_pgdir, KERNBASE, <span class="number">0x100000000</span> - KERNBASE, <span class="number">0</span>, PTE_U);</span><br></pre></td></tr></table></figure>
+<h2 id="为用户建立虚拟地址映射"><a href="#为用户建立虚拟地址映射" class="headerlink" title="为用户建立虚拟地址映射"></a>为用户建立虚拟地址映射</h2><p>这里才是Lab 3的内容。和page类似，内核通过一个<code>struct Env</code>数组<code>envs</code>管理用户环境。函数<code>env_init</code>初始化了这个数组，具体操作和<code>page_init</code>类似，就是拉链表。</p>
+<p>函数<code>env_setup_vm</code>为指定的用户环境<code>struct Env</code>初始化虚拟地址映射，得到的是一个<code>pde_t *</code>类型的<code>Page Directory</code>。需要注意以下几点：</p>
+<ul>
+<li>为<code>Page Directory</code>分配的新<code>page</code>应该增加引用统计次数<code>pp_ref</code>。</li>
+<li><code>UTOP</code>以下的地址对用户应该为可读可写的。</li>
+<li>可以使用<code>kern_pgdir</code>作为模板，在其基础上更改。</li>
+</ul>
+<p><a href="https://zhuanlan.zhihu.com/p/176967610" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/176967610</a></p>
+<p><a href="https://www.dingmos.com/index.php/archives/5/" target="_blank" rel="noopener">https://www.dingmos.com/index.php/archives/5/</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/11/16/6.828-lab1/" rel="next" title="6.828 lab1">
+                <i class="fa fa-chevron-left"></i> 6.828 lab1
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/11/16/6.828-lab3/" rel="prev" title="6.828 lab3">
+                6.828 lab3 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">334</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/xiaomeihao.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#简介"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#回顾：未初始化完成的内存映射"><span class="nav-number">1.1.</span> <span class="nav-text">回顾：未初始化完成的内存映射</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Part-1任务总览"><span class="nav-number">1.2.</span> <span class="nav-text">Part 1任务总览</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#va-list-va-start等等"><span class="nav-number">1.3.</span> <span class="nav-text">va_list va_start等等</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#两个内存分配器"><span class="nav-number">1.4.</span> <span class="nav-text">两个内存分配器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#page分配器"><span class="nav-number">1.5.</span> <span class="nav-text">page分配器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#page分配器boot-alloc"><span class="nav-number">1.6.</span> <span class="nav-text">page分配器boot_alloc</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内核内存布局和分配器初始化"><span class="nav-number">1.7.</span> <span class="nav-text">内核内存布局和分配器初始化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#获得物理内存信息"><span class="nav-number">1.7.1.</span> <span class="nav-text">获得物理内存信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#内存布局"><span class="nav-number">1.7.2.</span> <span class="nav-text">内存布局</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分配器初始化"><span class="nav-number">1.7.3.</span> <span class="nav-text">分配器初始化</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Lab-2-Part-2：内核内存映射"><span class="nav-number">2.</span> <span class="nav-text">Lab 2 Part 2：内核内存映射</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#虚拟地址、线性地址和物理地址"><span class="nav-number">2.1.</span> <span class="nav-text">虚拟地址、线性地址和物理地址</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#x86内存管理机制"><span class="nav-number">2.2.</span> <span class="nav-text">x86内存管理机制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟、线性和物理地址"><span class="nav-number">2.2.1.</span> <span class="nav-text">虚拟、线性和物理地址</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#两步映射总览"><span class="nav-number">2.2.2.</span> <span class="nav-text">两步映射总览</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Segment-Translation"><span class="nav-number">2.2.3.</span> <span class="nav-text">Segment Translation</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#描述符表Descriptor-Table"><span class="nav-number">2.2.4.</span> <span class="nav-text">描述符表Descriptor Table</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#描述符Descriptor"><span class="nav-number">2.2.5.</span> <span class="nav-text">描述符Descriptor</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#选择符Selector"><span class="nav-number">2.2.6.</span> <span class="nav-text">选择符Selector</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#和segment有关的寄存器"><span class="nav-number">2.2.7.</span> <span class="nav-text">和segment有关的寄存器</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Page-Translation"><span class="nav-number">2.3.</span> <span class="nav-text">Page Translation</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#每个域对应长度"><span class="nav-number">2.3.1.</span> <span class="nav-text">每个域对应长度</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Entry格式"><span class="nav-number">2.3.2.</span> <span class="nav-text">Entry格式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#可以使用的工具代码"><span class="nav-number">2.4.</span> <span class="nav-text">可以使用的工具代码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#mmu-h"><span class="nav-number">2.4.1.</span> <span class="nav-text">mmu.h</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#根据虚拟地址取出Page-Table-Entry"><span class="nav-number">2.5.</span> <span class="nav-text">根据虚拟地址取出Page Table Entry</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#映射一段空间"><span class="nav-number">2.6.</span> <span class="nav-text">映射一段空间</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Page-Table组织总结"><span class="nav-number">2.7.</span> <span class="nav-text">Page Table组织总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#建立映射的函数们"><span class="nav-number">2.8.</span> <span class="nav-text">建立映射的函数们</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为内核建立虚拟地址映射"><span class="nav-number">2.9.</span> <span class="nav-text">为内核建立虚拟地址映射</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#权限和故障隔离"><span class="nav-number">2.9.1.</span> <span class="nav-text">权限和故障隔离</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为用户建立虚拟地址映射"><span class="nav-number">2.10.</span> <span class="nav-text">为用户建立虚拟地址映射</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<span id="busuanzi_container_site_uv"> 
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
