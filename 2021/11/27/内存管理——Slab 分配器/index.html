@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="简介在Linux中，伙伴分配器（buddy allocator）是以页为单位管理和分配内存。但在内核中的需求却以字节为单位（在内核中面临频繁的结构体内存分配问题）。假如我们需要动态申请一个内核结构体（占 20 字节），若仍然分配一页内存，这将严重浪费内存。那么该如何分配呢？slab 分配器专为小内存分配而生，由Sun公司的一个雇员Jeff Bonwick在Solaris 2.4中设计并实现。sla">
+<meta name="keywords" content="Linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="内存管理——Slab 分配器">
+<meta property="og:url" content="http://yoursite.com/2021/11/27/内存管理——Slab 分配器/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="简介在Linux中，伙伴分配器（buddy allocator）是以页为单位管理和分配内存。但在内核中的需求却以字节为单位（在内核中面临频繁的结构体内存分配问题）。假如我们需要动态申请一个内核结构体（占 20 字节），若仍然分配一页内存，这将严重浪费内存。那么该如何分配呢？slab 分配器专为小内存分配而生，由Sun公司的一个雇员Jeff Bonwick在Solaris 2.4中设计并实现。sla">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/2076055272.jpg">
+<meta property="og:image" content="http://yoursite.com/img/2185908915.jpg">
+<meta property="og:image" content="http://yoursite.com/img/4077411688.jpg">
+<meta property="og:image" content="http://yoursite.com/img/511908609.jpg">
+<meta property="og:updated_time" content="2021-11-29T02:02:11.735Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="内存管理——Slab 分配器">
+<meta name="twitter:description" content="简介在Linux中，伙伴分配器（buddy allocator）是以页为单位管理和分配内存。但在内核中的需求却以字节为单位（在内核中面临频繁的结构体内存分配问题）。假如我们需要动态申请一个内核结构体（占 20 字节），若仍然分配一页内存，这将严重浪费内存。那么该如何分配呢？slab 分配器专为小内存分配而生，由Sun公司的一个雇员Jeff Bonwick在Solaris 2.4中设计并实现。sla">
+<meta name="twitter:image" content="http://yoursite.com/img/2076055272.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2021/11/27/内存管理——Slab 分配器/">
+
+
+
+
+
+  <title>内存管理——Slab 分配器 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/resume.pdf" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-mybetterhalf">
+          <a href="/mybetterhalf/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            mybetterhalf
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/11/27/内存管理——Slab 分配器/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">内存管理——Slab 分配器</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-11-27T23:42:00+08:00">
+                2021-11-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>在Linux中，伙伴分配器（buddy allocator）是以页为单位管理和分配内存。但在内核中的需求却以字节为单位（在内核中面临频繁的结构体内存分配问题）。假如我们需要动态申请一个内核结构体（占 20 字节），若仍然分配一页内存，这将严重浪费内存。那么该如何分配呢？slab 分配器专为小内存分配而生，由Sun公司的一个雇员Jeff Bonwick在Solaris 2.4中设计并实现。slab分配器分配内存以字节为单位，基于伙伴分配器的大内存进一步细分成小内存分配。换句话说，slab 分配器仍然从 Buddy 分配器中申请内存，之后自己对申请来的内存细分管理。</p>
+<p>除了提供小内存外，slab 分配器的第二个任务是维护常用对象的缓存。对于内核中使用的许多结构，初始化对象所需的时间可等于或超过为其分配空间的成本。当创建一个新的slab 时，许多对象将被打包到其中并使用构造函数（如果有）进行初始化。释放对象后，它会保持其初始化状态，这样可以快速分配对象。</p>
+<p>举例来说, 为管理与进程关联的文件系统数据, 内核必须经常生成<code>struct fs_struct</code>的新实例。此类型实例占据的内存块同样需要经常回收(在进程结束时)。换句话说, 内核趋向于非常有规律地分配并释放大小为<code>sizeof(fs_struct)</code>的内存块。slab分配器将释放的内存块保存在一个内部列表中。并不马上返回给伙伴系统。在请求为该类对象分配一个新实例时, 会使用最近释放的内存块。S这有两个优点。首先, 由于内核不必使用伙伴系统算法, 处理时间会变短。其次, 由于该内存块仍然是”新”的，因此其仍然驻留在CPU硬件缓存的概率较高。</p>
+<p>SLAB分配器的最后一项任务是提高CPU硬件缓存的利用率。 如果将对象包装到SLAB中后仍有剩余空间，则将剩余空间用于为SLAB着色。 SLAB着色是一种尝试使不同SLAB中的对象使用CPU硬件缓存中不同行的方案。 通过将对象放置在SLAB中的不同起始偏移处，对象可能会在CPU缓存中使用不同的行，从而有助于确保来自同一SLAB缓存的对象不太可能相互刷新。 通过这种方案，原本被浪费掉的空间可以实现一项新功能。</p>
+<p>通过命令<code>sudo cat /proc/slabinfo</code>可查看系统当前 slab 使用情况。以<code>vm_area_struct</code>结构体为例，当前系统已分配了 13014 个<code>vm_area_struct</code>缓存，每个大小为 216 字节，其中 active 的有 12392 个。<br><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">[root@VM-8-9-centos]<span class="comment"># cat /proc/slabinfo</span></span><br><span class="line">slabinfo - version: 2.1</span><br><span class="line"><span class="comment"># name            &lt;active_objs&gt; &lt;num_objs&gt; &lt;objsize&gt; &lt;objperslab&gt; &lt;pagesperslab&gt; : tunables &lt;limit&gt; &lt;batchcount&gt; &lt;sharedfactor&gt; : slabdata &lt;active_slabs&gt; &lt;num_slabs&gt; &lt;sharedavail&gt;</span></span><br><span class="line">...</span><br><span class="line">vm_area_struct     12392  13014    216   18    1 : tunables    0    0    0 : slabdata    723    723      0</span><br><span class="line">mm_struct            184    200   1600   20    8 : tunables    0    0    0 : slabdata     10     10      0</span><br><span class="line">shared_policy_node   5015   5015     48   85    1 : tunables    0    0    0 : slabdata     59     59      0</span><br><span class="line">numa_policy           15     15    264   15    1 : tunables    0    0    0 : slabdata      1      1      0</span><br><span class="line">radix_tree_node    15392  17234    584   14    2 : tunables    0    0    0 : slabdata   1231   1231      0</span><br><span class="line">idr_layer_cache      240    240   2112   15    8 : tunables    0    0    0 : slabdata     16     16      0</span><br><span class="line">kmalloc-8192          39     44   8192    4    8 : tunables    0    0    0 : slabdata     11     11      0</span><br><span class="line">kmalloc-4096         117    144   4096    8    8 : tunables    0    0    0 : slabdata     18     18      0</span><br><span class="line">kmalloc-2048         458    528   2048   16    8 : tunables    0    0    0 : slabdata     33     33      0</span><br><span class="line">kmalloc-1024        1399   1424   1024   16    4 : tunables    0    0    0 : slabdata     89     89      0</span><br><span class="line">kmalloc-512          763    800    512   16    2 : tunables    0    0    0 : slabdata     50     50      0</span><br><span class="line">kmalloc-256         3132   3376    256   16    1 : tunables    0    0    0 : slabdata    211    211      0</span><br><span class="line">kmalloc-192         2300   2352    192   21    1 : tunables    0    0    0 : slabdata    112    112      0</span><br><span class="line">kmalloc-128         1376   1376    128   32    1 : tunables    0    0    0 : slabdata     43     43      0</span><br><span class="line">kmalloc-96          1596   1596     96   42    1 : tunables    0    0    0 : slabdata     38     38      0</span><br><span class="line">kmalloc-64         16632  20800     64   64    1 : tunables    0    0    0 : slabdata    325    325      0</span><br><span class="line">kmalloc-32          1664   1664     32  128    1 : tunables    0    0    0 : slabdata     13     13      0</span><br><span class="line">kmalloc-16          4608   4608     16  256    1 : tunables    0    0    0 : slabdata     18     18      0</span><br><span class="line">kmalloc-8           4096   4096      8  512    1 : tunables    0    0    0 : slabdata      8      8      0</span><br><span class="line">...</span><br></pre></td></tr></table></figure></p>
+<p>可以看到，系统中存在的 slab 有些形如<code>kmalloc-xxx</code>的 slab，我们称其为通用型 slab，用来满足分配通用内存。其他含有具体名字的 slab 我们称其为 专用 slab，用来为特定结构体分配内存，如<code>vm_area_struct</code>、<code>mm_struct</code>等。</p>
+<p>为什么要分专用和通用 slab ？ 最直观的一个原因就是通用 slab 会造成内存浪费：出于 slab 管理的方便，每个 slab 管理的对象大小都是一致的，当我们需要分配一个处于 64-96字节中间大小的对象时，就必须从保存 96 字节的 slab 中分配。而对于专用的 slab，其管理的都是同一个结构体实例，申请一个就给一个恰好内存大小的对象，这就可以充分利用空间。</p>
+<p>slab 分配器的实现源码：</p>
+<ul>
+<li><code>include/linux/slab_def.h</code></li>
+<li><code>include/linux/slab.h</code></li>
+<li><code>mm/slab.c</code></li>
+</ul>
+<h1 id="Slab-API"><a href="#Slab-API" class="headerlink" title="Slab API"></a>Slab API</h1><p>与 libc 提供的内存申请 API （malloc 和 free ）类似，Slab 分配器提供的 API 为<code>kmalloc()</code>和<code>kfree()</code>。<code>kmalloc()</code>函数定义在<code>include/linux/slab.h</code>文件中，接收两个参数，并调用<code>__kmalloc()</code>函数。最终分配内存的实现是<code>__do_kmalloc()</code>函数。</p>
+<ul>
+<li><code>size</code>：申请的内存大小</li>
+<li><code>flags</code>：参数使用 GFP_XXX来指定分配内存的具体内存域，例如 GFP_DMA 指定分配适合于DMA的内存区.</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> __<span class="function">always_inline <span class="keyword">void</span> *<span class="title">kmalloc</span><span class="params">(<span class="keyword">size_t</span> size, <span class="keyword">gfp_t</span> flags)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">return</span> __kmalloc(size, flags);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// in mm/slab.c</span></span><br><span class="line"><span class="keyword">void</span> *__kmalloc(<span class="keyword">size_t</span> size, <span class="keyword">gfp_t</span> flags)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> __do_kmalloc(size, flags, _RET_IP_);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">static</span> __always_inline <span class="keyword">void</span> *__do_kmalloc(<span class="keyword">size_t</span> size, <span class="keyword">gfp_t</span> flags,</span><br><span class="line">                      <span class="keyword">unsigned</span> <span class="keyword">long</span> caller)</span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h1><p>由于slab的缓存特性，slab 分配器从 buddy 分配器中获取的物理内存称为 内存缓存（与 CPU 的硬件缓存进行区别，下文都称为缓存），使用结构体<code>struct kmem_cache</code>（定义在<code>include/linux/slab_def.h</code>文件中）描述。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">kmem_cache</span> &#123;</span></span><br><span class="line"><span class="comment">/* 2) touched by every alloc &amp; free from the backend */</span></span><br><span class="line">    <span class="keyword">slab_flags_t</span> flags;        <span class="comment">/* constant flags */</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> num;        <span class="comment">/* 每个 slab 中的 objs 数量 */</span></span><br><span class="line"><span class="comment">/* 3) cache_grow/shrink */</span></span><br><span class="line">    <span class="comment">/* 每个 slab 所使用的页框数量 order */</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> gfporder;</span><br><span class="line">    <span class="comment">/* force GFP flags, e.g。GFP_DMA */</span></span><br><span class="line">    <span class="keyword">gfp_t</span> allocflags;</span><br><span class="line">    <span class="keyword">size_t</span> colour;            <span class="comment">/* cache colouring range */</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> colour_off;    <span class="comment">/* colour offset */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">kmem_cache</span> *<span class="title">freelist_cache</span>;</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> freelist_size;</span><br><span class="line"><span class="comment">/* 4) cache creation/removal */</span></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span> *name;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">list</span>;</span></span><br><span class="line">    <span class="keyword">int</span> refcount;</span><br><span class="line">    <span class="keyword">int</span> object_size;</span><br><span class="line">    <span class="keyword">int</span> align;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">kmem_cache_node</span> *<span class="title">node</span>[<span class="title">MAX_NUMNODES</span>];</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>SLAB分配器由可变数量的缓存组成，这些缓存由称为“缓存链”的双向循环链表链接在一起（如下图中的<code>kmem_cache</code>链表）。 在slab分配器的上下文中，缓存是特定类型的多个对象的管理器，例如使用<code>cat /proc/slabinfo</code>命令输出的<code>mm_struct</code>或<code>fs_cache</code>缓存，其名字保存在<code>kmem_cache-&gt;name</code>中（Linux 支持单个最大的 slab 缓存大小为32MB ）。<code>kmem_cache</code>中所有对象的大小是相同的(<code>object_size</code>)，并且此<code>kmem_cache</code>中所有SLAB的大小也是相同的(<code>gfporder</code>、<code>num</code>)。</p>
+<p>每个缓存节点在内存中维护称为slab的连续页块，这些页面被切成小块，用于缓存数据结构和对象。<code>kmem_cache</code>的<code>kmem_cache_node</code>成员记录了该<code>kmem_cache</code>下的所有 slabs 列表。形成的结构如下图所示。</p>
+<p><img src="/img/2076055272.jpg" alt></p>
+<p><code>kmem_cache_node</code>定义在<code>mm/slab.h</code>文件中，如下所示<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">kmem_cache_node</span> &#123;</span></span><br><span class="line">    <span class="keyword">spinlock_t</span> list_lock;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CONFIG_SLAB</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">slabs_partial</span>;</span>    <span class="comment">/* partial list first, better asm code */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">slabs_full</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">slabs_free</span>;</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> total_slabs;    <span class="comment">/* 所有 slab list 的长度 */</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> free_slabs;    <span class="comment">/* 仅 free slab list 的长度*/</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> free_objects;</span><br><span class="line">    ...</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p><code>kmem_cache_noed</code>记录了3种slab：</p>
+<ul>
+<li><code>slabs_full</code>：已经完全分配的 slab</li>
+<li><code>slabs_partial</code>： 部分分配的slab</li>
+<li><code>slabs_free</code>：空slab，或者没有对象被分配</li>
+</ul>
+<p>以上3个链表保存的是slab 描述符，Linux kernel 使用<code>struct page</code>来描述一个slab。单个slab可以在slab链表之间移动，例如如果一个半满slab被分配了对象后变满了，就要从<code>slabs_partial</code>中被删除，同时插入到<code>slabs_full</code>中去。</p>
+<p>为了进一步解释，这里举个例子来说明。用<code>struct kmem_cache</code>结构描述的一段内存就称作一个 slab 缓存池。一个slab缓存池就像是一箱牛奶，一箱牛奶中有很多瓶牛奶，每瓶牛奶就是一个 slab 。在初始时，所有牛奶都是新的，都存在 slabs_free 链表中。分配内存的时候，就相当于从牛奶箱中拿一瓶牛奶，若把一瓶牛奶喝完，该牛奶就会被加入到 slabs_full 中不能再分配；若只喝了一半就放回到 slabs_partial 中。牛奶可能会喝完（不考虑 slab 内存 free 的情况，因为自己不能生产牛奶），当箱子空的时候，你就需要去超市再买一箱回来。超市就相当于buddy 分配器。</p>
+<p>上述例子有点不严谨，实际上操作系统启动创建<code>kmem_cache</code>完成后，这三个链表都为空，只有在申请对象时发现没有可用的 slab 时才会创建一个新的SLAB，并加入到这三个链表中的一个中。也就是说<code>kmem_cache</code>中的SLAB数量是动态变化的，当SLAB数量太多时，<code>kmem_cache</code>会将一些SLAB释放回页框分配器中。</p>
+<p>继续来看<code>page</code>结构体关于 slab 的部分。<code>struct page</code>定义在<code>include/linux/mm_types.h</code>文件中，与slab相关的结构体成员如下所示：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">page</span> &#123;</span></span><br><span class="line">    <span class="keyword">union</span> &#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> &#123;</span>    <span class="comment">/* Page cache and anonymous pages */</span></span><br><span class="line">            ...</span><br><span class="line">        &#125;;</span><br><span class="line"></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> &#123;</span>    <span class="comment">/* slab, slob and slub */</span></span><br><span class="line">            <span class="keyword">union</span> &#123;</span><br><span class="line">                <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">slab_list</span>;</span></span><br><span class="line">                <span class="class"><span class="keyword">struct</span> &#123;</span>    <span class="comment">/* Partial pages */</span></span><br><span class="line">                    <span class="class"><span class="keyword">struct</span> <span class="title">page</span> *<span class="title">next</span>;</span></span><br><span class="line"></span><br><span class="line">                    <span class="keyword">int</span> pages;    <span class="comment">/* Nr of pages left */</span></span><br><span class="line">                    <span class="keyword">int</span> pobjects;    <span class="comment">/* Approximate count */</span></span><br><span class="line">                &#125;;</span><br><span class="line">            &#125;;</span><br><span class="line">            <span class="class"><span class="keyword">struct</span> <span class="title">kmem_cache</span> *<span class="title">slab_cache</span>;</span></span><br><span class="line">            <span class="comment">/* Double-word boundary */</span></span><br><span class="line">            <span class="keyword">void</span> *freelist;        <span class="comment">/* first free object */</span></span><br><span class="line">            <span class="keyword">union</span> &#123;</span><br><span class="line">                <span class="keyword">void</span> *s_mem;    <span class="comment">/* slab: first object */</span></span><br><span class="line">                <span class="keyword">unsigned</span> <span class="keyword">long</span> counters;        <span class="comment">/* SLUB */</span></span><br><span class="line">                ...</span><br><span class="line">            &#125;;</span><br><span class="line">        &#125;;</span><br><span class="line">        ...</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li><code>void *s_mem</code>: 指向该页框中第一个object 的地址 。</li>
+<li><code>struct kmem_cache *slab_cache</code>: <code>struct kmem_cache_node</code>结构体用其追踪所有 page 的链表。</li>
+<li><code>struct list_head slab_list</code>: 用于跟踪此页框属于哪个slab链表（full, free, partial），即使用此成员将list串联起来。</li>
+<li><code>void *freelist</code>: 用于指向页框中空闲对象链表。空闲对象链表包含页框中每个空闲对象的索引。</li>
+</ul>
+<p>空闲对象链表是一个由数组制成的简单链表，它保存的地方有两种情况：</p>
+<ol>
+<li>保存在外部，会从SLAB中分配一个对象用于保存新的SLAB的空闲对象链表。</li>
+<li>保存在内部，保存在这个SLAB所代表的连续页框的头部。</li>
+</ol>
+<p>在空闲对象链表都是保存在内部（通常也是保存在内部）的情况下，slab 描述符描述一块连续的内存关键结构如下：</p>
+<p><img src="/img/2185908915.jpg" alt></p>
+<p>借助<code>freelist</code>以及<code>struct page</code>中的<code>active</code>成员可以实现优先分配刚释放的内存。内存分配的过程如下图所示。<br><img src="/img/4077411688.jpg" alt></p>
+<h1 id="Slab缓存建立过程"><a href="#Slab缓存建立过程" class="headerlink" title="Slab缓存建立过程"></a>Slab缓存建立过程</h1><p>第一个<code>kmem_cache</code>结构体实例是定义的全局变量<code>kmem_cache_boot</code>（<code>mm/slab.c</code>）。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">kmem_cache</span> <span class="title">kmem_cache_boot</span> = &#123;</span></span><br><span class="line">    .batchcount = <span class="number">1</span>,</span><br><span class="line">    .limit = BOOT_CPUCACHE_ENTRIES,</span><br><span class="line">    .shared = <span class="number">1</span>,</span><br><span class="line">    .size = <span class="keyword">sizeof</span>(struct kmem_cache),</span><br><span class="line">    .name = <span class="string">"kmem_cache"</span>,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p><code>kmem_cache_init()</code>函数在初始化过程中调用<code>create_boot_cache()</code>对<code>kmem_cache_boot</code>进行了进一步初始化。第一个<code>kmem cache</code>实例用于为创建其他<code>kmem cache</code>实例分配空间，其大小与系统内的<code>node</code>有关。<code>offsetof</code>求出<code>kmem_cache</code>结构体中<code>node</code>的偏移地址，再加上系统内<code>node</code>的个数乘以<code>sizeof(struct kmem_cache_node *)</code>，这真是把内存省到极致。因<code>kmem_cache</code>的成员<code>node</code>是用最大的<code>node</code>数定义的数组大小，这里最后只使用系统内实际的<code>node</code>数量来申请内存。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> __<span class="function">init <span class="title">kmem_cache_init</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line"></span><br><span class="line">    kmem_cache = &amp;kmem_cache_boot;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// NUM_INIT_LISTS 为 2 * 系统内的节点数量</span></span><br><span class="line">    <span class="comment">// 初始化 kmem_cache_node 结构体</span></span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; NUM_INIT_LISTS; i++)</span><br><span class="line">        kmem_cache_node_init(&amp;init_kmem_cache_node[i]);</span><br><span class="line">    <span class="comment">// 完成第一个kmem cache实例kmem_cache的初始化</span></span><br><span class="line">    <span class="comment">// 第一个kmem cache实例用于为创建其他kmem cache实例分配空间</span></span><br><span class="line">    create_boot_cache(kmem_cache, <span class="string">"kmem_cache"</span>,</span><br><span class="line">        offsetof(struct kmem_cache, node) +</span><br><span class="line">                  nr_node_ids * <span class="keyword">sizeof</span>(struct kmem_cache_node *),</span><br><span class="line">                  SLAB_HWCACHE_ALIGN, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">    <span class="comment">// kmem cache实例加入slab_caches链表</span></span><br><span class="line">    list_add(&amp;kmem_cache-&gt;<span class="built_in">list</span>, &amp;slab_caches);</span><br><span class="line">    slab_state = PARTIAL;</span><br><span class="line"></span><br><span class="line">    kmalloc_caches[KMALLOC_NORMAL][INDEX_NODE] = create_kmalloc_cache(</span><br><span class="line">                kmalloc_info[INDEX_NODE].name[KMALLOC_NORMAL],</span><br><span class="line">                kmalloc_info[INDEX_NODE].size,</span><br><span class="line">                ARCH_KMALLOC_FLAGS, <span class="number">0</span>,</span><br><span class="line">                kmalloc_info[INDEX_NODE].size);</span><br><span class="line">    slab_state = PARTIAL_NODE;</span><br><span class="line">    setup_kmalloc_cache_index_table();</span><br><span class="line"></span><br><span class="line">    slab_early_init = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 5) Replace the bootstrap kmem_cache_node */</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">int</span> nid;</span><br><span class="line"></span><br><span class="line">        for_each_online_node(nid) &#123;</span><br><span class="line">            init_list(kmem_cache, &amp;init_kmem_cache_node[CACHE_CACHE + nid], nid);</span><br><span class="line"></span><br><span class="line">            init_list(kmalloc_caches[KMALLOC_NORMAL][INDEX_NODE],</span><br><span class="line">                      &amp;init_kmem_cache_node[SIZE_NODE + nid], nid);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    create_kmalloc_caches(ARCH_KMALLOC_FLAGS);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><code>slab_cache</code>作为链接所有<code>kmem_cache</code>的链表头，使用宏<code>LIST_HEAD(slab_caches)</code>定义在文件<code>mm/slab_common.c</code>中；在<code>kmem_cache</code>初始化后，都将通过<code>list_add</code>将其添加到链表中。</p>
+<p>接下来<code>kmalloc_caches</code>是<code>struct kmem_cache *</code>的一个二维数组指针（定义在<code>mm/slab_common.c</code>），其使用<code>kmalloc_info</code>中保存的信息生成不同<code>size</code>的<code>kmem_cache</code>。<code>kmalloc_info</code>的定义如下：类似一个<code>map</code>，例如其中一个元素是<code>{“kmalloc-96”，96}</code>，<code>kmalloc-96</code>为<code>kmem_cache</code>的<code>name</code>，96为<code>object</code>的大小。此处调用<code>create_kmalloc_cache</code>是创建一个记录<code>kmem_cache_node</code>的<code>kmem_cache</code>（对<code>INDEX_NODE</code>展开为<code>INDEX_NODE kmalloc_index(sizeof(struct kmem_cache_node))</code>）<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> INIT_KMALLOC_INFO(__size, __short_size)            \</span></span><br><span class="line">&#123;                                \</span><br><span class="line">    .name[KMALLOC_NORMAL]  = <span class="string">"kmalloc-"</span> #__short_size,    \</span><br><span class="line">    .name[KMALLOC_RECLAIM] = <span class="string">"kmalloc-rcl-"</span> #__short_size,    \</span><br><span class="line">    .size = __size,                        \</span><br><span class="line">&#125;</span><br><span class="line">#endif</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> struct kmalloc_info_struct kmalloc_info[] __initconst = &#123;</span><br><span class="line">    INIT_KMALLOC_INFO(<span class="number">0</span>, <span class="number">0</span>),</span><br><span class="line">    INIT_KMALLOC_INFO(<span class="number">96</span>, <span class="number">96</span>),</span><br><span class="line">    INIT_KMALLOC_INFO(<span class="number">192</span>, <span class="number">192</span>),</span><br><span class="line">    INIT_KMALLOC_INFO(<span class="number">8</span>, <span class="number">8</span>),</span><br><span class="line">    ...</span><br><span class="line">    INIT_KMALLOC_INFO(<span class="number">67108864</span>, <span class="number">64</span>M)</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p><code>create_kmalloc_cache()</code>函数首先调用函数<code>kmem_cache_zalloc(kmem_cache, GFP_NOWAIT)</code>，从<code>kmem_cache</code>中申请一个 slab 用来保存记录·struct kmem_cache_node·实例的<code>kmem_cache</code>。之后再调用<code>create_boot_cache()</code>函数对从<code>kmem_cacha slab</code>中申请来的<code>kmem_cache</code>进行初始化，并再添加到<code>slab_caches</code>链表中。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">kmem_cache</span> *__<span class="title">init</span> <span class="title">create_kmalloc_cache</span>(<span class="title">const</span> <span class="title">char</span> *<span class="title">name</span>,</span></span><br><span class="line"><span class="class">        <span class="title">unsigned</span> <span class="title">int</span> <span class="title">size</span>, <span class="title">slab_flags_t</span> <span class="title">flags</span>,</span></span><br><span class="line"><span class="class">        <span class="title">unsigned</span> <span class="title">int</span> <span class="title">useroffset</span>, <span class="title">unsigned</span> <span class="title">int</span> <span class="title">usersize</span>)</span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">kmem_cache</span> *<span class="title">s</span> = <span class="title">kmem_cache_zalloc</span>(<span class="title">kmem_cache</span>, <span class="title">GFP_NOWAIT</span>);</span></span><br><span class="line">    ...</span><br><span class="line">    create_boot_cache(s, name, size, flags, useroffset, usersize);</span><br><span class="line">    list_add(&amp;s-&gt;<span class="built_in">list</span>, &amp;slab_caches);</span><br><span class="line">    s-&gt;refcount = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">return</span> s;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>此时<code>kmem_cache</code>形成的结构如下图。这部分可能有些绕，为了便于区分，此处额外添加了一个名为<code>vm_area_struct</code>的<code>kmem_cache</code>。<br><img src="/img/511908609.jpg" alt></p>
+<p>专用的 slab 的初始化分布在不同子系统所在的源文件中。以<code>vm_area_struct</code>为例，其初始化在<code>__init proc_caches_init(void)</code>函数（定义在文件<code>kernel/fork.c</code>中）中被调用，代码如下所示。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> __<span class="function">init <span class="title">proc_caches_init</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> mm_size;</span><br><span class="line"></span><br><span class="line">    sighand_cachep = kmem_cache_create(<span class="string">"sighand_cache"</span>,</span><br><span class="line">            <span class="keyword">sizeof</span>(struct sighand_struct), <span class="number">0</span>,</span><br><span class="line">            SLAB_HWCACHE_ALIGN|SLAB_PANIC|SLAB_TYPESAFE_BY_RCU|</span><br><span class="line">            SLAB_ACCOUNT, sighand_ctor);</span><br><span class="line">    signal_cachep = kmem_cache_create(<span class="string">"signal_cache"</span>,</span><br><span class="line">            <span class="keyword">sizeof</span>(struct signal_struct), <span class="number">0</span>,</span><br><span class="line">            SLAB_HWCACHE_ALIGN|SLAB_PANIC|SLAB_ACCOUNT,</span><br><span class="line">            <span class="literal">NULL</span>);</span><br><span class="line">    files_cachep = kmem_cache_create(<span class="string">"files_cache"</span>,</span><br><span class="line">            <span class="keyword">sizeof</span>(struct files_struct), <span class="number">0</span>,</span><br><span class="line">            SLAB_HWCACHE_ALIGN|SLAB_PANIC|SLAB_ACCOUNT,</span><br><span class="line">            <span class="literal">NULL</span>);</span><br><span class="line">    fs_cachep = kmem_cache_create(<span class="string">"fs_cache"</span>,</span><br><span class="line">            <span class="keyword">sizeof</span>(struct fs_struct), <span class="number">0</span>,</span><br><span class="line">            SLAB_HWCACHE_ALIGN|SLAB_PANIC|SLAB_ACCOUNT,</span><br><span class="line">            <span class="literal">NULL</span>);</span><br><span class="line">    ...</span><br><span class="line">    vm_area_cachep = KMEM_CACHE(vm_area_struct, SLAB_PANIC|SLAB_ACCOUNT);</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>其他通用的<code>kmem_cache</code>（<code>name</code>为<code>kmalloc-xxx</code>）的初始化在函数<code>new_kmalloc_cache()</code>（定义在<code>mm/slab_common.c</code>文件中）中调用，如下。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">void</span> __init</span><br><span class="line">new_kmalloc_cache(<span class="keyword">int</span> idx, <span class="keyword">enum</span> kmalloc_cache_type type, <span class="keyword">slab_flags_t</span> flags)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (type == KMALLOC_RECLAIM)</span><br><span class="line">        flags |= SLAB_RECLAIM_ACCOUNT;</span><br><span class="line"></span><br><span class="line">    kmalloc_caches[type][idx] = create_kmalloc_cache(</span><br><span class="line">                    kmalloc_info[idx].name[type],</span><br><span class="line">                    kmalloc_info[idx].size, flags, <span class="number">0</span>,</span><br><span class="line">                    kmalloc_info[idx].size);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="Slab缓存分配过程"><a href="#Slab缓存分配过程" class="headerlink" title="Slab缓存分配过程"></a>Slab缓存分配过程</h1><p>根据以上的分析可推断，<code>kmem_cache_zalloc()</code>函数实现了从 slab 中分配内存的功能。其调用流程如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">kmem_cache_zalloc(include/linux/slab.h)</span><br><span class="line">    kmem_cache_alloc(mm/slab.c)</span><br><span class="line">        slab_alloc(mm/slab.c)</span><br><span class="line">            __do_cache_alloc(mm/slab.c)</span><br><span class="line">                ____cache_alloc(mm/slab.c)</span><br><span class="line">                    cpu_cache_get(mm/slab.c)</span><br><span class="line">                    cache_alloc_refill(mm/slab.c)</span><br></pre></td></tr></table></figure></p>
+<p><code>____cache_alloc()</code>函数实现如下，slab 分配器首先会从<code>array_cache</code>中查找是否存在可用<code>obj</code>（下面会详细介绍<code>struct array_cache</code>），若有直接分配，若无则调用<code>cache_alloc_refill()</code>函数尝试从 3 个<code>slabs_</code>(<code>free/partial/full</code>)中寻找可用的内存，并将其填充到<code>array_cache</code>中，再次进行分配。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">void</span> *____cache_alloc(struct kmem_cache *cachep, <span class="keyword">gfp_t</span> flags)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">void</span> *objp;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">array_cache</span> *<span class="title">ac</span>;</span></span><br><span class="line">    ...</span><br><span class="line">    ac = cpu_cache_get(cachep);</span><br><span class="line">    <span class="keyword">if</span> (likely(ac-&gt;avail)) &#123;</span><br><span class="line">        ac-&gt;touched = <span class="number">1</span>;</span><br><span class="line">        objp = ac-&gt;entry[--ac-&gt;avail];</span><br><span class="line"></span><br><span class="line">        STATS_INC_ALLOCHIT(cachep);</span><br><span class="line">        <span class="keyword">goto</span> out;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    STATS_INC_ALLOCMISS(cachep);</span><br><span class="line">    objp = cache_alloc_refill(cachep, flags);</span><br><span class="line"></span><br><span class="line">    ac = cpu_cache_get(cachep);</span><br><span class="line"></span><br><span class="line">out:</span><br><span class="line">    <span class="keyword">if</span> (objp)</span><br><span class="line">        kmemleak_erase(&amp;ac-&gt;entry[ac-&gt;avail]);</span><br><span class="line">    <span class="keyword">return</span> objp;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="struct-array-cache-本地-CPU-空闲对象链表"><a href="#struct-array-cache-本地-CPU-空闲对象链表" class="headerlink" title="struct array_cache 本地 CPU 空闲对象链表"></a>struct array_cache 本地 CPU 空闲对象链表</h1><p>在<code>kmem_cache</code>结构体中还有一个成员<code>struct array_cache __percpu *cpu_cache;</code>。其用来为每个CPU维护一个空间对象链表（Per CPU 相关内容参考此链接）。这能带来如下好处：</p>
+<ul>
+<li>提高硬件缓存的命中率。每个CPU都有它们自己的硬件高速缓存（在多核CPU下，通常 L1/L2 为 CPU 单独占有，L2/L3为所有CPU核共享的）。当此CPU上释放对象时，又再次申请一个相同大小的对象时，原对象很可能还在这个CPU的硬件高速缓存中。内核为每个CPU维护一个这样的链表，当需要新的对象时，会优先尝试从当前CPU的本地CPU空闲对象链表获取相应大小的对象，这样就能更快地分配对象。</li>
+<li>减少锁的竞争。假设多个CPU同时申请一个大小的slab，这时候如果没有本地CPU空闲对象链表，就会导致分配流程是互斥的，需要上锁，就导致分配效率低。</li>
+</ul>
+<p><code>struct array_cache</code>定义在文件<code>mm/slab.c</code>文件中，如下所示：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">array_cache</span> &#123;</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> avail;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> limit;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> batchcount;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> touched;</span><br><span class="line">    <span class="keyword">void</span> *entry[];</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li><code>avail</code>： 表示当前可用对象的数量</li>
+<li><code>limit</code>：可拥有的最大对象数</li>
+<li><code>batchcount</code>：要从<code>slab_list</code>转移进本地高速缓存对象的数量，或从本地高速缓存中转移出去的<code>obj</code>数量</li>
+<li><code>touched</code>： 是否在收缩后访问过</li>
+<li><code>entry</code>: 伪数组，保存释放的对象指针</li>
+</ul>
+<p>本地CPU空闲对象链表在系统初始化完成后是一个空的链表，只有释放对象时才会将对象加入这个链表。链表对象个数是有限制的（最大值就是limit），链表数超过这个值时，会将<code>batchcount</code>个数的对象返回到所有CPU共享的空闲对象链表(也是这样一个结构)中。</p>
+<p>在<code>struct kmem_cache_node</code>结构体中同样存在一个<code>array_cache</code>的成员<code>struct array_cache shared;*</code>，其构成一个所有 CPU 共享的空闲对象链表。</p>
+<p>在此基础上，一个常规的对象申请流程是这样的：</p>
+<ul>
+<li>内核首先会从本地 CPU 空闲对象链表中尝试获取一个对象用于分配：如果失败，则检查所有CPU共享的空闲对象链表链表中是否存在，并且空闲链表中是否存在空闲对象，若有就转移<code>batchcount</code>个空闲对象到本地 CPU空闲对象链表中；</li>
+<li>如果第 1 步失败，就尝试从 SLAB中分配；这时如果还失败，kmem_cache会尝试从页框分配器中获取一组连续的页框建立一个新的SLAB，然后从新的SLAB中获取一个对象。</li>
+</ul>
+<p>对象释放流程如下：</p>
+<ul>
+<li>首先会先将对象释放到本地CPU空闲对象链表中，如果本地CPU空闲对象链表中对象过多，<code>kmem_cache</code>会将本地CPU空闲对象链表中的batchcount个对象移动到所有CPU共享的空闲对象链表链表中，</li>
+<li>如果所有CPU共享的空闲对象链表链表的对象也太多了，<code>kmem_cache</code>也会把所有CPU共享的空闲对象链表链表中<code>batchcount</code>个数的对象移回它们自己所属的SLAB中，</li>
+<li>这时如果SLAB中空闲对象太多，<code>kmem_cache</code>会整理出一些空闲的SLAB，将这些SLAB所占用的页框释放回页框分配器中。</li>
+</ul>
+<h1 id="array-cache-填充"><a href="#array-cache-填充" class="headerlink" title="array_cache 填充"></a>array_cache 填充</h1><p>在了解上述空闲对象分配的过程后，我们参考代码来进一步理解，<code>cache_alloc_refill()</code>函数实现如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> *<span class="title">cache_alloc_refill</span><span class="params">(struct kmem_cache *cachep, <span class="keyword">gfp_t</span> flags)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> batchcount;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">kmem_cache_node</span> *<span class="title">n</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">array_cache</span> *<span class="title">ac</span>, *<span class="title">shared</span>;</span></span><br><span class="line">    <span class="keyword">int</span> node;</span><br><span class="line">    <span class="keyword">void</span> *<span class="built_in">list</span> = <span class="literal">NULL</span>;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">page</span> *<span class="title">page</span>;</span></span><br><span class="line"></span><br><span class="line">    </span><br><span class="line">    ac = cpu_cache_get(cachep);</span><br><span class="line">    batchcount = ac-&gt;batchcount;</span><br><span class="line">    <span class="keyword">if</span> (!ac-&gt;touched &amp;&amp; batchcount &gt; BATCHREFILL_LIMIT) &#123;</span><br><span class="line">        batchcount = BATCHREFILL_LIMIT;</span><br><span class="line">    &#125;</span><br><span class="line">    n = get_node(cachep, node);</span><br><span class="line"></span><br><span class="line">    BUG_ON(ac-&gt;avail &gt; <span class="number">0</span> || !n);</span><br><span class="line">    shared = READ_ONCE(n-&gt;shared);</span><br><span class="line">    <span class="keyword">if</span> (!n-&gt;free_objects &amp;&amp; (!shared || !shared-&gt;avail))</span><br><span class="line">        <span class="keyword">goto</span> direct_grow;  <span class="comment">// 没有空闲对象，并且 没有共享空闲对象 可分配</span></span><br><span class="line"></span><br><span class="line">    spin_lock(&amp;n-&gt;list_lock);</span><br><span class="line">    shared = READ_ONCE(n-&gt;shared);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* See if we can refill from the shared array */</span></span><br><span class="line">    <span class="keyword">if</span> (shared &amp;&amp; transfer_objects(ac, shared, batchcount)) &#123;</span><br><span class="line">        shared-&gt;touched = <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">goto</span> alloc_done;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (batchcount &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">/* Get slab alloc is to come from。*/</span></span><br><span class="line">        page = get_first_slab(n, <span class="literal">false</span>);</span><br><span class="line">        <span class="keyword">if</span> (!page)</span><br><span class="line">            <span class="keyword">goto</span> must_grow;</span><br><span class="line"></span><br><span class="line">        check_spinlock_acquired(cachep);</span><br><span class="line"></span><br><span class="line">        batchcount = alloc_block(cachep, ac, page, batchcount);</span><br><span class="line">        fixup_slab_list(cachep, n, page, &amp;<span class="built_in">list</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">must_grow:</span><br><span class="line">    n-&gt;free_objects -= ac-&gt;avail;</span><br><span class="line">alloc_done:</span><br><span class="line">    spin_unlock(&amp;n-&gt;list_lock);</span><br><span class="line">    fixup_objfreelist_debug(cachep, &amp;<span class="built_in">list</span>);</span><br><span class="line"></span><br><span class="line">direct_grow:</span><br><span class="line">    <span class="keyword">if</span> (unlikely(!ac-&gt;avail)) &#123;</span><br><span class="line">        <span class="comment">/* Check if we can use obj in pfmemalloc slab */</span></span><br><span class="line">        <span class="keyword">if</span> (sk_memalloc_socks()) &#123;</span><br><span class="line">            <span class="keyword">void</span> *obj = cache_alloc_pfmemalloc(cachep, n, flags);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (obj)</span><br><span class="line">                <span class="keyword">return</span> obj;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        page = cache_grow_begin(cachep, gfp_exact_node(flags), node);</span><br><span class="line"></span><br><span class="line">        ac = cpu_cache_get(cachep);</span><br><span class="line">        <span class="keyword">if</span> (!ac-&gt;avail &amp;&amp; page)</span><br><span class="line">            alloc_block(cachep, ac, page, batchcount);</span><br><span class="line">        cache_grow_end(cachep, page);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (!ac-&gt;avail)</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    ac-&gt;touched = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ac-&gt;entry[--ac-&gt;avail];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li><code>transfer_objects()</code>：从全局共享空闲对象中转移空闲对象到本地 CPU 空闲对象链表上</li>
+<li><code>get_first_slab()</code>: 从 slab 中获取空闲 slab</li>
+<li><code>alloc_block()</code>: 从空闲 slab 中获取 空闲对象，转移到 本地 CPU 空闲对象链表上</li>
+<li><code>cache_grow_begin()</code>：当 slab 中都没有空闲对象时，开始从 buddy 系统中获取内存</li>
+</ul>
+<p>上面描述的对象申请的过程与<code>cache_alloc_refill()</code>函数实现的功能基本是一致的。</p>
+<h1 id="继续-kmalloc-API"><a href="#继续-kmalloc-API" class="headerlink" title="继续 kmalloc API"></a>继续 kmalloc API</h1><p>了解 slab 基本原理后，我们再回头看当 kmalloc API 的处理流程。我比较关心的是<code>kmalloc</code>并没有传入 name，slab系统怎么知道选择哪个 kmem_cache？还是每个<code>_kmem_cache_</code>实例的大小都会不一样？ 因为专用的 slab 通过<code>kmem_cache_alloc()</code>函数进行内存申请。例如，在<code>kernel/fork.c</code>文件中，<code>vm_area_alloc()</code>函数的功能是申请一个<code>vm_area_struct</code>结构体实例，通过<code>vma = kmem_cache_alloc(vm_area_cachep, GFP_KERNEL);</code>来完成该过程。</p>
+<p>而<code>kmalloc()</code>只是适用于分配通用的<code>slab</code>。之前已经提到<code>kmalloc</code>会调用到<code>__do_kmalloc()</code>函数，其实现如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> __always_inline <span class="keyword">void</span> *__do_kmalloc(<span class="keyword">size_t</span> size, <span class="keyword">gfp_t</span> flags,</span><br><span class="line">                      <span class="keyword">unsigned</span> <span class="keyword">long</span> caller)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">kmem_cache</span> *<span class="title">cachep</span>;</span></span><br><span class="line">    <span class="keyword">void</span> *ret;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (unlikely(size &gt; KMALLOC_MAX_CACHE_SIZE))</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    cachep = kmalloc_slab(size, flags);</span><br><span class="line">    <span class="keyword">if</span> (unlikely(ZERO_OR_NULL_PTR(cachep)))</span><br><span class="line">        <span class="keyword">return</span> cachep;</span><br><span class="line">    ret = slab_alloc(cachep, flags, caller);</span><br><span class="line"></span><br><span class="line">    ret = kasan_kmalloc(cachep, ret, size, flags);</span><br><span class="line">    trace_kmalloc(caller, ret,</span><br><span class="line">              size, cachep-&gt;size, flags);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><code>kmalloc_slab()</code>根据申请的<code>size</code>获取到对应的<code>kmem_cache</code>。继续深入，<code>kmalloc_slab()</code>函数实现如下。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">struct kmem_cache *<span class="title">kmalloc_slab</span><span class="params">(<span class="keyword">size_t</span> size, <span class="keyword">gfp_t</span> flags)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> index;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (size &lt;= <span class="number">192</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (!size)</span><br><span class="line">            <span class="keyword">return</span> ZERO_SIZE_PTR;</span><br><span class="line"></span><br><span class="line">        index = size_index[size_index_elem(size)];</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (WARN_ON_ONCE(size &gt; KMALLOC_MAX_CACHE_SIZE))</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">        index = fls(size - <span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> kmalloc_caches[kmalloc_type(flags)][index];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>首先计算出在对应的<code>index</code>，用于索引之前介绍的全局二维数组<code>_kmalloc_caches_</code>。 流程如下：</p>
+<p>首先，对于size 小于 192B的申请，则从<code>size_index</code>中查找索引。<code>size_index_elem()</code>函数和<code>size_index</code>数组的定义如下，为了方便比对，这里再次给出<code>kmalloc_info</code>数组的前 7 个元素。通过分析可以发现，在分配小于 192 的 obj 时，会向上对齐，例如，9~16 字节的 obj 保存到 16 字节的<code>kmem_cache</code>中，65-96字节的 obj 保存到 96字节的<code>mem_cache</code>中。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> u8 size_index[<span class="number">24</span>] __ro_after_init = &#123;</span><br><span class="line">    <span class="number">3</span>,    <span class="comment">/* 8 */</span>     <span class="number">4</span>,    <span class="comment">/* 16 */</span>    <span class="number">5</span>,    <span class="comment">/* 24 */</span>    <span class="number">5</span>,    <span class="comment">/* 32 */</span>    <span class="number">6</span>,    <span class="comment">/* 40 */</span>    </span><br><span class="line">    <span class="number">6</span>,    <span class="comment">/* 48 */</span>    <span class="number">6</span>,    <span class="comment">/* 56 */</span>    <span class="number">6</span>,    <span class="comment">/* 64 */</span>    <span class="number">1</span>,    <span class="comment">/* 72 */</span>    <span class="number">1</span>,    <span class="comment">/* 80 */</span>    </span><br><span class="line">    <span class="number">1</span>,    <span class="comment">/* 88 */</span>    <span class="number">1</span>,    <span class="comment">/* 96 */</span>    <span class="number">7</span>,    <span class="comment">/* 104 */</span>    <span class="number">7</span>,    <span class="comment">/* 112 */</span>   <span class="number">7</span>,    <span class="comment">/* 120 */</span>    </span><br><span class="line">    <span class="number">7</span>,    <span class="comment">/* 128 */</span>    <span class="number">2</span>,    <span class="comment">/* 136 */</span>    <span class="number">2</span>,    <span class="comment">/* 144 */</span>    <span class="number">2</span>,    <span class="comment">/* 152 */</span>    <span class="number">2</span>,    <span class="comment">/* 160 */</span>    </span><br><span class="line">    <span class="number">2</span>,    <span class="comment">/* 168 */</span>    <span class="number">2</span>,    <span class="comment">/* 176 */</span>    <span class="number">2</span>,    <span class="comment">/* 184 */</span>   <span class="number">2</span>    <span class="comment">/* 192 */</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">unsigned</span> <span class="keyword">int</span> <span class="title">size_index_elem</span><span class="params">(<span class="keyword">unsigned</span> <span class="keyword">int</span> bytes)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> (bytes - <span class="number">1</span>) / <span class="number">8</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">kmalloc_info_struct</span> <span class="title">kmalloc_info</span>[] __<span class="title">initconst</span> = &#123;</span></span><br><span class="line">    INIT_KMALLOC_INFO(<span class="number">0</span>, <span class="number">0</span>),</span><br><span class="line">    INIT_KMALLOC_INFO(<span class="number">96</span>, <span class="number">96</span>),</span><br><span class="line">    INIT_KMALLOC_INFO(<span class="number">192</span>, <span class="number">192</span>),</span><br><span class="line">    INIT_KMALLOC_INFO(<span class="number">8</span>, <span class="number">8</span>),</span><br><span class="line">    INIT_KMALLOC_INFO(<span class="number">16</span>, <span class="number">16</span>),</span><br><span class="line">    INIT_KMALLOC_INFO(<span class="number">32</span>, <span class="number">32</span>),</span><br><span class="line">    INIT_KMALLOC_INFO(<span class="number">64</span>, <span class="number">64</span>),</span><br><span class="line">    INIT_KMALLOC_INFO(<span class="number">128</span>, <span class="number">128</span>),</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>对于高于 192 字节的 obj 分配，则调用<code>fls()</code>函数，其作用是得出 最高有效位（二进制下，最低向高位，最后一个 1的位置）。例如 fls(0) = 0, fls(1) = 1, fls(0x80000000) = 32。此处不进一步分析。</p>
+<h1 id="kfree"><a href="#kfree" class="headerlink" title="kfree"></a>kfree</h1><p>接下来简单分析一下释放通用型 slab 对象时 如何根据一个指针找到待释放的对象，并对其进行释放操作的过程。<code>kfree()</code>函数如下，根据一个指针找到待释放的对象由函数<code>virt_to_cache()</code>函数实现。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">kfree</span><span class="params">(<span class="keyword">const</span> <span class="keyword">void</span> *objp)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">kmem_cache</span> *<span class="title">c</span>;</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> flags;</span><br><span class="line"></span><br><span class="line">    trace_kfree(_RET_IP_, objp);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (unlikely(ZERO_OR_NULL_PTR(objp)))</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    local_irq_save(flags);</span><br><span class="line">    kfree_debugcheck(objp);</span><br><span class="line">    c = virt_to_cache(objp);</span><br><span class="line">    <span class="keyword">if</span> (!c) &#123;</span><br><span class="line">        local_irq_restore(flags);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    debug_check_no_locks_freed(objp, c-&gt;object_size);</span><br><span class="line"></span><br><span class="line">    debug_check_no_obj_freed(objp, c-&gt;object_size);</span><br><span class="line">    __cache_free(c, (<span class="keyword">void</span> *)objp, _RET_IP_);</span><br><span class="line">    local_irq_restore(flags);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><code>virt_to_cache()</code>函数定义在<code>mm/slab.h</code>文件中，调用<code>virt_to_head_page()</code>函数获得该虚拟地址对应的<code>page</code>描述符，然后由<code>page-&gt;slab_cache</code>反向获取到对应的<code>kmem_cache</code>。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> struct kmem_cache *<span class="title">virt_to_cache</span><span class="params">(<span class="keyword">const</span> <span class="keyword">void</span> *obj)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">page</span> *<span class="title">page</span>;</span></span><br><span class="line"></span><br><span class="line">    page = virt_to_head_page(obj);</span><br><span class="line">    <span class="keyword">if</span> (WARN_ONCE(!PageSlab(page), <span class="string">"%s: Object is not a Slab page!\n"</span>,</span><br><span class="line">                    __func__))</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    <span class="keyword">return</span> page-&gt;slab_cache;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>虚拟地址到<code>page</code>描述符的相关实现如下（include/linux/mm.h）。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> struct page *<span class="title">virt_to_head_page</span><span class="params">(<span class="keyword">const</span> <span class="keyword">void</span> *x)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">page</span> *<span class="title">page</span> = <span class="title">virt_to_page</span>(<span class="title">x</span>);</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> compound_head(page);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// arch/arm64/include/asm/memory.h</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> virt_to_page(x)        pfn_to_page(virt_to_pfn(x))</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> virt_to_pfn(x)        __phys_to_pfn(__virt_to_phys((unsigned long)(x)))</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> __virt_to_phys(x)    __virt_to_phys_nodebug(x)</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// __is_lm_address 检查是否为线性映射（linear map）</span></span><br><span class="line"><span class="comment">// 0xffff_8000_0000_0000 - 0xffff_8008_0000_0000：线性映射区域映射内存</span></span><br><span class="line"><span class="comment">// 0xffff_8000_0000_0000向下的 kernel space virtual addr 是给  kernel image 使用的[8]</span></span><br><span class="line"><span class="comment">// 这对应 __lm_to_phys 和 __kimg_to_phys 两个宏。</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> __virt_to_phys_nodebug(x) (&#123;                    \</span></span><br><span class="line">    <span class="keyword">phys_addr_t</span> __x = (<span class="keyword">phys_addr_t</span>)(__tag_reset(x));        \</span><br><span class="line">    __is_lm_address(__x) ? __lm_to_phys(__x) : __kimg_to_phys(__x);    \</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> __is_lm_address(addr)    (((u64)(addr) ^ PAGE_OFFSET) &lt; (PAGE_END - PAGE_OFFSET))</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> __lm_to_phys(addr)    (((addr) &amp; ~PAGE_OFFSET) + PHYS_OFFSET)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> __kimg_to_phys(addr)    ((addr) - kimage_voffset)</span></span><br></pre></td></tr></table></figure></p>
+<p>虚拟地址与物理地址转换的过程这里不详细介绍。</p>
+<p>继续回到<code>kfree()</code>函数，<code>virt_to_cache()</code>函数获取到了虚拟地址所对应的<code>kmem_cache</code>，接下来调用<code>__cache_free()</code>函数来释放内存。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> __always_inline <span class="keyword">void</span> __cache_free(struct kmem_cache *cachep, <span class="keyword">void</span> *objp,</span><br><span class="line">                     <span class="keyword">unsigned</span> <span class="keyword">long</span> caller)</span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">    ___cache_free(cachep, objp, caller);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> ___cache_free(struct kmem_cache *cachep, <span class="keyword">void</span> *objp,</span><br><span class="line">        <span class="keyword">unsigned</span> <span class="keyword">long</span> caller)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">array_cache</span> *<span class="title">ac</span> = <span class="title">cpu_cache_get</span>(<span class="title">cachep</span>);</span></span><br><span class="line"></span><br><span class="line">    check_irq_off();</span><br><span class="line">    <span class="keyword">if</span> (unlikely(slab_want_init_on_free(cachep)))</span><br><span class="line">        <span class="comment">// 释放时初始化对象</span></span><br><span class="line">        <span class="built_in">memset</span>(objp, <span class="number">0</span>, cachep-&gt;object_size);</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (nr_online_nodes &gt; <span class="number">1</span> &amp;&amp; cache_free_alien(cachep, objp))</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ac-&gt;avail &lt; ac-&gt;limit) &#123;</span><br><span class="line">        STATS_INC_FREEHIT(cachep);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        STATS_INC_FREEMISS(cachep);</span><br><span class="line">        cache_flusharray(cachep, ac);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (sk_memalloc_socks()) &#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">page</span> *<span class="title">page</span> = <span class="title">virt_to_head_page</span>(<span class="title">objp</span>);</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (unlikely(PageSlabPfmemalloc(page))) &#123;</span><br><span class="line">            cache_free_pfmemalloc(cachep, page, objp);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    __free_one(ac, objp);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>以上代码实现与我们之前分析的对象回收过程是一致的</p>
+<p>本地 CPU 缓存数量未超过 limit 则直接回收到本地 CPU 空闲缓存中，调用<code>__free_one()</code>函数</p>
+<p>若超过则调用<code>cache_flusharray()</code>向全局 CPU 共享空闲缓存中移动</p>
+<p><code>cache_flusharray()</code>函数首先判断是否存在全局共享缓存，若存在并且全局共享缓存空闲对象未超过限制，则向全局缓存中移动</p>
+<p>若不满足上述条件则调用<code>free_block()</code>函数向 slab 中释放空闲对象。同时根据释放情况，调整对应的<code>slab</code>到<code>slabs_free</code>或<code>slabs_partial</code>链表中。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">cache_flusharray</span><span class="params">(struct kmem_cache *cachep, struct array_cache *ac)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (n-&gt;shared) &#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">array_cache</span> *<span class="title">shared_array</span> = <span class="title">n</span>-&gt;<span class="title">shared</span>;</span></span><br><span class="line">        <span class="keyword">int</span> max = shared_array-&gt;limit - shared_array-&gt;avail;</span><br><span class="line">        <span class="keyword">if</span> (max) &#123;</span><br><span class="line">            <span class="keyword">if</span> (batchcount &gt; max)</span><br><span class="line">                batchcount = max;</span><br><span class="line">            <span class="built_in">memcpy</span>(&amp;(shared_array-&gt;entry[shared_array-&gt;avail]),</span><br><span class="line">                   ac-&gt;entry, <span class="keyword">sizeof</span>(<span class="keyword">void</span> *) * batchcount);</span><br><span class="line">            shared_array-&gt;avail += batchcount;</span><br><span class="line">            <span class="keyword">goto</span> free_done;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    free_block(cachep, ac-&gt;entry, batchcount, node, &amp;<span class="built_in">list</span>);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/11/27/编译器常用的一些优化方法/" rel="next" title="编译器常用的一些优化方法">
+                <i class="fa fa-chevron-left"></i> 编译器常用的一些优化方法
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">338</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/xiaomeihao.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#简介"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Slab-API"><span class="nav-number">2.</span> <span class="nav-text">Slab API</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#实现原理"><span class="nav-number">3.</span> <span class="nav-text">实现原理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Slab缓存建立过程"><span class="nav-number">4.</span> <span class="nav-text">Slab缓存建立过程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Slab缓存分配过程"><span class="nav-number">5.</span> <span class="nav-text">Slab缓存分配过程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#struct-array-cache-本地-CPU-空闲对象链表"><span class="nav-number">6.</span> <span class="nav-text">struct array_cache 本地 CPU 空闲对象链表</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#array-cache-填充"><span class="nav-number">7.</span> <span class="nav-text">array_cache 填充</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#继续-kmalloc-API"><span class="nav-number">8.</span> <span class="nav-text">继续 kmalloc API</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#kfree"><span class="nav-number">9.</span> <span class="nav-text">kfree</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<span id="busuanzi_container_site_uv"> 
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>

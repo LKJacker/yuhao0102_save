@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="C++,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="常量传播常量传播，就是说在编译期时，能够直接计算出结果（这个结果往往是常量）的变量，将被编译器由直接计算出的结果常量来替换这个变量。 例：12345int main(int argc,char **argv)&amp;#123;    int x = 1;    std::cout&amp;lt;&amp;lt;x&amp;lt;&amp;lt;std::endl;    return 0;&amp;#125; 上例编译器会直接用常量1替换变量">
+<meta name="keywords" content="C++">
+<meta property="og:type" content="article">
+<meta property="og:title" content="编译器常用的一些优化方法">
+<meta property="og:url" content="http://yoursite.com/2021/11/27/编译器常用的一些优化方法/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="常量传播常量传播，就是说在编译期时，能够直接计算出结果（这个结果往往是常量）的变量，将被编译器由直接计算出的结果常量来替换这个变量。 例：12345int main(int argc,char **argv)&amp;#123;    int x = 1;    std::cout&amp;lt;&amp;lt;x&amp;lt;&amp;lt;std::endl;    return 0;&amp;#125; 上例编译器会直接用常量1替换变量">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2021-11-29T02:02:11.733Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="编译器常用的一些优化方法">
+<meta name="twitter:description" content="常量传播常量传播，就是说在编译期时，能够直接计算出结果（这个结果往往是常量）的变量，将被编译器由直接计算出的结果常量来替换这个变量。 例：12345int main(int argc,char **argv)&amp;#123;    int x = 1;    std::cout&amp;lt;&amp;lt;x&amp;lt;&amp;lt;std::endl;    return 0;&amp;#125; 上例编译器会直接用常量1替换变量">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2021/11/27/编译器常用的一些优化方法/">
+
+
+
+
+
+  <title>编译器常用的一些优化方法 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/resume.pdf" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-mybetterhalf">
+          <a href="/mybetterhalf/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            mybetterhalf
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/11/27/编译器常用的一些优化方法/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">编译器常用的一些优化方法</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-11-27T20:08:00+08:00">
+                2021-11-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="常量传播"><a href="#常量传播" class="headerlink" title="常量传播"></a>常量传播</h1><p>常量传播，就是说在编译期时，能够直接计算出结果（这个结果往往是常量）的变量，将被编译器由直接计算出的结果常量来替换这个变量。</p>
+<p>例：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc,<span class="keyword">char</span> **argv)</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> x = <span class="number">1</span>;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span>&lt;&lt;x&lt;&lt;<span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>上例编译器会直接用常量1替换变量x，优化成：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc,<span class="keyword">char</span> **argv)</span></span>&#123;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span>&lt;&lt;<span class="number">1</span>&lt;&lt;<span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="常量折叠"><a href="#常量折叠" class="headerlink" title="常量折叠"></a>常量折叠</h1><p>常量折叠，就是说在编译期间，如果有可能，多个变量的计算可以最终替换为一个变量的计算，通常是多个变量的多级冗余计算被替换为一个变量的一级计算</p>
+<p>例：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc,<span class="keyword">char</span> **argv)</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> a = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">int</span> b = <span class="number">2</span>;</span><br><span class="line">    <span class="keyword">int</span> x = a + b;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span>&lt;&lt;x&lt;&lt;<span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>常量折叠优化后：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc,<span class="keyword">char</span> **argv)</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> x = <span class="number">1</span> + <span class="number">2</span>;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span>&lt;&lt;x&lt;&lt;<span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>当然，可以再进行进一步的常量替换优化：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc,<span class="keyword">char</span> **argv)</span></span>&#123;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span>&lt;&lt;<span class="number">3</span>&lt;&lt;<span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>通常，编译优化是一件综合且连贯一致的复杂事情，下文就不再赘述了。</p>
+<h1 id="复写传播"><a href="#复写传播" class="headerlink" title="复写传播"></a>复写传播</h1><p>复写传播，就是编译器用一个变量替换两个或多个相同的变量。</p>
+<p>例：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc,<span class="keyword">char</span> **argv)</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> y = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">int</span> x = y;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span>&lt;&lt;x&lt;&lt;<span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>优化后：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc,<span class="keyword">char</span> **argv)</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> x = <span class="number">1</span>;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span>&lt;&lt;x&lt;&lt;<span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>上例有两个变量y和x，但是其实是两个相同的变量，并且其它地方并未区分它们两个，所以它们是重复的，可称为“复写”，编译器可以将其优化，将x“传播”给y，只剩下一个变量x，当然，反过来优化掉x只剩下一个y也是可以的。</p>
+<h1 id="公共子表式消除"><a href="#公共子表式消除" class="headerlink" title="公共子表式消除"></a>公共子表式消除</h1><p>公共子表达式消除是说，如果一个表达式E已经计算过了，并且从先前的计算到现在的E中的变量都没有发生变化，那么E的此次出现就成为了公共子表达式，因此，编译器可判断其不需要再次进行计算浪费性能。</p>
+<p>例：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc,<span class="keyword">char</span> **argv)</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> a = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">int</span> b = <span class="number">2</span>;</span><br><span class="line">    <span class="keyword">int</span> x = （a+b) * <span class="number">2</span> + (b+a) * <span class="number">6</span>;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span>&lt;&lt;x&lt;&lt;<span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>优化后：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc,<span class="keyword">char</span> **argv)</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> a = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">int</span> b = <span class="number">2</span>;</span><br><span class="line">    <span class="keyword">int</span> E = a + b;</span><br><span class="line">    <span class="keyword">int</span> x = E * <span class="number">2</span> + E * <span class="number">6</span>;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span>&lt;&lt;x&lt;&lt;<span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>当然，也有可能会直接变成：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc,<span class="keyword">char</span> **argv)</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> a = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">int</span> b = <span class="number">2</span>;</span><br><span class="line">    <span class="keyword">int</span> E = a + b;</span><br><span class="line">    <span class="keyword">int</span> x = E * <span class="number">8</span>;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span>&lt;&lt;x&lt;&lt;<span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="无用代码消除"><a href="#无用代码消除" class="headerlink" title="无用代码消除"></a>无用代码消除</h1><p>无用代码消除指的是永远不能被执行到的代码或者没有任何意义的代码会被清除掉，比如return之后的语句，变量自己给自己赋值等等。</p>
+<p>例：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc,<span class="keyword">char</span> **argv)</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> x = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">int</span> x = x;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span>&lt;&lt;x&lt;&lt;<span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>上例中，x变量自我赋值显然是无用代码，将会被优化掉：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc,<span class="keyword">char</span> **argv)</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> x = <span class="number">1</span>;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span>&lt;&lt;x&lt;&lt;<span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="数组范围检查消除"><a href="#数组范围检查消除" class="headerlink" title="数组范围检查消除"></a>数组范围检查消除</h1><p>如果开发语言是Java这种动态类型安全型的，那在访问数组时比如<code>array[ ]</code>时，Java不会像C/C++那样只是纯粹的裸指针访问，而是会在运行时访问数组元素前进行一次是否越界检查，这将会带来许多开销，如果即时编译器能根据数据流分析出变量的取值范围在<code>[0,array.length]</code>之间，那么在循环期间就可以把数组的上下边界检查消除，以减少不必要的性能损耗。</p>
+<h1 id="方法内联"><a href="#方法内联" class="headerlink" title="方法内联"></a>方法内联</h1><p>这种优化方法是将比较简短的函数或者方法代码直接粘贴到其调用者中，以减少函数调用时的开销，比较重要且常用，很容易理解，就比如C++的inline关键字一样，只不过inline是开发者的手动方法内联，而编译器在分析代码和数据流之后，也有可能做出自动inline的优化。</p>
+<h1 id="逃逸分析"><a href="#逃逸分析" class="headerlink" title="逃逸分析"></a>逃逸分析</h1><p>一个对象如果被其声明的方法之外的一个或多个函数所引用，那就被称为逃逸，可以通俗理解为，该对象逃逸了其原本的命名空间或者作用域，使得声明（或者定义）该对象的方法结束时，该对象不能被销毁。</p>
+<p>通常，一个函数里的局部变量其内存空间是在栈上分配的，而对象则是在堆上分配的内存空间，在函数调用结束时，局部变量会随着栈空间销毁而自动销毁，但堆上的空间要么是依赖类似JVM的垃圾内存自动回收机制（GC），要么就得像C/C++那样的依赖开发者本身的记忆力，因此，堆上的内存分配与销毁一般开销会比栈上的大得多。</p>
+<p>逃逸分析的基本原理就是分析对象动态作用域。如果确定一个方法不会逃逸出方法之外，那让整个对象在栈上分配内存将会是一个很不错的主意，对象所占用的内存空间就可以随栈帧而销毁。在一般应用中，不会逃逸的局部对象所占用的比例很大，如果能在编译器优化时，为其在栈上分配内存空间，那大量的对象就会随着方法结束而自动销毁了，不用依赖前面讲的GC或者记忆力，系统的压力将会小很多。</p>
+<h1 id="一个演示简单编译器循环优化的例子"><a href="#一个演示简单编译器循环优化的例子" class="headerlink" title="一个演示简单编译器循环优化的例子"></a>一个演示简单编译器循环优化的例子</h1><h2 id="演示用的代码例子"><a href="#演示用的代码例子" class="headerlink" title="演示用的代码例子"></a>演示用的代码例子</h2><p>先来看用于演示的C代码例子：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdint.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">uint32_t</span> gLastI;</span><br><span class="line"></span><br><span class="line"><span class="keyword">uint32_t</span> foo(<span class="keyword">uint32_t</span> lo, <span class="keyword">uint32_t</span> hi) &#123;</span><br><span class="line">  <span class="keyword">uint32_t</span> sum = <span class="number">0</span>;                     <span class="comment">// (1)</span></span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">uint32_t</span> i = lo; i &lt; hi; i++) &#123;  <span class="comment">// (2)</span></span><br><span class="line">    <span class="keyword">uint32_t</span> y = <span class="number">2</span> * i;                 <span class="comment">// (3)</span></span><br><span class="line">    <span class="keyword">if</span> ((hi &amp; <span class="number">1</span>) == <span class="number">0</span>) &#123;                <span class="comment">// (4)</span></span><br><span class="line">      sum += i;                         <span class="comment">// (5)</span></span><br><span class="line">      gLastI = i;                       <span class="comment">// (6)</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      sum += y;                         <span class="comment">// (7)</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> sum;                           <span class="comment">// (8)</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>挺简单的函数。有啥好优化的呢？——对于不熟悉编译原理的同学来说，最可能让他们意外的可能就是优化后代码的顺序与原程序的巨大差异。</p>
+<p>ICC 17在Linux/x86-64上在-O3优化级别会把这个例子优化为等价于下面的形式：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">uint32_t</span> foo(<span class="keyword">uint32_t</span> lo, <span class="keyword">uint32_t</span> hi) &#123;</span><br><span class="line">  <span class="keyword">uint32_t</span> sum = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">if</span> (lo &lt; hi) &#123;</span><br><span class="line">    <span class="keyword">uint32_t</span> n = hi - lo;</span><br><span class="line">    <span class="keyword">if</span> ((hi &amp; <span class="number">1</span>) != <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="keyword">for</span> (<span class="keyword">uint32_t</span> i = <span class="number">0</span>; i &lt; n; i++) &#123;</span><br><span class="line">        sum += lo * <span class="number">2</span>; <span class="comment">// folded into lea</span></span><br><span class="line">        sum += i * <span class="number">2</span>;  <span class="comment">// folded into lea</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">uint32_t</span> last_i;</span><br><span class="line">      <span class="keyword">for</span> (<span class="keyword">uint32_t</span> i = <span class="number">0</span>; i &lt; n; i++) &#123;</span><br><span class="line">        sum += lo;</span><br><span class="line">        last_i = lo;</span><br><span class="line">        lo++;</span><br><span class="line">      &#125;</span><br><span class="line">      gLastI = last_i;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> sum;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>实际生成的汇编长这样：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">foo:</span><br><span class="line">        mov       edx, esi                                      #5.35</span><br><span class="line">        xor       eax, eax                                      #6.11</span><br><span class="line">        cmp       edi, edx                                      #7.29</span><br><span class="line">        jae       ..B1.9        # Prob 50%                      #7.29</span><br><span class="line">        mov       esi, edx                                      #5.35</span><br><span class="line">        mov       ecx, eax                                      #7.3</span><br><span class="line">        sub       esi, edi                                      #5.35</span><br><span class="line">        test      dl, 1                                         #9.15</span><br><span class="line">        je        ..B1.7        # Prob 50%                      #9.21</span><br><span class="line">..B1.4:                         # Preds ..B1.2 ..B1.4</span><br><span class="line">        lea       eax, DWORD PTR [rax+rdi*2]                    #7.3</span><br><span class="line">        lea       eax, DWORD PTR [rax+rcx*2]                    #8.17</span><br><span class="line">        inc       ecx                                           #7.3</span><br><span class="line">        cmp       ecx, esi                                      #7.3</span><br><span class="line">        jb        ..B1.4        # Prob 82%                      #7.3</span><br><span class="line">        jmp       ..B1.9        # Prob 100%                     #7.3</span><br><span class="line">..B1.7:                         # Preds ..B1.2 ..B1.7</span><br><span class="line">        inc       ecx                                           #7.3</span><br><span class="line">        add       eax, edi                                      #10.7</span><br><span class="line">        mov       edx, edi                                      #11.7</span><br><span class="line">        inc       edi                                           #7.3</span><br><span class="line">        cmp       ecx, esi                                      #7.3</span><br><span class="line">        jb        ..B1.7        # Prob 82%                      #7.3</span><br><span class="line">        mov       DWORD PTR gLastI[rip], edx                    #11.7</span><br><span class="line">..B1.9:                         # Preds ..B1.4 ..B1.8 ..B1.1</span><br><span class="line">        ret                                                     #16.10</span><br></pre></td></tr></table></figure></p>
+<p>它为什么可以这样做？下面就让我简单科普一下。</p>
+<p>编译器在优化代码的时候，只要保证最终的结果满足程序中各种依赖关系就可以了，而不必总是维持跟输入的源码相同的顺序（“program order”）。不过这个传送门中涉及的例子非常简单，只有纯直线代码，没有跳转 / 条件跳转，也没有对内存的读写，所以只要用“数据依赖”（data dependence）就足以讲解了。</p>
+<p>而本文所用的例子则稍微复杂一点，可以涉及稍微多一些的优化的讲解。</p>
+<p>首先在(2)开始有一个典型的for循环，在(4)有一个条件分支；这两个都是控制流操作，使这个例子涉及“控制依赖”（control dependence）。然后在(6)有一个对全局变量gLastI的写操作，这是一个内存写操作，使这个例子涉及“内存依赖”（memory dependence）——或者说正好演示了冗余写操作的情况。</p>
+<h2 id="副作用？"><a href="#副作用？" class="headerlink" title="副作用？"></a>副作用？</h2><p>对编译器中的优化器来说，所谓“副作用”就是在当前编译单元中无法做足够分析的运算结果。这跟上层的源语言中所说的“副作用”并不总是一回事。所以当看到对程序中的副作用的讨论时，要注意清楚讨论的上下文是什么，免得误解了对方的意思。</p>
+<p>例如说，对编译器中端的优化器来说，C语言的一个标量类型的局部变量，如果它在整个函数中都没有被取过地址，那么所有对它自身的读写运算都可以认为是“无副作用”的。这是因为这些变量是活动记录（activation record，或者说栈帧）的一部分，而一个函数被调用一次的活动记录里的内容都是这次调用独享访问的，除非程序主动通过取局部变量地址的方式来暴露出机会让别的代码能操作这些局部变量。这样编译器的优化器就可以对其做足够分析，将它们涉及的副作用都分析出来，并转换为没有副作用的形式。</p>
+<p>而对原本的C语言来说，一般会把对局部变量的赋值（写）运算叫做“有副作用”的。</p>
+<p>这个差异主要是来自编译器各部分的分工，以及优化器对程序的分析能力。</p>
+<p>回顾一下一个典型的带优化的编译器的工作流程：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">    源代码</span><br><span class="line">-&gt; [ 词法分析 ]</span><br><span class="line">-&gt;  单词流</span><br><span class="line">-&gt; [ 语法分析 ]</span><br><span class="line">-&gt;  语法树 / 抽象语法树           编译器前端</span><br><span class="line">-&gt; [ 语义分析 ]</span><br><span class="line">-&gt;  带标注的语法树</span><br><span class="line">-&gt; [ 中间代码生成 ]</span><br><span class="line">-&gt;  中间代码              -------------------------</span><br><span class="line">-&gt; [ 平台无关优化 ]</span><br><span class="line">-&gt;  优化的中间代码                编译器中端</span><br><span class="line">-&gt; [ 平台相关lowering ]</span><br><span class="line">-&gt;  平台相关中间代码       --------------------------</span><br><span class="line">-&gt; [ 平台相关优化 ]</span><br><span class="line">-&gt;  优化的平台相关中间代码         编译器后端</span><br><span class="line">-&gt; [ 代码生成 ]</span><br><span class="line">-&gt; 目标代码</span><br></pre></td></tr></table></figure></p>
+<p>在这个流程中，编译器前端更关心源语言的语义，后端更关心目标平台的特性，而位于中间的中端则主要关心相对不那么语言相关、也不那么平台相关的优化。</p>
+<p>当我们讨论源语言层面上的“副作用”，编译器前端的“语义分析”部分是必须要能正确理解这些副作用的含义（并在副作用不合理时给出警告）。然后在“中间代码生成”的部分，这些“副作用”会在中间表示中用更显式的方式表现出来，于是到编译器中端拿到中间表示的时候，就不用关心这些源语言层面的副作用了。</p>
+<p>例如说，一个经典的不好的C代码：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">foo</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  <span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">int</span> j = i + i++;</span><br><span class="line">  <span class="keyword">return</span> j;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在<code>i + i++</code>的地方有一个纯粹的对局部变量i的读操作，以及一个带有副作用（自增）的对局部变量i的读写操作，而这两个操作之间没有sequence point所以它们俩的求值顺序是未定义的。</p>
+<p>在Clang中，语义分析的部分会对这个情况给出警告：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">foo.c:3:16: warning: unsequenced modification and access to &apos;i&apos; [-Wunsequenced]</span><br><span class="line">  int j = i + i++;</span><br><span class="line">          ~    ^</span><br></pre></td></tr></table></figure></p>
+<p>然后Clang在生成中间代码（LLVM IR）时，会根据自己的理解选择一种求值顺序——后做i++，生成出每个操作都简单明确的中间代码，然后编译器中端（LLVM）在拿到LLVM IR之后就能根据代码的顺序准确地理解前端所做的选择：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">; Function Attrs: nounwind</span><br><span class="line">define i32 @foo() #0 &#123;</span><br><span class="line">  %i = alloca i32, align 4           ; int i</span><br><span class="line">  %j = alloca i32, align 4           ; int j</span><br><span class="line">  store i32 0, i32* %i, align 4      ; i = 0</span><br><span class="line">  %3 = load i32, i32* %i, align 4    ; tmp3 = i</span><br><span class="line">  %4 = load i32, i32* %i, align 4    ; tmp4 = i</span><br><span class="line">  %5 = add nsw i32 %4, 1             ; tmp5 = tmp4 + 1</span><br><span class="line">  store i32 %5, i32* %i, align 4     ; i = tmp5</span><br><span class="line">  %6 = add nsw i32 %3, %4            ; tmp6 = tmp3 + tmp4</span><br><span class="line">  store i32 %6, i32* %j, align 4     ; j = tmp6</span><br><span class="line">  %7 = load i32, i32* %j, align 4    ; tmp7 = j</span><br><span class="line">  ret i32 %7                         ; return tmp7</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>也就是Clang选择拆解副作用的方式，对应这样的C代码：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">foo</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  <span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">int</span> j = i + i;</span><br><span class="line">  i = i + <span class="number">1</span>;     <span class="comment">// side-effect of i++</span></span><br><span class="line">  <span class="keyword">return</span> j;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>可以看到这里生成的LLVM IR还是“有副作用”的——那3条store指令就是“副作用”。但是LLVM可以对所有没有被取地址的标量类型的局部变量都可以做完全的分析——可以找到所有对这些局部变量的读写操作并分析其中的副作用的效果——然后将IR转换到对这些局部变量来说没有副作用的形式。</p>
+<p>例如说对上述LLVM IR跑一次mem2reg pass（或者包含mem2reg的sroa pass），会得到：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">; Function Attrs: nounwind</span><br><span class="line">define i32 @foo() #0 &#123;</span><br><span class="line">  %1 = add nsw i32 0, 1              ; tmp1 = 0 + 1</span><br><span class="line">  %2 = add nsw i32 0, 0              ; tmp2 = 0 + 0</span><br><span class="line">  ret i32 %2                         ; return tmp2</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这里就没有任何副作用了，只有对局部值的简单运算。进一步做常量折叠和无用代码消除之后，就只剩下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">; Function Attrs: nounwind</span><br><span class="line">define i32 @foo() #0 &#123;</span><br><span class="line">  ret i32 0                          ; return 0</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>了。</p>
+<p>同一个例子用GCC 4.9.2来看编译器前端的理解（生成的GIMPLE）：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">foo ()</span><br><span class="line">&#123;</span><br><span class="line">    int i.0;</span><br><span class="line">    int D.1748;</span><br><span class="line">    int i;</span><br><span class="line">    int j;</span><br><span class="line"></span><br><span class="line">    i = 0;</span><br><span class="line">    i.0 = i;</span><br><span class="line">    i = i.0 + 1;      // side-effect of i++</span><br><span class="line">    j = i.0 + i;</span><br><span class="line">    D.1748 = j;</span><br><span class="line">    return D.1748;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这GCC选择的求值顺序就跟Clang正好相反，先做了i++。</p>
+<p>然后中端在分析完局部变量涉及的副作用之后，所生成的无副作用的中间代码（Tree SSA形式的GIMPLE）：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">foo ()</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">int</span> j;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">int</span> D<span class="number">.1748</span>;</span><br><span class="line">    <span class="keyword">int</span> i<span class="number">.0</span>;</span><br><span class="line">    <span class="keyword">int</span> i<span class="number">.0</span>_2;</span><br><span class="line">    <span class="keyword">int</span> _5;</span><br><span class="line"></span><br><span class="line">    &lt;bb <span class="number">2</span>&gt;:</span><br><span class="line">    i_1 = <span class="number">0</span>;</span><br><span class="line">    i<span class="number">.0</span>_2 = i_1;</span><br><span class="line">    i_3 = i<span class="number">.0</span>_2 + <span class="number">1</span>;</span><br><span class="line">    j_4 = i<span class="number">.0</span>_2 + i_3;</span><br><span class="line">    _5 = j_4;</span><br><span class="line"></span><br><span class="line">&lt;L0&gt;:</span><br><span class="line">    <span class="keyword">return</span> _5;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>每个局部变量最多被赋值一次，从赋值到使用直接不用考虑别的副作用影响该变量的值，所以说“没有副作用”。</p>
+<h2 id="副作用与控制依赖"><a href="#副作用与控制依赖" class="headerlink" title="副作用与控制依赖"></a>副作用与控制依赖</h2><p>先说结论：没有副作用的运算可以无视控制依赖，只要满足数据依赖即可执行。</p>
+<p>什么是控制依赖？控制依赖是说，某个运算Y的执行与否，依赖于某个带有控制流语义的运算X的结果。</p>
+<p>例如说，<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">foo</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b, <span class="keyword">int</span> cond)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> c = b + <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">int</span> x = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span> (cond) &#123;</span><br><span class="line">        x = a + c;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> x;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这个例子里，<code>x = a + c</code>就控制依赖于”if (cond)”的运算结果，只有当cond为真值的时候，<code>x = a + c</code>才执行。</p>
+<p>但是”a + c”是一个没有副作用的运算，它其实放在<code>foo()</code>中的什么位置执行都可以——只要它所依赖的数据输入a和c都已经求好值了即可——而不必依赖于”if (cond)”的结果。这跟本文开头提到的传送门里“数据依赖”的例子一样。</p>
+<p>所以把上述代码的a + c提取到if外面，转换成下面这样也是一样的：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">foo</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b, <span class="keyword">int</span> cond)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">int</span> c = b + <span class="number">1</span>;</span><br><span class="line">  <span class="keyword">int</span> x = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">int</span> tmp = a + c;</span><br><span class="line">  <span class="keyword">if</span> (cond) &#123;</span><br><span class="line">    x = tmp;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> x;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>又或者再向前挪一点：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">foo</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b, <span class="keyword">int</span> cond)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">int</span> c = b + <span class="number">1</span>;</span><br><span class="line">  <span class="keyword">int</span> tmp = a + c;</span><br><span class="line">  <span class="keyword">int</span> x = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">if</span> (cond) &#123;</span><br><span class="line">    x = tmp;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> x;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>也可以。</p>
+<p>那么”x = “的部分呢？这个赋值会根据”if (cond)”的结果而影响局部变量x的值，所以要先看作有控制依赖的有副作用的操作，分析清楚之后再转换到无副作用的形式。</p>
+<p>但是所谓“无副作用”的形式要如何表达一个变量可能经由不同的分支执行后得到不同的值呢？一种办法是SSA形式的“phi”伪函数。让我们把这个例子转成SSA形式来看：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">foo</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b, <span class="keyword">int</span> cond)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">int</span> c = b + <span class="number">1</span>;</span><br><span class="line">  <span class="keyword">int</span> x0 = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">if</span> (cond) <span class="keyword">goto</span> condtrue; <span class="keyword">else</span> <span class="keyword">goto</span> condfalse;</span><br><span class="line"></span><br><span class="line">condtrue:</span><br><span class="line">  <span class="keyword">int</span> x1 = a + c;</span><br><span class="line">  <span class="keyword">goto</span> aftercond;</span><br><span class="line"></span><br><span class="line">condfalse:</span><br><span class="line">  <span class="keyword">goto</span> aftercond;</span><br><span class="line"></span><br><span class="line">aftercond:</span><br><span class="line">  <span class="keyword">int</span> x2 = phi(condfalse x0, condtrue x1);</span><br><span class="line">  <span class="keyword">return</span> x2;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这个“phi”伪函数会显式指明“如果控制来自某个分支，则选用某个值”。这就把副作用与控制依赖显式结合在一起表达出来了。</p>
+<p>回到本文开头的例子，位于(3)的”2 * i”是一个无副作用的运算，所以它的运算位置可以被移动。例如说它可以被向下移动（sink），到真正使用它的地方，变成：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdint.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">uint32_t</span> gLastI;</span><br><span class="line"></span><br><span class="line"><span class="keyword">uint32_t</span> foo(<span class="keyword">uint32_t</span> lo, <span class="keyword">uint32_t</span> hi) &#123;</span><br><span class="line">  <span class="keyword">uint32_t</span> sum = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">uint32_t</span> i = lo; i &lt; hi; i++) &#123;</span><br><span class="line">    <span class="keyword">if</span> ((hi &amp; <span class="number">1</span>) == <span class="number">0</span>) &#123;</span><br><span class="line">      sum += i;</span><br><span class="line">      gLastI = i;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">uint32_t</span> y = <span class="number">2</span> * i;</span><br><span class="line">      sum += y;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> sum;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="循环不变量与循环不变量外提（LICM）"><a href="#循环不变量与循环不变量外提（LICM）" class="headerlink" title="循环不变量与循环不变量外提（LICM）"></a>循环不变量与循环不变量外提（LICM）</h2><p>就跟上一节提到的思路一样，如果通过分析可以发现在循环中有运算的值不受循环的影响，那么就可以把它提升到循环的外面。这种优化叫做循环不变量外提（LICM，loop-invariant code motion）。</p>
+<p>以本文开头的例子来说，通过分析可以发现从(2)开始的for循环，在循环体中没有对变量<code>hi</code>赋过值，所以<code>hi</code>的值在循环内不会改变。递推出去，<code>hi &amp; 1</code>是一个无副作用的运算，它的值在循环中也不会改变。同理<code>(hi &amp; 1) == 0</code>的值在循环中也不会改变。</p>
+<p>所以这个例子就可以把(4)的条件运算提取到循环外面，变成（在上一节的基础上）:<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdint.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">uint32_t</span> gLastI;</span><br><span class="line"></span><br><span class="line"><span class="keyword">uint32_t</span> foo(<span class="keyword">uint32_t</span> lo, <span class="keyword">uint32_t</span> hi) &#123;</span><br><span class="line">  <span class="keyword">uint32_t</span> sum = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">_Bool</span> tmpcond = (hi &amp; <span class="number">1</span>) == <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">uint32_t</span> i = lo; i &lt; hi; i++) &#123;</span><br><span class="line">    <span class="keyword">if</span> (tmpcond) &#123;</span><br><span class="line">      sum += i;</span><br><span class="line">      gLastI = i;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">uint32_t</span> y = <span class="number">2</span> * i;</span><br><span class="line">      sum += y;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> sum;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="循环判断外提（loop-unswitching）"><a href="#循环判断外提（loop-unswitching）" class="headerlink" title="循环判断外提（loop unswitching）"></a>循环判断外提（loop unswitching）</h2><p>作为LICM的一种扩展，如果我们发现循环里有条件是对循环不变量来做判断的，那么就可以选择把这个判断提升到循环的外面 ，并且把原循环拆分为两个特化的版本，分别对应条件为真以及为假的情况。</p>
+<p>这样每个版本的循环都会比原本的更简单，而假定循环是耗时的操作，是我们要有针对性优化的目标，把循环拆分成特化的版本后就可以减小循环的开销。</p>
+<p>还是回到本文开头的例子，在上一节版本的基础上，可以进一步变换为：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdint.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">uint32_t</span> gLastI;</span><br><span class="line"></span><br><span class="line"><span class="keyword">uint32_t</span> foo(<span class="keyword">uint32_t</span> lo, <span class="keyword">uint32_t</span> hi) &#123;</span><br><span class="line">  <span class="keyword">uint32_t</span> sum = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">if</span> ((hi &amp; <span class="number">1</span>) == <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">uint32_t</span> i = lo; i &lt; hi; i++) &#123;</span><br><span class="line">      sum += i;</span><br><span class="line">      gLastI = i;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">uint32_t</span> i = lo; i &lt; hi; i++) &#123;</span><br><span class="line">      <span class="keyword">uint32_t</span> y = <span class="number">2</span> * i;</span><br><span class="line">      sum += y;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> sum;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>跟开头演示的优化后的结果是不是越来越相似了？</p>
+<h2 id="内存写的下沉（store-sinking）"><a href="#内存写的下沉（store-sinking）" class="headerlink" title="内存写的下沉（store sinking）"></a>内存写的下沉（store sinking）</h2><p>嗯这个读起来有点怪。简单来说就是如果有连续多次对同一个位置的内存写操作，那么只有最后一个才是有意义的，前面那些只要没被用到都是无意义的，可以消除。所以这种优化也叫做“冗余内存写消除”（redundant store elimination）。</p>
+<p>应用到循环中，如果我们在循环体中不断对某个位于内存中的变量做赋值，但却没有在循环中使用过这个赋值的结果，那么这个赋值就没有意义，可以被消除。</p>
+<p>例如说：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">3</span>; i++) &#123;</span><br><span class="line">  globalVariable = i;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>全局变量<code>globalVariable</code>的实体必须要被分配在内存中，所以对它的赋值是一个内存写操作（memory store）。如果我们分析一下循环的执行过程 ，就会发现这个例子实际上会执行3次对<code>globalVariable</code>的赋值：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">globalVariable = <span class="number">0</span></span><br><span class="line">globalVariable = <span class="number">1</span></span><br><span class="line">globalVariable = <span class="number">2</span></span><br></pre></td></tr></table></figure></p>
+<p>但在这个循环中其实并没有用到这些赋值的结果，而在循环结束时需要给外界留下的副作用只需要是<code>globalVariable = 2</code>。所以我们可以把这个内存写操作“下沉”（sink）到循环的后面去，变成：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">3</span>; i++) &#123;</span><br><span class="line">  <span class="comment">/* empty loop body */</span></span><br><span class="line">&#125;</span><br><span class="line">globalVariable = <span class="number">2</span>; <span class="comment">// constant-folded condition: if (0 &lt; 3)</span></span><br></pre></td></tr></table></figure></p>
+<p>或者稍微没那么优化的版本：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> i;</span><br><span class="line"><span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; <span class="number">3</span>; i++) &#123;</span><br><span class="line">  <span class="comment">/* empty loop body */</span></span><br><span class="line">&#125;</span><br><span class="line">globalVariable = i - <span class="number">1</span>; <span class="comment">// constant-folded condition: if (0 &lt; 3)</span></span><br></pre></td></tr></table></figure></p>
+<p>但要注意的是：一个for循环其实是有可能一次也不执行的，所以在循环体里的赋值如果被下沉到循环后面的话，要保证该循环至少执行过一次才正确。</p>
+<p>回到本文开头的例子，在上一节版本的基础上，把(6)对全局变量<code>gLastI</code>的赋值下沉到循环后面，可以变换成：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdint.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">uint32_t</span> gLastI;</span><br><span class="line"></span><br><span class="line"><span class="keyword">uint32_t</span> foo(<span class="keyword">uint32_t</span> lo, <span class="keyword">uint32_t</span> hi) &#123;</span><br><span class="line">  <span class="keyword">uint32_t</span> sum = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">if</span> (lo &lt; hi) &#123;</span><br><span class="line">    <span class="keyword">if</span> ((hi &amp; <span class="number">1</span>) == <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="keyword">for</span> (<span class="keyword">uint32_t</span> i = lo; i &lt; hi; i++) &#123;</span><br><span class="line">        sum += i;</span><br><span class="line">      &#125;</span><br><span class="line">      gLastI = hi - <span class="number">1</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">for</span> (<span class="keyword">uint32_t</span> i = lo; i &lt; hi; i++) &#123;</span><br><span class="line">        <span class="keyword">uint32_t</span> y = <span class="number">2</span> * i;</span><br><span class="line">        sum += y;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> sum;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>具体到ICC所选用的优化形式，它没能彻底优化掉循环中的运算，不过至少在循环中用一个局部变量来替代了全局变量作为赋值的目标，然后在循环之后才做最终的内存写操作：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">uint32_t</span> last_i;</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">uint32_t</span> i = lo; i &lt; hi; i++) &#123;</span><br><span class="line">  sum += i;</span><br><span class="line">  last_i = i;</span><br><span class="line">&#125;</span><br><span class="line">gLastI = last_i;</span><br></pre></td></tr></table></figure></p>
+<p>这仍然算是store sinking——局部变量可以被分配到寄存器里，对局部变量的赋值就不会内存写了，所以还是比对全局变量的赋值更快。</p>
+<p>经过store sinking优化后，代码的形式已经跟ICC优化的结果非常相似了。</p>
+<h2 id="循环归纳变量优化（loop-induction-variable-optimizations）"><a href="#循环归纳变量优化（loop-induction-variable-optimizations）" class="headerlink" title="循环归纳变量优化（loop induction variable optimizations）"></a>循环归纳变量优化（loop induction variable optimizations）</h2><p>本文开头所给出的ICC优化后的版本，剩下的一些优化是跟循环归纳变量相关的。所谓“循环归纳变量”，就是值与循环轮次成线性关系的变量。</p>
+<p>例如说最典型的for循环：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; max; i++) &#123;</span><br><span class="line">  <span class="keyword">int</span> x = arr[i + <span class="number">2</span>];</span><br><span class="line">  <span class="comment">/* ... */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>局部变量i就是一个循环归纳变量，它的值跟循环轮次正好相等。我们可以分析出这个变量i的性质为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">init = 0</span><br><span class="line">limit = max</span><br><span class="line">cmp = &lt;</span><br><span class="line">step = 1</span><br></pre></td></tr></table></figure></p>
+<p>而表达式<code>i + 2</code>的值也是跟循环轮次成线性关系的，关系为<code>1 * i + 2</code>。于是这个表达式的性质就可以从变量i推算出来。</p>
+<p>GCC与Clang对循环归纳变量的分析与优化叫做“Scalar evolutions”（简称SCEV）。</p>
+<p>事实上，既然这是一个等差数列求和的例子，比例子中ICC编译结果更简短的形式应该是这样的：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdint.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">uint32_t</span> gLastI;</span><br><span class="line"></span><br><span class="line"><span class="keyword">uint32_t</span> foo(<span class="keyword">uint32_t</span> lo, <span class="keyword">uint32_t</span> hi) &#123;</span><br><span class="line">  <span class="keyword">if</span> (lo &lt; hi) &#123;</span><br><span class="line">    <span class="keyword">uint32_t</span> n = hi - lo;</span><br><span class="line">    <span class="keyword">if</span> ((hi &amp; <span class="number">1</span>) == <span class="number">0</span>) &#123;</span><br><span class="line">      gLastI = hi - <span class="number">1</span>;</span><br><span class="line">      <span class="keyword">return</span> (lo &amp; <span class="number">1</span>) == <span class="number">0</span> ? (n &gt;&gt; <span class="number">1</span>) * (lo + hi - <span class="number">1</span>)</span><br><span class="line">                           : ((lo + hi - <span class="number">1</span>) &gt;&gt; <span class="number">1</span>) * n;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> (lo + hi - <span class="number">1</span>) * n;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>直接连循环都不要了。</p>
+<p>把非常量的循环加法变换为非循环的乘法形式是实际编译器实现中比较少见的做法。更常见的反过来的优化：“强度削减”（strength reduction），把本来是乘法的运算变成加法，之类。</p>
+<h1 id="英特尔多核平台编程优化大赛报告"><a href="#英特尔多核平台编程优化大赛报告" class="headerlink" title="英特尔多核平台编程优化大赛报告"></a>英特尔多核平台编程优化大赛报告</h1><p>代码优化前所需时间：4.765秒</p>
+<p>代码优化后所需时间：0.25秒（保留小数点后7位精度）</p>
+<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>本次优化使用的CPU是Intel Xeon 5130，主频为2.0GHz，同Intel酷睿2一样是基于Core Microarchitecture 的双核处理器。本次优化在Intel的工具帮助下主要针对Core Microarchitecture 系列处理器进行优化。但是由于未知原因，Intel VTune Analyzers并不能在该系统下正常工作。所以，所有使用Intel VTune Analyzers的测试均使用另外一个奔腾D 820的系统测试。</p>
+<p>第一章主要介绍了程序的串行优化。其中有关于Intel编译器使用，以及Intel Math Kernel Library使用，Intel VTune Analyzers使用的介绍。在借助Intel工具的帮助下，结合Intel Core Microarchitectured的特性。设计出了针对L1 Cache进行优化的，高效率的串行代码。程序的执行时间从优化前的4.765秒达到了优化后的0.765秒。</p>
+<p>第二章主要介绍了程序的并行化。首先讨论了2种并行算法的优缺点。然后选择了适合本程序的并行算法进行优化。并且在最后分析了并行化时的性能瓶颈。通过并行化，程序达到了0.437秒。</p>
+<p>第三章主要介绍了程序的汇编优化。首先介绍了计算的数学理论。然后介绍了汇编代码的编写。最后进行了性能分析。通过该步优化程序在保留小数点后7位精度的前提下达到了0.312秒的好成绩。并且在Intel酷睿2 E6600 上测试达到了0.25秒。</p>
+<h2 id="串行优化"><a href="#串行优化" class="headerlink" title="串行优化"></a>串行优化</h2><h3 id="代码的基本修改和优化"><a href="#代码的基本修改和优化" class="headerlink" title="代码的基本修改和优化"></a>代码的基本修改和优化</h3><p>首先根据主办方的要求把代码的输出精度改为小数点后7位。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (i%<span class="number">10</span> == <span class="number">0</span>) <span class="built_in">printf</span>(<span class="string">"%5d: Potential: %20.7f\n"</span>, i, pot);</span><br></pre></td></tr></table></figure></p>
+<p>在进行任何优化前代码的执行时间是4.765秒。</p>
+<p>接着把项目转换成使用Intel C++ Compiler，代码的执行时间是4.531秒。</p>
+<p>然后执行最基本的优化，把代码中的pow函数优化成乘法。代码如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">distx = (r[0][j] - r[0][i])*(r[0][j] - r[0][i]);</span><br><span class="line">disty = (r[1][j] - r[1][i])*(r[1][j] - r[1][i]);</span><br><span class="line">distz = (r[2][j] - r[2][i])*(r[2][j] - r[2][i]);</span><br></pre></td></tr></table></figure></p>
+<p>执行时间依然为4.531秒。说明Intel编译器已经将pow函数优化掉了。</p>
+<h3 id="基于Intel编译器的优化"><a href="#基于Intel编译器的优化" class="headerlink" title="基于Intel编译器的优化"></a>基于Intel编译器的优化</h3><p>这里介绍本程序中基于Intel编译器优化技术。其中有些优化参数是可以确定的，有些优化参数需要在程序的不同阶段反复调试以确定最优方案，而有些优化技术是在后面的优化中使用的。</p>
+<h4 id="编译器优化级别"><a href="#编译器优化级别" class="headerlink" title="编译器优化级别"></a>编译器优化级别</h4><p>Intel的编译器共有如下一些主要的优化级别：</p>
+<ul>
+<li><code>/O1</code>：实现最基本的优化</li>
+<li><code>/O2</code>：基于代码速度实现常规优化，这个也是默认的优化级别</li>
+<li><code>/O3</code>：在/O2的基础上实现进一步的优化，包括Cache预读，标量转换等等，但是在某些情况下反而会减慢代码的执行速度。</li>
+<li><code>/Ox</code>：实现最大化的优化，包括自动内联函数的确定，全局优化，使用EBP作为通用寄存器等。</li>
+<li><code>/fast</code>：等同于<code>/O3</code>, <code>/Qipo</code>, <code>/Qprec-div-</code>, and <code>/QxP</code>。</li>
+</ul>
+<p>通过测试，目前选用/O3，但是随着代码的更改，需要重新测试，选择合适的优化级别。</p>
+<h4 id="针对特定处理器进行优化"><a href="#针对特定处理器进行优化" class="headerlink" title="针对特定处理器进行优化"></a>针对特定处理器进行优化</h4><p>Intel的编译器一共支持如下3种针对特定处理器的优化：</p>
+<ul>
+<li><code>/G</code>：使用这个优化选项，Intel将针对特定的CPU进行优化，但是其代码依然可以在所有的CPU上执行。</li>
+<li><code>/Qx</code>：使用这个优化选项，Intel将针对特定的CPU进行优化，并且产生的代码无法使用在不兼容的CPU上。</li>
+<li><code>/Qax</code>：使用这个优化选项，Intel将针对特定的CPU进行优化，并且产生多份代码，在运行时根据CPU类型自动选择最优的代码。</li>
+</ul>
+<p>由于本程序只需要运行在基于Core Microarchitecture 的处理器上，而无需考虑兼容性。所以本程序选择<code>/Qx</code>选项。并且针对运行时的酷睿2处理器，选择<code>/QxT</code>。但是在进行VTune测试时，由于测试平台为奔腾D 820，所以暂时使用<code>/QxP</code>的参数。</p>
+<h4 id="使用IPO"><a href="#使用IPO" class="headerlink" title="使用IPO"></a>使用IPO</h4><p>使用<code>/Qipo</code>可以启用Intel编译器的过程间优化(Interprocedural Optimizations)。通过过程间优化，编译器可以通过使用寄存器优化函数调用、内联函数展开、过程间常数传递、跨多文件优化等方式进一步优化程序。</p>
+<p>此外，Intel编译器支持多文件的过程间优化，而由于本程序只有一个文件，所以并不需要使用。</p>
+<p>但是IPO优化却会对本程序的调试带来极大的麻烦。所以本程序开发时不使用IPO优化，只有在最后的版本中才尝试使用IPO优化能否提高效率。</p>
+<h4 id="使用GPO"><a href="#使用GPO" class="headerlink" title="使用GPO"></a>使用GPO</h4><p>Intel编译器支持GPO(Profile-Guided Optimization)。GPO由一下三步组成。</p>
+<ul>
+<li>第一步：使用<code>/Qprof-gen</code>编译程序，产生能记录运行细节的特殊程序。</li>
+<li>第二步：运行第一步产生的程序，生成动态信息文件(.dyn)。</li>
+<li>第三步，使用<code>/Qprof-use</code>，结合动态信息文件重新编译程序，产生更优化的程序。</li>
+</ul>
+<p>通过使用GPO，Intel编译器可以更详细得了解程序的运行情况，从而根据实际情况产生更优化的代码。比如优化条件跳转，使得CPU分支预测的能力更准确，又如决定哪些函数需要内联，哪些不要内联等。</p>
+<p>此外，基于GPO还有很多的工具方便用户开发程序。比如Code-Coverage Tool可以进行代码覆盖测试。</p>
+<p>由于GPO收集的信息和特定的程序有关，而本程序一直在修改。所以本程序只在每个版本的最后部分使用GPO进行优化。</p>
+<h4 id="循环展开"><a href="#循环展开" class="headerlink" title="循环展开"></a>循环展开</h4><p>循环展开(Loop Unrolling)通过在把循环语句中的内容展开从而使执行的代码速度更快。循环展开可以提高代码的并行程度，减少条件转移次数从而提高速度。另外，对于Pentium 4处理器，其分支预测功能可以精确得预测出16次迭代以内的循环，所以，如果能把循环展开到迭代次数在16次以内，对于特定的CPU可以提高分支预测准确度。</p>
+<p>但是循环展开必须有一个度，并不是展开层数越多越好，展开层数多了，可能反而影响代码的执行速度。所以通常的做法是让编译器自己决定循环展开的层数。</p>
+<p>Intel编译器对于循环展开有如下选项：</p>
+<ul>
+<li><code>/Qunrolln</code>：执行循环展开n层。</li>
+<li><code>/Qunroll</code>：让Intel编译器自己决定循环展开的层数。</li>
+</ul>
+<p>此外Intel编译器还提供在了程序中使用编译制导语句规定某个特定循环的展开次数。如下例指示for循环展开n层。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> unroll(n)</span></span><br><span class="line"><span class="keyword">for</span>(i=<span class="number">0</span>;i&lt;<span class="number">10000</span>;i++)&#123;……&#125;</span><br></pre></td></tr></table></figure></p>
+<p>所以本程序使用<code>/Qunroll</code>参数，让Intel编译器自己决定使用循环展开的层数。但是在程序的最终优化时，如果发现Intel编译器的循环展开并不是最优的，则通过在特定循环前加上编译制导语句，使用最佳的循环展开层数。</p>
+<h4 id="浮点计算优化"><a href="#浮点计算优化" class="headerlink" title="浮点计算优化"></a>浮点计算优化</h4><p>Intel编译器提供了很多基于浮点数的优化参数，有提供精度的，也有提高速度的。对于本程序，主要使用如下优化参数。</p>
+<ul>
+<li><code>/fp: fast</code>或<code>/fp: fast=1</code>：这两个参数的等价的，同时也是默认的参数。他告诉编译器进行快速浮点计算优化。</li>
+<li><code>/fp: fast=2</code>：这个参数比<code>/fp: fast=1</code>提供更高的优化级别，同时也可能带来更大的精度损失。</li>
+</ul>
+<p>本程序使用<code>/fp: fast=2</code>优化，但是如果发生精度问题，可以考虑使用<code>/fp: fast=1</code>。</p>
+<h4 id="自动并行化"><a href="#自动并行化" class="headerlink" title="自动并行化"></a>自动并行化</h4><p>Intel的编译器支持自动并行化(Auto-parallelization)。通过<code>/Qparallel</code>可以打开编译器的自动并行化，编译器会在分析了用户的串行程序后，自动选择可以并行的部分进行并行化。自动并行化的有点是方便，不需要用户懂得专业知识，不需要更改原来的串行程序。但是缺点也是显而易见的，由于编译器并不知道用户的程序逻辑，所以无法很好得进行并行化。</p>
+<h4 id="使用OpenMP并行化"><a href="#使用OpenMP并行化" class="headerlink" title="使用OpenMP并行化"></a>使用OpenMP并行化</h4><p>OpenMP是一种通用的并行程序设计语言，其通过在源代码中添加编译制导语句，提示编译器如何进行程序的并行化。OpenMP具有书写方便，不需要改变源代码结构等多种优点。Intel的编译器支持OpenMP。本次程序并不打算使用OpenMP进行并行化，而打算使用Windows Thread。但是由于本程序需要使用到Intel Math Kernel Library，而Intel Math Kernel Library中的代码支持OpenMP并行化。所以有必要使用一些基本的OpenMP设置函数。</p>
+<p>需要使用OpenMP，需要在编译时加上<code>/Qopenmp</code>选项。并且在源代码中包含” omp.h”文件。</p>
+<p>OpenMP提供了函数<code>omp_set_num_threads(nthreads)</code>设置OpenMP使用的线程数，由于其设置会影响到Intel Math Kernel Library，所以将其设置成1，禁止Intel Math Kernel Library的自动并行化。</p>
+<h4 id="向量化"><a href="#向量化" class="headerlink" title="向量化"></a>向量化</h4><p>Intel的编译器支持向量化(Vectorization)。可以把循环计算部分使用MMX，SSE，SSE2，SSE3，SSSE3等指令进行向量化，从而大大提高计算速度。这也是本程序串行化时的主要优化点。前面提到的针对处理器的<code>/QaxT</code>优化选项已经打开了向量化。将代码向量化还有许多需要注意的地方，具体的注意点和方法将在后面具体的代码中说明。这里先给出一些对向量化有用的编译制导语句以及选项。</p>
+<p><code>/Qrestrict</code>选项：当Intel编译器遇到循环中使用指针时，由于多个指针可能指向同一个地址，所以其无法保证指针指向内容的唯一性。故Intel编译器无法确定循环内数据是否存在依赖性。这是可以通过使用<code>/Qrestrict</code>选项与<code>restrict</code>关键字，指示某个指针指向内容的唯一性。从而能解决数据依赖性不确定的问题。</p>
+<p><code>#pragma vector</code>编译制导语句：该编译制导语句一共包含3个。<code>#pragma vector always</code>用于指示编译器忽略其他因素，进行向量化。<code>#pragma vector aligned</code>用于指示编译器进行向量化时使用对齐的数据读写方式。<code>#pragma vector unaligned</code>用于指示编译器进行向量化时使用不对齐的数据读写方式。由于在使用SSE类指令进行向量化时，需要同时处理多个数据，所以每次读写的数据长度很长，可以达到128bit。所以将要处理的数据按照128bit(16byte)对齐，使用对齐的读写指令是可以提高程序运行速度的。但是需要注意的是对于实际没有对齐的数据使用<code>#pragma vector aligned</code>会造成程序运行错误。</p>
+<h4 id="使用变量对齐指示"><a href="#使用变量对齐指示" class="headerlink" title="使用变量对齐指示"></a>使用变量对齐指示</h4><p>Intel编译器提供了<code>__declspec(align(n))</code>用于在定义变量时指定其需要进行n字节对齐。变量对齐对于向量化计算的读取速度有很大关系。对于向量化计算一般使用<code>__declspec(align(16))</code>进行对齐。另外也可以使用<code>__declspec(align(64))</code>指定变量对齐到Cache的行首。关于Cache的行对齐的详细讨论请见后文的分析。</p>
+<h4 id="数据预读"><a href="#数据预读" class="headerlink" title="数据预读"></a>数据预读</h4><p>通常数据是放在内存中，当要计算时才读入CPU进行计算。由于内存到CPU的传输需要很长时间，所以CPU中有多级Cache机制。Intel编译器支持数据预读优化选项。通过<code>/Qprefetch</code>打开数据预读优化，编译器会在使用数据前先插入预读指令，让CPU先把数据预读到Cache中，从而加快数据的访问速度。该选项默认情况下是打开的。此外Intel还提供了数据预读的编译制导语句，通过使用<code>#pragma prefetch</code>语句，用户可以人为得在程序中增加数据预读指令。但是需要注意的是，数据预读指令并不是越多越好的。不恰当的数据预读指令会占用内存带宽，把有用的数据从Cache中挤出去，反而影响速度。并且Core Microarchitecture体系结构已经支持给予硬件的数据预读指令。所以本程序倾向于使用给予硬件的数据预读机制。而由于<code>/Qprefetch</code>默认的打开的，也没有必要特意关闭该选项，Intel编译器有能力判断哪些地方可以通过合适的数据访问模式激活硬件数据预读机制，哪些地方需要额外添加数据预读指令。</p>
+<h4 id="产生调试信息"><a href="#产生调试信息" class="headerlink" title="产生调试信息"></a>产生调试信息</h4><p>通过使用<code>/Zi</code>选项产生调试信息以帮助调试。默认为关闭。在本程序的开发阶段，打开此选项。在开发完成后关闭此选项。</p>
+<h4 id="使用全局优化"><a href="#使用全局优化" class="headerlink" title="使用全局优化"></a>使用全局优化</h4><p>通过使用<code>/Og</code>选项打开编译器的全局优化功能。改选项需要在本程序不同的开发阶段分别尝试是否打开以确定最优优化选项。</p>
+<h4 id="针对Windows程序优化"><a href="#针对Windows程序优化" class="headerlink" title="针对Windows程序优化"></a>针对Windows程序优化</h4><p>通过使用<code>/GA</code>选项可以打开Intel编译器的针对Windows程序优化的功能。其实通过打开<code>/GA</code>选项，Intel可以提高访问Windows下thread-local storage(TLS)变量的速度。TLS变量通过<code>__declspec(thread)</code>来定义。在本程序中，并不打算使用TLS变量。但还是打开<code>/GA</code>选项。</p>
+<h4 id="内联函数扩展"><a href="#内联函数扩展" class="headerlink" title="内联函数扩展"></a>内联函数扩展</h4><p>Intel编译器可以通过<code>/Obn</code>来定义内联函数的扩展级别。当n为0禁止用户定义的内核函数的扩展。当n为1时，根据用户定义的inline关键字进行扩展。当n为2时，根据Intel编译器的自动判断进行扩展。本次程序使用/Ob2选项。</p>
+<h4 id="FTZ与DAZ"><a href="#FTZ与DAZ" class="headerlink" title="FTZ与DAZ"></a>FTZ与DAZ</h4><p>在计算机内浮点数是由尾数和指数组成的。尾数通常被规范化成[1,2)之间。但是当数字接近0时，由于其指数已经无法将尾数规范成[1,2)之间，所以需要在尾数表示成0.0000xx的形式。这种表示形式称为不规范的形式。其会影响CPU的浮点计算速度。并且由于这种数非常接近0，所有有时将其表示成0并不会影响计算的结果。所以CPU的浮点控制器有2个用于控制对于不规范数处理的选项。<code>FTZ</code>用于将计算结果中的不规范数表示成0，<code>DAZ</code>用于在读入不规范数时将其表示成0。Intel编译器提供了内置的宏来方便用户设置这两个模式。这两个宏分别是<code>_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON)</code>和<code>_MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON)</code>。用户在程序中设置了这两个模式将有助于提高浮点计算速度。但是实际上对于本程序，由于已经使用了<code>/O3</code>以及SSE指令集优化。所以Intel编译器已经设置好了<code>FTZ</code>模式，用户不必另外设置<code>FTZ</code>。并且由于本程序中所有的数都是计算得来的，所以只要计算时使用了<code>FTZ</code>，那读取数据时就不会碰到不规范的数据，所以用户也没必要设置DAZ。</p>
+<h4 id="编译器报告"><a href="#编译器报告" class="headerlink" title="编译器报告"></a>编译器报告</h4><p>编译器报告虽然不能直接提供优化，但是却可以让用户了解编译器处理程序的信息，给用户更改源代码提供了很多有用的信息。对于本程序，向量化是非常重要的一步，而编译器报告可以指出某个地方是由于什么原因造成没有向量化。所以本使用使用<code>/Qvec-report3</code>参数对向量优化进行报告。</p>
+<h3 id="使用Intel编译器函数进行精确时间测量"><a href="#使用Intel编译器函数进行精确时间测量" class="headerlink" title="使用Intel编译器函数进行精确时间测量"></a>使用Intel编译器函数进行精确时间测量</h3><p>Intel编译器提供了许多特殊的函数。这类函数一般都对应一条或者几条汇编语言。其可以让用户以比汇编语言方便的方式写出性能接近汇编语言的代码。其中最主要的是对SIMD类指令的支持。当然其中还有很多其他功能的函数。比如<code>_rdtsc()</code>函数。</p>
+<p>需要注意的是要使用这些函数必需打开<code>/Oi</code>选项。这个选项默认是打开的。</p>
+<p>当程序需要进行精确时间测量，比如优化后需要知道某段特定的代码到底快了多少毫米时，使用Windows的时间函数已经无法满足精度要求。这是用户可以使用Intel VTune Analyzers进行测量（具体使用方法将在后面介绍）。其实CPU已经提供了一个特殊的机器指令rdtsc，使用这条指令可以读出CPU自从启动以来的时钟周期数。由于现在的CPU主频已经是上GHz了。所以，其计时精度可以达到纳秒级。Intel提供的_rdtsc()函数使得用户不必再使用汇编语言，可以像调用函数一样得到CPU的时钟周期数。例子代码如下：</p>
+<p>注：以下代码摘自“Intel C++ Compiler Documentation”<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    __int64 start, stop, elaspe;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">int</span> arr[<span class="number">10000</span>];</span><br><span class="line">    start= _rdtsc(); </span><br><span class="line">    <span class="keyword">for</span>(i=<span class="number">0</span>; i&lt;<span class="number">10000</span>; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        arr[i]=i;</span><br><span class="line">    &#125;</span><br><span class="line">    stop= _rdtsc();</span><br><span class="line">    elaspe = stop -start;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"Processor cycles\n %I64u\n"</span>, elaspe);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>经过以上编译器选项的调整，程序的运行速度已经达到了2.25秒。</p>
+<h3 id="使用Intel-VTune-Analyzers进行性能分析"><a href="#使用Intel-VTune-Analyzers进行性能分析" class="headerlink" title="使用Intel VTune Analyzers进行性能分析"></a>使用Intel VTune Analyzers进行性能分析</h3><h4 id="Intel-VTune-Analyzers概述"><a href="#Intel-VTune-Analyzers概述" class="headerlink" title="Intel VTune Analyzers概述"></a>Intel VTune Analyzers概述</h4><p>Intel VTune Analyzers用于监视程序或者系统的各种性能，从而为用户优化程序提供有价值的数据。同时Intel VTune Analyzers也能分析其收集的信息，给出用户优化程序的建议。Intel VTune Analyzers即支持本地的数据收集，也支持远程的数据收集。在本程序中，我们只需使用其本地数据收集功能。Intel VTune Analyzers共支持3种数据收集机制。每种机制都有其自己的适用范围，详细介绍如下：</p>
+<ul>
+<li>SAMPLING：其通过使用CPU内部的监视功能来检测系统底层的各种性能事件。使用这个功能无需在执行代码中插入特定的指令，因此其几乎没有探针效应。其无法给出函数间的调用关系。但是可以把相应的事件关联到程序中某行源代码或者汇编代码上。该方法通常适用于对某段程序的微调或者针对特定性能事件的调整上。</li>
+<li>CALL GRAPH：其通过在程序中插入特殊的指令，来记录每个函数执行的时间。函数间的调用关系等。其有一定的探针效应。该方法通常用于对于整个比较庞大的程序，进行分析，找出其中具有性能瓶颈的函数。</li>
+<li>COUNTER MONITOR：其无需在程序内部插入特殊的指令，因此其几乎没有探针效应。该方法即无法显示函数间的调用关系，也没法把事件定位到具体的某行代码中。该方式是用于测试整个系统的某些性能，比如CPU占用率，内存带宽等。通常用于系统级的调试。</li>
+</ul>
+<p>对于本程序。由于程序结构简单。无需进行函数间调用的分析。而主要需要进行基于特定代码的分析。特别是后期需要针对CPU内部的事件特性进行源代码级甚至是汇编级的调试。所以本次优化主要采用SAMPLING方式。</p>
+<h4 id="基于SAMPLING方式的分析"><a href="#基于SAMPLING方式的分析" class="headerlink" title="基于SAMPLING方式的分析"></a>基于SAMPLING方式的分析</h4><p>原理：Intel的CPU有一组性能检测寄存器，由于记录各种影响性能的事件。程序首先通过编程设定需要检测的事件，并且设定触发中断的计数值。当CPU中被检测的事件达到预设的值后触发相应的中断。Intel VTune Analyzers中的SAMPLING就是使用CPU的性能检测功能帮助用户分析程序的性能。其中有关于内存访问的事件，分支预测的事件，指令执行的事件等等。由于不同的CPU支持不同的性能事件，所以在不同的CPU上使用VTune时，所能监视的事件并不相同。</p>
+<p>使用注意事项：SAMPLING一共支持2种统计。一种是Event，其是直接测量得到的值。另外一种是Event Ratio，其是基于多个Event计算得到的，有时更有实际意义，更直观。需要注意的是，每个Event都有一个预设的值，当这个预设的值到了以后，CPU引起中断，VTune进行统计。而这个值的设置不能太大，否则统计到的事件不够多，无法分析。也不能太小，否则频繁引起中断，会加大探针效应。用户可以在每个Event上手工设置合适的Sample After值，也可以通过选项卡上的选项，让VTune先运行一遍程序，然后根据实际的事件数量来校准触发值。对于本程序，这点尤其需要引起注意。因为本程序优化到后面时间非常短，如果不校准触发值，分析的效果会不理想。需要注意的是Clockticks和Instructions Retired这两个最基本的事件，默认是不校准触发值的，我们需要把他们调整成自动校准。此外对于某个Event的发生，大部分的中断点并不是精确的。即真正发生该事件的指令在所记录事件指令的前几条。但是有一部分属于精确事件，引起这类事件的指令正好是发生中断的前一条。</p>
+<h3 id="优化computePot函数"><a href="#优化computePot函数" class="headerlink" title="优化computePot函数"></a>优化computePot函数</h3><p>在对<code>computePot</code>函数向量化前，我们可以注意到<code>distx</code>，<code>disty</code>，<code>distz</code>三个变量都是临时变量。先将这3个变量去掉，从而可以使得Intel编译器能够更灵活得进行中间结果优化。另外最完成循环的i虽然是从0开始的，但是实际0和1并不进行计算，所以把外层循环的i设置层从2开始。代码如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span>( i=<span class="number">2</span>; i&lt;NPARTS; i++ ) &#123;</span><br><span class="line">    <span class="keyword">for</span>( j=<span class="number">0</span>; j&lt;i<span class="number">-1</span>; j++ ) &#123;</span><br><span class="line">        dist = <span class="built_in">sqrt</span>( (r[<span class="number">0</span>][j] - r[<span class="number">0</span>][i])*(r[<span class="number">0</span>][j] - r[<span class="number">0</span>][i]) + (r[<span class="number">1</span>][j] - r[<span class="number">1</span>][i])*(r[<span class="number">1</span>][j] - r[<span class="number">1</span>][i]) + (r[<span class="number">2</span>][j] - r[<span class="number">2</span>][i])*(r[<span class="number">2</span>][j] - r[<span class="number">2</span>][i]) );</span><br><span class="line">        pot += <span class="number">1.0</span> / dist;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>此时编译器显示内层循环已经向量化了。但是这个绝非我们的目标。为了提高计算开根号倒数的速度，为了使用Intel Math Kernel Library，我们需要把开根号倒数的计算先存在一组向量中，再一同计算。既将dist变量变成，dist数组，然后再对dist数组统一计算，再求和。代码如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span>( i=<span class="number">2</span>; i&lt;NPARTS; i++ ) &#123;</span><br><span class="line">    <span class="keyword">for</span>( j=<span class="number">0</span>; j&lt;i<span class="number">-1</span>; j++ ) &#123;</span><br><span class="line">        dist[j] = (r[<span class="number">0</span>][j] - r[<span class="number">0</span>][i])*(r[<span class="number">0</span>][j] - r[<span class="number">0</span>][i]) + (r[<span class="number">1</span>][j] - r[<span class="number">1</span>][i])*(r[<span class="number">1</span>][j] - r[<span class="number">1</span>][i]) + (r[<span class="number">2</span>][j] - r[<span class="number">2</span>][i])*(r[<span class="number">2</span>][j] - r[<span class="number">2</span>][i]);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">for</span>( j=<span class="number">0</span>; j&lt;i<span class="number">-1</span>; j++ ) &#123;</span><br><span class="line">        dist[j] = <span class="number">1.0</span> / <span class="built_in">sqrt</span>(dist[j]);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">for</span>( j=<span class="number">0</span>; j&lt;i<span class="number">-1</span>; j++ ) &#123;</span><br><span class="line">        pot += dist[j];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>Intel编译器提示，内部的3个循环都进行了向量化。此时出现了令人惊喜的成绩。程序的执行时间突然降到了1.453秒。使用VTune进行分析，发现Intel编译器对于开根号倒数的计算自动调用了内部的向量化代码库。注意此时，还没有使用Intel Math Kernel Library，所以这个向量代码库是Intel编译器内置的，虽然效率没有使用Intel Math Kernel Library高，但是速度已经提高了很多。</p>
+<h3 id="使用Intel-Math-Kernel-Library"><a href="#使用Intel-Math-Kernel-Library" class="headerlink" title="使用Intel Math Kernel Library"></a>使用Intel Math Kernel Library</h3><p>Intel Math Kernel Library中提供了一部分的向量函数(Vector Mathematical Functions)。这类函数提供了对于普通数学计算函数的快速的向量化计算。VML中有一个向量函数就是计算开根号倒数的。</p>
+<p>Intel的VML库中提供了如下函数来计算整个向量中各个数的开根号倒数：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vdInvSqrt( n, a, y )</span><br></pre></td></tr></table></figure></p>
+<p>其中n表示计算的元素个数。a是指向输入计算数据数组的头指针。y是指向输出计算数据数组的头指针。其中a和y可以相同。</p>
+<p>要使用该函数，首先需要在头文件中包含”mkl.h”，并且链接mkl_c.lib文件和libguide40.lib文件。</p>
+<p>除了基本计算功能外，VML还提供了一个设置模式的函数，用于设置特定的计算模式：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vmlSetMode ( mode )</span><br></pre></td></tr></table></figure></p>
+<p>其中的mode是一个预定义宏。在我们的程序中，需要设置如下模式：</p>
+<ul>
+<li><code>VML_LA</code>：VML的所有向量函数都提供了2个精度的版本。精度低的版本计算速度也相对比较快。本程序只需要保留小数点后7位精度。低精度的版本符合要求，所以设定VML使用低精度的版本。</li>
+<li><code>VML_DOUBLE_CONSISTENT</code>：该选项用于控制FPU的计算精度为double，其实由于我们这次使用的函数基本上是使用SSE2指令集进行计算的，和FPU没什么关系。但是也可能存在使用FPU的可能，所以设定VML使FPU的精度为double。</li>
+<li><code>VML_ERRMODE_IGNORE</code>：该选项用于关闭VML的错误处理功能，本程序不需要进行错误处理。</li>
+<li><code>VML_NUM_THREADS_OMP_FIXED</code>：VML函数都能使用OpenMP，根据特定的硬件环境进行并行化。而我们并不需要其进行并行化。所以使用该选项和前面提到的<code>omp_set_num_threads(1)</code>结合。关闭VML的自动并行化功能。</li>
+</ul>
+<p>具体的代码如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> ( i = <span class="number">2</span>; i &lt; NPARTS; i ++ ) &#123;</span><br><span class="line">    <span class="keyword">for</span> ( j = <span class="number">0</span>; j &lt; i - <span class="number">1</span>; j ++ ) &#123;</span><br><span class="line">        dist[j] = (r[<span class="number">0</span>][j] - r[<span class="number">0</span>][i]) * (r[<span class="number">0</span>][j] - r[<span class="number">0</span>][i]) + (r[<span class="number">1</span>][j] - r[<span class="number">1</span>][i]) * (r[<span class="number">1</span>][j] - r[<span class="number">1</span>][i]) + (r[<span class="number">2</span>][j] - r[<span class="number">2</span>][i]) * (r[<span class="number">2</span>][j] - r[<span class="number">2</span>][i]);</span><br><span class="line">    &#125;</span><br><span class="line">    vdInvSqrt(i<span class="number">-1</span>, dist, dist);</span><br><span class="line">    <span class="keyword">for</span> ( j = <span class="number">0</span>; j &lt; i - <span class="number">1</span>; j ++ ) &#123;</span><br><span class="line">        pot += dist[j];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>优化后出现了令人可惜可贺的成绩：0.796秒。</p>
+<h3 id="根据Cache大小优化Intel-Math-Kernel-Library调用"><a href="#根据Cache大小优化Intel-Math-Kernel-Library调用" class="headerlink" title="根据Cache大小优化Intel Math Kernel Library调用"></a>根据Cache大小优化Intel Math Kernel Library调用</h3><p>在上面的程序中对于MKL函数的调用是每次内部循环都执行一次调用，我们知道每次执行函数的调用都是需要开销的，那是否有更优化的调用MKL方法那？下面这段话摘自Intel Math Kernel Library的说明文档上：</p>
+<blockquote>
+<p>There are two extreme cases: so-called “short” and “long” vectors (logarithmic scale is used to show both cases). For short vectors there are cycle organization and initialization overheads. The cost of such overheads is amortized with increasing vector length, and for vectors longer than a few dozens of elements the performance remains quite flat until the L2 cache size is exceeded with the length of the vector.</p>
+</blockquote>
+<p>从这段文字中，我们了解到对于MKL函数的调用时，所处理的向量不能太短，否则函数的建立时间开销将是非常大的，也不能太长，操作了L2 Cache，否则函数执行时访问内存的开销是很大的。不合适的长度对于函数的性能将产生指数级影响。</p>
+<p>根据理论计算：每次执行<code>computePot</code>函数，总共需要执行的计算量为<code>(1+998)*998/2=498501</code>个。每个double类型占用8个字节，所有总共需要占用的空间为<code>498501*8=3988008byte=3894KB</code>。而这次进行竞赛的测试平台的CPU的L2 Cache大小为2M，由于有2个线程同时计算，平均每个线程分到的L2 Cache为1M。由于L2 Cache可能还被其他数据占据。所以为了保证所计算的数据在L2 Cache中，最好每次计算的向量长度在512KB左右。故把整个computePot函数的计算量分成8份。每份计算量的中间结果向量长度为3894KB/8=486KB。</p>
+<p>但是实际情况并非如此，进行这种优化后，程序的执行速度反而降低了。通过分析发现原来CPU中的L1 Cache大小为32KB。数组r有3000个元素，如果每次迭代都进行<code>vdInvSqrt</code>调用。那<code>dist</code>的长度为1000个元素左右。加起来正好可以全部在L1 Cache中。而如果合并起来调用<code>vdInvSqrt</code>，则由于<code>vdInvSqrt</code>过长。其L1 Cache中存放不下，需要存放在L2 Cache中，从而反而影响了速度。看来，对于本程序，不应该根据L2 Cache进行优化，而应该根据L1 Cache进行优化。但是对于只有几个或者几十个数据就调用MKL函数，其开销还是很大的。因此本程序使用了折中的方法，对于前面非常小的几十个数据，凑足1000个放在一起进行计算，而后面的数据还是按照原来的方式计算。具体实现的代码如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span>( i = <span class="number">2</span>, k = <span class="number">0</span>; i &lt; <span class="number">47</span>; i ++ ) &#123;</span><br><span class="line">    <span class="keyword">for</span>( j = <span class="number">0</span>; j &lt; i - <span class="number">1</span>; j ++, k ++ ) &#123;</span><br><span class="line">        dist[k] = (r[<span class="number">0</span>][j] - r[<span class="number">0</span>][i]) * (r[<span class="number">0</span>][j] - r[<span class="number">0</span>][i]) + (r[<span class="number">1</span>][j] - r[<span class="number">1</span>][i]) * (r[<span class="number">1</span>][j] - r[<span class="number">1</span>][i]) + (r[<span class="number">2</span>][j] - r[<span class="number">2</span>][i]) * (r[<span class="number">2</span>][j] - r[<span class="number">2</span>][i]);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">vdInvSqrt(k, dist, dist);</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span>( j = <span class="number">0</span>; j &lt; k; j ++ ) &#123;</span><br><span class="line">    pot += dist[j];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span>( i = <span class="number">47</span>; i &lt; NPARTS; i ++ ) &#123;</span><br><span class="line">    <span class="keyword">for</span>( j = <span class="number">0</span>; j &lt; i - <span class="number">1</span>; j ++ ) &#123;</span><br><span class="line">        dist[j] = (r[<span class="number">0</span>][j] - r[<span class="number">0</span>][i]) * (r[<span class="number">0</span>][j] - r[<span class="number">0</span>][i]) + (r[<span class="number">1</span>][j] - r[<span class="number">1</span>][i]) * (r[<span class="number">1</span>][j] - r[<span class="number">1</span>][i]) + (r[<span class="number">2</span>][j] - r[<span class="number">2</span>][i]) * (r[<span class="number">2</span>][j] - r[<span class="number">2</span>][i]);</span><br><span class="line">    &#125;</span><br><span class="line">    vdInvSqrt(i - <span class="number">1</span>, dist, dist);</span><br><span class="line">    <span class="keyword">for</span>( j = <span class="number">0</span>; j &lt; i - <span class="number">1</span>; j ++ ) &#123;</span><br><span class="line">        pot += dist[j];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>通过该优化，程序的性能略微有所提高，达到了0.781秒。</p>
+<h3 id="优化updatePositions函数"><a href="#优化updatePositions函数" class="headerlink" title="优化updatePositions函数"></a>优化updatePositions函数</h3><p>虽然<code>updatePositions</code>函数执行的时间非常短。但还是值得优化的。</p>
+<p>首先进行的是基于数学的优化。我们发现在<code>updatePositions</code>和<code>initPositions</code>中，都有加0.5的计算。但是从后面的<code>computePot</code>的相减计算中发现，这个0.5是被抵消的，既不加0.5对结果没有影响。故去掉该加0.5的计算。另外<code>updatePositions</code>和<code>initPositions</code>中都有除以<code>RAND_MAX</code>的计算。而通过提取公因子的变换发现，如果此处不除以<code>RAND_MAX</code>而将最后的<code>pot</code>乘以<code>RAND_MAX</code>，则最后结果相同。故去掉该处的除以<code>RAND_MAX</code>的计算，而以在<code>pot</code>上一次乘以<code>RAND_MAX</code>为替换。具体代码如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">initPositions</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i, j;</span><br><span class="line">    <span class="keyword">for</span>( i = <span class="number">0</span>; i &lt; DIMS; i ++ )</span><br><span class="line">        <span class="keyword">for</span>( j = <span class="number">0</span>; j &lt; NPARTS; j ++ )</span><br><span class="line">            r[i][j] = (<span class="keyword">double</span>) rand();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">updatePositions</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i, j;</span><br><span class="line">    <span class="keyword">for</span>( i = <span class="number">0</span>; i &lt; DIMS; i ++ )</span><br><span class="line">        <span class="keyword">for</span>( j = <span class="number">0</span>; j &lt; NPARTS; j ++ )</span><br><span class="line">            r[i][j] -= (<span class="keyword">double</span>) rand();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在main函数中：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">pot = <span class="number">0.0</span>;</span><br><span class="line">computePot();</span><br><span class="line">pot*=(<span class="keyword">double</span>)RAND_MAX;</span><br><span class="line"><span class="keyword">if</span> (i%<span class="number">10</span> == <span class="number">0</span>) <span class="built_in">printf</span>(<span class="string">"%5d: Potential: %20.7f\n"</span>, i, pot);</span><br></pre></td></tr></table></figure></p>
+<p>其次需要进行<code>updatePositions</code>内<code>rand</code>函数的优化。虽然<code>rand</code>函数本身的执行时间非常短，但是其频繁得进行调用却影响了性能。通过查找Microsoft Visual Studio .NET 2005中提供的源代码。将其中的<code>rand</code>函数提取出来，进行必要的修改，并且加上inline属性。从而加快程序的调用速度。具体代码如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> holdrand=<span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">inline</span> <span class="keyword">int</span> <span class="title">myrand</span> <span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">return</span>( ((holdrand = holdrand * <span class="number">214013L</span>+ <span class="number">2531011L</span>) &gt;&gt; <span class="number">16</span>) &amp; <span class="number">0x7fff</span> );</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>经过上述优化，代码的执行速度已经达到了0.765秒。</p>
+<h3 id="其他优化以及性能分析"><a href="#其他优化以及性能分析" class="headerlink" title="其他优化以及性能分析"></a>其他优化以及性能分析</h3><p>至此，该程序串行优化部分已经一本完成。但是还有一点细小的地方需要优化。</p>
+<p>变量对齐对于数据读取速度是非常重要的。尤其是使用SIMD指令集进行优化后，对于对齐的变量，可以使用对齐的读写指令提高速度。一般对于SIMD指令需要进行16字节对齐。但是对于本程序，由于后面要进行多线程优化，而多线程执行时基于Cache Line的共享冲突会对读写造成很大的损失。故本程序使用64字节对齐。代码如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">__declspec(align(<span class="number">64</span>)) <span class="keyword">int</span> holdrand=<span class="number">1</span>;</span><br><span class="line">__declspec(align(<span class="number">64</span>)) <span class="keyword">double</span> r[DIMS][NPARTS];</span><br><span class="line">__declspec(align(<span class="number">64</span>)) <span class="keyword">double</span> pot;</span><br><span class="line">__declspec(align(<span class="number">64</span>)) <span class="keyword">double</span> dist[<span class="number">1048</span>];</span><br></pre></td></tr></table></figure></p>
+<p>在<code>computePot</code>函数的第一次迭代中。有一处进行<code>pot</code>累加的地方，使用了<code>k</code>变量作为循环条件。但是其实该变量的确切值是可以计算出来的。通过计算出该变量的确切值，可以让Intel编译器在编译时就知道循环的次数，从而有助于优化。具体代码如下（注意1035这个值）：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span>( i = <span class="number">2</span>, k = <span class="number">0</span>; i &lt; <span class="number">47</span>; i ++ ) &#123;</span><br><span class="line">    <span class="keyword">for</span>( j = <span class="number">0</span>; j &lt; i - <span class="number">1</span>; j ++, k ++ ) &#123;</span><br><span class="line">        dist[k] = (r[<span class="number">0</span>][j] - r[<span class="number">0</span>][i]) * (r[<span class="number">0</span>][j] - r[<span class="number">0</span>][i]) + (r[<span class="number">1</span>][j] - r[<span class="number">1</span>][i]) * (r[<span class="number">1</span>][j] - r[<span class="number">1</span>][i]) + (r[<span class="number">2</span>][j] - r[<span class="number">2</span>][i]) * (r[<span class="number">2</span>][j] - r[<span class="number">2</span>][i]);</span><br><span class="line">    &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">vdInvSqrt(k,dist,dist);</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span>( j=<span class="number">0</span>; j&lt;<span class="number">1035</span>; j++ ) &#123;</span><br><span class="line">      pot += dist[j];</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure></p>
+<p>此外再调整以下编译器的某些优化参数，选择合适的使用。比如使用哪个编译级别，是否打开全局优化，使用IPO，使用GPO等。</p>
+<h2 id="并行优化"><a href="#并行优化" class="headerlink" title="并行优化"></a>并行优化</h2><h3 id="并行优化概述"><a href="#并行优化概述" class="headerlink" title="并行优化概述"></a>并行优化概述</h3><p>在进行本程序的并行优化前先谈谈并行优化需要注意的问题。在并行优化中经常用到数据重复和计算重复的方法。所谓数据重复，就是为了保证多个线程能同时进行计算，就把数据复制多份来提高并行度。所谓计算重复，就是有时使用计算换通信的方法，提高并行度。</p>
+<p>在对本程序进行优化前需要注意的是。测试平台使用的是基于Core Microarchitecture结构的。这个结构的双核CPU是共享L2 Cache的。但是当数据在一个核中进行修改，另外一个核去读他时，需要消耗几十个时钟周期的延迟。其代价的非常高的。这里需要注意的是，数据在Cache中是按行进行存放的，也就是说，CPU看待数据有没有被修改过是根据Cache Line的。所以2个分别被不同的核修改的数据如果存在于同一行Cache中，访问时的效率就会非常低。也就是发生了共享冲突。所以在分配变量时要尽量把不同性质的变量分配到不同的Cache Line中。我们的测试平台的L1 Cache和L2 Cache都是每行64byte的。所以前一章中的变量对齐都使用了64byte对齐。同样，在程序并行化时也需要考虑这种情况。</p>
+<h3 id="优化方案一"><a href="#优化方案一" class="headerlink" title="优化方案一"></a>优化方案一</h3><p>此方案使用数据重复的方法。程序可以定义2个r数组。以及2个pot数组。通过定义2个r数组，使得主线程可以在从线程使用一个r数组计算时同时更新第二个r数组。即主线程先更新r数组，然后主线程和从线程同时开始计算。但是从线程的计算量比主线程大一点。这样当主线程计算完后，可以继续更新第二个r数组，而此时从线程还在计算原来r数组的内容。当主线程更新完第二个r数组时，从线程正好完成前面的计算，并和主线程一同计算第二个r数组，依次类推。同时2个pot数组，一个给主线程计算每步的中间结果，另一个给从线程计算每步的中间结果。等计算结束后，再将其结果相加，打印。</p>
+<p>优点：使用该方法的优点是显而易见的，理论上线程可以做到完全同步。</p>
+<p>缺点：使用该方法的缺点是，从线程每次计算需要从主线程计算好的r数组中读取内容，由于是2个核，所以其访问延迟非常大。此外使用2个数值，每次迭代都需要将指针指向使用的数组，增加了程序的设计难度。同时计算任务分配的调优也是非常繁琐的。</p>
+<p>由于在前一章中，我们发现updatePositions函数所花费的时间非常短。所以做到线程间的完全平衡意义并不大。</p>
+<h3 id="优化方案二"><a href="#优化方案二" class="headerlink" title="优化方案二"></a>优化方案二</h3><p>在前一个方案中，我们提到了线程的完全平衡的算法。同时我们发现完全平衡的意义不大。因此我们设计适合本程序的更优的方案。既然updatePositions函数所花费的时间非常短。那2个线程同时执行updatePositions造成的额外开销也是可以忽略的。本方案使用了数据重复和计算重复的方法。同样使用2个r数组，但是2个线程同时进行重复计算，并且2个线程分区完成不同的迭代步骤的computePot计算。即主线程完成整个r数组的更新，但是只计算其中的奇数次迭代。从线程同样完成整个r数组的更新，但是只进行偶数次迭代。并且同样使用了一个pot数组，2个线程分别将自己的计算结果先存储到pot数组中。等最后同步的时候再打印。</p>
+<p>优点：使用该方案，程序的设计相对来说比较简单，负载均衡的调整也很容易。程序只需要很少的同步操作（在本程序中，只使用了2次同步）。并且重要的是。由于2个线程都在各自的CPU上使用各自的数据进行计算，所以最大化得避免了共享冲突的发生。同时也保留了前一章优化中针对L1 Cache的命中率。</p>
+<p>缺点：该方案的缺点是存在重复计算。但是通过前面VTune的测试，已经发现其重复计算量非常小，可以忽略。</p>
+<h3 id="并行实现"><a href="#并行实现" class="headerlink" title="并行实现"></a>并行实现</h3><p>本程序使用方案二进行并行化。首先将所有需要计算的数据和函数都复制2份，代码如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">computePot1</span><span class="params">(<span class="keyword">void</span>)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">initPositions1</span><span class="params">(<span class="keyword">void</span>)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">updatePositions1</span><span class="params">(<span class="keyword">void</span>)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">computePot2</span><span class="params">(<span class="keyword">void</span>)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">initPositions2</span><span class="params">(<span class="keyword">void</span>)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">updatePositions2</span><span class="params">(<span class="keyword">void</span>)</span></span>;</span><br><span class="line">__declspec(align(<span class="number">64</span>)) <span class="keyword">int</span> holdrand1=<span class="number">1</span>;</span><br><span class="line">__declspec(align(<span class="number">64</span>)) <span class="keyword">double</span> r1[DIMS][NPARTS];</span><br><span class="line">__declspec(align(<span class="number">64</span>)) <span class="keyword">double</span> pot1;</span><br><span class="line">__declspec(align(<span class="number">64</span>)) <span class="keyword">double</span> dist1[<span class="number">1048</span>];</span><br><span class="line">__declspec(align(<span class="number">64</span>)) <span class="keyword">int</span> holdrand2=<span class="number">1</span>;</span><br><span class="line">__declspec(align(<span class="number">64</span>)) <span class="keyword">double</span> r2[DIMS][NPARTS];</span><br><span class="line">__declspec(align(<span class="number">64</span>)) <span class="keyword">double</span> pot2;</span><br><span class="line">__declspec(align(<span class="number">64</span>)) <span class="keyword">double</span> dist2[<span class="number">1048</span>];</span><br><span class="line">__declspec(align(<span class="number">64</span>)) <span class="keyword">double</span> potfinal[<span class="number">264</span>];</span><br></pre></td></tr></table></figure></p>
+<p>其中的<code>potfinal</code>数组记录每次迭代的计算结果，用于最后的数组。</p>
+<p>在主函数的并行中。我们发现由于偶数次迭代比奇数次迭代需要多算一次。故本程序的偶数次迭代在进行到快完成前先释放一个同步锁。使得主线程可以先输出一部分数据。而从线程在执行完所有的偶数次迭代后再释放一个同步锁，使主线程输出剩余的数据。由于输出数据也有一点的耗时。所以使用这种方法可以提高一点并行度。另外在本代码中使用了SetThreadAffinityMask分别设置不同的线程对应各自的CPU，以防止线程在不同的CPU中切换从而影响L1 Cache命中率。具体代码如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">DWORD WINAPI <span class="title">mythread</span><span class="params">( <span class="keyword">void</span> *myarg )</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    SetThreadAffinityMask(GetCurrentThread(), <span class="number">2</span>);</span><br><span class="line">    initPositions2();</span><br><span class="line">    updatePositions2();</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">for</span>(i=<span class="number">0</span>;i&lt;=<span class="number">190</span>;i+=<span class="number">2</span>)&#123;</span><br><span class="line">        pot2 = <span class="number">0.0</span>;</span><br><span class="line">        computePot2();</span><br><span class="line">        pot2*=(<span class="keyword">double</span>)RAND_MAX;</span><br><span class="line">        potfinal[i]=pot2;</span><br><span class="line">        updatePositions2();</span><br><span class="line">        updatePositions2();</span><br><span class="line">    &#125;</span><br><span class="line">    ReleaseSemaphore(semmiddle, <span class="number">1</span>, <span class="literal">NULL</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span>(i=<span class="number">192</span>;i&lt;=NITER;i+=<span class="number">2</span>)&#123;</span><br><span class="line">        pot2 = <span class="number">0.0</span>;</span><br><span class="line">        computePot2();</span><br><span class="line">        pot2*=(<span class="keyword">double</span>)RAND_MAX;</span><br><span class="line">        potfinal[i]=pot2;</span><br><span class="line">        updatePositions2();</span><br><span class="line">        updatePositions2();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">     ReleaseSemaphore(semafter, <span class="number">1</span>, <span class="literal">NULL</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;<span class="comment">//从线程</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">int</span> myarg=<span class="number">0</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">clock_t</span> start, stop;</span><br><span class="line">    omp_set_num_threads(<span class="number">1</span>);</span><br><span class="line">    vmlSetMode(VML_LA);</span><br><span class="line">    vmlSetMode(VML_DOUBLE_CONSISTENT);</span><br><span class="line">    vmlSetMode(VML_ERRMODE_IGNORE);</span><br><span class="line">    vmlSetMode(VML_NUM_THREADS_OMP_FIXED);</span><br><span class="line">    semmiddle = CreateSemaphore(<span class="literal">NULL</span>, <span class="number">0</span>, <span class="number">1</span>, <span class="literal">NULL</span>);</span><br><span class="line">    semafter = CreateSemaphore(<span class="literal">NULL</span>, <span class="number">0</span>, <span class="number">1</span>, <span class="literal">NULL</span>);</span><br><span class="line">    CreateThread(<span class="number">0</span>, <span class="number">8</span>*<span class="number">1024</span>, mythread, (<span class="keyword">void</span> *)&amp;myarg, <span class="number">0</span>, <span class="literal">NULL</span>);</span><br><span class="line">    SetThreadAffinityMask(GetCurrentThread(), <span class="number">1</span>);</span><br><span class="line">    initPositions1();</span><br><span class="line">    start=clock();</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">for</span>(i=<span class="number">1</span>;i&lt;NITER;i+=<span class="number">2</span>)&#123;</span><br><span class="line">        pot1 = <span class="number">0.0</span>;</span><br><span class="line">        updatePositions1();</span><br><span class="line">        updatePositions1();</span><br><span class="line">        computePot1();</span><br><span class="line">        pot1*=(<span class="keyword">double</span>)RAND_MAX;</span><br><span class="line">        potfinal[i]=pot1;</span><br><span class="line">    &#125;</span><br><span class="line">    WaitForSingleObject(semmiddle, INFINITE);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span>(i=<span class="number">0</span>;i&lt;=<span class="number">190</span>;i+=<span class="number">10</span>)</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"%5d: Potential: %20.7f\n"</span>, i, potfinal[i]);</span><br><span class="line"></span><br><span class="line">    WaitForSingleObject(semafter , INFINITE);</span><br><span class="line"></span><br><span class="line">    i=<span class="number">200</span>;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"%5d: Potential: %20.7f\n"</span>, i, potfinal[i]);</span><br><span class="line">    stop=clock();</span><br><span class="line">    <span class="built_in">printf</span> (<span class="string">"Seconds = %10.9f\n"</span>,(<span class="keyword">double</span>)(stop-start)/ CLOCKS_PER_SEC);</span><br><span class="line">&#125;<span class="comment">//主线程</span></span><br></pre></td></tr></table></figure></p>
+<h3 id="性能分析"><a href="#性能分析" class="headerlink" title="性能分析"></a>性能分析</h3><p>并行化后的性能并不没有像理论中这么高只有0.437秒。于是我们开始查找原因。通过使用Intel Threading Checker我们发现，VML库中存在着访问冲突。</p>
+<p>当然这个错误有可能是Intel Threading Checker的误报。因为程序每次执行都没有发现不正确的结果，并且VML函数的文档上说明是线程安全性的。</p>
+<p>由于兼容性原因，本系统无法使用Intel VTune Analyzers进行每个函数的耗时分析。于是使用Intel编译器提供的内置函数<code>_rdtsc()</code>记录不同部分所花费的CPU时钟周期。结果发现VML函数的总执行时间大概增加了0.088秒左右。说明VML函数在用户使用Windows Thread函数并行化访问时，其同步开销可能有一定的影响。</p>
+<h2 id="汇编级优化"><a href="#汇编级优化" class="headerlink" title="汇编级优化"></a>汇编级优化</h2><h3 id="优化目标"><a href="#优化目标" class="headerlink" title="优化目标"></a>优化目标</h3><p>本程序主要的执行时间在computePot函数与VML库中。对于computePot函数，通过查看Intel编译器产生的汇编码发现其已经很优了。而对于VML函数由于其需要满足通用性，所以本程序应该可以设计出最适合本程序的计算函数来。</p>
+<h3 id="数学理论"><a href="#数学理论" class="headerlink" title="数学理论"></a>数学理论</h3><p>Intel的CPU支持的SSE2指令中，有2条是用于计算双精度浮点的开根号倒数的。sqrtpd指令可以同时计算2个double型的开根号，其吞吐率为28个时钟周期。divpd指令用于计算2个数的除法，即用于计算倒数，其吞出率为17个时钟周期。由此可以计算出，如果当当使用这2条指令计算双精度数的开根号倒数，那即使使用汇编语言，忽略其他开销。计算每个元素的时钟周期也有(17+28)/2=22.5。而Intel的VML库计算每个元素的只需要10多个时钟周期，说明其肯定是通过其他快速的数学计算方法得到的。所以要优化<code>vdInvSqrt</code>函数，关键是找到更快速的数学计算方法。在Quake 3在源代码中有如下一段具有传奇色彩的代码：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">float</span> <span class="title">InvSqrt</span><span class="params">(<span class="keyword">float</span> x)</span></span>&#123;</span><br><span class="line">    <span class="keyword">float</span> xhalf = <span class="number">0.5f</span>*x;</span><br><span class="line">    <span class="keyword">int</span> i = *(<span class="keyword">int</span>*)&amp;x; <span class="comment">// get bits for floating value</span></span><br><span class="line">    i = <span class="number">0x5f3759df</span> - (i&gt;&gt;<span class="number">1</span>); <span class="comment">// gives initial guess y0</span></span><br><span class="line">    x = *(<span class="keyword">float</span>*)&amp;i; <span class="comment">// convert bits back to float</span></span><br><span class="line">    x = x*(<span class="number">1.5f</span>-xhalf*x*x); <span class="comment">// Newton step, repeating increases accuracy</span></span><br><span class="line">    <span class="keyword">return</span> x;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在上面的代码中最后一条是典型的牛顿迭代，可以根据精度要求进行多次迭代。这段代码神奇的地方在于初始值的估算上，只用了减法和移位2个简单的操作，达到了非常接近的估算值。我们称0x5f3759df为幻数(magic number)。CHRIS LOMONT在他的《FAST INVERSE SQUARE ROOT》文章中给出了对于这个幻数的解释和计算方法。并且计算出了理论上最优的适用于double类型的幻数为0x5fe6ec85e7de30da。说们我们的代码中可以使用该方法进行计算，示例代码如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">double</span> <span class="title">myinvsqrt</span> <span class="params">(<span class="keyword">double</span> x)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">double</span> xhalf = <span class="number">0.5</span>*x;</span><br><span class="line">    __int64 i = *(__int64*)&amp;x;</span><br><span class="line">    i = <span class="number">0x5fe6ec85e7de30da</span> - (i&gt;&gt;<span class="number">1</span>);</span><br><span class="line">    x = *(<span class="keyword">double</span>*)&amp;i;</span><br><span class="line">    x = x*(<span class="number">1.5</span>-xhalf*x*x);</span><br><span class="line">    x = x*(<span class="number">1.5</span>-xhalf*x*x);</span><br><span class="line">    x = x*(<span class="number">1.5</span>-xhalf*x*x);</span><br><span class="line">    x = x*(<span class="number">1.5</span>-xhalf*x*x);</span><br><span class="line">    <span class="keyword">return</span> x;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>但是不幸的是，根据调试，需要达到比赛要求的小数点后7位精度，必需进行4次牛顿迭代也行。而4次牛顿迭代的计算量使得这个方法对于Intel的VML函数来说毫无优势可言。那能否降低牛顿迭代的次数那？</p>
+<p>我们发现如果以上代码只进行3次牛顿迭代，那误差只有小数点最后的1，2位。CHRIS LOMONT在他的文中提到他说计算出来的理论最优值，而这个幻数只是在线性估计时是最优的。在多次牛顿迭代中，这个值并不是最优的。CHRIS LOMONT并没有给出对于多次牛顿迭代最优幻数的计算方法，他在文章中对于float类型的实际最优值也是穷举得到的。我们同样在理论最优值0x5fe6ec85e7de30da的基础上进行了一定的穷举操作，发现的确有更优的幻数。但是即使使用了更优的幻数，还是无法在3次牛顿迭代基础上达到精度要求。但是我们发现所有的数值都偏小。于是我们可以在三次牛顿迭代后再乘一个比1大一点点的偏移量。从而能做到3次牛顿迭代就能达到精度要求。示例代码如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">double</span> <span class="title">myinvsqrt</span> <span class="params">(<span class="keyword">double</span> x)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">double</span> xhalf = <span class="number">0.5</span>*x;</span><br><span class="line">    __int64 i = *(__int64*)&amp;x;</span><br><span class="line">    i = newmagicnum - (i&gt;&gt;<span class="number">1</span>);</span><br><span class="line">    x = *(<span class="keyword">double</span>*)&amp;i;</span><br><span class="line">    x = x*(<span class="number">1.5</span>-xhalf*x*x);</span><br><span class="line">    x = x*(<span class="number">1.5</span>-xhalf*x*x);</span><br><span class="line">    x = x*(<span class="number">1.5</span>-xhalf*x*x);</span><br><span class="line">    x = x*offset</span><br><span class="line">    <span class="keyword">return</span> x;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>由于时间原因，这里并没有对newmagicnum和offset进行详细的计算与统计。只给出一个对于本程序相对较优的newmagicnum值0x5fe6d250b0000000。</p>
+<p>在上面的代码中只进行了3次牛顿迭代。对于Intel的VML来说也没有什么优势可言。那能不能再减少一次牛顿迭代，只进行2次迭代就达到精度要求那？</p>
+<p>我们知道要进行2次牛顿迭代就达到精度要求就必须对其初始值的估计更加准确。而使用上面的方法估计的初始值已经无法满足该准确性。这是通过查找《Intel 64 and IA-32 Architectures Optimization Reference Manual》，我们发现SSE指令集中有一条RSQRTPS的指令用于同时计算四个单精度浮点数的开根号倒数，而其在Core Microarchitecture上的延迟为3个周期，吞吐率为2个周期。也就是说我们可以在极短的时间内就算出单精度类型的开根号倒数值（看来在现在的CPU上，当初Quake 3那段具有传奇色彩的代码已经没有用了）。于是我们想到了先使用单精度类型精度初值估算，然后再使用牛顿迭代。实验结果表明该方法只需要进行2次牛顿迭代就能满足小数点后7位的精度要求。示例代码如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">double</span> <span class="title">myinvsqrt</span> <span class="params">(<span class="keyword">double</span> x)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">double</span> xhalf = <span class="number">0.5</span>*x;</span><br><span class="line">    <span class="keyword">float</span> xf=(<span class="keyword">float</span>)x;</span><br><span class="line">    __asm&#123;</span><br><span class="line">        movss xmm1,xf;</span><br><span class="line">        rsqrtss xmm1,xmm1;</span><br><span class="line">        movss xf,xmm1;</span><br><span class="line">    &#125;</span><br><span class="line">    x=(<span class="keyword">double</span>)xf;</span><br><span class="line">    x = x*(<span class="number">1.5</span>-xhalf*x*x);</span><br><span class="line">    x = x*(<span class="number">1.5</span>-xhalf*x*x);</span><br><span class="line">    <span class="keyword">return</span> x;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>不幸的是由于该代码涉及到了复杂的算法以及类型转换，Intel的编译器并无法将其很好的并行化。所以只有依靠手工使用汇编语言将其优化。</p>
+<h3 id="汇编码实现"><a href="#汇编码实现" class="headerlink" title="汇编码实现"></a>汇编码实现</h3><p>在实现汇编码前先要将原来的代码进行优化，将牛顿迭代中的减法变成加法，代码如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">double</span> <span class="title">myinvsqrt</span> <span class="params">(<span class="keyword">double</span> x)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">double</span> xhalf = <span class="number">-0.5</span>*x;</span><br><span class="line">    <span class="keyword">float</span> xf=(<span class="keyword">float</span>)x;</span><br><span class="line">    __asm&#123;</span><br><span class="line">        movss xmm1,xf;</span><br><span class="line">        rsqrtss xmm1,xmm1;</span><br><span class="line">        movss xf,xmm1;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    x=(<span class="keyword">double</span>)xf;</span><br><span class="line">    x = x*(<span class="number">1.5</span>+xhalf*x*x);</span><br><span class="line">    x = x*(<span class="number">1.5</span>+xhalf*x*x);</span><br><span class="line">    <span class="keyword">return</span> x;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>进行这种转变是一点都不影响计算结果的。但是确可以提高计算速度。这是因为，如果执行的是减法，汇编语言的减法指令会将结果存在原来存放被减数（即1.5）的寄存器中。从而覆盖掉了原来的常数1.5，使得每次计算必须重新读入该参数。而优化成加法后则没有这个问题。</p>
+<p>在进行优化前，还有一点需要注意的是。rsqrtps函数是4个元素一算的，所以本程序使用4个元素作为一次计算单元来向量化。而用户输入的数据并不可能是正好4个元素。对于Intel编译器以及VML函数库来所，其使用的解决方法称为” Strip-mining and Cleanup”。即先按照4个数据一组进行计算。对于剩下的个别数据再进行单独计算。这对于通用化的程序来说是必须的。但是在我们的程序中，多计算几个并不会影响结果。而对于单独几个的数据如果另外处理不但会增加程序设计的复杂性，而且性能也可能会降低。所以本程序使用过渡计算的方法。即对于需要计算的数据中不足4个的，补满4个将其后面的数据计算掉。但是此时需要注意，由于dist变量是全局变量，默认的值为全0。如果过渡计算遇到0的值，速度可能会受到影响。所以本程序需要在一开始，将会被过渡计算使用到，但是从来不会被初始化的存储单元，初始化成1。具体代码如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">myinvsqrt</span> <span class="params">(<span class="keyword">double</span> *start,<span class="keyword">double</span> *end)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    __asm&#123;</span><br><span class="line">        mov esi,start;</span><br><span class="line">        mov edi,end;</span><br><span class="line">        test edi,<span class="number">0x0000001f</span>;</span><br><span class="line">        jz myalign;</span><br><span class="line">        <span class="keyword">and</span> edi,<span class="number">0xffffffe0</span>;</span><br><span class="line">        add edi,<span class="number">32</span>;</span><br><span class="line">        myalign:</span><br><span class="line">    </span><br><span class="line">    myagain:</span><br><span class="line">        movapd xmm0,[esi];</span><br><span class="line">        movapd xmm3,[esi+<span class="number">16</span>];</span><br><span class="line">        cvtpd2ps xmm6,xmm0;</span><br><span class="line">        cvtpd2ps xmm7,xmm3;</span><br><span class="line">        shufps xmm6,xmm7,<span class="number">01000100b</span>;</span><br><span class="line">        rsqrtps xmm6,xmm6;</span><br><span class="line">        cvtps2pd xmm1,xmm6;</span><br><span class="line">        shufps xmm6,xmm6,<span class="number">01001110b</span>;</span><br><span class="line">        cvtps2pd xmm4,xmm6;</span><br><span class="line">        mulpd xmm0,mulcc;</span><br><span class="line">        mulpd xmm3,mulcc;</span><br><span class="line">        movapd xmm2,xmm1;</span><br><span class="line">        movapd xmm5,xmm4;</span><br><span class="line">        mulpd xmm1,xmm1;</span><br><span class="line">        mulpd xmm4,xmm4;</span><br><span class="line">        mulpd xmm1,xmm0;</span><br><span class="line">        mulpd xmm4,xmm3;</span><br><span class="line">        addpd xmm1,addcc;</span><br><span class="line">        addpd xmm4,addcc;</span><br><span class="line">        mulpd xmm1,xmm2;</span><br><span class="line">        mulpd xmm4,xmm5;<span class="comment">//前半段</span></span><br><span class="line">        movapd xmm2,xmm1;</span><br><span class="line">        movapd xmm5,xmm4;</span><br><span class="line">        mulpd xmm1,xmm1;</span><br><span class="line">        mulpd xmm4,xmm4;</span><br><span class="line">        mulpd xmm1,xmm0;</span><br><span class="line">        mulpd xmm4,xmm3;</span><br><span class="line">        addpd xmm1,addcc;</span><br><span class="line">        addpd xmm4,addcc;</span><br><span class="line">        mulpd xmm1,xmm2;</span><br><span class="line">        mulpd xmm4,xmm5;</span><br><span class="line">        movapd [esi],xmm1;</span><br><span class="line">        movapd [esi+<span class="number">16</span>],xmm4;</span><br><span class="line">        add esi,<span class="number">32</span>;</span><br><span class="line">        cmp esi,edi;</span><br><span class="line">        jne myagain;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//后半段</span></span><br><span class="line"></span><br><span class="line">myinvsqrt(dist1,dist1+k); <span class="comment">//调用方法</span></span><br></pre></td></tr></table></figure></p>
+<p>对于本函数的调用方法为分别传入其需要计算数据的头指针和尾指针。</p>
+<h3 id="性能分析-1"><a href="#性能分析-1" class="headerlink" title="性能分析"></a>性能分析</h3><p>使用汇编语言优化后，程序跑出了惊人的0.312秒的好成绩。并且所有的输出数据全部都满足小数点后7位的精度要求。在使用Intel Threading Checker和Intel Threading Profiler分析程序时也得到了相对比较好的结果。</p>
+<p>在Intel Threading Checker的检测中，没有发现程序有任何冲突。在使用Intel Threading Profiler的分析中，表现出了程序良好的并行性。</p>
+<p>最后，在另外一台Intel酷睿2 E6600的机器上测试时，程序达到了0.25秒的好成绩，并且所有数据输出精度都达到了小数点后7位。</p>
+<h1 id="LLVM-内存依赖分析实现及其在后端优化中的应用"><a href="#LLVM-内存依赖分析实现及其在后端优化中的应用" class="headerlink" title="LLVM 内存依赖分析实现及其在后端优化中的应用"></a>LLVM 内存依赖分析实现及其在后端优化中的应用</h1><h2 id="内存依赖分析简介"><a href="#内存依赖分析简介" class="headerlink" title="内存依赖分析简介"></a>内存依赖分析简介</h2><p>提高程序并行度是提高代码执行效率的重要途经。在寄存器压力允许的条件下，编译器总是并行调度尽可能多的指令。并行指令执行需要满足的另一个条件是指令之间互相独立，即编译器必须先明确指令之间的相关性，才能决定是否并行执行。如果一条指令必须依赖另一条指令的执行，例如，计算操作数必须先由load指令从内存中加载，然后才能使用，这样的指令就不能并行执行。所以依赖性会抑制并行性。与别名分析类似，编译器对于指令之间依赖性的分析总是偏向保守。当编译器无法确定两条指令的依赖关系时，一般假定指令间存在依赖性，并顺序调度这两条指令。只有在编译器可以完全确定两条指令是相互独立时，才能并行调度执行。</p>
+<p>内存依赖的隐蔽性为编译器确定访问内存的指令依赖关系带来了一定困难。下面的例子很好地解释内存依赖：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">VectorAdd</span> <span class="params">(<span class="keyword">short</span> *sum, <span class="keyword">short</span> *input1, <span class="keyword">short</span> *input2)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; <span class="number">100</span>; i++)</span><br><span class="line">        sum[i] = input1[i] + input2[i];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>由于sum、input1和input2指针关系的不确定，将求和结果写入sum数组可能会影响input1或input2所指向的内存。例如，以如下参数调用<code>VectorAdd()</code>：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">VectorAdd (arr0, arr0, arr1);</span><br></pre></td></tr></table></figure></p>
+<p>这时，从内存中读取<code>input[i]</code>的操作就依赖于<code>sum[i-1]</code>的写入，以及<code>input1[i-1]</code>和<code>input2[i-1]</code>的求和操作。因此，编译器会默认for循环中的加法指令不能并行执行。显然，这会大大影响<code>VectorAdd()</code>的性能。</p>
+<p>为了帮助编译器分析内存依赖，大部分C / C ++编译器提供了标识指针别名信息的方法。 C99标准包括关键字strict。虽然C ++中没有标准关键字，但是大多数编译器允许使用关键字<code>__restrict__</code>。通过给指针增加strict属性，程序员可以向编译器保证，<strong>通过该指针写入的任何数据都不会被任何其他带有strict属性的指针读取，strict指针指向的内存对象只能被该指针访问，编译器也不必担心写入strict指针指向的内存会导致从另一个strict指针读取的值发生变化</strong>。对于<code>VectorAdd()</code>，如果事先知道<code>sum[i]</code>、<code>input1[i]</code>、<code>input2[i]</code>不会在内存中出现重叠，就可以给这些参数增加<code>__restrict__</code>修饰符：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">VectorAdd</span> <span class="params">(<span class="keyword">short</span> * __restrict__ sum, <span class="keyword">short</span> * __restrict__ input1, </span></span></span><br><span class="line"><span class="function"><span class="params">                <span class="keyword">short</span> * __restrict__ input2)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; <span class="number">100</span>; i++) &#123;</span><br><span class="line">        sum[i] = input1[i] + input2[i];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这时，编译器知道，循环的每次迭代均引用不同的数组元素，对<code>sum[i-1]</code>的写入不会影响<code>input1[i]</code>或<code>input2[i]</code>的读取。因此，循环的不同迭代可以按任意顺序执行。由于不同迭代的两个数据元素不可能相互干扰，编译器可以做更多的并行化优化。</p>
+<h2 id="LLVM中的内存分析实现"><a href="#LLVM中的内存分析实现" class="headerlink" title="LLVM中的内存分析实现"></a>LLVM中的内存分析实现</h2><p>LLVM中的内存依赖分析主要通过Wrapper pass MemoryDependenceWrapperPass实现（MemoryDependenceAnalysis.cpp.）。MemoryDependenceWrapperPass以别名分析信息为基础，确定给定内存操作所依赖的前导内存操作，最终对客户端暴露MemoryDepnedenceResults实例：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">MemoryDependenceResults *MDA = <span class="literal">nullptr</span>;</span><br><span class="line">MDA = &amp;getAnalysis&lt;MemoryDependenceWrapperPass&gt;().getMemDep();</span><br></pre></td></tr></table></figure></p>
+<p><code>MemoryDependenceResults</code>的定义位于<code>MemoryDependenceAnalysis.h</code>，是用于进行公用内存别名信息查询的缓存接口。如果被查询的<code>store</code>或<code>call</code>指令可能会修改内存，该接口将返回可能从该内存加载或存储数据到其中的指令；如果被查询的<code>load</code>或<code>call</code>指令不会修改内存，该接口将返回可能会修改指针的<code>call</code>和<code>store</code>指令，但通常不返回<code>load</code>指令，除非<code>load</code>指令是易失性的（volatile），或者<code>load</code>指令是从must-aliased指针中加载。</p>
+<p><code>MemoryDependenceResults</code>中定义的内存以来分析接口主要有：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">MemDepResult </span><br><span class="line">getDependency (Instruction *QueryInst, OrderedBasicBlock *OBB=<span class="literal">nullptr</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> NonLocalDepInfo &amp; </span><br><span class="line">getNonLocalCallDependency (CallBase *QueryCall)</span><br><span class="line"></span><br><span class="line">MemDepResult </span><br><span class="line">getPointerDependencyFrom (<span class="keyword">const</span> MemoryLocation &amp;Loc, <span class="keyword">bool</span> isLoad, BasicBlock::iterator ScanIt, </span><br><span class="line">                          BasicBlock *BB, Instruction *QueryInst=<span class="literal">nullptr</span>, </span><br><span class="line">                          <span class="keyword">unsigned</span> *Limit=<span class="literal">nullptr</span>, OrderedBasicBlock *OBB=<span class="literal">nullptr</span>)</span><br><span class="line"></span><br><span class="line">MemDepResult </span><br><span class="line">getSimplePointerDependencyFrom (<span class="keyword">const</span> MemoryLocation &amp;MemLoc, <span class="keyword">bool</span> isLoad, </span><br><span class="line">                                BasicBlock::iterator ScanIt, BasicBlock *BB, </span><br><span class="line">                          Instruction *QueryInst, <span class="keyword">unsigned</span> *Limit, OrderedBasicBlock *OBB)</span><br></pre></td></tr></table></figure></p>
+<p>这些接口中有的用于返回内存操作依赖的指令，有的用于返回内存位置依赖的指令，但返回的类型大多是<code>MemDepResult</code>，其中定义了内存依赖查询的四种结果：Invalid、Clobber、Def和Other，以及依赖的指令（getInst()）。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">enum</span> DepType &#123;</span><br><span class="line">    Invalid = <span class="number">0</span>,</span><br><span class="line">    Clobber,</span><br><span class="line">    Def,</span><br><span class="line">    Other</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>Invalid：当从MemDep中删除指令时，LocalDeps map或NonLocalDeps map中与该指令对应的条目将被标记为Invalid标记。LocalDeps是指令与其依赖关系之间的映射结构，NonLocalDeps是指令与其non-local依赖关系之间的映射结构。这里的local是指当前块，non-local指当前块的前驱块。LocalDeps和NonLocalDeps的定义如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> LocalDepMapType = DenseMap&lt;Instruction *, MemDepResult&gt;;</span><br><span class="line">LocalDepMapType LocalDeps;</span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> NonLocalDepMapType = DenseMap&lt;Instruction *, PerInstNLInfo&gt;;</span><br><span class="line">NonLocalDepMapType NonLocalDeps;</span><br></pre></td></tr></table></figure></p>
+<p>无论LocalDeps映射或NonLocalDeps映射，条目中都包括指令指针，指针指向的是扫描块中的指令。在默认构造的MemDepResult对象中，依赖类型设为Invalid，指令指针将为null。</p>
+<p>Clobber：Clobber是对篡改了内存中期望值的特定指令的依赖。 当内存依赖查询的结果为“Clobber”时，MemDepResult对的指针成员保存了篡改内存的指令。例如，当may-aliased的store指令向某个内存位置写时，有可能意外修改内存，导致随后load指令加载的数据被篡改。</p>
+<p>Def：当内存依赖查询的结果为“Def”时，表明内存位置与指令之间有依赖关系。此时，MemDepResult对中的指针成员保存了定义内存的指令。在本例中，<code>getPointerDependencyFrom()</code>对指针参数%r指向内存位置的查询结果就是Def，定义内存的指令为“store i32 %2, i32 addrspace(1)* %r, align 1”。</p>
+<p>Other：Other表示查询在指定的块中没有已知的依赖性。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Instruction *<span class="title">getInst</span><span class="params">()</span> <span class="keyword">const</span> </span>&#123;</span><br><span class="line">    <span class="keyword">switch</span> (Value.getTag()) &#123;</span><br><span class="line">    <span class="keyword">case</span> Invalid:</span><br><span class="line">         Value.cast&lt;Invalid&gt;();</span><br><span class="line">    <span class="keyword">case</span> Clobber:</span><br><span class="line">        <span class="keyword">return</span> Value.cast&lt;Clobber&gt;();</span><br><span class="line">    <span class="keyword">case</span> Def:</span><br><span class="line">        <span class="keyword">return</span> Value.cast&lt;Def&gt;();</span><br><span class="line">    <span class="keyword">case</span> Other:</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    llvm_unreachable(<span class="string">"Unknown discriminant!"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="内存分析在LLVM-AMDGPU后端优化中的应用"><a href="#内存分析在LLVM-AMDGPU后端优化中的应用" class="headerlink" title="内存分析在LLVM AMDGPU后端优化中的应用"></a>内存分析在LLVM AMDGPU后端优化中的应用</h2><p>LLVM AMDGPU后端实现中两处用到MemoryDependenceWrapperPass，其中之一就是AMDGPURewriteOutArgumentsPass。本节以AMDGPURewriteOutArgumentsPass为例，阐述内存依赖分析的用法。AMDGPURewriteOutArgumentsPass优化的目的是用的返回结构替换指针参数，将方法实现由：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"> <span class="function"><span class="keyword">int</span> <span class="title">foo</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b, <span class="keyword">int</span>* out)</span> </span>&#123;</span><br><span class="line">    *out = bar();</span><br><span class="line">    <span class="keyword">return</span> a + b;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>转化为形式：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::pair&lt;<span class="keyword">int</span>, <span class="keyword">int</span>&gt; foo(<span class="keyword">int</span> a, <span class="keyword">int</span> b) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">std</span>::make_pair(a + b, bar());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>上述第一个<code>foo()</code>方法实现中，除了返回<code>a+b</code>的结果外，还通过指针参数<code>out</code>返回<code>ba()</code>的执行结果。第一个<code>foo()</code>方法返回值类型是<code>std::pair</code>，可将两个数据组合成一个数据，<code>pair</code>实质上是一个结构体，通过调用<code>std::make_pair</code>函数初始化，两个主要成员变量<code>first</code>和<code>second</code>在这里分别是<code>a+b</code>和<code>ba()</code>的执行结果。</p>
+<p>一般方法执行结束后，可以直接通过寄存器中返回多个值。但是C代码通常使用指针参数返回第二个值，而不是按值返回结构。 GPU堆栈访问代价较高，因此应尽可能避免使用指针参数传递返回值。将堆栈对象指针传递给函数还需要附加的地址扩展代码序列，以将指针转换为kernel关联的scratch wave offset寄存器，因为被调用函数不知道传入指针和哪个栈帧关联。</p>
+<p>通常，传入的指针是指向由API调用​​为临时变量分配的内存，当创建的stub函数是内联函数时，如果将传入的指针替换为结构返回，传入的指针很可能被SROA（聚合标量替换）优化删除。</p>
+<p><code>AMDGPURewriteOutArgumentsPass</code>引入了结构返回，但是保留了未使用的指针参数，并引入了一个新的<code>stub</code>函数来调用struct返回主体。之后应运行<code>DeadArgumentElimination</code>将其清除。</p>
+<p>本文用到的IR示例文件如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">define dso_local i32 @test_mem_dep(&lt;32 x i8&gt; addrspace(4)* %in, i32 addrspace(1)* %r) #0 &#123;</span><br><span class="line">entry:</span><br><span class="line"> %0 = load &lt;32 x i8&gt;, &lt;32 x i8&gt; addrspace(4)* %in</span><br><span class="line"> %1 = bitcast &lt;32 x i8&gt; %0 to &lt;8 x i32&gt;</span><br><span class="line"> %2 = extractelement &lt;8 x i32&gt; %1, i32 1</span><br><span class="line"> store i32 %2, i32 addrspace(1)* %r, align 1</span><br><span class="line"> %3 = icmp ne i32 %2, 0</span><br><span class="line"> %4 = select i1 %3, i32 0, i32 1</span><br><span class="line"> %5 = bitcast &lt;32 x i8&gt; addrspace(4)* %in to &lt;8 x i32&gt; addrspace(4)*</span><br><span class="line"> %6 = load &lt;8 x i32&gt;, &lt;8 x i32&gt; addrspace(4)* %5</span><br><span class="line"> %7 = extractelement &lt;8 x i32&gt; %6, i32 1</span><br><span class="line"> %8 = load &lt;8 x i32&gt;, &lt;8 x i32&gt; addrspace(4)* %5</span><br><span class="line"> %9 = extractelement &lt;8 x i32&gt; %8, i32 1</span><br><span class="line"> %10 = add nsw i32 %7, %4</span><br><span class="line"> %add = add nsw i32 %10, %9</span><br><span class="line"> ret i32 %add</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><code>AMDGPURewriteOutArgumentsPass</code>的<code>runOnFunction()</code>方法遍历IR方法的输入参数，如本例中的<code>%in</code>、<code>%r</code>，调用<code>isOutArgumentCandidate()</code>方法判断：</p>
+<ul>
+<li>判断参数是否为指针类型。因为这个pass用于优化指针参数返回，所以如果参数不是指针，则返回false；</li>
+<li>判断参数的指针类型地址空间（getAddressSpace）是否和分配地址空间（getAllocaAddrSpace）相同。如果不相同，则返回false；</li>
+<li>判断传入的指针参数是否有<code>byval</code>属性（<code>hasByValAttr</code>）。如果有<code>byval</code>属性，表明指针参数按值传递给函数。如果有<code>byval</code>属性，则返回false；<ul>
+<li><code>byval</code>属性表示在调用者和被调用者之间已创建了pointee的隐藏副本，因此被调用者无法修改调用者中的值。该属性仅对LLVM指针参数有效，通常用于按值传递结构和数组，但对标量指针也有效。副本属于调用者而不是被调用者（例如，只读函数不应写入byval参数）。byval属性对返回值无效。<code>byval</code>属性还支持可选的类型实参，该实参必须与对应的<code>pointee</code>类型相同。<code>byval</code>属性还支持使用<code>align</code>属性指定对齐方式，向调用方指明stack slot的对齐方式和指针的对齐方式。如果未指定对齐方式，代码生成器将针对不同目标机器做不同的假设。</li>
+</ul>
+</li>
+<li>判断传入的指针参数是否有sret属性（hasStructRetAttr）。sret属性表明指针参数指向结构的地址，并将该结构作为源程序方法的返回值。如果有sret属性，则返回false；</li>
+<li>判断传入指针参数的类型的字节大小（<code>getTypeStoreSize</code>）是否超过指定值。如果超过，则返回false。比如，在本例中，对第一个输入向量指针参数<code>&lt;32 x i8&gt; addrspace(4)* %in</code>，<code>getTypeID()</code>返回<code>PointerTyID</code>，<code>getPointerElementType()</code>返回指向<code>VectorTyID</code>类型的指针，<code>getTypeStoreSize()</code>返回类型的保存大小，这个值由向量中元素的数量（getNumElements=32）和每个向量元素大小（<code>getTypeSizeInBits=8bits</code>）的乘积决定。乘积单位为比特，需要转为字节。因此，针对<code>&lt;32 x i8&gt; addrspace(4)* %in</code>的<code>getTypeStoreSize</code>返回值为32字节。</li>
+</ul>
+<p>如果上述5个条件任意一条不满足，则不能将该指针参数转化到返回结构中。<code>isOutArgumentCandidate()</code>代码如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">bool</span> AMDGPURewriteOutArguments::isOutArgumentCandidate(Argument &amp;Arg) <span class="keyword">const</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> <span class="keyword">unsigned</span> MaxOutArgSizeBytes = <span class="number">4</span> * MaxNumRetRegs;</span><br><span class="line">  PointerType *ArgTy = dyn_cast&lt;PointerType&gt;(Arg.getType());</span><br><span class="line"></span><br><span class="line">  <span class="comment">// <span class="doctag">TODO:</span> It might be useful for any out arguments, not just privates.</span></span><br><span class="line">  <span class="keyword">if</span> (!ArgTy || (ArgTy-&gt;getAddressSpace() != DL-&gt;getAllocaAddrSpace() &amp;&amp;</span><br><span class="line">                 !AnyAddressSpace) ||</span><br><span class="line">      Arg.hasByValAttr() || Arg.hasStructRetAttr() ||</span><br><span class="line">      DL-&gt;getTypeStoreSize(ArgTy-&gt;getPointerElementType()) &gt; MaxOutArgSizeBytes) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> checkArgumentUses(Arg);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>如果以上条件都满足，则继续执行<code>checkArgumentUses(Arg)</code>，代码如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">bool</span> AMDGPURewriteOutArguments::checkArgumentUses(Value &amp;Arg) <span class="keyword">const</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> <span class="keyword">int</span> MaxUses = <span class="number">10</span>;</span><br><span class="line">  <span class="keyword">int</span> UseCount = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">for</span> (Use &amp;U : Arg.uses()) &#123;</span><br><span class="line">    StoreInst *SI = dyn_cast&lt;StoreInst&gt;(U.getUser());</span><br><span class="line">    <span class="keyword">if</span> (UseCount &gt; MaxUses)</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!SI) &#123;</span><br><span class="line">      <span class="keyword">auto</span> *BCI = dyn_cast&lt;BitCastInst&gt;(U.getUser());</span><br><span class="line">      <span class="keyword">if</span> (!BCI || !BCI-&gt;hasOneUse())</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">      Type *DestEltTy = BCI-&gt;getType()-&gt;getPointerElementType();</span><br><span class="line">      <span class="keyword">if</span> (DestEltTy-&gt;isAggregateType())</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">      Type *SrcEltTy = Arg.getType()-&gt;getPointerElementType();</span><br><span class="line">      <span class="keyword">if</span> (SrcEltTy-&gt;isArrayTy())</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">if</span> ((SrcEltTy-&gt;isStructTy() &amp;&amp; (SrcEltTy-&gt;getNumContainedTypes() != <span class="number">1</span>)))</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">if</span> (DL-&gt;getTypeAllocSize(SrcEltTy) != DL-&gt;getTypeAllocSize(DestEltTy))</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">return</span> checkArgumentUses(*BCI);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!SI-&gt;isSimple() ||</span><br><span class="line">        U.getOperandNo() != StoreInst::getPointerOperandIndex())</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">    ++UseCount;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure></p>
+<p>该方法遍历指针参数的<code>use</code>，根据参数的<code>use</code>判断是否可以对参数做结构返回优化。例如，<code>%in</code>的<code>use</code>为<code>%0 = load &lt;32 x i8&gt;, &lt;32 x i8&gt; addrspace(4)* %in</code>，<code>%r</code>的<code>use</code>为<code>store i32 %2, i32 addrspace(1)* %r, align 1</code>。对指针参数的<code>use</code>依次做如下检查：</p>
+<ul>
+<li>判断指针参数是否被用作<code>store</code>指令的目的操作数，即判断是否向指针参数写入值，即写入返回值。只有在写入返回值时，对参数优化才有意义。<ul>
+<li>如果<code>store</code>不是<code>atomic</code>，<code>store</code>的内存位置也不是<code>volatile</code>，即<code>isSimple()</code>为真，则<code>UseCount</code>递增。这表明为指针参数找到合格的<code>use</code>。</li>
+</ul>
+</li>
+<li>如果没有<code>store</code>指令将指针参数作为目的操作数，则进一步判断是否有将指针参数作为操作数的<code>bitcast</code>指令，因为源程序中其它地方有可能通过<code>bitcast</code>指令将指针参数做类型转换，然后向其中写入数据。但优化无法处理对同一指针参数做多次<code>bitcast</code>操作的情况，因此要求<code>bitcast</code>结果只有一个use（hasOneUse()），否则，视为不合格的use。接下来判断<code>bitcast</code>操作后的类型是否为聚合类型（<code>isAggregateType()</code>）。聚合类型的数据可以作为insertvalue或extractvalue指令的第一个操作数，结构和数组类型都是聚合类型，但向量不是聚合类型。对指针参数做<code>bitcast</code>操作后的结果仍是指针参数，后续还会作为store的目的操作数。目前的优化实现不支持store到聚合类型目的操作数的情况。所以，如果<code>bitcast</code>操作后的类型是聚合类型，则视为不合格的use。类似地，目前的优化实现也不支持指针参数的单元类型为数组的情况（<code>isArrayTy()</code>），以及指针参数的单元类型为结构体（<code>isStructTy()</code>）且结构体中有多于一种数据类型的情况（<code>getNumContainedTypes()</code>），这些都被视为不合格的use。</li>
+</ul>
+<p>如果找到指针参数的合格<code>use</code>（如本例中的指针参数%r），则该指针参数有可能被优化为结构返回，将其保存在<code>OutArgs</code>向量中。在本例中，<code>OutArgs</code>向量中保存的是<code>%r</code>，其类型（<code>getType()</code>）为<code>llvm::Type::PointerTyID</code>，其指针元素类型（<code>getPointerElementType()</code>）为<code>llvm::Type::IntegerTyID</code>。</p>
+<p>接下来遍历IR中的<code>ReturnInst</code>（本例中为“ret i32 %add”），为每个ReturnInst所属的基本块调用内存依赖查询方法<code>getPointerDependencyFrom()</code>：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (ReturnInst *RI : Returns) &#123;</span><br><span class="line">  BasicBlock *BB = RI-&gt;getParent();</span><br><span class="line"></span><br><span class="line">  MemDepResult Q = MDA-&gt;getPointerDependencyFrom(MemoryLocation(OutArg),</span><br><span class="line">                                                 <span class="literal">true</span>, BB-&gt;end(), BB, RI);</span><br><span class="line">  StoreInst *SI = <span class="literal">nullptr</span>;</span><br><span class="line">  <span class="keyword">if</span> (Q.isDef())</span><br><span class="line">    SI = dyn_cast&lt;StoreInst&gt;(Q.getInst());</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (SI) &#123;</span><br><span class="line">    LLVM_DEBUG(dbgs() &lt;&lt; <span class="string">"Found out argument store: "</span> &lt;&lt; *SI &lt;&lt; <span class="string">'\n'</span>);</span><br><span class="line">    ReplaceableStores.emplace_back(RI, SI);</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    ThisReplaceable = <span class="literal">false</span>;</span><br><span class="line">    <span class="keyword">break</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><code>getPointerDependencyFrom()</code>方法原型如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">MemDepResult MemoryDependenceResults::getPointerDependencyFrom (</span><br><span class="line">	<span class="keyword">const</span> MemoryLocation &amp;  Loc,</span><br><span class="line">	<span class="keyword">bool</span>  			isLoad,</span><br><span class="line">	BasicBlock::iterator  	ScanIt,</span><br><span class="line">	BasicBlock *  		BB,</span><br><span class="line">	Instruction *  		QueryInst = <span class="literal">nullptr</span>,</span><br><span class="line">	<span class="keyword">unsigned</span> *  		Limit = <span class="literal">nullptr</span>,</span><br><span class="line">	OrderedBasicBlock *  	OBB = <span class="literal">nullptr</span> </span><br><span class="line">	)</span><br></pre></td></tr></table></figure></p>
+<p><code>getPointerDependencyFrom()</code>方法返回内存位置依赖的指令，该内存位置在参数中指定，如例子中的<code>MemoryLocation(OutArg)</code>表示<code>OutArg</code>指向的内存位置。<code>getPointerDependencyFrom()</code>方法的参数说明如下：</p>
+<ul>
+<li><code>isLoad</code>：如果<code>isLoad</code>为true，则<code>getPointerDependencyFrom()</code>方法忽略只读操作的may-alias别名。如果isLoad为false，则<code>getPointerDependencyFrom()</code>方法忽略只读位置读操作的may-alias别名；</li>
+<li><code>ScanIt</code>：遍历基本块时结束循环的条件，本例为BB-&gt;end()，即在基本块的最后指令处结束遍历；</li>
+<li><code>BB</code>：需检查依赖关系的基本块；</li>
+<li><code>QueryInst</code>：<code>QueryInst</code>参数可帮助<code>getPointerDependencyFrom()</code>方法利用QueryInst的元数据来完善依赖分析结果；</li>
+<li><code>Limit</code>：<code>Limit</code>参数用于设定需检查指针依赖的最大指令数。<code>getPointerDependencyFrom()</code>方法返回时，<code>Limit</code>又作为返回参数，设置为需要检查而未检查的指令数；</li>
+<li><code>OBB</code>：经过排序的基本块（Ordered Basic Block），OBB可快速查询基本块中两个指令之间的相对位置，<code>AliasAnalysis :: callCapturesBefore()</code>方法也会用到OBB。</li>
+</ul>
+<p><code>getPointerDependencyFrom()</code>方法的主要功能实现在<code>MemoryDependenceResults::getSimplePointerDependencyFrom()</code>中。</p>
+<p><code>getPointerDependencyFrom()</code>返回对象的类是<code>MemDepResult</code>。</p>
+<p>内存依赖查询方法的客户端可通过API获得查询结果。例如本例通过<code>Q.isDef()</code>判断查询结果是否为<code>Def</code>。本例中，<code>OutArg</code>为<code>%r</code>，<code>QueryInst</code>(即RI)为<code>ret i32 %add</code>，<code>getPointerDependencyFrom()</code>方法返回内存位置依赖的指令<code>Q.getInst()</code>为<code>store i32 %2, i32 addrspace(1)* %r, align 1</code>。这条store指令的确与<code>OutArg %r</code>相关，而且这条store指令可被结构返回替换，因此将其连同QueryInst一起保存在<code>ReplaceableStores</code>向量中。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ReplaceableStores.emplace_back(RI, SI);</span><br></pre></td></tr></table></figure></p>
+<p>遍历基本块并将可替换<code>store</code>指令收集完毕，保存<code>ReplaceableStores</code>到后，接下来遍历<code>ReplaceableStores</code>：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="built_in">std</span>::pair&lt;ReturnInst *, StoreInst *&gt; Store : ReplaceableStores) &#123;</span><br><span class="line">  Value *ReplVal = Store.second-&gt;getValueOperand();</span><br><span class="line"></span><br><span class="line">  <span class="keyword">auto</span> &amp;ValVec = Replacements[Store.first]</span><br><span class="line">  ......</span><br><span class="line"></span><br><span class="line">  ValVec.emplace_back(OutArg, ReplVal);</span><br><span class="line">  Store.second-&gt;eraseFromParent();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>其中，<code>ReplVal</code>是<code>store</code>指令的操作数（本例中为<code>%r</code>），<code>ValVec</code>是以<code>ReturnInst</code>为索引从<code>Replacements</code>中取得的<code>ReplacementVec</code>向量，该向量的单元是一对参数值<code>&lt;Argument *, Value *&gt;</code>。遍历<code>ReplaceableStores</code>的目的就是向<code>ValVec</code>中写入参数和值，即：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ValVec.emplace_back(OutArg, ReplVal);</span><br></pre></td></tr></table></figure></p>
+<p>在本例中<code>OutArg</code>为<code>i32 addrspace(1)* %r</code>，<code>ReplVal</code>为<code>%2 = extractelement &lt;8 x i32&gt; %1, i32 1</code>。</p>
+<p>然后将<code>store</code>指令从当前当前基本块中删除（<code>eraseFromParent()</code>），并将输出参数的类型<code>ArgTy</code>（本例中为<code>IntegerTyID</code>）保存在<code>ReturnTypes</code>向量中:<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (ThisReplaceable) &#123;</span><br><span class="line">    ReturnTypes.push_back(ArgTy);</span><br><span class="line">…</span><br></pre></td></tr></table></figure></p>
+<p>新生成的返回类型<code>NewRetTy</code>为<code>{ i32, i32 }</code>：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">StructType *NewRetTy = StructType::create(Ctx, ReturnTypes, F.getName());</span><br><span class="line">…</span><br></pre></td></tr></table></figure></p>
+<p>因为要将原IR方法的输出参数优化进返回结构，原方法发生变化，因此调用：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Function *NewFunc = Function::Create(NewFuncTy, Function::PrivateLinkage,</span><br><span class="line">F.getName() + <span class="string">".body"</span>);</span><br></pre></td></tr></table></figure></p>
+<p>生成新方法并添加到模块中，但要剥离所有返回属性。此时的IR方法如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">define <span class="keyword">private</span> %test_mem_dep @test_mem_dep.body(&lt;<span class="number">32</span> x i8&gt; addrspace(<span class="number">4</span>)* %in, </span><br><span class="line">                                                i32 addrspace(<span class="number">1</span>)* %r) #<span class="number">0</span> &#123;</span><br><span class="line">entry:</span><br><span class="line"> %<span class="number">0</span> = load &lt;<span class="number">32</span> x i8&gt;, &lt;<span class="number">32</span> x i8&gt; addrspace(<span class="number">4</span>)* %in</span><br><span class="line"> %<span class="number">1</span> = bitcast &lt;<span class="number">32</span> x i8&gt; %<span class="number">0</span> to &lt;<span class="number">8</span> x i32&gt;</span><br><span class="line"> %<span class="number">2</span> = extractelement &lt;<span class="number">8</span> x i32&gt; %<span class="number">1</span>, i32 <span class="number">1</span></span><br><span class="line"> %<span class="number">3</span> = icmp ne i32 %<span class="number">2</span>, <span class="number">0</span></span><br><span class="line"> %<span class="number">4</span> = select i1 %<span class="number">3</span>, i32 <span class="number">0</span>, i32 <span class="number">1</span></span><br><span class="line"> %<span class="number">5</span> = bitcast &lt;<span class="number">32</span> x i8&gt; addrspace(<span class="number">4</span>)* %in to &lt;<span class="number">8</span> x i32&gt; addrspace(<span class="number">4</span>)*</span><br><span class="line"> %<span class="number">6</span> = load &lt;<span class="number">8</span> x i32&gt;, &lt;<span class="number">8</span> x i32&gt; addrspace(<span class="number">4</span>)* %<span class="number">5</span></span><br><span class="line"> %<span class="number">7</span> = extractelement &lt;<span class="number">8</span> x i32&gt; %<span class="number">6</span>, i32 <span class="number">1</span></span><br><span class="line"> %<span class="number">8</span> = load &lt;<span class="number">8</span> x i32&gt;, &lt;<span class="number">8</span> x i32&gt; addrspace(<span class="number">4</span>)* %<span class="number">5</span></span><br><span class="line"> %<span class="number">9</span> = extractelement &lt;<span class="number">8</span> x i32&gt; %<span class="number">8</span>, i32 <span class="number">1</span></span><br><span class="line"> %<span class="number">10</span> = add nsw i32 %<span class="number">7</span>, %<span class="number">4</span></span><br><span class="line"> %add = add nsw i32 %<span class="number">10</span>, %<span class="number">9</span></span><br><span class="line"> ret i32 %add</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>从上述IR方法中可以看到，原IR方法中的store指令“store i32 %2, i32 addrspace(1)* %r, align 1”已经被删除。</p>
+<p>经过<code>insertvalue</code>指令处理：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">NewRetVal = B.CreateInsertValue(NewRetVal, RetVal, RetIdx++);</span><br></pre></td></tr></table></figure></p>
+<p>新的IR方法如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">; Function Attrs: nounwind</span><br><span class="line">define private %test_mem_dep @test_mem_dep.body(&lt;32 x i8&gt; addrspace(4)* %in, </span><br><span class="line">                                                i32 addrspace(1)* %r) #0 &#123;</span><br><span class="line">entry:</span><br><span class="line"> %0 = load &lt;32 x i8&gt;, &lt;32 x i8&gt; addrspace(4)* %in</span><br><span class="line"> %1 = bitcast &lt;32 x i8&gt; %0 to &lt;8 x i32&gt;</span><br><span class="line"> %2 = extractelement &lt;8 x i32&gt; %1, i32 1</span><br><span class="line"> %3 = icmp ne i32 %2, 0</span><br><span class="line"> %4 = select i1 %3, i32 0, i32 1</span><br><span class="line"> %5 = bitcast &lt;32 x i8&gt; addrspace(4)* %in to &lt;8 x i32&gt; addrspace(4)*</span><br><span class="line"> %6 = load &lt;8 x i32&gt;, &lt;8 x i32&gt; addrspace(4)* %5</span><br><span class="line"> %7 = extractelement &lt;8 x i32&gt; %6, i32 1</span><br><span class="line"> %8 = load &lt;8 x i32&gt;, &lt;8 x i32&gt; addrspace(4)* %5</span><br><span class="line"> %9 = extractelement &lt;8 x i32&gt; %8, i32 1</span><br><span class="line">  %10 = add nsw i32 %7, %4</span><br><span class="line"> %add = add nsw i32 %10, %9</span><br><span class="line"> %11 = insertvalue %test_mem_dep undef, i32 %add, 0</span><br><span class="line"> %12 = insertvalue %test_mem_dep %11, i32 %2, 1</span><br><span class="line"> ret %test_mem_dep %12</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在经过返回结构优化后的IR方法中，有两条用到<code>insertvalue</code>指令的语句：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">%<span class="number">11</span> = insertvalue %test_mem_dep undef, i32 %add, <span class="number">0</span></span><br><span class="line">%<span class="number">12</span> = insertvalue %test_mem_dep %<span class="number">11</span>, i32 %<span class="number">2</span>, <span class="number">1</span></span><br></pre></td></tr></table></figure></p>
+<p>第一条语句的目的是向undef的结构<code>%test_mem_dep</code>的第一个成员字段中插入i32类型的值%add。第一条语句继续向结构<code>%test_mem_dep</code>的第二个成员字段中插入i32类型的值%2。最后得到：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">%test_mem_dep %<span class="number">12</span> = &#123;i32 %add, i32 %<span class="number">2</span>&#125;</span><br></pre></td></tr></table></figure></p>
+<p><code>%test_mem_dep %12</code>就是优化后的返回结构。</p>
+<p><code>insertvalue</code>指令语法：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;result&gt; = insertvalue &lt;aggregate type&gt; &lt;val&gt;, &lt;ty&gt; &lt;elt&gt;, &lt;idx&gt;&#123;, &lt;idx&gt;&#125;* ; yields &lt;aggregate type&gt;</span><br></pre></td></tr></table></figure></p>
+<p><code>insertvalue</code>指令将某个值插入到另一个聚合值（aggregate value）的成员字段中。insertvalue指令的第一个操作数是一个结构或数组，第二个操作数是要插入的值。接下来的操作数是常量索引，表示插入值的位置，要插入的值必须与索引所标识的值具有相同的类型。</p>
+<p>例如：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">%agg1 = insertvalue &#123;i32, <span class="keyword">float</span>&#125; undef, i32 <span class="number">1</span>, <span class="number">0</span></span><br></pre></td></tr></table></figure></p>
+<p>其中，结构{i32, float}是指令的第一个操作数。第二个操作数“i32 1”表示是要插入的值为1，类型为i32。第三个操作数0表示将“i32 1”插入结构的第一个成员字段，成员字段的类型与要插入的类型都为i32。操作完成后的结果为{i32 1, float undef}。</p>
+<p>再例如：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">%agg2 = insertvalue &#123;i32, <span class="keyword">float</span>&#125; %agg1, <span class="keyword">float</span> %val, <span class="number">1</span></span><br></pre></td></tr></table></figure></p>
+<p>上述语句的目的是将<code>loat %val</code>插入结构<code>{i32, float} %agg1</code>的第二个成员字段，结果为<code>{i32 1, float %val}</code>。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/C/" rel="tag"># C++</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/11/24/Linux_IO原理/" rel="next" title="Linux I/O 原理和 Zero-copy 技术全面揭秘">
+                <i class="fa fa-chevron-left"></i> Linux I/O 原理和 Zero-copy 技术全面揭秘
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/11/27/内存管理——Slab 分配器/" rel="prev" title="内存管理——Slab 分配器">
+                内存管理——Slab 分配器 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">338</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/xiaomeihao.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#常量传播"><span class="nav-number">1.</span> <span class="nav-text">常量传播</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#常量折叠"><span class="nav-number">2.</span> <span class="nav-text">常量折叠</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#复写传播"><span class="nav-number">3.</span> <span class="nav-text">复写传播</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#公共子表式消除"><span class="nav-number">4.</span> <span class="nav-text">公共子表式消除</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#无用代码消除"><span class="nav-number">5.</span> <span class="nav-text">无用代码消除</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#数组范围检查消除"><span class="nav-number">6.</span> <span class="nav-text">数组范围检查消除</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#方法内联"><span class="nav-number">7.</span> <span class="nav-text">方法内联</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#逃逸分析"><span class="nav-number">8.</span> <span class="nav-text">逃逸分析</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#一个演示简单编译器循环优化的例子"><span class="nav-number">9.</span> <span class="nav-text">一个演示简单编译器循环优化的例子</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#演示用的代码例子"><span class="nav-number">9.1.</span> <span class="nav-text">演示用的代码例子</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#副作用？"><span class="nav-number">9.2.</span> <span class="nav-text">副作用？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#副作用与控制依赖"><span class="nav-number">9.3.</span> <span class="nav-text">副作用与控制依赖</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#循环不变量与循环不变量外提（LICM）"><span class="nav-number">9.4.</span> <span class="nav-text">循环不变量与循环不变量外提（LICM）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#循环判断外提（loop-unswitching）"><span class="nav-number">9.5.</span> <span class="nav-text">循环判断外提（loop unswitching）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内存写的下沉（store-sinking）"><span class="nav-number">9.6.</span> <span class="nav-text">内存写的下沉（store sinking）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#循环归纳变量优化（loop-induction-variable-optimizations）"><span class="nav-number">9.7.</span> <span class="nav-text">循环归纳变量优化（loop induction variable optimizations）</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#英特尔多核平台编程优化大赛报告"><span class="nav-number">10.</span> <span class="nav-text">英特尔多核平台编程优化大赛报告</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">10.1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#串行优化"><span class="nav-number">10.2.</span> <span class="nav-text">串行优化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#代码的基本修改和优化"><span class="nav-number">10.2.1.</span> <span class="nav-text">代码的基本修改和优化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#基于Intel编译器的优化"><span class="nav-number">10.2.2.</span> <span class="nav-text">基于Intel编译器的优化</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#编译器优化级别"><span class="nav-number">10.2.2.1.</span> <span class="nav-text">编译器优化级别</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#针对特定处理器进行优化"><span class="nav-number">10.2.2.2.</span> <span class="nav-text">针对特定处理器进行优化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#使用IPO"><span class="nav-number">10.2.2.3.</span> <span class="nav-text">使用IPO</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#使用GPO"><span class="nav-number">10.2.2.4.</span> <span class="nav-text">使用GPO</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#循环展开"><span class="nav-number">10.2.2.5.</span> <span class="nav-text">循环展开</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#浮点计算优化"><span class="nav-number">10.2.2.6.</span> <span class="nav-text">浮点计算优化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#自动并行化"><span class="nav-number">10.2.2.7.</span> <span class="nav-text">自动并行化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#使用OpenMP并行化"><span class="nav-number">10.2.2.8.</span> <span class="nav-text">使用OpenMP并行化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#向量化"><span class="nav-number">10.2.2.9.</span> <span class="nav-text">向量化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#使用变量对齐指示"><span class="nav-number">10.2.2.10.</span> <span class="nav-text">使用变量对齐指示</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#数据预读"><span class="nav-number">10.2.2.11.</span> <span class="nav-text">数据预读</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#产生调试信息"><span class="nav-number">10.2.2.12.</span> <span class="nav-text">产生调试信息</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#使用全局优化"><span class="nav-number">10.2.2.13.</span> <span class="nav-text">使用全局优化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#针对Windows程序优化"><span class="nav-number">10.2.2.14.</span> <span class="nav-text">针对Windows程序优化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#内联函数扩展"><span class="nav-number">10.2.2.15.</span> <span class="nav-text">内联函数扩展</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#FTZ与DAZ"><span class="nav-number">10.2.2.16.</span> <span class="nav-text">FTZ与DAZ</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#编译器报告"><span class="nav-number">10.2.2.17.</span> <span class="nav-text">编译器报告</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用Intel编译器函数进行精确时间测量"><span class="nav-number">10.2.3.</span> <span class="nav-text">使用Intel编译器函数进行精确时间测量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用Intel-VTune-Analyzers进行性能分析"><span class="nav-number">10.2.4.</span> <span class="nav-text">使用Intel VTune Analyzers进行性能分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Intel-VTune-Analyzers概述"><span class="nav-number">10.2.4.1.</span> <span class="nav-text">Intel VTune Analyzers概述</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#基于SAMPLING方式的分析"><span class="nav-number">10.2.4.2.</span> <span class="nav-text">基于SAMPLING方式的分析</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#优化computePot函数"><span class="nav-number">10.2.5.</span> <span class="nav-text">优化computePot函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用Intel-Math-Kernel-Library"><span class="nav-number">10.2.6.</span> <span class="nav-text">使用Intel Math Kernel Library</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#根据Cache大小优化Intel-Math-Kernel-Library调用"><span class="nav-number">10.2.7.</span> <span class="nav-text">根据Cache大小优化Intel Math Kernel Library调用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#优化updatePositions函数"><span class="nav-number">10.2.8.</span> <span class="nav-text">优化updatePositions函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#其他优化以及性能分析"><span class="nav-number">10.2.9.</span> <span class="nav-text">其他优化以及性能分析</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#并行优化"><span class="nav-number">10.3.</span> <span class="nav-text">并行优化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#并行优化概述"><span class="nav-number">10.3.1.</span> <span class="nav-text">并行优化概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#优化方案一"><span class="nav-number">10.3.2.</span> <span class="nav-text">优化方案一</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#优化方案二"><span class="nav-number">10.3.3.</span> <span class="nav-text">优化方案二</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#并行实现"><span class="nav-number">10.3.4.</span> <span class="nav-text">并行实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#性能分析"><span class="nav-number">10.3.5.</span> <span class="nav-text">性能分析</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#汇编级优化"><span class="nav-number">10.4.</span> <span class="nav-text">汇编级优化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#优化目标"><span class="nav-number">10.4.1.</span> <span class="nav-text">优化目标</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数学理论"><span class="nav-number">10.4.2.</span> <span class="nav-text">数学理论</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#汇编码实现"><span class="nav-number">10.4.3.</span> <span class="nav-text">汇编码实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#性能分析-1"><span class="nav-number">10.4.4.</span> <span class="nav-text">性能分析</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#LLVM-内存依赖分析实现及其在后端优化中的应用"><span class="nav-number">11.</span> <span class="nav-text">LLVM 内存依赖分析实现及其在后端优化中的应用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#内存依赖分析简介"><span class="nav-number">11.1.</span> <span class="nav-text">内存依赖分析简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#LLVM中的内存分析实现"><span class="nav-number">11.2.</span> <span class="nav-text">LLVM中的内存分析实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内存分析在LLVM-AMDGPU后端优化中的应用"><span class="nav-number">11.3.</span> <span class="nav-text">内存分析在LLVM AMDGPU后端优化中的应用</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<span id="busuanzi_container_site_uv"> 
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
