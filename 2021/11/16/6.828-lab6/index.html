@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="来源：https://github.com/bysui/mit6.828 Introduction我们已经实现了1个文件系统，当然OS还需要1个网络栈，在本次实验中我们将实现1个网卡驱动，这个网卡基于Intel 82540EM芯片，也就是熟知的E1000网卡。 网卡驱动不足以使你的OS能连接上Internet。在LAB6新增加的代码中，我们提供了1个网络栈(network stack)和网络服务器">
+<meta name="keywords" content="Linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="6.828 lab6">
+<meta property="og:url" content="http://yoursite.com/2021/11/16/6.828-lab6/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="来源：https://github.com/bysui/mit6.828 Introduction我们已经实现了1个文件系统，当然OS还需要1个网络栈，在本次实验中我们将实现1个网卡驱动，这个网卡基于Intel 82540EM芯片，也就是熟知的E1000网卡。 网卡驱动不足以使你的OS能连接上Internet。在LAB6新增加的代码中，我们提供了1个网络栈(network stack)和网络服务器">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/20211129222000.png">
+<meta property="og:image" content="http://yoursite.com/img/1638326044.jpg">
+<meta property="og:updated_time" content="2021-12-01T08:22:17.368Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="6.828 lab6">
+<meta name="twitter:description" content="来源：https://github.com/bysui/mit6.828 Introduction我们已经实现了1个文件系统，当然OS还需要1个网络栈，在本次实验中我们将实现1个网卡驱动，这个网卡基于Intel 82540EM芯片，也就是熟知的E1000网卡。 网卡驱动不足以使你的OS能连接上Internet。在LAB6新增加的代码中，我们提供了1个网络栈(network stack)和网络服务器">
+<meta name="twitter:image" content="http://yoursite.com/img/20211129222000.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2021/11/16/6.828-lab6/">
+
+
+
+
+
+  <title>6.828 lab6 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/resume.pdf" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-mybetterhalf">
+          <a href="/mybetterhalf/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            mybetterhalf
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/11/16/6.828-lab6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">6.828 lab6</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-11-16T22:28:00+08:00">
+                2021-11-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>来源：<a href="https://github.com/bysui/mit6.828" target="_blank" rel="noopener">https://github.com/bysui/mit6.828</a></p>
+<h1 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h1><p>我们已经实现了1个文件系统，当然OS还需要1个网络栈，在本次实验中我们将实现1个网卡驱动，这个网卡基于Intel 82540EM芯片，也就是熟知的E1000网卡。</p>
+<p>网卡驱动不足以使你的OS能连接上Internet。在LAB6新增加的代码中，我们提供了1个网络栈(network stack)和网络服务器(network server)在<code>net/</code>目录和<code>kern/</code>目录下。</p>
+<p>本次新增加的文件如下：</p>
+<ul>
+<li><code>net/lwip</code>目录：开源轻量级TCP/IP协议组件包括1个网络栈</li>
+<li><code>net/timer.c</code>：定时器功能测试程序</li>
+<li><code>net/ns.h</code>：网卡驱动相关的参数宏定义和函数声明</li>
+<li><code>net/testinput.c</code>：收包功能测试程序</li>
+<li><code>net/input.c</code>：收包功能的用户态函数</li>
+<li><code>net/testoutput.c</code>：发包功能测试程序</li>
+<li><code>net/output.c</code>：发包功能的用户态函数</li>
+<li><code>net/serv.c</code>：网络服务器的实现</li>
+<li><code>kern/e1000.c</code>：网卡驱动的内核实现</li>
+<li><code>kern/e1000.h</code>：网卡驱动实现相关的参数宏定义和函数声明</li>
+</ul>
+<p>除了实现网卡驱动，我们还要实现1个系统调用接口来访问驱动。我们需要实现网络服务器代码来传输网络数据包在网络栈和驱动之间。同时网络服务器也能使用文件系统中的文件。</p>
+<p>大部分内核驱动代码必须从零开始编写，这次实验比前面的实验提供更少的指导：没有骨架文件、没有系统调用接口等。总之一句话，要实现这次实验需要阅读很多提供的指导说明手册，才能完成实验。</p>
+<h1 id="QEMU’s-virtual-network"><a href="#QEMU’s-virtual-network" class="headerlink" title="QEMU’s virtual network"></a>QEMU’s virtual network</h1><p>我们将会使用QEMU用户态网络栈，因为它运行不需要管理员权限。</p>
+<p>在默认情况下，QEMU会提供一个运行在IP为10.0.2.2的虚拟路由器并且分配给JOS一个10.0.2.15的IP地址。为了简单起见，我们把这些默认设置硬编码在了<code>net/ns.h</code>中。</p>
+<p>尽管QEMU的虚拟网络允许JOS和互联网做任意的连接，但是JOS的10.0.2.15 IP地址在QEMU运行的虚拟网络之外没有任何意义(QEMU就像一个NAT)，所以我们不能直接和JOS中运行的se服务器连接，即使是运行QEMU的宿主机上也不行。为了解决这个问题，我们通过配置QEMU，让JOS的一些端口和宿主机的某些端口相连，让服务器运行在这些端口上，从而让数据在宿主机和虚拟网络之间进行交换。</p>
+<p>我们将在端口7（echo）和80（http）运行端口。为了避免端口冲突，makefile里实现了端口转发。可以通过运行<code>make which-ports</code>来找出QEMU转发的端口，也可以通过<code>make nc-7</code>和<code>make nc-80</code>来和运行在这些端口上的服务器交互。</p>
+<h2 id="Packet-Inspection"><a href="#Packet-Inspection" class="headerlink" title="Packet Inspection"></a>Packet Inspection</h2><p>makefile也配置了QEMU的网络栈来记录各种进入和出去的数据包到<code>qemu.pcap</code>文件中。为了获得hex/ASCII的转换，我们可以使用<code>tcpdump</code>命令(Linux下非常有用的网络抓包分析工具，具体的参数说明可以用man tcpdump)：<br><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tcpdump -XXnr qemu.pcap</span><br></pre></td></tr></table></figure></p>
+<h2 id="Debugging-the-E1000"><a href="#Debugging-the-E1000" class="headerlink" title="Debugging the E1000　　"></a>Debugging the E1000　　</h2><p>很幸运我们使用的是模拟硬件，E1000网卡运行为软件，模拟的E1000网卡能以用户可读的形式，向我们汇报有用的信息，比如内部状态和问题。</p>
+<p>模拟E1000网卡能产生一系列debug输出，通过打开特殊的日志通道，来捕获输出信息：</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tx</td>
+<td>Log packet transmit operations</td>
+</tr>
+<tr>
+<td>txerr</td>
+<td>Log transmit ring errors</td>
+</tr>
+<tr>
+<td>rx</td>
+<td>Log changes to RCTL</td>
+</tr>
+<tr>
+<td>rxfilter</td>
+<td>Log filtering of incoming packets</td>
+</tr>
+<tr>
+<td>rxerr</td>
+<td>Log receive ring errors</td>
+</tr>
+<tr>
+<td>unknown</td>
+<td>Log reads and writes of unknown registers</td>
+</tr>
+<tr>
+<td>eeprom</td>
+<td>Log reads from the EEPROM</td>
+</tr>
+<tr>
+<td>interrupt</td>
+<td>Log interrupts and changes to interrupt registers.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="The-Network-Server"><a href="#The-Network-Server" class="headerlink" title="The Network Server"></a>The Network Server</h2><p>从零开始写1个网络栈是很难的。这里，我们使用lwIP开源TCP/IP协议组件来实现网络栈。在这个实验中，我们只需知道lwIP是一个黑盒，它实现了BSD的socket接口并且有一个数据包input port和数据包output port。</p>
+<p>网络服务器其实是由以下四个environments组成的</p>
+<ol>
+<li>核心网络服务 environment(包括socket调用分发和lwIP</li>
+<li>输入environment</li>
+<li>输出environment</li>
+<li>计时environment</li>
+</ol>
+<p>下图显示了各个environments以及它们之间的关系。图中展示了整个系统包括设备驱动。在本次实验中，我们将实现被标记为绿色的那些部分。<br><img src="/img/20211129222000.png" alt></p>
+<p>其实整个网络服务器实现与文件系统的实现类似，也是通过IPC机制来在各个environment之间进行数据交互。</p>
+<p>本次实验中QEMU因为不是MIT修改过的版本，所以改为：<br><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/home/yuhao/6.828/qemu/i386-softmmu/qemu-system-i386 -drive file=obj/kern/kernel.img,index=0,media=disk,format=raw -serial mon:stdio -gdb tcp::26000 -D qemu.log -smp 1 -drive file=obj/fs/fs.img,index=1,media=disk,format=raw -netdev user,id=u1 -device e1000,netdev=u1 -nic user,hostfwd=tcp::26001-:7 -nic user,hostfwd=tcp::26002-:80 -nic user,hostfwd=udp::26001-:7 -object filter-dump,id=f1,netdev=u1,file=qemu.pcap</span><br></pre></td></tr></table></figure></p>
+<h2 id="The-Core-Network-Server-Environment"><a href="#The-Core-Network-Server-Environment" class="headerlink" title="The Core Network Server Environment　　"></a>The Core Network Server Environment　　</h2><p>核心网络服务environment由<code>socket</code>调用分发器和lwIP组成。<code>socket</code>调用分发和文件服务器的工作方式类似。用户 environment通过<code>stubs</code>（定义在<code>lib/nsipc.c</code>）向核心网络environment发送IPC消息。查看<code>lib/nsipc.c</code>可以发现，核心网络服务器的工作方式和文件服务器是类似的：<code>i386_init</code>创建了NS environment，类型为<code>NS_TYPE_NS</code>，因此我们遍历<code>envs</code>，找到这个特殊的environment type。对于每一个用户environment的IPC，网络服务器中的IPC分发器会调用由lwIP提供的BSD socket接口来实现。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Send an IP request to the network server, and wait for a reply.</span></span><br><span class="line"><span class="comment">// The request body should be in nsipcbuf, and parts of the response</span></span><br><span class="line"><span class="comment">// may be written back to nsipcbuf.</span></span><br><span class="line"><span class="comment">// type: request code, passed as the simple integer IPC value.</span></span><br><span class="line"><span class="comment">// Returns 0 if successful, &lt; 0 on failure.</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">int</span></span><br><span class="line">nsipc(<span class="keyword">unsigned</span> type)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">envid_t</span> nsenv;</span><br><span class="line">    <span class="keyword">if</span> (nsenv == <span class="number">0</span>)</span><br><span class="line">        nsenv = ipc_find_env(ENV_TYPE_NS);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static_assert</span>(<span class="keyword">sizeof</span>(nsipcbuf) == PGSIZE);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (debug)</span><br><span class="line">        cprintf(<span class="string">"[%08x] nsipc %d\n"</span>, thisenv-&gt;env_id, type);</span><br><span class="line"></span><br><span class="line">    ipc_send(nsenv, type, &amp;nsipcbuf, PTE_P|PTE_W|PTE_U);</span><br><span class="line">    <span class="keyword">return</span> ipc_recv(<span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>普通的用户environment不直接使用<code>nsipc_*</code>调用。通常它们都使用<code>lib/sockets.c</code>中提供的基于文件描述符的sockets API。因此，用户environment通过文件描述符来引用<code>socket</code>，就像引用普通的磁盘文件一样。虽然<code>socket</code>有许多特殊的操作(比如<code>connect</code>、<code>accept</code>等等)，但是像<code>read</code>，<code>write</code>，<code>close</code>这样的操作也是通过<code>lib/fd.c</code>中正常的文件描述符device-dispatcher代码。就像文件服务器会为所有打开的文件维护一个内部独有的ID，lwIP也会为每个打开的socket维护一个独有的ID。在文件服务器或者网络服务器中，我们使用存储在<code>struct Fd</code>中的信息来映射每个environment的文件描述符到相应的ID空间中。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">int</span></span><br><span class="line">fd2sockid(<span class="keyword">int</span> fd)</span><br><span class="line">&#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">Fd</span> *<span class="title">sfd</span>;</span></span><br><span class="line">        <span class="keyword">int</span> r;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> ((r = fd_lookup(fd, &amp;sfd)) &lt; <span class="number">0</span>)</span><br><span class="line">                <span class="keyword">return</span> r;</span><br><span class="line">        <span class="keyword">if</span> (sfd-&gt;fd_dev_id != devsock.dev_id)</span><br><span class="line">                <span class="keyword">return</span> -E_NOT_SUPP;</span><br><span class="line">        <span class="keyword">return</span> sfd-&gt;fd_sock.sockid;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">int</span></span><br><span class="line">alloc_sockfd(<span class="keyword">int</span> sockid)</span><br><span class="line">&#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">Fd</span> *<span class="title">sfd</span>;</span></span><br><span class="line">        <span class="keyword">int</span> r;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> ((r = fd_alloc(&amp;sfd)) &lt; <span class="number">0</span></span><br><span class="line">            || (r = sys_page_alloc(<span class="number">0</span>, sfd, PTE_P|PTE_W|PTE_U|PTE_SHARE)) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">                nsipc_close(sockid);</span><br><span class="line">                <span class="keyword">return</span> r;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        sfd-&gt;fd_dev_id = devsock.dev_id;</span><br><span class="line">        sfd-&gt;fd_omode = O_RDWR;</span><br><span class="line">        sfd-&gt;fd_sock.sockid = sockid;</span><br><span class="line">        <span class="keyword">return</span> fd2num(sfd);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span></span><br><span class="line">accept(<span class="keyword">int</span> s, struct sockaddr *addr, <span class="keyword">socklen_t</span> *addrlen)</span><br><span class="line">&#123;</span><br><span class="line">        <span class="keyword">int</span> r;</span><br><span class="line">        <span class="keyword">if</span> ((r = fd2sockid(s)) &lt; <span class="number">0</span>)</span><br><span class="line">                <span class="keyword">return</span> r;</span><br><span class="line">        <span class="keyword">if</span> ((r = nsipc_accept(r, addr, addrlen)) &lt; <span class="number">0</span>)</span><br><span class="line">                <span class="keyword">return</span> r;</span><br><span class="line">        <span class="keyword">return</span> alloc_sockfd(r);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span></span><br><span class="line">bind(<span class="keyword">int</span> s, struct sockaddr *name, <span class="keyword">socklen_t</span> namelen)</span><br><span class="line">&#123;</span><br><span class="line">        <span class="keyword">int</span> r;</span><br><span class="line">        <span class="keyword">if</span> ((r = fd2sockid(s)) &lt; <span class="number">0</span>)</span><br><span class="line">                <span class="keyword">return</span> r;</span><br><span class="line">        <span class="keyword">return</span> nsipc_bind(r, name, namelen);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span></span><br><span class="line">shutdown(<span class="keyword">int</span> s, <span class="keyword">int</span> how)</span><br><span class="line">&#123;</span><br><span class="line">        <span class="keyword">int</span> r;</span><br><span class="line">        <span class="keyword">if</span> ((r = fd2sockid(s)) &lt; <span class="number">0</span>)</span><br><span class="line">                <span class="keyword">return</span> r;</span><br><span class="line">        <span class="keyword">return</span> nsipc_shutdown(r, how);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">int</span></span><br><span class="line">devsock_close(struct Fd *fd)</span><br><span class="line">&#123;</span><br><span class="line">        <span class="keyword">if</span> (pageref(fd) == <span class="number">1</span>)</span><br><span class="line">                <span class="keyword">return</span> nsipc_close(fd-&gt;fd_sock.sockid);</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">                <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span></span><br><span class="line">connect(<span class="keyword">int</span> s, <span class="keyword">const</span> struct sockaddr *name, <span class="keyword">socklen_t</span> namelen)</span><br><span class="line">&#123;</span><br><span class="line">        <span class="keyword">int</span> r;</span><br><span class="line">        <span class="keyword">if</span> ((r = fd2sockid(s)) &lt; <span class="number">0</span>)</span><br><span class="line">                <span class="keyword">return</span> r;</span><br><span class="line">        <span class="keyword">return</span> nsipc_connect(r, name, namelen);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span></span><br><span class="line">listen(<span class="keyword">int</span> s, <span class="keyword">int</span> backlog)</span><br><span class="line">&#123;</span><br><span class="line">        <span class="keyword">int</span> r;</span><br><span class="line">        <span class="keyword">if</span> ((r = fd2sockid(s)) &lt; <span class="number">0</span>)</span><br><span class="line">                <span class="keyword">return</span> r;</span><br><span class="line">        <span class="keyword">return</span> nsipc_listen(r, backlog);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">ssize_t</span></span><br><span class="line">devsock_read(struct Fd *fd, <span class="keyword">void</span> *buf, <span class="keyword">size_t</span> n)</span><br><span class="line">&#123;</span><br><span class="line">        <span class="keyword">return</span> nsipc_recv(fd-&gt;fd_sock.sockid, buf, n, <span class="number">0</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">ssize_t</span></span><br><span class="line">devsock_write(struct Fd *fd, <span class="keyword">const</span> <span class="keyword">void</span> *buf, <span class="keyword">size_t</span> n)</span><br><span class="line">&#123;</span><br><span class="line">        <span class="keyword">return</span> nsipc_send(fd-&gt;fd_sock.sockid, buf, n, <span class="number">0</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">int</span></span><br><span class="line">devsock_stat(struct Fd *fd, struct Stat *stat)</span><br><span class="line">&#123;</span><br><span class="line">        <span class="built_in">strcpy</span>(stat-&gt;st_name, <span class="string">"&lt;sock&gt;"</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span></span><br><span class="line">socket(<span class="keyword">int</span> domain, <span class="keyword">int</span> type, <span class="keyword">int</span> protocol)</span><br><span class="line">&#123;</span><br><span class="line">        <span class="keyword">int</span> r;</span><br><span class="line">        <span class="keyword">if</span> ((r = nsipc_socket(domain, type, protocol)) &lt; <span class="number">0</span>)</span><br><span class="line">                <span class="keyword">return</span> r;</span><br><span class="line">        <span class="keyword">return</span> alloc_sockfd(r);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>虽然看起来文件服务器和网络服务器的IPC分发器工作方式相同，但是事实上有一个非常重要的区别。有些BSD socket的操作，例如accept和recv可能会永远阻塞。如果分发器让lwIP运行其中一个堵塞调用，那么很可能分发器会阻塞，因此整个系统在某一时刻只能有一个网络调用，显然，这是不能让人接收的。因此网络服务器使用用户级线程去避免整个服务器environment的阻塞。对于每一个到来的IPC，分发器都会创建一个线程，然后由它对请求进行处理。即使这个线程阻塞了，那么也仅仅只是它进入休眠状态，而其他的线程照样能继续运行。</p>
+<p>除了核心网络environment之外，还有其他三个辅助的environment。除了从用户程序中获取消息以外，核心网络 environment的分发器还从input environment和timer environment处获取信息。</p>
+<h2 id="The-Output-Environment"><a href="#The-Output-Environment" class="headerlink" title="The Output Environment　"></a>The Output Environment　</h2><p>当处理用户environment的socket调用时，lwIP会产生packet用于网卡的传输。lwIP会将需要发送的packet通过<code>NSREQ_OUTPUT IPC</code>发送给output helper environment，packet的内容存放在IPC的共享页中。output environment负责接收这些信息并且通过系统调用接口将这些packet转发到相应的设备驱动(我们即将实现)。</p>
+<h2 id="The-Input-Environment"><a href="#The-Input-Environment" class="headerlink" title="The Input Environment"></a>The Input Environment</h2><p>网卡得到的packet需要注入到lwIP中。对于设备驱动获得的每一个packet，input environment需要通过相应的系统调用将它们从内核中抽取出来，然后通过<code>NSREQ_INPUT IPC</code>发送给核心服务器environment。</p>
+<p>packet input的功能从核心网络environment中剥离出来了，因为接收IPC并且同时接收或等待来自设备驱动的packet对于JOS是非常困难的。因为JOS中没有select这样能够允许environment监听多个输入源并且判断出哪个源已经准备好了。</p>
+<p>当我们实现完网卡驱动和系统调用接口后<code>net/input.c</code>和<code>net/output.c</code>中就是我们要实现的2个用户态函数。</p>
+<h2 id="The-Timer-Environment"><a href="#The-Timer-Environment" class="headerlink" title="The Timer Environment　　　　　　　"></a>The Timer Environment　　　　　　　</h2><p>timer environment会定期地向核心网络服务器发送<code>NSREQ_TIMER IPC</code>，通知它又过去了一个时间间隔，而lwIP会利用这些时间信息去实现各种的网络超时。</p>
+<h1 id="Part-A-Initialization-and-transmitting-packets"><a href="#Part-A-Initialization-and-transmitting-packets" class="headerlink" title="Part A: Initialization and transmitting packets"></a>Part A: Initialization and transmitting packets</h1><p>我们的内核中还没有时间的概念，所以我们需要加上它。现在每隔10ms都有一个由硬件产生的时钟中断。每次出现一个时钟中断的时候，我们都对一个变量进行加操作，表示过去了10ms。这实现在kern/time.c中，但是并未归并到内核中。<br>　　<br>Exercise 1：在<code>kern/trap.c</code>中增加1个<code>time_tick</code>调用来处理每次时钟中断，实现<code>sys_time_msec</code>系统调用，使用户空间能读取时间。<br>　<br>首先在<code>kern/trap.c</code>的<code>trap_dispatch</code>函数中，对于<code>IRQ_OFFSET + IRQ_TIMER</code>中断添加<code>time_tick</code>调用：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//kern/trap.c</span></span><br><span class="line"><span class="keyword">if</span> (tf-&gt;tf_trapno == IRQ_OFFSET + IRQ_TIMER) &#123;</span><br><span class="line">        lapic_eoi();</span><br><span class="line">        time_tick();</span><br><span class="line">        sched_yield();</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//kern/time.c</span></span><br><span class="line"><span class="keyword">void</span></span><br><span class="line">time_tick(<span class="keyword">void</span>)</span><br><span class="line">&#123;   </span><br><span class="line">    ticks++;</span><br><span class="line">    <span class="keyword">if</span> (ticks * <span class="number">10</span> &lt; ticks)</span><br><span class="line">        panic(<span class="string">"time_tick: time overflowed"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>接下去就是添加获取时间的系统调用，具体流程和之前的一样，主要是在<code>kern/syscall.c</code>的中实现<code>sys_time_msec</code>函数，在该函数中调用<code>time_msec</code>函数来获得系统时间。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//kern/syscall.c</span></span><br><span class="line"><span class="comment">// Return the current time.</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">int</span></span><br><span class="line">sys_time_msec(<span class="keyword">void</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> time_msec();</span><br><span class="line">&#125;   </span><br><span class="line"></span><br><span class="line"><span class="comment">//kern/time.c</span></span><br><span class="line"><span class="keyword">unsigned</span> <span class="keyword">int</span></span><br><span class="line">time_msec(<span class="keyword">void</span>)</span><br><span class="line">&#123;   </span><br><span class="line">    <span class="keyword">return</span> ticks * <span class="number">10</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>通过运行<code>make INIT_CFLAGS=-DTEST_NO_NS run-testtime</code>来测试计时器共，将会看到从5到1的倒计时。其中<code>-DTEST_NO_NS</code>禁止启动网络服务器environment，因为我们暂时还没实现。</p>
+<h2 id="The-Network-Interface-Card"><a href="#The-Network-Interface-Card" class="headerlink" title="The Network Interface Card"></a>The Network Interface Card</h2><p>　　要写1个驱动必须要深入硬件和软件接口，在本次实验中我们将给1个高层次综述关于如何与E1000网卡交互，但是你需要去使用Intel的帮助手册来实现驱动。</p>
+<h2 id="PCI-Interface"><a href="#PCI-Interface" class="headerlink" title="PCI Interface"></a>PCI Interface</h2><p>E1000网卡是一个PCI设备，这说明它是插入主板的PCI总线。PCI总线有地址总线、数据总线和中断总线，从而允许CPU能访问PCI设备，PCI设备也能读写内存。一个PCI设备在使用之前需要被发现并且初始化。发现的过程是指遍历PCI总线找到已经连接的设备。初始化是指为设备分配IO和内存空间并且指定IRQ线的过程。</p>
+<p>PCI是外围设备互连(Peripheral Component Interconnect)的简称，是在目前计算机系统中得到广泛应用的通用总线接口标准：　　</p>
+<ul>
+<li>在一个PCI系统中，最多可以有256根PCI总线，一般主机上只会用到其中很少的几条。</li>
+<li>在一根PCI总线上可以连接多个物理设备，可以是一个网卡、显卡或者声卡等，最多不超过32个。</li>
+<li>一个PCI物理设备可以有多个功能，比如同时提供视频解析和声音解析，最多可提供8个功能。</li>
+<li>每个功能对应1个256字节的PCI配置空间。</li>
+</ul>
+<p>我们在<code>kern/pci.c</code>中已经提供了PCI相关的代码。为了在启动过程中实现PCI的初始化，相关的PCI代码遍历了PCI总线进行设备查找。当发现一个设备时，它会读取它的vendor ID和device ID，把这两个值作为<code>key</code>去查询<code>pci_attach_vendor</code>数组。该数组元素是<code>struct pci_driver</code>类型的，如下所示：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">pci_driver</span> &#123;</span></span><br><span class="line">　　<span class="keyword">uint32_t</span> key1, key2;</span><br><span class="line">　　<span class="keyword">int</span> (*attachfn) (struct pci_func *pcif);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>如果被发现设备的vendor ID和device ID和数组中的某个表项是匹配的，那么接下来就会调用该表项的<code>attachfn</code>函数进行初始化工作。(设备也能被class识别，我们在<code>kern/pci.c</code>中也提供了其它驱动表)</p>
+<p>当我们向查询1个特定PCI设备的配置空间时，需要向I/O地址<code>[0cf8，0cfb]</code>写入1个4字节的查询码指定总线号：设备号：功能号以及其配置地址空间中的查询位置。PCI Host Bridge将监听对于这个I/O端口的写入，并将查询结果写入到<code>[0cfc，0cff]</code>，我们可以从这个地址读出1个32位整数表示查询到的相应信息。</p>
+<p><code>attach</code>函数通过一个 PCI 函数来初始化。 PCI 卡可以提供多种功能，而 E1000 只提供一种功能。以下是我们在 JOS 中表示 PCI 功能的方式：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">pci_func</span> &#123;</span></span><br><span class="line">　　<span class="class"><span class="keyword">struct</span> <span class="title">pci_bus</span> 　　*<span class="title">bus</span>;</span></span><br><span class="line">　　<span class="keyword">uint32_t</span>　　　　　dev;</span><br><span class="line">　　<span class="keyword">uint32_t</span>　　　　　func;</span><br><span class="line">　　<span class="keyword">uint32_t</span>　　　　　dev_id;</span><br><span class="line">　　<span class="keyword">uint32_t</span>　　　　　dev_clasee;</span><br><span class="line">　　<span class="keyword">uint32_t</span>　　　　　reg_base[<span class="number">6</span>];</span><br><span class="line">　　<span class="keyword">uint32_t</span>　　　　　reg_size[<span class="number">6</span>];</span><br><span class="line">　　<span class="keyword">uint8_t</span>　　　　　  irq_line;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>上述结构的最后三个表项是最吸引我们的地方，其中记录了该设备的内存、IO和中断资源的信息。<code>reg_base</code>和<code>reg_size</code>数组包含了最多6个Base Address Register（BAR）的信息。<code>reg_base</code>记录了memory-mapped IO region的基内存地址或者基IO端口，<code>reg_size</code>则记录了<code>reg_base</code>对应的内存区域的大小或者IO端口的数目，<code>irq_line</code>则表示分配给设备中断用的IRQ线。</p>
+<p>当设备的<code>attachfn</code>被调用时，设备已经被找到了，但是还不能用。这说明相关代码还没有确定分配给设备的资源，比如地址空间和IRQ线，其实就是<code>struct pci_fun</code>中的后三项还没被填充。<code>attachfn</code>函数需要调用<code>pci_func_enable</code>来分配相应的资源，填充<code>struct pci_func</code>，使设备运行起来。</p>
+<p>每一个PCI设备都有它映射的内存地址空间和I/O区域，除此之外，PCI设备还有配置空间，一共有256字节，其中前64字节是标准化的，提供了厂商号、设备号、版本号等信息，唯一标示1个PCI设备，同时提供最多6个的IO地址区域。<br><img src="/img/1638326044.jpg" alt></p>
+<p>Exercise 3：实现1个<code>attach</code>函数来初始化E1000网卡，在<code>pci_attach_vendor</code>数组中增加1个表项来触发，可以在参考手册的5.2章节来找到82450EM的vendor ID和device ID。目前暂时使用<code>pci_func_enable</code>来使能E1000网卡设备，初始化工作放到后面。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span></span><br><span class="line">pci_func_enable(struct pci_func *f)</span><br><span class="line">&#123;</span><br><span class="line">    pci_conf_write(f, PCI_COMMAND_STATUS_REG,</span><br><span class="line">                   PCI_COMMAND_IO_ENABLE |</span><br><span class="line">                   PCI_COMMAND_MEM_ENABLE |</span><br><span class="line">                   PCI_COMMAND_MASTER_ENABLE);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">uint32_t</span> bar_width;</span><br><span class="line">    <span class="keyword">uint32_t</span> bar;</span><br><span class="line">    <span class="keyword">for</span> (bar = PCI_MAPREG_START; bar &lt; PCI_MAPREG_END;</span><br><span class="line">        bar += bar_width)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">uint32_t</span> oldv = pci_conf_read(f, bar);</span><br><span class="line"></span><br><span class="line">        bar_width = <span class="number">4</span>;</span><br><span class="line">        pci_conf_write(f, bar, <span class="number">0xffffffff</span>);</span><br><span class="line">        <span class="keyword">uint32_t</span> rv = pci_conf_read(f, bar);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (rv == <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">int</span> regnum = PCI_MAPREG_NUM(bar);</span><br><span class="line">        <span class="keyword">uint32_t</span> base, size;</span><br><span class="line">        <span class="keyword">if</span> (PCI_MAPREG_TYPE(rv) == PCI_MAPREG_TYPE_MEM) &#123;</span><br><span class="line">            <span class="keyword">if</span> (PCI_MAPREG_MEM_TYPE(rv) == PCI_MAPREG_MEM_TYPE_64BIT)</span><br><span class="line">                bar_width = <span class="number">8</span>;</span><br><span class="line"></span><br><span class="line">            size = PCI_MAPREG_MEM_SIZE(rv);</span><br><span class="line">            base = PCI_MAPREG_MEM_ADDR(oldv);</span><br><span class="line">            <span class="keyword">if</span> (pci_show_addrs)</span><br><span class="line">                cprintf(<span class="string">"  mem region %d: %d bytes at 0x%x\n"</span>,</span><br><span class="line">                        regnum, size, base);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            size = PCI_MAPREG_IO_SIZE(rv);</span><br><span class="line">            base = PCI_MAPREG_IO_ADDR(oldv);</span><br><span class="line">            <span class="keyword">if</span> (pci_show_addrs)</span><br><span class="line">                cprintf(<span class="string">"  io region %d: %d bytes at 0x%x\n"</span>,</span><br><span class="line">                        regnum, size, base);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        pci_conf_write(f, bar, oldv);</span><br><span class="line">        f-&gt;reg_base[regnum] = base;</span><br><span class="line">        f-&gt;reg_size[regnum] = size;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (size &amp;&amp; !base)</span><br><span class="line">            cprintf(<span class="string">"PCI device %02x:%02x.%d (%04x:%04x) "</span></span><br><span class="line">                    <span class="string">"may be misconfigured: "</span></span><br><span class="line">                    <span class="string">"region %d: base 0x%x, size %d\n"</span>,</span><br><span class="line">                    f-&gt;bus-&gt;busno, f-&gt;dev, f-&gt;func,</span><br><span class="line">                    PCI_VENDOR(f-&gt;dev_id), PCI_PRODUCT(f-&gt;dev_id),</span><br><span class="line">                    regnum, base, size);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    cprintf(<span class="string">"PCI function %02x:%02x.%d (%04x:%04x) enabled\n"</span>,</span><br><span class="line">            f-&gt;bus-&gt;busno, f-&gt;dev, f-&gt;func,</span><br><span class="line">            PCI_VENDOR(f-&gt;dev_id), PCI_PRODUCT(f-&gt;dev_id));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>回答：在JOS中是如何对PCI设备进行初始化的，这部分模块主要定义在<code>pci.c</code>中，JOS会在系统初始化时调用<code>pci_init</code>函数来进行设备初始化(在<code>kern/init.c</code>的<code>i386_init</code>函数中)。</p>
+<p>首先来看一些最基本的变量和函数：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// pci_attach_class matches the class and subclass of a PCI device</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">pci_driver</span> <span class="title">pci_attach_class</span>[] = &#123;</span></span><br><span class="line">    &#123; PCI_CLASS_BRIDGE, PCI_SUBCLASS_BRIDGE_PCI, &amp;pci_bridge_attach &#125;,</span><br><span class="line">    &#123; <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span> &#125;,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// pci_attach_vendor matches the vendor ID and device ID of a PCI device. key1</span></span><br><span class="line"><span class="comment">// and key2 should be the vendor ID and device ID respectively</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">pci_driver</span> <span class="title">pci_attach_vendor</span>[] = &#123;</span></span><br><span class="line">    &#123; PCI_E1000_VENDOR, PCI_E1000_DEVICE, &amp;pci_e1000_attach &#125;,</span><br><span class="line">    &#123; <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span> &#125;,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">void</span></span><br><span class="line">pci_conf1_set_addr(<span class="keyword">uint32_t</span> bus,</span><br><span class="line">           <span class="keyword">uint32_t</span> dev,</span><br><span class="line">           <span class="keyword">uint32_t</span> func,</span><br><span class="line">           <span class="keyword">uint32_t</span> offset)</span><br><span class="line">&#123;</span><br><span class="line">    assert(bus &lt; <span class="number">256</span>);</span><br><span class="line">    assert(dev &lt; <span class="number">32</span>);</span><br><span class="line">    assert(func &lt; <span class="number">8</span>);</span><br><span class="line">    assert(offset &lt; <span class="number">256</span>);</span><br><span class="line">    assert((offset &amp; <span class="number">0x3</span>) == <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">uint32_t</span> v = (<span class="number">1</span> &lt;&lt; <span class="number">31</span>) |        <span class="comment">// config-space</span></span><br><span class="line">        (bus &lt;&lt; <span class="number">16</span>) | (dev &lt;&lt; <span class="number">11</span>) | (func &lt;&lt; <span class="number">8</span>) | (offset);</span><br><span class="line">    outl(pci_conf1_addr_ioport, v);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">uint32_t</span></span><br><span class="line">pci_conf_read(struct pci_func *f, <span class="keyword">uint32_t</span> off)</span><br><span class="line">&#123;</span><br><span class="line">    pci_conf1_set_addr(f-&gt;bus-&gt;busno, f-&gt;dev, f-&gt;func, off);</span><br><span class="line">    <span class="keyword">return</span> inl(pci_conf1_data_ioport);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">void</span></span><br><span class="line">pci_conf_write(struct pci_func *f, <span class="keyword">uint32_t</span> off, <span class="keyword">uint32_t</span> v)</span><br><span class="line">&#123;</span><br><span class="line">    pci_conf1_set_addr(f-&gt;bus-&gt;busno, f-&gt;dev, f-&gt;func, off);</span><br><span class="line">    outl(pci_conf1_data_ioport, v);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>　<br><code>pci_attach_class</code>和<code>pci_attach_vendor</code>2个数组就是设备数组，3个函数是堆PCI设备最基本的读状态和写状态的函数：　　　</p>
+<ul>
+<li><code>pci_conf_read</code>函数是读取PCI配置空间中特定位置的配置值</li>
+<li><code>pci_conf_write</code>函数是设置PCI配置空间中特定位置的配置值</li>
+<li><code>pci_conf1_set_addr</code>函数是负责设置需要读写的具体设备</li>
+</ul>
+<p>这里涉及的2个I/O端口正是我们上面提到的操作PCI设备的IO端口。接下来我们看看如何初始化PCI设备，进入<code>pic_init</code>函数<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span></span><br><span class="line">pci_init(<span class="keyword">void</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">pci_bus</span> <span class="title">root_bus</span>;</span></span><br><span class="line">    <span class="built_in">memset</span>(&amp;root_bus, <span class="number">0</span>, <span class="keyword">sizeof</span>(root_bus));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> pci_scan_bus(&amp;root_bus);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">int</span></span><br><span class="line">pci_scan_bus(struct pci_bus *bus)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">int</span> totaldev = <span class="number">0</span>;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">pci_func</span> <span class="title">df</span>;</span></span><br><span class="line">    <span class="built_in">memset</span>(&amp;df, <span class="number">0</span>, <span class="keyword">sizeof</span>(df));</span><br><span class="line">    df.bus = bus;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (df.dev = <span class="number">0</span>; df.dev &lt; <span class="number">32</span>; df.dev++) &#123;</span><br><span class="line">        <span class="keyword">uint32_t</span> bhlc = pci_conf_read(&amp;df, PCI_BHLC_REG);</span><br><span class="line">        <span class="keyword">if</span> (PCI_HDRTYPE_TYPE(bhlc) &gt; <span class="number">1</span>)     <span class="comment">// Unsupported or no device</span></span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line"></span><br><span class="line">        totaldev++;</span><br><span class="line"></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">pci_func</span> <span class="title">f</span> = <span class="title">df</span>;</span></span><br><span class="line">        <span class="keyword">for</span> (f.func = <span class="number">0</span>; f.func &lt; (PCI_HDRTYPE_MULTIFN(bhlc) ? <span class="number">8</span> : <span class="number">1</span>);</span><br><span class="line">             f.func++) &#123;</span><br><span class="line">            <span class="class"><span class="keyword">struct</span> <span class="title">pci_func</span> <span class="title">af</span> = <span class="title">f</span>;</span></span><br><span class="line"></span><br><span class="line">            af.dev_id = pci_conf_read(&amp;f, PCI_ID_REG);</span><br><span class="line">            <span class="keyword">if</span> (PCI_VENDOR(af.dev_id) == <span class="number">0xffff</span>)</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">uint32_t</span> intr = pci_conf_read(&amp;af, PCI_INTERRUPT_REG);</span><br><span class="line">            af.irq_line = PCI_INTERRUPT_LINE(intr);</span><br><span class="line"></span><br><span class="line">            af.dev_class = pci_conf_read(&amp;af, PCI_CLASS_REG);</span><br><span class="line">            <span class="keyword">if</span> (pci_show_devs)</span><br><span class="line">                pci_print_func(&amp;af);</span><br><span class="line">            pci_attach(&amp;af);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> totaldev;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在<code>pci_init</code>函数中，<code>root_bus</code>被全部清0，然后交给<code>pci_scan_bus</code>函数来扫描这条总线上的所有设备，说明在JOS中E1000网卡是连接在0号总线上的。<code>pci_scan_bus</code>函数来顺次查找0号总线上的32个设备，如果发现其存在，那么顺次扫描它们每个功能对应的配置地址空间，将一些关键的控制参数读入到<code>pci_func</code>中进行保存。</p>
+<p>得到<code>pci_func</code>函数后，被传入<code>pci_attach</code>函数去查找是否为已存在的设备，并用相应的初始化函数来初始化设备。</p>
+<p>通过查阅手册，我们知道E1000网卡的Vendor ID为0x8086，Device ID为0x100E，所以我们先实现1个e1000网卡初始化函数：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//kern/e1000.h</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifndef</span> JOS_KERN_E1000_H</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> JOS_KERN_E1000_H</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;kern/pci.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">pci_e1000_attach</span><span class="params">(struct pci_func *pcif)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span>  <span class="comment">// SOL &gt;= 6</span></span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// kern/e1000.c</span></span><br><span class="line"><span class="keyword">int</span></span><br><span class="line">pci_e1000_attach(struct pci_func *pcif)</span><br><span class="line">&#123;</span><br><span class="line">    pci_func_enable(pcif);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//kern/pci.c</span></span><br><span class="line"><span class="comment">// pci_attach_vendor matches the vendor ID and device ID of a PCI device. key1</span></span><br><span class="line"><span class="comment">// and key2 should be the vendor ID and device ID respectively</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">pci_driver</span> <span class="title">pci_attach_vendor</span>[] = &#123;</span></span><br><span class="line">        &#123; PCI_VENDOR_ID, PCI_DEVICE_ID, &amp;e1000_init &#125;,</span><br><span class="line">        &#123; <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span> &#125;,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">//kern/pcireg.h</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PCI_VENDOR_ID                           0x8086</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PCI_DEVICE_ID                           0x100E</span></span><br></pre></td></tr></table></figure></p>
+<h2 id="Memory-mapped-I-O"><a href="#Memory-mapped-I-O" class="headerlink" title="Memory-mapped I/O"></a>Memory-mapped I/O</h2><p>软件通过memory-mapped IO（MMIO）和E1000网卡进行通信。我们已经在JOS两次见到过它了：对于CGA和LAPIC都是通过直接读写“内存”来控制和访问的。但是这些读写操作都是不经过DRAM的，而是直接进入设备。</p>
+<p><code>pci_func_enable</code>为E1000网卡分配了一个MMIO区域，并且将它的基地址和大小存储在了BAR0中，也就是<code>reg_base[0]</code>和<code>reg_size[0]</code>中。这是一段为设备分配的物理地址，意味着你需要通过虚拟内存访问它。因为MMIO区域通常都被放在非常高的物理地址上（通常高于3GB），因此我们不能直接使用<code>KADDR</code>去访问它，因为JOS 256MB的内存限制。所以我们需要建立一个新的内存映射。我们将会使用高于<code>MMIOBASE</code>的区域（lab4中的<code>mmio_map_region</code>将会保证我们不会复写LAPIC的映射）。因为PCI设备的初始化发生在JOS创建user environment之前，所以我们可以在<code>kern_pgdir</code>创建映射，从而保证它永远可用。</p>
+<p>Exercise 4：在E1000网卡的初始化函数中，通过调用<code>mmio_map_region</code>函数来为E1000网卡的BAR0建立一个虚拟内存映射。你需要使用1个变量记录下该映射地址以便之后可以访问映射的寄存器。查看在<code>kern/lapic.c</code>中的<code>lapic</code>变量，效仿它的做法。假如你使用1个指针指向设备寄存器映射地址，那么你必须声明它为<code>volatile</code>，否则编译器会运行缓存该值和重新排序内存访问序列。</p>
+<p>为了测试你的映射，可以尝试答应处设备状态寄出去，该寄存器为4个字节，值为0x80080783，表示全双工1000MB/S。</p>
+<p>根据练习的提示，仿照lapic中的做法，在<code>kern/e1000.c</code>中声明1个全局变量<code>e1000</code>，该变量是1个指针，指向映射地址。然后调用<code>mmio_map_region</code>函数来申请内存建立映射，输出状态寄存器的值。关于寄存器位置和相关掩码，我们需要查看开发手册，设置宏定义，这一步可以借鉴QEMU的e1000_hw.h文件，拷贝相关定义到<code>kern/e1000.h</code>中。代码如下，具体的宏定义可以参考github。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span></span><br><span class="line">pci_e1000_attach(struct pci_func *pcif)</span><br><span class="line">&#123;</span><br><span class="line">    pci_func_enable(pcif);</span><br><span class="line"></span><br><span class="line">    e1000 = mmio_map_region(pcif-&gt;reg_base[<span class="number">0</span>], pcif-&gt;reg_size[<span class="number">0</span>]);</span><br><span class="line">    cprintf(<span class="string">"e1000: bar0  %x size0 %x\n"</span>, pcif-&gt;reg_base[<span class="number">0</span>], pcif-&gt;reg_size[<span class="number">0</span>]);</span><br><span class="line">    cprintf(<span class="string">"e1000: status %x\n"</span>, e1000[STATUS/<span class="number">4</span>]);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="DMA"><a href="#DMA" class="headerlink" title="DMA"></a>DMA</h2><p>我们可以想象通过读写E1000网卡的寄存器来发送和接收<code>packet</code>，但这实在是太慢了，而且需要E1000暂存<code>packets</code>。因此E1000使用Direct Access Memory(DMA)来直接从内存中读写<code>packets</code>而不通过CPU。驱动的作用就是负责为发送和接收队列分配内存，建立DMA描述符，以及配置E1000网卡，让它知道这些队列的位置，不过之后的所有事情都是异步。在发送<code>packet</code>的时候，驱动会将它拷贝到<code>transmit</code>队列的下一个DMA描述符中，然后通知E1000网卡另外一个包到了。E1000网卡会在能够发送下一个<code>packet</code>的时候，将<code>packet</code>从描述符中拷贝出来。同样，当E1000网卡接收到一个<code>packet</code>的时候，就会将它拷贝到接收队列的下一个DMA描述符中，并且在合适的时机，驱动会将它从中读取出来。<br>　　<br>从高层次来看，接收和发送队列是非常相似的，都是由一系列的描述符组成。但是这些descriptor具体的结构是不同的，每个描述符都包含了一些flag以及存储packet数据的物理地址。<br>　　<br>队列由循环数组构成，这表示当网卡或者驱动到达了数组的末尾时，它又会转回数组的头部。每个循环数组都有一个<code>head</code>指针和<code>tail</code>指针，这两个指针之间的部分就是队列的内容。网卡总是从<code>head</code>消耗描述符并且移动<code>head</code>指针，同时，驱动总是向尾部添加描述符并且移动<code>tail</code>指针。发送队列的描述符代表等待被发送的<code>packet</code>。对于接收队列，队列中的描述符是一些闲置的描述符，网卡可以将收到的<code>packet</code>放进去。</p>
+<p>这些指向数组的指针和描述符中packet buffer的地址都必须是物理地址，因为硬件直接和物理RAM发生DMA，并不经过MMU。</p>
+<h2 id="Transmitting-Packets"><a href="#Transmitting-Packets" class="headerlink" title="Transmitting Packets"></a>Transmitting Packets</h2><p>E1000网卡的发送和接收函数是独立的，因此我们能一次处理其中一个。我们将首先实现发送<code>packet</code>的操作，因为没有发送就不能接收。<br>　　<br>首先，我们要做的是初始化网卡的发包。根据14.5章节描述的步骤，发送操作初始化的第一步就是建立发送队列，具体队列结构的描述在3.4章节，描述符的结构在3.3.3章节。我们不会使用E1000网卡的TCP offload特性，所以我们专注于”legacy transmit descriptor format”。</p>
+<h3 id="C-Structures"><a href="#C-Structures" class="headerlink" title="C Structures"></a>C Structures</h3><p>我们会发现用C的结构描述E1000网卡的结构是相当容易的。就像我们之前遇到过的<code>struct Trapframe</code>，C结构能让你精确地控制数据在内存中的布局。C会在结构的各个元素间插入空白用于对齐，但是对于E1000里的结构这都不是问题。例如，传统的发送描述符如下图所示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">63      48 47 40 39   32 31  24 23   16 15      0</span><br><span class="line">+-----------------------------------------------+</span><br><span class="line">|               buffer address                  |</span><br><span class="line">+---------+-----+--------+-----+-------+--------+</span><br><span class="line">| special | CSS | status | cmd |  CSO  | length |</span><br><span class="line">+---------+-----+--------+-----+-------+--------+</span><br></pre></td></tr></table></figure></p>
+<p>按照从上往下，从右往左的顺序读取，我们可以发现，<code>struct tx_desc</code>刚好是对齐的，因此不会有空白填充。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">tx_desc</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    <span class="keyword">uint64_t</span> addr;</span><br><span class="line">    <span class="keyword">uint16_t</span> length;</span><br><span class="line">    <span class="keyword">uint8_t</span> cso;</span><br><span class="line">    <span class="keyword">uint8_t</span> cmd;</span><br><span class="line">    <span class="keyword">uint8_t</span> status;</span><br><span class="line">    <span class="keyword">uint8_t</span> css;</span><br><span class="line">    <span class="keyword">uint16_t</span> special;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>我们的驱动需要为发送描述符数组和发送描述符指向的<code>packet buffers</code>预留内存。对于这一点，我们有很多实现方法，包括可以通过动态地分配页面并将它们存放在全局变量中。我们用哪种方法，需要记住的是E1000总是直接访问物理内存的，这意味着任何它访问的buffer都必须在物理空间上是连续的。<br>　　<br>同样，我们有很多方法处理<code>packet buffer</code>。最简单的就是像最开始我们说的那样，在驱动初始化的时候为每个描述符的<code>packet buffer</code>预留空间，之后就在这些预留的<code>buffer</code>中对<code>packet</code>进行进出拷贝。Ethernet packet最大有1518个byte，这就表明了这些buffer至少要多大。更加复杂的驱动可以动态地获取packet buffer（为了降低网络使用率比较低的时候带来的浪费）或者直接提供由用户空间提供的buffers，不过一开始简单点总是好的。<br>　　<br>Exercise 5：根据14.5章节的描述，实现发包初始化，同时借鉴13章节(寄存器初始化)、3.3.3章节((发送描述符)和3.4章节(发送描述符数组)。<br>　　<br>记住发送描述数组的对弈要求和数组长度的限制。TDLEN必须是128字节对齐的，每个发送描述符是16字节的，你的发送描述符数组大小需要是8的倍数。在JOS中不要超过64个描述符，以防不好测试发送环形队列溢出情况。</p>
+<p>这里需要查看开发手册14.5章节关于发送初始化的描述，主要步骤如下：</p>
+<ul>
+<li>为发送描述符队列分配一块连续空间，设置<code>TDBAL</code>和<code>TDBAH</code>寄存器的值指向起始地址，其中<code>TDBAL</code>为32位地址，<code>TDBAL</code>和<code>TDBAH</code>表示64位地址。</li>
+<li>设置<code>TDLEN</code>寄存器的值为描述符队列的大小，以字节计算。</li>
+<li>设置发送队列的<code>Head</code>指针(TDH)和<code>Tail</code>指针(TDT)寄存器的值为0。</li>
+<li>初始化发送控制<code>TCTL</code>寄存器的值，包括设置Enable位为1(<code>TCTL.EN</code>)、<code>TCTL.PSP</code>位为1、<code>TCTL.CT</code>位为10h、<code>TCTL.COLD</code>位为40h。</li>
+<li>设置<code>TIPG</code>寄存器为期望值<br>　　<br>首先是发送队列的设置，这里采用最简单的方法，声明发送描述符结构体和<code>packet buffer</code>结构体，并定义1个64大小的全局发送描述符数组和1个64大小的<code>packet buffer</code>数组，即都使用静态分配的方法。由于packet最大为1518字节，根据后面接收描述符的配置，将<code>packet buffer</code>设置为2048字节。</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//kern/e1000.h</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">tx_desc</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    <span class="keyword">uint64_t</span> addr;</span><br><span class="line">    <span class="keyword">uint16_t</span> length;</span><br><span class="line">    <span class="keyword">uint8_t</span> cso;</span><br><span class="line">    <span class="keyword">uint8_t</span> cmd;</span><br><span class="line">    <span class="keyword">uint8_t</span> status;</span><br><span class="line">    <span class="keyword">uint8_t</span> css;</span><br><span class="line">    <span class="keyword">uint16_t</span> special;</span><br><span class="line">&#125; __attribute__((packed));</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">packet</span></span></span><br><span class="line"><span class="class">&#123;</span>       </span><br><span class="line">    <span class="keyword">char</span> body[<span class="number">2048</span>];</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">//kern/e1000.c</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">tx_desc</span> <span class="title">tx_d</span>[<span class="title">TXRING_LEN</span>] __<span class="title">attribute__</span>((<span class="title">aligned</span> (<span class="title">PGSIZE</span>)))</span></span><br><span class="line"><span class="class">        = &#123;</span>&#123;<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>&#125;&#125;;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">packet</span> <span class="title">pbuf</span>[<span class="title">TXRING_LEN</span>] __<span class="title">attribute__</span>((<span class="title">aligned</span> (<span class="title">PGSIZE</span>)))</span></span><br><span class="line"><span class="class">        = &#123;</span>&#123;&#123;<span class="number">0</span>&#125;&#125;&#125;;</span><br></pre></td></tr></table></figure>
+<p>在<code>pci_enable_attach</code>函数中初始化相关寄存器的设置和发送描述符初始化。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">void</span></span><br><span class="line">init_desc()&#123;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; TXRING_LEN; i++)&#123;</span><br><span class="line">        <span class="built_in">memset</span>(&amp;tx_d[i], <span class="number">0</span>, <span class="keyword">sizeof</span>(tx_d[i]));</span><br><span class="line">        tx_d[i].addr = PADDR(&amp;pbuf[i]);</span><br><span class="line">        tx_d[i].status = TXD_STAT_DD;</span><br><span class="line">        tx_d[i].cmd = TXD_CMD_RS | TXD_CMD_EOP;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span></span><br><span class="line">pci_e1000_attach(struct pci_func *pcif)</span><br><span class="line">&#123;</span><br><span class="line">    pci_func_enable(pcif);</span><br><span class="line">    init_desc();</span><br><span class="line"></span><br><span class="line">    e1000 = mmio_map_region(pcif-&gt;reg_base[<span class="number">0</span>], pcif-&gt;reg_size[<span class="number">0</span>]);</span><br><span class="line">    cprintf(<span class="string">"e1000: bar0  %x size0 %x\n"</span>, pcif-&gt;reg_base[<span class="number">0</span>], pcif-&gt;reg_size[<span class="number">0</span>]);</span><br><span class="line"></span><br><span class="line">    e1000[TDBAL/<span class="number">4</span>] = PADDR(tx_d);</span><br><span class="line">    e1000[TDBAH/<span class="number">4</span>] = <span class="number">0</span>;</span><br><span class="line">    e1000[TDLEN/<span class="number">4</span>] = TXRING_LEN * <span class="keyword">sizeof</span>(struct tx_desc);</span><br><span class="line">    e1000[TDH/<span class="number">4</span>] = <span class="number">0</span>;</span><br><span class="line">    e1000[TDT/<span class="number">4</span>] = <span class="number">0</span>;</span><br><span class="line">    e1000[TCTL/<span class="number">4</span>] = TCTL_EN | TCTL_PSP | (TCTL_CT &amp; (<span class="number">0x10</span> &lt;&lt; <span class="number">4</span>)) | (TCTL_COLD &amp; (<span class="number">0x40</span> &lt;&lt; <span class="number">12</span>));</span><br><span class="line">    e1000[TIPG/<span class="number">4</span>] = <span class="number">10</span> | (<span class="number">8</span> &lt;&lt; <span class="number">10</span>) | (<span class="number">12</span> &lt;&lt; <span class="number">20</span>);</span><br><span class="line">    cprintf(<span class="string">"e1000: status %x\n"</span>, e1000[STATUS/<span class="number">4</span>]);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在完成了exercise 5之后，发送已经初始化完成。我们需要实现包的发送工作，然后让用户空间能够通过系统调用获取这些包。为了发送一个包，我们需要将它加入到发送队列的尾部，这意味着我们要将<code>packet</code>拷贝到下一个packet buffer，并且更新TDT寄存器，从而告诉网卡，已经有另一个<code>packet</code>进入发送队列了。(需要注意的是，TDT是一个指向transmit descriptor array的index，而不是一个byte offset)</p>
+<p>但是，发送队列只有这么大。如果网卡迟迟没有发送<code>packet</code>，发送队列满了怎么办？为了检测这种情况，我们需要反馈给E1000网卡一些信息。不幸的是，我们并不能直接使用<code>TDH</code>寄存器，文档中明确声明，读取该寄存器的值是不可靠的。然而，如果我们在发送描述符的command filed设置了RS位，那么当网卡发送了这个描述符中的包之后，就会设置该描述符的status域的DD位。如果一个描述符的DD位被设置了，那么我们就可以知道循环利用这个描述符是安全的，可以利用它去发送下一个packet。</p>
+<p>如果当用户调用了发包的系统调用，但是下一个描述符的DD位没有设置怎么办？这是否代表发送队列满了么？遇到这种情况我们应该如何处理？我们可以选择简单地直接丢弃这个packet。许多网络协议都对这种情况有弹性的设置，但是如果我们丢弃了很多packet的话，协议可能就无法恢复了。我们也许可以告诉user environment我们需要重新发送，就像<code>sys_ipc_try_send</code>中做的一样。我们可以让驱动一直处于自旋状态，直到有一个发送描述符被释放，但是这可能会造成比较大的性能问题，因为JOS内核不是设计成能阻塞的。最后，我们可以让transmitting environment睡眠并且要求网卡在有transmit descriptor被释放的时候发送一个中断。</p>
+<p>Exercise 6：写一个函数通过检查下一个描述符是否可用来发送一个包，拷贝数据包内容到下一个描述符中，更新TDT，确保你能正确解决发送队列满了的情况。</p>
+<p>回答：在初始化工作中我们已经设置发送描述符的状态位为DD，即表示可用，只要在发送函数里获取<code>Tail</code>指针寄存器的值，判断该指针指向的发送描述符是否可用，如果可用将数据包内容拷贝到描述符中，并更新描述符的状态位和<code>TDT</code>寄存器。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span></span><br><span class="line">e1000_transmit(<span class="keyword">void</span> *addr, <span class="keyword">size_t</span> len)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">uint32_t</span> tail = e1000[TDT/<span class="number">4</span>];</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tx_desc</span> *<span class="title">nxt</span> = &amp;<span class="title">tx_d</span>[<span class="title">tail</span>];</span></span><br><span class="line">    <span class="comment">// find the last ex_desc with tail.</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>((nxt-&gt;status &amp; TXD_STAT_DD) != TXD_STAT_DD)</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    <span class="keyword">if</span> (len &gt; TBUFFSIZE)</span><br><span class="line">        len = TBUFFSIZE;</span><br><span class="line"></span><br><span class="line">    memmove(&amp;pbuf[tail], addr, len);</span><br><span class="line">    nxt-&gt;length = (<span class="keyword">uint16_t</span>)len;</span><br><span class="line">    nxt-&gt;status &amp;= !TXD_STAT_DD;</span><br><span class="line">    e1000[TDT/<span class="number">4</span>] = (tail + <span class="number">1</span>) % TXRING_LEN;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当你完成发包代码后，可以在内核中调用该函数来测试代码正确性。运行<code>make E1000_DEBUG=TXERR,TX qemu</code>测试，你会看到如下输出：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">e1000: index 0: 0x271f00 : 9000002a 0</span><br></pre></td></tr></table></figure></p>
+<p>其中每一行表示1个发送的数据包，<code>index</code>给出了在发送描述符数组中的索引，之后的为该描述符中<code>packet buffer</code>的地址，然后是cmd/CSO/length标志位，最后是special/CSS/status标志位。</p>
+<p>Exercise 7：添加1个系统调用来让用户空间可以发送数据包。具体的接口实现取决于自己。</p>
+<p>仿照<code>sys_ipc_try_send</code>调用，在系统调用涉及的文件中添加调用号和接口函数。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//kern/syscall.c</span></span><br><span class="line"><span class="comment">// Send network packet</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">int</span></span><br><span class="line">sys_netpacket_try_send(<span class="keyword">void</span> *addr, <span class="keyword">size_t</span> len)</span><br><span class="line">&#123;</span><br><span class="line">    user_mem_assert(curenv, addr, len, PTE_U);</span><br><span class="line">    <span class="keyword">return</span> e1000_transmit(addr, len);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="Transmitting-Packets-Network-Server"><a href="#Transmitting-Packets-Network-Server" class="headerlink" title="Transmitting Packets: Network Server"></a>Transmitting Packets: Network Server</h2><p>现在我们已经有了访问设备驱动发送端的系统调用接口，那么该发送一些<code>packets</code>了。output helper environment的作用就是不断做如下的循环：从核心网络服务器中接收<code>NSREQ_OUTPUT</code>类型的IPC消息，然后用我们自己写的系统调用将含有这些IPC消息的<code>packet</code>发送到网卡驱动。</p>
+<p><code>NSREQ_OUTPUT</code>的IPC消息是由<code>net/lwip/jos/jif/jif.c</code>中的<code>low_level_output</code>发送的，它将lwIP stack和JOS的网络系统连在了一起。每一个IPC都会包含一个由union Nsipc组成的页，其中<code>packet</code>存放在<code>struct jif_pkt</code>字段中（见<code>inc/ns.h</code>）。<code>struct jif_pkt</code>如下所示：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">jif_pkt</span> &#123;</span></span><br><span class="line">　　<span class="keyword">int</span> 　　jp_len;</span><br><span class="line">　　<span class="keyword">char</span>　  jp_data[<span class="number">0</span>];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>　　<br>其中<code>jp_len</code>代表了<code>packet</code>的长度。IPC page之后的所有字节都代表了<code>packet</code>的内容。使用一个长度为0的数组，例如<code>jp_data</code>，在<code>struct jif_pkt</code>的结尾，是C中一种比较通用的方式，用于代表一个未提前指定长度的<code>buffer</code>。因为C中并没有做任何边界检测，只要你确定<code>struct</code>之后有足够的未被使用的内存，我们就可以认为<code>jp_data</code>是任意大小的数组。</p>
+<p>我们需要搞清楚当设备驱动的发送队列中没有空间的时候，设备驱动，output environment和核心网络服务器三者之间的关系。核心网络服务器通过IPC将packet发送给output environment。如果output environment因为驱动中没有足够的缓存空间用于存放新的packet而阻塞，核心网络服务器会一直阻塞直到output environment接受了IPC为止。</p>
+<p>Exercise 8：实现<code>net/output.c</code>。</p>
+<p>回答：这里主要是实现output environment的工作。<code>net/testoutput.c</code>是测试发包的代码。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">envid_t</span> output_envid;</span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">jif_pkt</span> *<span class="title">pkt</span> = (<span class="title">struct</span> <span class="title">jif_pkt</span>*)<span class="title">REQVA</span>;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span></span><br><span class="line">umain(<span class="keyword">int</span> argc, <span class="keyword">char</span> **argv)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">envid_t</span> ns_envid = sys_getenvid();</span><br><span class="line">    <span class="keyword">int</span> i, r;</span><br><span class="line"></span><br><span class="line">    binaryname = <span class="string">"testoutput"</span>;</span><br><span class="line"></span><br><span class="line">    output_envid = fork();</span><br><span class="line">    <span class="keyword">if</span> (output_envid &lt; <span class="number">0</span>)</span><br><span class="line">        panic(<span class="string">"error forking"</span>);</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (output_envid == <span class="number">0</span>) &#123;</span><br><span class="line">        output(ns_envid);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;       </span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; TESTOUTPUT_COUNT; i++) &#123;</span><br><span class="line">        <span class="keyword">if</span> ((r = sys_page_alloc(<span class="number">0</span>, pkt, PTE_P|PTE_U|PTE_W)) &lt; <span class="number">0</span>)</span><br><span class="line">            panic(<span class="string">"sys_page_alloc: %e"</span>, r);</span><br><span class="line">        pkt-&gt;jp_len = <span class="built_in">snprintf</span>(pkt-&gt;jp_data,</span><br><span class="line">                       PGSIZE - <span class="keyword">sizeof</span>(pkt-&gt;jp_len),</span><br><span class="line">                       <span class="string">"Packet %02d"</span>, i);</span><br><span class="line">        cprintf(<span class="string">"Transmitting packet %d\n"</span>, i);</span><br><span class="line">        ipc_send(output_envid, NSREQ_OUTPUT, pkt, PTE_P|PTE_W|PTE_U);</span><br><span class="line">        sys_page_unmap(<span class="number">0</span>, pkt);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Spin for a while, just in case IPC's or packets need to be flushed</span></span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; TESTOUTPUT_COUNT*<span class="number">2</span>; i++)</span><br><span class="line">        sys_yield();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在<code>testoutput.c</code>中，先<code>fork</code>1个environment，即output environment，然后运行需要实现的<code>output</code>函数，在原先environment中通过<code>ipc_send</code>发送数据包的内容。所以在output environment中，就需要实现通过<code>ipc_recv</code>接受到IPC信息时，如果为<code>NSREQ_OUTPUT</code>，那么调用发包系统调用来发送数据包到网卡驱动。</p>
+<h1 id="Part-B-Receiving-packets-and-the-web-server"><a href="#Part-B-Receiving-packets-and-the-web-server" class="headerlink" title="Part B: Receiving packets and the web server"></a>Part B: Receiving packets and the web server</h1><h2 id="Receiving-Packets"><a href="#Receiving-Packets" class="headerlink" title="Receiving Packets"></a>Receiving Packets</h2><p>与发包类似，我们必须配置E1000网卡来接受包并提供接收描述符队列和接收描述符。</p>
+<p>接收队列和发送队列非常相似，不同的是它由空的<code>packet buffer</code>组成，等待被即将到来的<code>packet</code>填充。因此，当网络暂停的时候，发送队列是空的，但是接收队列是满的。当E1000接收到一个<code>packet</code>时，它会首先检查这个<code>packet</code>是否满足该网卡的configured filters（比如，这个包的目的地址是不是该E1000的MAC地址）并且忽略那些不符合这些filter的<code>packet</code>。否则，E1000尝试获取从接收队列获取下一个空闲的描述符。如果<code>Head</code>指针（<code>RDH</code>）已经追赶上了<code>Tail</code>指针（<code>RDT</code>），那么说明接收队列已经用完了空闲的descriptor，因此网卡就会丢弃这个<code>packet</code>。如果还有空闲的接收描述符，它会将packet data拷贝到描述符包含的<code>buffer</code>中，并且设置描述符的<code>DD</code>（descriptor done）和<code>EOP</code>（End of Packet）状态位，然后增加<code>RDH</code>。</p>
+<p>如果E1000网卡收到一个<code>packet</code>，它的数据大于一个接收描述符的packet buffer，它会继续从接收队列中获取尽可能多的描述符，用来存放<code>packet</code>的所有内容。为了表明这样的情况，它会在每个<code>descriptor</code>中都设置<code>DD</code>状态位，但只在最后一个<code>descriptor</code>中设置<code>EOP</code>状态位。我们可以让驱动对这种情况进行处理，或者只是简单地对对网卡进行配置，让它不接收这样的“long packet”，但是我们要确保我们的receive buffer能够接收最大的标志Ethernet packet（1518字节）。</p>
+<p>Exercise 10：建立接收队列和配置E1000网卡，无须支持”long packets”和multicast。暂时不要配置使用中断，同时忽略CRC。</p>
+<p>默认情况下，网卡会过滤所有的<code>packet</code>，我们必须配置接收地址寄存器(<code>RAL</code>和<code>RAH</code>)为网卡的MAC地址以使得能接受发送给该网卡的包。目前可以简单地硬编码QEMU的默认MAC地址52:54:00:12:34:56。注意字节顺序MAC地址从左到右是从低地址到高地址的，所以52:54:00:12为低32位，34:56为高16位</p>
+<p>E1000网卡只支持一系列特殊的receive buffer大小。假如我们配置receive packet buffers足够大并关闭long packets，那么我们就无需担心跨越多个receive buffer的包。同时记住接收队列和packet buffer也必须是连续的物理内存。我们必需使用至少128个接收描述符。</p>
+<p>整个流程跟发包初始化配置类似。主要相关工作如下：</p>
+<ul>
+<li>设置接受地址寄存器(RAL/RAH)为网卡的MAC地址。</li>
+<li>初始化<code>multicast</code>表数组为0。</li>
+<li>设置中断相关寄存器的值，这里我们关闭中断</li>
+<li>为接收描述符队列分配一块连续空间，设置<code>RDBAL</code>和<code>RDBAH</code>寄存器的值指向起始地址，其中<code>RDBAL</code>为32位地址，<code>RDBAL</code>和<code>RDBAH</code>表示64位地址。</li>
+<li>设置<code>RDLEN</code>寄存器的值为描述符队列的大小，以字节计算。</li>
+<li>设置接收队列的<code>Head</code>指针(<code>RDH</code>)和<code>Tail</code>指针(<code>RDT</code>)寄存器的值为0。<code>Head</code>指针指向第1个可用的描述符，<code>Tail</code>指向最后1个可用描述符的下一个描述符。如果将<code>Head</code>指针和<code>Tail</code>指针初始化为0，那么将接收不到数据包，应该将<code>Tail</code>指针初始化为最后1个可用描述符即<code>RDLEN-1</code>，因为像上面描述的当<code>RDH</code>等于<code>RDT</code>的时候，网卡认为队列满了，会丢弃数据包。</li>
+<li>设置接收控制寄存器<code>RCTL</code>的值，主要包括设置<code>RCTL.EN</code>标志位为1(激活)、<code>RCTL.LBM</code>标志位为00(关闭回环)、<code>RCTL.BSIZE</code>标志位为00和<code>RCTL.BSEX</code>位为0(<code>buffer</code>大小为2048字节)、<code>RCTL.SECRC</code>标志位为1(忽略校验)。</li>
+</ul>
+<p>下边的代码与上述描述一一对应。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 为描述符列表分配静态内存 */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">tx_desc</span> <span class="title">tx_d</span>[<span class="title">TXRING_LEN</span>] __<span class="title">attribute__</span>((<span class="title">aligned</span>(<span class="title">PGSIZE</span>)))</span></span><br><span class="line"><span class="class">        = &#123;</span>&#123;<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>&#125;&#125;;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">packet</span> <span class="title">pbuf</span>[<span class="title">TXRING_LEN</span>] __<span class="title">attribute__</span>((<span class="title">aligned</span>(<span class="title">PGSIZE</span>)))</span></span><br><span class="line"><span class="class">        = &#123;</span>&#123;&#123;<span class="number">0</span>&#125;&#125;&#125;;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">rx_desc</span> <span class="title">rx_d</span>[<span class="title">RXRING_LEN</span>] __<span class="title">attribute__</span>((<span class="title">aligned</span>(<span class="title">PGSIZE</span>)))</span></span><br><span class="line"><span class="class">        = &#123;</span>&#123;<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>&#125;&#125;;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">packet</span> <span class="title">prbuf</span>[<span class="title">RXRING_LEN</span>] __<span class="title">attribute__</span>((<span class="title">aligned</span>(<span class="title">PGSIZE</span>)))</span></span><br><span class="line"><span class="class">        = &#123;</span>&#123;&#123;<span class="number">0</span>&#125;&#125;&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">void</span></span><br><span class="line">init_desc()&#123;</span><br><span class="line">    ......</span><br><span class="line">    <span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; RXRING_LEN; i++)&#123;</span><br><span class="line">        <span class="built_in">memset</span>(&amp;rx_d[i], <span class="number">0</span>, <span class="keyword">sizeof</span>(rx_d[i]));</span><br><span class="line">        rx_d[i].addr = PADDR(&amp;prbuf[i]);</span><br><span class="line">        rx_d[i].status = <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span></span><br><span class="line">pci_e1000_attach(struct pci_func *pcif)</span><br><span class="line">&#123;</span><br><span class="line">    ......</span><br><span class="line">   e1000[RA/<span class="number">4</span>] = mac[<span class="number">0</span>];</span><br><span class="line">    e1000[RA/<span class="number">4</span>+<span class="number">1</span>] = mac[<span class="number">1</span>];</span><br><span class="line">    e1000[RA/<span class="number">4</span>+<span class="number">1</span>] |= RAV;</span><br><span class="line"></span><br><span class="line">    cprintf(<span class="string">"e1000: mac address %x:%x\n"</span>, mac[<span class="number">1</span>], mac[<span class="number">0</span>]);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">memset</span>((<span class="keyword">void</span>*)&amp;e1000[MTA/<span class="number">4</span>], <span class="number">0</span>, <span class="number">128</span> * <span class="number">4</span>);</span><br><span class="line">    e1000[ICS/<span class="number">4</span>] = <span class="number">0</span>;</span><br><span class="line">    e1000[IMS/<span class="number">4</span>] = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">//e1000[IMC/4] = 0xFFFF;</span></span><br><span class="line">    e1000[RDBAL/<span class="number">4</span>] = PADDR(rx_d);</span><br><span class="line">    e1000[RDBAH/<span class="number">4</span>] = <span class="number">0</span>;</span><br><span class="line">    e1000[RDLEN/<span class="number">4</span>] = RXRING_LEN * <span class="keyword">sizeof</span>(struct rx_desc);</span><br><span class="line">    e1000[RDH/<span class="number">4</span>] = <span class="number">0</span>;</span><br><span class="line">    e1000[RDT/<span class="number">4</span>] = RXRING_LEN - <span class="number">1</span>;</span><br><span class="line">    e1000[RCTL/<span class="number">4</span>] = RCTL_EN | RCTL_LBM_NO | RCTL_SECRC | RCTL_BSIZE;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>完成后，运行<code>make E1000_DEBUG=TX,TXERR,RX,RXERR,RXFILTER run-net_testinput</code>，<code>testinput</code>会发送ARP广播，QEMU会自动回应。</p>
+<p>现在我们要实现接收包。为了接收<code>packet</code>，我们的驱动需要跟踪到底从哪个描述符中获取下一个received packet。和发送时相似，文档中说明从软件中读取RDH寄存器也是不可靠的。所以，为了确定一个<code>packet</code>是否被发送到描述符的packet buffer中，我们需要读取该描述符的<code>DD</code>状态位。如果<code>DD</code>已经被置位，那么我们可以将packet data从描述符的packet buffer中拷贝出来，然后通过更新队列的RDT告诉网卡该描述符已经被释放了。</p>
+<p>如果<code>DD</code>没有被置位，那么说明没有接收到任何packet。这和发送端队列已满的情况是一样的，在这种情况下，我们可以做很多事情。我们可以简单地返回一个“try again”的error并且要求调用者继续尝试。这种方法对于发送队列已满的情况是有效的，因为那种情况是短暂的，但是对于空的接收队列就不合适了，因为接收队列可能很长时间处于空的状态。</p>
+<p>第二种方法就是将calling environment挂起，直到接收队列中有packet可以处理。这种方法和<code>sys_ipc_recv</code>和相似。就像在IPC中所做的，每个CPU只有一个kernel stack，一旦我们离开kernel，那么栈上的state就会消失。我们需要设置一个<code>flag</code>来表明这个environment是因为接收队列被挂起的并且记录下系统调用参数。这种方法的缺点有点复杂：E1000网卡必须被配置成能产生接收中断并且驱动还需要能够对中断进行处理，为了让等待packet的environment能恢复过来。</p>
+<p>Exercise 11：写1个函数来从E1000网卡接收1个包，并添加1个系统调用暴露给用户空间。确保你能处理接收队列为空的情况。</p>
+<p>与发包类似，读取<code>RDT</code>寄存器的值，判断最后1个可用描述符的下一个描述符的标志位是否为<code>DD</code>，如果是则拷贝该描述符中的<code>buffer</code>，清除<code>DD</code>位，并增加<code>RDT</code>。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span></span><br><span class="line">e1000_receive(<span class="keyword">void</span> *addr, <span class="keyword">size_t</span> buflen)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">uint32_t</span> tail = (e1000[RDT/<span class="number">4</span>] + <span class="number">1</span>) % RXRING_LEN;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">rx_desc</span> *<span class="title">nxt</span> = &amp;<span class="title">rx_d</span>[<span class="title">tail</span>];</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>((nxt-&gt;status &amp; RXD_STAT_DD) != RXD_STAT_DD) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span>(nxt-&gt;length &lt; buflen)</span><br><span class="line">        buflen = nxt-&gt;length;</span><br><span class="line"></span><br><span class="line">    memmove(addr, &amp;prbuf[tail], buflen);</span><br><span class="line">    nxt-&gt;status &amp;= !RXD_STAT_DD;</span><br><span class="line">    e1000[RDT/<span class="number">4</span>] = tail;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> buflen;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="Receiving-Packets-Network-Server"><a href="#Receiving-Packets-Network-Server" class="headerlink" title="Receiving Packets: Network Server"></a>Receiving Packets: Network Server</h2><p>在网络服务器input environment中，我们将需要使用新添加的收包系统调用来接收数据包并通过<code>NSREQ_INPUT IPC</code>消息传递给核心网络服务器environment。</p>
+<p>Exercise 12：实现<code>net/input.c</code></p>
+<p>回答：这里主要是实现input environment的工作。<code>net/testinput.c</code>是测试收包的代码。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span></span><br><span class="line">umain(<span class="keyword">int</span> argc, <span class="keyword">char</span> **argv)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">envid_t</span> ns_envid = sys_getenvid();</span><br><span class="line">    <span class="keyword">int</span> i, r, first = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    binaryname = <span class="string">"testinput"</span>;</span><br><span class="line"></span><br><span class="line">    output_envid = fork();</span><br><span class="line">    <span class="keyword">if</span> (output_envid &lt; <span class="number">0</span>)</span><br><span class="line">        panic(<span class="string">"error forking"</span>);</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (output_envid == <span class="number">0</span>) &#123;</span><br><span class="line">        output(ns_envid);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    input_envid = fork();</span><br><span class="line">    <span class="keyword">if</span> (input_envid &lt; <span class="number">0</span>)</span><br><span class="line">        panic(<span class="string">"error forking"</span>);</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (input_envid == <span class="number">0</span>) &#123;</span><br><span class="line">        input(ns_envid);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    cprintf(<span class="string">"Sending ARP announcement...\n"</span>);</span><br><span class="line">    announce();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">        <span class="keyword">envid_t</span> whom;</span><br><span class="line">        <span class="keyword">int</span> perm;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">int32_t</span> req = ipc_recv((<span class="keyword">int32_t</span> *)&amp;whom, pkt, &amp;perm);</span><br><span class="line">        <span class="keyword">if</span> (req &lt; <span class="number">0</span>)</span><br><span class="line">            panic(<span class="string">"ipc_recv: %e"</span>, req);</span><br><span class="line">        <span class="keyword">if</span> (whom != input_envid)</span><br><span class="line">            panic(<span class="string">"IPC from unexpected environment %08x"</span>, whom);</span><br><span class="line">        <span class="keyword">if</span> (req != NSREQ_INPUT)</span><br><span class="line">            panic(<span class="string">"Unexpected IPC %d"</span>, req);</span><br><span class="line"></span><br><span class="line">        hexdump(<span class="string">"input: "</span>, pkt-&gt;jp_data, pkt-&gt;jp_len);</span><br><span class="line">        cprintf(<span class="string">"\n"</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Only indicate that we're waiting for packets once</span></span><br><span class="line">        <span class="comment">// we've received the ARP reply</span></span><br><span class="line">        <span class="keyword">if</span> (first)</span><br><span class="line">            cprintf(<span class="string">"Waiting for packets...\n"</span>);</span><br><span class="line">        first = <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><code>fork</code>了2个新的environment，其中1个执行output，发送ARP广播，另外1个执行input，接收QEMU的回应。通过<code>ipc_recv</code>来获得input environment收到的数据包。</p>
+<p>在<code>net/input.c</code>的<code>input</code>函数中通过调用收包系统调用从网卡驱动处获得数据包，这里的注意点是根据注释有可能收包太快，发送给网络服务器，但是网络服务器可能读取过慢，导致相应的内容被冲刷，所以我们采用10页的缓冲来存放从网卡驱动获得的数据包。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">input</span><span class="params">(<span class="keyword">envid_t</span> ns_envid)</span></span></span><br><span class="line"><span class="function"></span>&#123;   </span><br><span class="line">    binaryname = <span class="string">"ns_input"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> i, r;</span><br><span class="line">    <span class="keyword">int32_t</span> length;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">jif_pkt</span> *<span class="title">cpkt</span> = <span class="title">pkt</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; <span class="number">10</span>; i++)</span><br><span class="line">        <span class="keyword">if</span> ((r = sys_page_alloc(<span class="number">0</span>, (<span class="keyword">void</span>*)((<span class="keyword">uintptr_t</span>)pkt + i * PGSIZE), PTE_P | PTE_U | PTE_W)) &lt; <span class="number">0</span>)</span><br><span class="line">            panic(<span class="string">"sys_page_alloc: %e"</span>, r);</span><br><span class="line"></span><br><span class="line">    i = <span class="number">0</span>; </span><br><span class="line">    <span class="keyword">while</span>(<span class="number">1</span>) &#123;</span><br><span class="line">        <span class="keyword">while</span>((length = sys_netpacket_recv((<span class="keyword">void</span>*)((<span class="keyword">uintptr_t</span>)cpkt + <span class="keyword">sizeof</span>(cpkt-&gt;jp_len)), PGSIZE - <span class="keyword">sizeof</span>(cpkt-&gt;jp_len))) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="comment">// cprintf("len: %d\n", length);</span></span><br><span class="line">            sys_yield();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        cpkt-&gt;jp_len = length;</span><br><span class="line">        ipc_send(ns_envid, NSREQ_INPUT, cpkt, PTE_P | PTE_U);</span><br><span class="line">        i = (i + <span class="number">1</span>) % <span class="number">10</span>;</span><br><span class="line">        cpkt = (struct jif_pkt*)((<span class="keyword">uintptr_t</span>)pkt + i * PGSIZE);</span><br><span class="line">        sys_yield();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="The-Web-Server"><a href="#The-Web-Server" class="headerlink" title="The Web Server"></a>The Web Server</h2><p>1个简单的web服务器将发送1个文件内容给请求客户端。JOS已经在<code>user/httpd.c</code>文件中提供可骨架代码，处理socket连接和Http头转义。</p>
+<p>Exercise 13：实现<code>user/httpd.c</code>文件中的<code>send_file</code>函数和<code>send_data</code>函数。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">int</span></span><br><span class="line">send_file(struct http_request *req)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">int</span> r;</span><br><span class="line">    <span class="keyword">off_t</span> file_size = <span class="number">-1</span>;</span><br><span class="line">    <span class="keyword">int</span> fd;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">Stat</span> <span class="title">st</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ((fd = open(req-&gt;url, O_RDONLY)) &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">return</span> send_error(req, <span class="number">404</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ((r = fstat(fd, &amp;st)) &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">return</span> send_error(req, <span class="number">404</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (st.st_isdir)</span><br><span class="line">        <span class="keyword">return</span> send_error(req, <span class="number">404</span>);</span><br><span class="line"></span><br><span class="line">    file_size = st.st_size;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ((r = send_header(req, <span class="number">200</span>)) &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">goto</span> end;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ((r = send_size(req, file_size)) &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">goto</span> end;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ((r = send_content_type(req)) &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">goto</span> end;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ((r = send_header_fin(req)) &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">goto</span> end;</span><br><span class="line"></span><br><span class="line">    r = send_data(req, fd);</span><br><span class="line"></span><br><span class="line">end:</span><br><span class="line">    close(fd);</span><br><span class="line">    <span class="keyword">return</span> r;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">int</span></span><br><span class="line">send_data(struct http_request *req, <span class="keyword">int</span> fd)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">char</span> buf[<span class="number">128</span>];</span><br><span class="line">    <span class="keyword">int</span> r;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span>(<span class="number">1</span>)&#123;</span><br><span class="line">        r = read(fd, buf, <span class="number">128</span>);</span><br><span class="line">        <span class="keyword">if</span>(r &lt;= <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">return</span> r;</span><br><span class="line">        <span class="keyword">if</span>(write(req-&gt;sock, buf, r) != r)</span><br><span class="line">            <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/11/16/6.828-lab5/" rel="next" title="6.828 lab5">
+                <i class="fa fa-chevron-left"></i> 6.828 lab5
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/11/24/Linux_IO原理/" rel="prev" title="Linux I/O 原理和 Zero-copy 技术全面揭秘">
+                Linux I/O 原理和 Zero-copy 技术全面揭秘 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">340</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/xiaomeihao.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Introduction"><span class="nav-number">1.</span> <span class="nav-text">Introduction</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#QEMU’s-virtual-network"><span class="nav-number">2.</span> <span class="nav-text">QEMU’s virtual network</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Packet-Inspection"><span class="nav-number">2.1.</span> <span class="nav-text">Packet Inspection</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Debugging-the-E1000"><span class="nav-number">2.2.</span> <span class="nav-text">Debugging the E1000　　</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#The-Network-Server"><span class="nav-number">2.3.</span> <span class="nav-text">The Network Server</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#The-Core-Network-Server-Environment"><span class="nav-number">2.4.</span> <span class="nav-text">The Core Network Server Environment　　</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#The-Output-Environment"><span class="nav-number">2.5.</span> <span class="nav-text">The Output Environment　</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#The-Input-Environment"><span class="nav-number">2.6.</span> <span class="nav-text">The Input Environment</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#The-Timer-Environment"><span class="nav-number">2.7.</span> <span class="nav-text">The Timer Environment　　　　　　　</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Part-A-Initialization-and-transmitting-packets"><span class="nav-number">3.</span> <span class="nav-text">Part A: Initialization and transmitting packets</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#The-Network-Interface-Card"><span class="nav-number">3.1.</span> <span class="nav-text">The Network Interface Card</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PCI-Interface"><span class="nav-number">3.2.</span> <span class="nav-text">PCI Interface</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Memory-mapped-I-O"><span class="nav-number">3.3.</span> <span class="nav-text">Memory-mapped I/O</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DMA"><span class="nav-number">3.4.</span> <span class="nav-text">DMA</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Transmitting-Packets"><span class="nav-number">3.5.</span> <span class="nav-text">Transmitting Packets</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#C-Structures"><span class="nav-number">3.5.1.</span> <span class="nav-text">C Structures</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Transmitting-Packets-Network-Server"><span class="nav-number">3.6.</span> <span class="nav-text">Transmitting Packets: Network Server</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Part-B-Receiving-packets-and-the-web-server"><span class="nav-number">4.</span> <span class="nav-text">Part B: Receiving packets and the web server</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Receiving-Packets"><span class="nav-number">4.1.</span> <span class="nav-text">Receiving Packets</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Receiving-Packets-Network-Server"><span class="nav-number">4.2.</span> <span class="nav-text">Receiving Packets: Network Server</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#The-Web-Server"><span class="nav-number">4.3.</span> <span class="nav-text">The Web Server</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<span id="busuanzi_container_site_uv"> 
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
