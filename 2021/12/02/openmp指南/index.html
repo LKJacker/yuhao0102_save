@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="积累,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="原文链接：https://hpc.llnl.gov/tuts/openMP/ 摘要OpenMP 是一个应用程序接口(API)，由一组主要的计算机硬件和软件供应商联合定义。OpenMP 为共享内存并行应用程序的开发人员提供了一个可移植的、可伸缩的模型。该API在多种体系结构上支持 C/C++ 和 Fortran。本教程涵盖了 OpenMP 3.1 的大部分主要特性，包括用于指定并行区域、工作共享、同">
+<meta name="keywords" content="积累">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OpenMP指南">
+<meta property="og:url" content="http://yoursite.com/2021/12/02/openmp指南/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="原文链接：https://hpc.llnl.gov/tuts/openMP/ 摘要OpenMP 是一个应用程序接口(API)，由一组主要的计算机硬件和软件供应商联合定义。OpenMP 为共享内存并行应用程序的开发人员提供了一个可移植的、可伸缩的模型。该API在多种体系结构上支持 C/C++ 和 Fortran。本教程涵盖了 OpenMP 3.1 的大部分主要特性，包括用于指定并行区域、工作共享、同">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/22782486-39c6a9a1da904c10.gif">
+<meta property="og:image" content="http://yoursite.com/img/22782486-6e84877ae3d67aae.gif">
+<meta property="og:image" content="http://yoursite.com/img/22782486-dbd6ee9610fb13a5.gif">
+<meta property="og:image" content="http://yoursite.com/img/20211202115649.png">
+<meta property="og:updated_time" content="2021-12-03T17:24:27.794Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="OpenMP指南">
+<meta name="twitter:description" content="原文链接：https://hpc.llnl.gov/tuts/openMP/ 摘要OpenMP 是一个应用程序接口(API)，由一组主要的计算机硬件和软件供应商联合定义。OpenMP 为共享内存并行应用程序的开发人员提供了一个可移植的、可伸缩的模型。该API在多种体系结构上支持 C/C++ 和 Fortran。本教程涵盖了 OpenMP 3.1 的大部分主要特性，包括用于指定并行区域、工作共享、同">
+<meta name="twitter:image" content="http://yoursite.com/img/22782486-39c6a9a1da904c10.gif">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2021/12/02/openmp指南/">
+
+
+
+
+
+  <title>OpenMP指南 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/resume.pdf" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-mybetterhalf">
+          <a href="/mybetterhalf/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            mybetterhalf
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/12/02/openmp指南/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">OpenMP指南</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-12-02T11:34:00+08:00">
+                2021-12-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>原文链接：<a href="https://hpc.llnl.gov/tuts/openMP/" target="_blank" rel="noopener">https://hpc.llnl.gov/tuts/openMP/</a></p>
+<h1 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h1><p>OpenMP 是一个应用程序接口(API)，由一组主要的计算机硬件和软件供应商联合定义。OpenMP 为共享内存并行应用程序的开发人员提供了一个可移植的、可伸缩的模型。该API在多种体系结构上支持 C/C++ 和 Fortran。本教程涵盖了 OpenMP 3.1 的大部分主要特性，包括用于指定并行区域、工作共享、同步和数据环境的各种构造和指令。还将讨论运行时库函数和环境变量。本教程包括 C 和 Fortran 示例代码以及一个实验练习。</p>
+<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><h2 id="什么是OpenMP"><a href="#什么是OpenMP" class="headerlink" title="什么是OpenMP"></a>什么是OpenMP</h2><p>OpenMP是一种应用程序接口(API)，可用于显式地指示多线程、共享内存并行性。由三个主要的API组件组成：</p>
+<ul>
+<li>编译器指令</li>
+<li>运行时库函数</li>
+<li>环境变量</li>
+</ul>
+<p>OpenMP的目标</p>
+<ul>
+<li>标准化<ul>
+<li>在各种共享内存架构/平台之间提供一个标准。</li>
+<li>由一组主要的计算机硬件和软件供应商联合定义和认可。</li>
+</ul>
+</li>
+<li>至精至简<ul>
+<li>为共享内存机器建立一组简单且有限的指令。</li>
+<li>重要的并行性可以通过使用3或4个指令来实现。</li>
+</ul>
+</li>
+<li>易用性<ul>
+<li>提供以增量方式并行化串行程序的能力，这与通常需要全有或全无方法的消息传递库不同。</li>
+<li>提供实现粗粒度和细粒度并行的能力。</li>
+</ul>
+</li>
+<li>可移植性<ul>
+<li>为 C/C++ 和 FORTRAN 指定API。</li>
+</ul>
+</li>
+</ul>
+<h1 id="OpenMP编程模型"><a href="#OpenMP编程模型" class="headerlink" title="OpenMP编程模型"></a>OpenMP编程模型</h1><h2 id="共享内存模型"><a href="#共享内存模型" class="headerlink" title="共享内存模型"></a>共享内存模型</h2><p>OpenMP是为多处理器或多核共享内存机器设计的。底层架构可以是共享内存 UMA 或 NUMA。</p>
+<p>Uniform Memory Access 一致内存访问<br><img src="/img/22782486-39c6a9a1da904c10.gif" alt></p>
+<p>Ununiform Memory Access 非一致内存访问<br><img src="/img/22782486-6e84877ae3d67aae.gif" alt></p>
+<p>因为OpenMP是为共享内存并行编程而设计的，所以它在很大程度上局限于单节点并行性。通常，节点上处理元素(核心)的数量决定了可以实现多少并行性。</p>
+<h2 id="在-HPC-中使用-OpenMP-的动机"><a href="#在-HPC-中使用-OpenMP-的动机" class="headerlink" title="在 HPC 中使用 OpenMP 的动机"></a>在 HPC 中使用 OpenMP 的动机</h2><ul>
+<li>OpenMP本身的并行性仅限于单个节点。</li>
+<li>对于高性能计算(HPC - High Performance Computing)应用程序，OpenMP 与 MPI 相结合以实现分布式内存并行。这通常被称为混合并行编程。<ul>
+<li>OpenMP 用于每个节点上的计算密集型工作。</li>
+<li>MPI 用于实现节点之间的通信和数据共享。</li>
+</ul>
+</li>
+</ul>
+<p>这使得并行性可以在集群的整个范围内实现Hybrid OpenMP-MPI Parallelism。</p>
+<h2 id="基于线程的并行性"><a href="#基于线程的并行性" class="headerlink" title="基于线程的并行性"></a>基于线程的并行性</h2><p>OpenMP 程序仅通过使用线程来实现并行性。执行线程是操作系统可以调度的最小处理单元。一种可以自动运行的子程序，这个概念可能有助于解释什么是线程。线程存在于单个进程的资源中。没有这个进程，它们就不复存在。通常，线程的数量与机器处理器/核心的数量相匹配。但是，线程的实际使用取决于应用程序。</p>
+<h2 id="显式并行性"><a href="#显式并行性" class="headerlink" title="显式并行性"></a>显式并行性</h2><p>OpenMP 是一个显式的(而不是自动的)编程模型，为程序员提供了对并行化的完全控制。并行化可以像获取串行程序和插入编译器指令一样简单…或者像插入子程序来设置多个并行级别、锁甚至嵌套锁一样复杂</p>
+<h2 id="Fork-Join-模型"><a href="#Fork-Join-模型" class="headerlink" title="Fork - Join 模型"></a>Fork - Join 模型</h2><p>OpenMP 使用并行执行的 fork-join 模型：<br><img src="/img/22782486-dbd6ee9610fb13a5.gif" alt></p>
+<ul>
+<li>所有 OpenMP 程序都开始于一个主线程。主线程按顺序执行，直到遇到第一个并行区域结构。</li>
+<li>FORK：主线程然后创建一组并行线程。</li>
+<li>之后程序中由并行区域结构封装的语句在各个团队线程中并行执行。</li>
+<li>JOIN：当团队线程完成并行区域结构中的语句时，它们将进行同步并终止，只留下主线程。</li>
+</ul>
+<p>并行区域的数量和组成它们的线程是任意的。</p>
+<h2 id="数据范围"><a href="#数据范围" class="headerlink" title="数据范围"></a>数据范围</h2><ul>
+<li>因为 OpenMP 是共享内存编程模型，所以在默认情况下，并行区域中的大多数数据都是共享的。</li>
+<li>一个并行区域中的所有线程都可以同时访问共享数据。</li>
+<li>OpenMP 为程序员提供了一种方法，可以在不需要默认共享范围的情况下显式地指定数据的“作用域”。</li>
+</ul>
+<h2 id="动态线程"><a href="#动态线程" class="headerlink" title="动态线程"></a>动态线程</h2><p>该 API 为运行时环境提供了动态更改线程数量的功能，这些线程用于执行并行区域。如有可能，旨在促进更有效地利用资源。实现可能支持这个特性，也可能不支持。</p>
+<h2 id="I-O"><a href="#I-O" class="headerlink" title="I/O"></a>I/O</h2><p>OpenMP 没有指定任何关于并行 I/O 的内容。如果多个线程试图从同一个文件进行写/读操作，这一点尤其重要。如果每个线程都对不同的文件执行 I/O，那么问题就不那么重要了。完全由程序员来确保在多线程程序的上下文中正确地执行 I/O。</p>
+<h2 id="内存模型：经常刷新？"><a href="#内存模型：经常刷新？" class="headerlink" title="内存模型：经常刷新？"></a>内存模型：经常刷新？</h2><p>OpenMP 提供了线程内存的“宽松一致性”和“临时”视图(用他们的话说)。换句话说，线程可以“缓存”它们的数据，并且不需要始终与实际内存保持精确的一致性。当所有线程以相同的方式查看共享变量非常重要时，程序员负责确保所有线程根据需要刷新该变量。</p>
+<h1 id="OpenMP-API-概述"><a href="#OpenMP-API-概述" class="headerlink" title="OpenMP API 概述"></a>OpenMP API 概述</h1><h2 id="三大构成"><a href="#三大构成" class="headerlink" title="三大构成"></a>三大构成</h2><p>OpenMP 3.1 API 由三个不同的组件组成：</p>
+<ul>
+<li>编译器指令</li>
+<li>运行时库函数</li>
+<li>环境变量</li>
+</ul>
+<p>后来的一些 API 包含了这三个相同的组件，但是增加了指令、运行时库函数和环境变量的数量。应用程序开发人员决定如何使用这些组件。在最简单的情况下，只需要其中的几个。实现对所有 API 组件的支持各不相同。例如，一个实现可能声明它支持嵌套并行，但是 API 清楚地表明它可能被限制在一个线程上——主线程。不完全符合开发人员的期望？</p>
+<h2 id="编译器指令"><a href="#编译器指令" class="headerlink" title="编译器指令"></a>编译器指令</h2><p>编译器指令在源代码中以注释的形式出现，编译器会忽略它们，除非您另外告诉它们 — 通常通过指定适当的编译标志，如后面的编译部分所述。OpenMP 编译器指令用于各种目的：</p>
+<ul>
+<li>生成一个并行区域</li>
+<li>在线程之间划分代码块</li>
+<li>在线程之间分配循环迭代</li>
+<li>序列化代码段</li>
+<li>线程之间的工作同步</li>
+</ul>
+<p>编译器指令有以下语法：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sentinel directive-name [clause, ...]</span><br></pre></td></tr></table></figure></p>
+<p>例如：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel default(shared) private(beta, pi)</span></span><br></pre></td></tr></table></figure></p>
+<p>后面将详细讨论编译器指令。</p>
+<h2 id="运行时库函数-Run-time-Library-Routines"><a href="#运行时库函数-Run-time-Library-Routines" class="headerlink" title="运行时库函数 Run-time Library Routines:"></a>运行时库函数 Run-time Library Routines:</h2><p>OpenMP API 包括越来越多的运行时库函数。这些程序用于各种目的：</p>
+<ul>
+<li>设置和查询线程的数量</li>
+<li>查询线程的唯一标识符(线程ID)、父线程的标识符、线程团队大小</li>
+<li>设置和查询动态线程特性</li>
+<li>查询是否在一个并行区域，以及在什么级别</li>
+<li>设置和查询嵌套并行性</li>
+<li>设置、初始化和终止锁以及嵌套锁</li>
+<li>查询 wall clock time 和分辨率</li>
+</ul>
+<p>对于 C/C++，所有运行时库函数都是实际的子程序。对于Fortran来说，有些是函数，有些是子程序。例如：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">omp_get_num_threads</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br></pre></td></tr></table></figure></p>
+<p>注意，对于C/C++，通常需要包含<code>&lt;omp.h &gt;</code>头文件。</p>
+<p>运行时库函数将在运行时库函数一节中作为概述进行简要讨论，更多细节将在附录A中讨论。</p>
+<h2 id="环境变量"><a href="#环境变量" class="headerlink" title="环境变量"></a>环境变量</h2><p>OpenMP 提供了几个环境变量，用于在运行时控制并行代码的执行。这些环境变量可以用来控制这些事情：</p>
+<ul>
+<li>设置线程数</li>
+<li>指定如何划分循环交互</li>
+<li>将线程绑定到处理器</li>
+<li>启用/禁用嵌套的并行性；设置嵌套并行度的最大级别</li>
+<li>启用/禁用动态线程</li>
+<li>设置线程堆栈大小</li>
+<li>设置线程等待策略</li>
+</ul>
+<p>设置 OpenMP 环境变量的方法与设置任何其他环境变量的方法相同，并且取决于您使用的是哪种 shell。例如：<br><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">csh/tcsh: setenv OMP_NUM_THREADS 8</span><br><span class="line">sh/bash:  <span class="built_in">export</span> OMP_NUM_THREADS=8</span><br></pre></td></tr></table></figure></p>
+<p>稍后将在环境变量一节中讨论 OpenMP 环境变量。</p>
+<h2 id="OpenMP代码结构示例"><a href="#OpenMP代码结构示例" class="headerlink" title="OpenMP代码结构示例"></a>OpenMP代码结构示例</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line">main ()  &#123;</span><br><span class="line">    <span class="keyword">int</span> var1, var2, var3;</span><br><span class="line">    串行代码 `Serial code`</span><br><span class="line">     .</span><br><span class="line">     .</span><br><span class="line">     .</span><br><span class="line">    并行区域的开始。派生一组线程。 `Beginning of parallel region. Fork a team of threads.`</span><br><span class="line">    指定变量作用域 `Specify variable scoping `</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel private(var1, var2) shared(var3)</span></span><br><span class="line">    &#123;</span><br><span class="line">        由所有线程执行的并行区域 `Parallel region executed by all threads` </span><br><span class="line">             .</span><br><span class="line">        其他 OpenMP 指令 `Other OpenMP directives`</span><br><span class="line">             .</span><br><span class="line">        运行时库调用 `Run-time Library calls`</span><br><span class="line">             .</span><br><span class="line">        所有线程加入主线程并解散 `All threads join master thread <span class="keyword">and</span> disband` </span><br><span class="line">    &#125;  </span><br><span class="line">    恢复串行代码 `Resume serial code` </span><br><span class="line">     .</span><br><span class="line">     .</span><br><span class="line">     .</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="编译-OpenMP-程序"><a href="#编译-OpenMP-程序" class="headerlink" title="编译 OpenMP 程序"></a>编译 OpenMP 程序</h1><p>OpenMP 版本依赖的 GCC 版本</p>
+<table>
+<thead>
+<tr>
+<th>OpenMP 版本</th>
+<th>GCC版本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OpenMP 5.0</td>
+<td>&gt;= GCC 9.1</td>
+</tr>
+<tr>
+<td>OpenMP 4.5</td>
+<td>&gt;= GCC 6.1</td>
+</tr>
+<tr>
+<td>OpenMP 4.0</td>
+<td>&gt;= GCC 4.9.0</td>
+</tr>
+<tr>
+<td>OpenMP 3.1</td>
+<td>&gt;= GCC 4.7.0</td>
+</tr>
+<tr>
+<td>OpenMP 3.0</td>
+<td>&gt;= GCC 4.4.0</td>
+</tr>
+<tr>
+<td>OpenMP 2.5</td>
+<td>&gt;= GCC 4.2.0</td>
+</tr>
+</tbody>
+</table>
+<p>linux 下编译命令示例：<br><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">g++ Test.cpp -o omptest -fopenmp</span><br></pre></td></tr></table></figure></p>
+<h1 id="OpenMP-指令"><a href="#OpenMP-指令" class="headerlink" title="OpenMP 指令"></a>OpenMP 指令</h1><h2 id="C-C-指令格式"><a href="#C-C-指令格式" class="headerlink" title="C/C++ 指令格式"></a>C/C++ 指令格式</h2><p>格式<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#pragma omp	directive-name	[clause, ...]	newline</span><br></pre></td></tr></table></figure></p>
+<p>所有 OpenMP C/C++ 指令都需要。    一个有效的 OpenMP 指令。必须出现在 pragma 之后和任何子句之前。    可选的。除非另有限制，子句可以按任何顺序重复。    必需的。在此指令所包含的结构化块之前。</p>
+<p>一般规则</p>
+<ul>
+<li>区分大小写。</li>
+<li>指令遵循 C/C++ 编译器指令标准的约定。</li>
+<li>每个指令只能指定一个指令名。</li>
+<li>每个指令最多应用于一个后续语句，该语句必须是一个结构化块。</li>
+<li>长指令行可以通过在指令行的末尾使用反斜杠(“\”)来转义换行符，从而在后续的行中“继续”。</li>
+</ul>
+<h2 id="指令范围"><a href="#指令范围" class="headerlink" title="指令范围"></a>指令范围</h2><h3 id="静态-词法-范围"><a href="#静态-词法-范围" class="headerlink" title="静态(词法)范围"></a>静态(词法)范围</h3><ul>
+<li>在指令后面的结构化块的开始和结束之间以文本形式封装的代码。</li>
+<li>指令的静态范围不跨越多个程序或代码文件。</li>
+</ul>
+<h3 id="孤立的指令"><a href="#孤立的指令" class="headerlink" title="孤立的指令"></a>孤立的指令</h3><p>一个 OpenMP 指令，独立于另一个封闭指令，称为孤立型指令。它存在于另一个指令的静态(词法)范围之外。将跨越程序和可能的代码文件。</p>
+<h3 id="动态范围"><a href="#动态范围" class="headerlink" title="动态范围"></a>动态范围</h3><p>指令的动态范围包括静态(词法)范围和孤立指令的范围。</p>
+<h3 id="为什么这很重要？"><a href="#为什么这很重要？" class="headerlink" title="为什么这很重要？"></a>为什么这很重要？</h3><p>OpenMP 为指令如何相互关联(绑定)和嵌套指定了许多范围规则。如果忽略 OpenMP 绑定和嵌套规则，可能会导致非法或不正确的程序。有关详细信息，请参阅指令绑定和嵌套规则。</p>
+<h2 id="并行区域结构"><a href="#并行区域结构" class="headerlink" title="并行区域结构"></a>并行区域结构</h2><h3 id="目的"><a href="#目的" class="headerlink" title="目的"></a>目的</h3><p>并行区域是由多个线程执行的代码块。这是基本的 OpenMP 并行结构。</p>
+<h3 id="格式"><a href="#格式" class="headerlink" title="格式"></a>格式</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel [clause ...]  newline </span></span><br><span class="line">                     <span class="keyword">if</span> (scalar_expression) </span><br><span class="line">                     <span class="keyword">private</span> (<span class="built_in">list</span>) </span><br><span class="line">                     shared (<span class="built_in">list</span>) </span><br><span class="line">                     <span class="keyword">default</span> (shared | none) </span><br><span class="line">                     firstprivate (<span class="built_in">list</span>) </span><br><span class="line">                     reduction (<span class="keyword">operator</span>: <span class="built_in">list</span>) </span><br><span class="line">                     copyin (<span class="built_in">list</span>) </span><br><span class="line">                     num_threads (integer-expression)</span><br><span class="line"></span><br><span class="line">   structured_block</span><br></pre></td></tr></table></figure>
+<h3 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h3><ul>
+<li>当一个线程执行到一个并行指令时，它创建一个线程组并成为该线程组的主线程。主线程是该团队的成员，在该团队中线程号为0。</li>
+<li>从这个并行区域开始，代码被复制，所有线程都将执行该代码。</li>
+<li>在并行区域的末端有一个隐含的屏障。只有主线程在此之后继续执行。</li>
+<li>如果任何线程在一个并行区域内终止，则团队中的所有线程都将终止，并且在此之前所做的工作都是未定义的。</li>
+</ul>
+<h3 id="有多少线程"><a href="#有多少线程" class="headerlink" title="有多少线程"></a>有多少线程</h3><p>并行区域内的线程数由以下因素决定，按优先级排序：</p>
+<ul>
+<li><code>IF</code>子句的计算</li>
+<li><code>NUM_THREADS</code>子句的设置</li>
+<li>使用<code>omp_set_num_threads()</code>库函数</li>
+<li>设置<code>OMP_NUM_THREADS</code>环境变量</li>
+<li>实现缺省值 — 通常是一个节点上的 cpu 数量，尽管它可以是动态的(参见下一小节)</li>
+<li>线程的编号从0(主线程)到N-1。</li>
+</ul>
+<h3 id="动态线程-1"><a href="#动态线程-1" class="headerlink" title="动态线程"></a>动态线程</h3><p>使用<code>omp_get_dynamic()</code>库函数来确定是否启用了动态线程。如果支持的话，启用动态线程的两种方法是：</p>
+<ul>
+<li><code>omp_set_dynamic()</code>库函数</li>
+<li>将<code>OMP_NESTED</code>环境变量设置为 TRUE</li>
+</ul>
+<p>如果不支持，则在另一个并行区域内嵌套一个并行区域，从而在默认情况下创建一个由单个线程组成的新团队。</p>
+<h3 id="子句"><a href="#子句" class="headerlink" title="子句"></a>子句</h3><p>IF 子句：如果存在，它的值必须为非零，以便创建一个线程组。否则，该区域将由主线程串行执行。</p>
+<h3 id="限制条件"><a href="#限制条件" class="headerlink" title="限制条件"></a>限制条件</h3><ul>
+<li>并行区域必须是不跨越多个程序或代码文件的结构化块。</li>
+<li>从一个并行区域转入或转出是非法的。</li>
+<li>只允许一个 IF 子句。</li>
+<li>只允许一个 NUM_THREADS 子句。</li>
+<li>程序不能依赖于子句的顺序。</li>
+</ul>
+<h3 id="并行区域例子"><a href="#并行区域例子" class="headerlink" title="并行区域例子"></a>并行区域例子</h3><p>简单的“Hello World”程序。每个线程执行包含在并行区域中的所有代码。OpenMP 库函数用于获取线程标识符和线程总数。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> nthreads, tid;</span><br><span class="line">    <span class="comment">/* Fork a team of threads with each thread having a private tid variable */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel private(tid)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/* Obtain and print thread id */</span></span><br><span class="line">        tid = omp_get_thread_num();</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"Hello World from thread = %d\n"</span>, tid);</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* Only master thread does this */</span></span><br><span class="line">        <span class="keyword">if</span> (tid == <span class="number">0</span>) &#123;</span><br><span class="line">            nthreads = omp_get_num_threads();</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">"Number of threads = %d\n"</span>, nthreads);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="comment">/* All threads join master thread and terminate */</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="工作共享结构"><a href="#工作共享结构" class="headerlink" title="工作共享结构"></a>工作共享结构</h3><p>工作共享结构将封闭代码区域的执行划分给遇到它的团队成员。工作共享结构不会启动新线程。在进入工作共享结构时没有隐含的屏障，但是在工作共享结构的末尾有一个隐含的屏障。</p>
+<p>工作共享结构的类型：</p>
+<ul>
+<li>DO / for - 整个团队的循环迭代。表示一种“数据并行性”。</li>
+<li>SECTIONS - 把工作分成单独的、不连续的部分。每个部分由一个线程执行。可以用来实现一种“函数并行性”。</li>
+<li>SINGLE - 序列化一段代码。</li>
+</ul>
+<p><img src="/img/20211202115649.png" alt>    </p>
+<h3 id="限制条件-1"><a href="#限制条件-1" class="headerlink" title="限制条件"></a>限制条件</h3><p>为了使指令能够并行执行，必须将工作共享结构动态地封装在一个并行区域中。团队的所有成员都必须遇到工作共享结构，或者根本不遇到。团队的所有成员必须以相同的顺序遇到连续的工作共享结构。</p>
+<h3 id="DO-for-指令"><a href="#DO-for-指令" class="headerlink" title="DO / for 指令"></a>DO / for 指令</h3><p>DO / for 指令指定紧随其后的循环迭代必须由团队并行执行。这假定已经启动了并行区域，否则它将在单个处理器上串行执行。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp for [clause ...]  newline </span></span><br><span class="line">                schedule (type [,chunk]) </span><br><span class="line">                ordered</span><br><span class="line">                <span class="keyword">private</span> (<span class="built_in">list</span>) </span><br><span class="line">                firstprivate (<span class="built_in">list</span>) </span><br><span class="line">                lastprivate (<span class="built_in">list</span>) </span><br><span class="line">                shared (<span class="built_in">list</span>) </span><br><span class="line">                reduction (<span class="keyword">operator</span>: <span class="built_in">list</span>) </span><br><span class="line">                collapse (n) </span><br><span class="line">                nowait </span><br><span class="line"></span><br><span class="line">   for_loop</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>schedule</code>：描述循环迭代如何在团队中的线程之间进行分配。默认的调度是依赖于实现的。有关如何使一种调度比其他调度更优的讨论，请参见<a href="http://openmp.org/forum/viewtopic.php?f=3&amp;t=83" target="_blank" rel="noopener">http://openmp.org/forum/viewtopic.php?f=3&amp;t=83</a> 。<ul>
+<li>静态(STATIC) - 循环迭代被分成小块，然后静态地分配给线程。如果没有指定 chunk，则迭代是均匀地(如果可能)在线程之间连续地划分。</li>
+<li>动态(DYNAMIC) - 循环迭代分成小块，并在线程之间动态调度；当一个线程完成一个块时，它被动态地分配给另一个块。默认块大小为1。</li>
+<li>引导(GUIDED) - 当线程请求迭代时，迭代被动态地分配给块中的线程，直到没有剩余的块需要分配为止。与 DYNAMIC 类似，只是每次将一个工作包分配给一个线程时，块的大小就会减小。<ul>
+<li>初始块的大小与 number_of_iteration / number_of_threads 成比例</li>
+<li>后续块与number_of_iterations_remaining / number_of_threads 成比例</li>
+<li>chunk 参数定义最小块大小。默认块大小为1。</li>
+</ul>
+</li>
+<li>运行时(RUNTIME) - 环境变量 OMP_SCHEDULE 将调度决策延迟到运行时。为这个子句指定块大小是非法的。</li>
+<li>自动(AUTO) - 调度决策被委托给编译器或运行时系统。</li>
+</ul>
+</li>
+<li><code>nowait</code>： 如果指定，那么线程在并行循环结束时不会同步。</li>
+<li><code>ordered</code>：指定循环的迭代必须像在串行程序中一样执行。</li>
+<li><code>collapse</code>：指定在一个嵌套循环中有多少个循环应该折叠成一个大的迭代空间，并根据 schedule 子句进行划分。折叠迭代空间中的迭代的顺序是确定的，就好像它们是按顺序执行的一样。可能会提高性能。</li>
+<li>其他子句稍后将在数据范围属性子句一节中详细描述。</li>
+</ul>
+<h4 id="限制条件-2"><a href="#限制条件-2" class="headerlink" title="限制条件"></a>限制条件</h4><ul>
+<li>DO 循环不能是 DO WHILE 循环，也不能是没有循环控制的循环。此外，循环迭代变量必须是整数，并且对于所有线程，循环控制参数必须相同。</li>
+<li>程序的正确性不能依赖于哪个线程执行特定的迭代。</li>
+<li>在与 DO / for 指令关联的循环中跳转（转到）是非法的。</li>
+<li>块大小必须指定为循环不变的整数表达式，因为在不同线程求值期间不存在同步。</li>
+<li>ORDERED、COLLAPSE、SCHEDULE 子句可以出现一次。</li>
+<li>有关其他限制，请参阅 OpenMP 规范文档。</li>
+</ul>
+<h4 id="DO-for-指令示例"><a href="#DO-for-指令示例" class="headerlink" title="DO / for 指令示例"></a>DO / for 指令示例</h4><p>简单的 vector 相加程序，数组 A、B、C 和变量 N 将由所有线程共享。变量 i 对每个线程都是私有的；每个线程都有自己唯一的副本。循环迭代将在 CHUNK 大小的块中动态分布。线程在完成各自的工作后将不会同步 (NOWAIT)。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> N 1000</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> CHUNKSIZE 100</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i, chunk;</span><br><span class="line">    <span class="keyword">float</span> a[N], b[N], c[N];</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Some initializations */</span></span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; N; i++)</span><br><span class="line">        a[i] = b[i] = i * <span class="number">1.0</span>;</span><br><span class="line">    chunk = CHUNKSIZE;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel shared(a,b,c,chunk) private(i)</span></span><br><span class="line">    &#123;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp for schedule(dynamic,chunk) nowait</span></span><br><span class="line">        <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; N; i++)</span><br><span class="line">            c[i] = a[i] + b[i];</span><br><span class="line"></span><br><span class="line">    &#125; <span class="comment">/* end of parallel region */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="sections-指令"><a href="#sections-指令" class="headerlink" title="sections 指令"></a>sections 指令</h3><h4 id="目的-1"><a href="#目的-1" class="headerlink" title="目的"></a>目的</h4><p>sections 指令是一个非迭代的工作共享结构。它指定所包含的代码段将被分配给团队中的各个线程。</p>
+<p>独立的 section 指令嵌套在 sections 指令中。每个部分由团队中的一个线程执行一次。不同的部分可以由不同的线程执行。如果一个线程执行多个部分的速度足够快，并且实现允许这样做，那么它就可以执行多个部分。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp sections [clause ...]  newline </span></span><br><span class="line">                     <span class="keyword">private</span> (<span class="built_in">list</span>) </span><br><span class="line">                     firstprivate (<span class="built_in">list</span>) </span><br><span class="line">                     lastprivate (<span class="built_in">list</span>) </span><br><span class="line">                     reduction (<span class="keyword">operator</span>: <span class="built_in">list</span>) </span><br><span class="line">                     nowait</span><br><span class="line">  &#123;</span><br><span class="line">  <span class="meta">#<span class="meta-keyword">pragma</span> omp section   newline </span></span><br><span class="line">     structured_block</span><br><span class="line">  <span class="meta">#<span class="meta-keyword">pragma</span> omp section   newline </span></span><br><span class="line">     structured_block</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<h4 id="子句-1"><a href="#子句-1" class="headerlink" title="子句"></a>子句</h4><p>除非使用了 NOWAIT/nowait 子句，否则在 sections 指令的末尾有一个隐含的屏障（译者注：an implied barrier 意思应该是线程会相互等待）。稍后将在数据范围属性子句一节中详细描述子句。</p>
+<h4 id="限制条件-3"><a href="#限制条件-3" class="headerlink" title="限制条件"></a>限制条件</h4><p>跳转（转到）或跳出 section 代码块是非法的。section 指令必须出现在一个封闭的 sections 指令的词法范围内(没有独立部分)。</p>
+<h4 id="sections-指令示例"><a href="#sections-指令示例" class="headerlink" title="sections 指令示例"></a>sections 指令示例</h4><p>下面一个简单的程序演示不同的工作块将由不同的线程完成。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> N 1000</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">float</span> a[N], b[N], c[N], d[N];</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Some initializations */</span></span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; N; i++) &#123;</span><br><span class="line">        a[i] = i * <span class="number">1.5</span>;</span><br><span class="line">        b[i] = i + <span class="number">22.35</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel shared(a,b,c,d) private(i)</span></span><br><span class="line">    &#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp sections nowait</span></span><br><span class="line">        &#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp section</span></span><br><span class="line">            <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; N; i++)</span><br><span class="line">                c[i] = a[i] + b[i];</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp section</span></span><br><span class="line">            <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; N; i++)</span><br><span class="line">                d[i] = a[i] * b[i];</span><br><span class="line">        &#125; <span class="comment">/* end of sections */</span></span><br><span class="line">    &#125; <span class="comment">/* end of parallel region */</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="single-指令"><a href="#single-指令" class="headerlink" title="single 指令"></a>single 指令</h3><h4 id="目的-2"><a href="#目的-2" class="headerlink" title="目的"></a>目的</h4><p>single 指令指定所包含的代码仅由团队中的一个线程执行。在处理非线程安全的代码段(如 I/O )时可能很有用</p>
+<h4 id="格式-1"><a href="#格式-1" class="headerlink" title="格式"></a>格式</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp single [clause ...]  newline </span></span><br><span class="line">                   <span class="keyword">private</span> (<span class="built_in">list</span>) </span><br><span class="line">                   firstprivate (<span class="built_in">list</span>) </span><br><span class="line">                   nowait</span><br><span class="line"></span><br><span class="line">     structured_block</span><br></pre></td></tr></table></figure>
+<h4 id="子句-2"><a href="#子句-2" class="headerlink" title="子句"></a>子句</h4><p>除非指定了 nowait 子句，否则团队中不执行 single 指令的线程将在代码块的末尾等待。稍后将在数据范围属性子句一节中详细描述子句。</p>
+<h4 id="限制条件-4"><a href="#限制条件-4" class="headerlink" title="限制条件"></a>限制条件</h4><p>进入或跳出一个 single 代码块是非法的。</p>
+<h2 id="合并并行工作共享结构"><a href="#合并并行工作共享结构" class="headerlink" title="合并并行工作共享结构"></a>合并并行工作共享结构</h2><p>OpenMP 提供了三个简单的指令：</p>
+<ul>
+<li>parallel for</li>
+<li>parallel sections</li>
+<li>PARALLEL WORKSHARE (fortran only)</li>
+</ul>
+<p>在大多数情况下，这些指令的行为与单独的并行指令完全相同，并行指令后面紧跟着一个单独的工作共享指令。大多数适用于这两个指令的规则、条款和限制都是有效的。有关详细信息，请参阅 OpenMP API。</p>
+<p>下面显示了一个使用 parallel for 组合指令的示例。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> N       1000</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> CHUNKSIZE   100</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i, chunk;</span><br><span class="line">    <span class="keyword">float</span> a[N], b[N], c[N];</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Some initializations */</span></span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; N; i++)</span><br><span class="line">        a[i] = b[i] = i * <span class="number">1.0</span>;</span><br><span class="line">    chunk = CHUNKSIZE;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for shared(a,b,c,chunk) private(i) schedule(static,chunk)</span></span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; N; i++)</span><br><span class="line">        c[i] = a[i] + b[i];</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="任务结构"><a href="#任务结构" class="headerlink" title="任务结构"></a>任务结构</h2><h3 id="目的-3"><a href="#目的-3" class="headerlink" title="目的"></a>目的</h3><p>任务结构定义了一个显式任务，该任务可以由遇到的线程执行，也可以由团队中的任何其他线程延迟执行。任务的数据环境由数据共享属性子句确定。任务执行取决于任务调度 — 详细信息请参阅 OpenMP 3.1 规范文档</p>
+<h3 id="格式-2"><a href="#格式-2" class="headerlink" title="格式"></a>格式</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp task [clause ...]  newline </span></span><br><span class="line">                 <span class="keyword">if</span> (scalar expression) </span><br><span class="line">                 final (scalar expression) </span><br><span class="line">                 untied</span><br><span class="line">                 <span class="keyword">default</span> (shared | none)</span><br><span class="line">                 mergeable</span><br><span class="line">                 <span class="keyword">private</span> (<span class="built_in">list</span>) </span><br><span class="line">                 firstprivate (<span class="built_in">list</span>) </span><br><span class="line">                 shared (<span class="built_in">list</span>) </span><br><span class="line"></span><br><span class="line">    structured_block</span><br></pre></td></tr></table></figure>
+<h2 id="同步结构"><a href="#同步结构" class="headerlink" title="同步结构"></a>同步结构</h2><p>考虑一个简单的例子，两个线程都试图同时更新变量x：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">THREAD1	</span><br><span class="line">update(x)</span><br><span class="line">&#123;</span><br><span class="line">    x = x + <span class="number">1</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">x = <span class="number">0</span></span><br><span class="line">update(x)</span><br><span class="line">print(x)</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">THREAD2</span><br><span class="line">update(x)</span><br><span class="line">&#123;</span><br><span class="line">    x = x + <span class="number">1</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">x = <span class="number">0</span></span><br><span class="line">update(x)</span><br><span class="line">print(x)</span><br></pre></td></tr></table></figure>
+<p>一种可能的执行顺序：</p>
+<ul>
+<li>线程1初始化 x 为0并调用</li>
+<li>线程1将 x 加1，x 现在等于1</li>
+<li>线程2初始化 x 为0并调用 update(x)，x现在等于0</li>
+<li>线程1输出 x，它等于0而不是1</li>
+<li>线程2将 x 加1，x 现在等于1</li>
+<li>线程2打印 x 为1</li>
+</ul>
+<p>为了避免这种情况，必须在两个线程之间同步 x 的更新，以确保产生正确的结果。OpenMP 提供了各种同步结构，这些构造控制每个线程相对于其他团队线程的执行方式。</p>
+<h3 id="master-指令"><a href="#master-指令" class="headerlink" title="master 指令"></a>master 指令</h3><h4 id="目的-4"><a href="#目的-4" class="headerlink" title="目的"></a>目的</h4><p>master 指令指定了一个区域，该区域只由团队的主线程执行。团队中的所有其他线程都将跳过这部分代码。这个指令没有隐含的障碍( implied barrier )。</p>
+<h4 id="格式-3"><a href="#格式-3" class="headerlink" title="格式"></a>格式</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp master  newline</span></span><br><span class="line">    structured_block</span><br></pre></td></tr></table></figure>
+<h4 id="限制条件-5"><a href="#限制条件-5" class="headerlink" title="限制条件"></a>限制条件</h4><p>进入或跳出一个 master 代码块是非法的。</p>
+<h3 id="critical-指令"><a href="#critical-指令" class="headerlink" title="critical 指令"></a>critical 指令</h3><h4 id="目的-5"><a href="#目的-5" class="headerlink" title="目的"></a>目的</h4><p>critical 指令指定了一个只能由一个线程执行的代码区域。</p>
+<h4 id="格式-4"><a href="#格式-4" class="headerlink" title="格式"></a>格式</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp critical [ name ]  newline</span></span><br><span class="line">    structured_block</span><br></pre></td></tr></table></figure>
+<h4 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h4><ul>
+<li>如果一个线程当前在一个 critical 区域内执行，而另一个线程到达该 critical 区域并试图执行它，那么它将阻塞，直到第一个线程退出该 critical 区域。</li>
+<li>可选的名称使多个不同的临界区域存在：<ul>
+<li>名称充当全局标识符。具有相同名称的不同临界区被视为相同的区域。</li>
+<li>所有未命名的临界段均视为同一段。</li>
+</ul>
+</li>
+</ul>
+<h4 id="限制条件-6"><a href="#限制条件-6" class="headerlink" title="限制条件"></a>限制条件</h4><p>进入或跳出一个 critical 代码块是非法的。</p>
+<p>Fortran only: The names of critical constructs are global entities of the program. If a name conflicts with any other entity, the behavior of the program is unspecified.</p>
+<h4 id="critical-结构示例"><a href="#critical-结构示例" class="headerlink" title="critical 结构示例"></a>critical 结构示例</h4><p>团队中的所有线程都将尝试并行执行，但是由于 x 的增加由 critical 结构包围，在任何时候只有一个线程能够读/增量/写 x。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> x;</span><br><span class="line">    x = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel shared(x)</span></span><br><span class="line">    &#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp critical</span></span><br><span class="line">        x = x + <span class="number">1</span>;</span><br><span class="line">    &#125; <span class="comment">/* end of parallel region */</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="barrier-指令"><a href="#barrier-指令" class="headerlink" title="barrier 指令"></a>barrier 指令</h3><h4 id="目的-6"><a href="#目的-6" class="headerlink" title="目的"></a>目的</h4><p>barrier 指令同步团队中的所有线程。当到达 barrier 指令时，一个线程将在该点等待，直到所有其他线程都到达了 barrier 指令。然后，所有线程继续并行执行 barrier 之后的代码。</p>
+<h4 id="格式-5"><a href="#格式-5" class="headerlink" title="格式"></a>格式</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp barrier  newline</span></span><br></pre></td></tr></table></figure>
+<p>f</p>
+<h4 id="限制条件-7"><a href="#限制条件-7" class="headerlink" title="限制条件"></a>限制条件</h4><p>团队中的所有线程(或没有线程)都必须执行 barrier 区域。对于团队中的每个线程，遇到的 work-sharing 区域和 barrier 区域的顺序必须是相同的。</p>
+<h3 id="taskwait-指令"><a href="#taskwait-指令" class="headerlink" title="taskwait 指令"></a>taskwait 指令</h3><h4 id="目的-7"><a href="#目的-7" class="headerlink" title="目的"></a>目的</h4><p>taskwait 结构指定自当前任务开始以来生成的子任务完成时的等待时间。</p>
+<h4 id="格式-6"><a href="#格式-6" class="headerlink" title="格式"></a>格式</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp taskwait  newline</span></span><br></pre></td></tr></table></figure>
+<h4 id="限制条件-8"><a href="#限制条件-8" class="headerlink" title="限制条件"></a>限制条件</h4><p>因为 taskwait 结构是一个独立的指令，所以它在程序中的位置有一些限制。taskwait 指令只能放置在允许使用基本语言语句的地方。taskwait 指令不能代替 if、while、do、switch 或 label 后面的语句。有关详细信息，请参阅 OpenMP 3.1 规范文档。</p>
+<h3 id="atomic-指令"><a href="#atomic-指令" class="headerlink" title="atomic 指令"></a>atomic 指令</h3><h4 id="目的-8"><a href="#目的-8" class="headerlink" title="目的"></a>目的</h4><p>atomic 结构确保以原子方式访问特定的存储位置，而不是将其暴露给多个线程同时读写，这些线程可能会导致不确定的值。本质上，这个指令提供了一个最小临界( mini-CRITICAL )区域。</p>
+<h4 id="格式-7"><a href="#格式-7" class="headerlink" title="格式"></a>格式</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#pragma omp atomic  [ read | write | update | capture ] newline</span><br><span class="line">   statement_expression</span><br></pre></td></tr></table></figure>
+<h4 id="限制条件-9"><a href="#限制条件-9" class="headerlink" title="限制条件"></a>限制条件</h4><p>该指令仅适用于紧接其后的单个语句。原子语句必须遵循特定的语法。查看最新的OpenMP规范。</p>
+<h3 id="flush-指令"><a href="#flush-指令" class="headerlink" title="flush 指令"></a>flush 指令</h3><h4 id="目的-9"><a href="#目的-9" class="headerlink" title="目的"></a>目的</h4><p>flush 指令标识了一个同步点，在这个点上，内存数据必须一致。这时，线程可见的变量被写回内存。请参阅最新的 OpenMP 规范以获取详细信息。</p>
+<h4 id="格式-8"><a href="#格式-8" class="headerlink" title="格式"></a>格式</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp flush (list)  newline</span></span><br></pre></td></tr></table></figure>
+<h4 id="注意事项-1"><a href="#注意事项-1" class="headerlink" title="注意事项"></a>注意事项</h4><p>可选 list 参数包含一个将被刷新的已命名变量列表，以避免刷新所有变量。对于列表中的指针，请注意指针本身被刷新，而不是它指向的对象。实现必须确保线程可见变量的任何修改在此之后对所有线程都是可见的，例如编译器必须将值从寄存器恢复到内存，硬件可能需要刷新写缓冲区，等等。对于下面的指令，将使用 flush 指令。如果存在 nowait 子句，则该指令无效。</p>
+<ul>
+<li>barrier</li>
+<li>parallel - 进入和退出</li>
+<li>critical - 进入和退出</li>
+<li>ordered - 进入和退出</li>
+<li>for - 退出</li>
+<li>sections - 退出</li>
+<li>single - 退出</li>
+</ul>
+<h3 id="ordered-指令"><a href="#ordered-指令" class="headerlink" title="ordered 指令"></a>ordered 指令</h3><h4 id="目的-10"><a href="#目的-10" class="headerlink" title="目的"></a>目的</h4><p>ordered 指令指定封闭的循环迭代将以串行处理器上执行顺序执行。如果之前的迭代还没有完成，线程在执行它们的迭代块之前需要等待。在带有 ordered 子句的 for 循环中使用。ordered 指令提供了一种“微调”的方法，其中在循环中应用了排序。否则，它不是必需的。</p>
+<h4 id="格式-9"><a href="#格式-9" class="headerlink" title="格式"></a>格式</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp for ordered [clauses...]</span></span><br><span class="line">   (loop region)</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp ordered  newline</span></span><br><span class="line">   structured_block</span><br><span class="line">   (endo of loop region)</span><br></pre></td></tr></table></figure>
+<h4 id="限制条件-10"><a href="#限制条件-10" class="headerlink" title="限制条件"></a>限制条件</h4><ul>
+<li>一个 ordered 指令只能在以下指令的动态范围内出现：<ul>
+<li>for 或者 parallel for (C/C++)。</li>
+</ul>
+</li>
+<li>在一个有序的区段中，任何时候都只允许一个线程。</li>
+<li>进入或跳出一个 ordered 代码块是非法的。</li>
+<li>一个循环的迭代不能多次执行同一个有序指令，也不能一次执行多个有序指令。</li>
+<li>包含有序指令的循环必须是带有 ordered 子句的循环。</li>
+</ul>
+<h2 id="threadprivate-指令"><a href="#threadprivate-指令" class="headerlink" title="threadprivate 指令"></a>threadprivate 指令</h2><h3 id="目的-11"><a href="#目的-11" class="headerlink" title="目的"></a>目的</h3><p>threadprivate 指令指定复制变量，每个线程都有自己的副本。</p>
+<p>可用于通过执行多个并行区域将全局文件作用域变量(C/C++/Fortran)或公共块(Fortran)局部化并持久化到一个线程。</p>
+<h3 id="格式-10"><a href="#格式-10" class="headerlink" title="格式"></a>格式</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp threadprivate (list)</span></span><br></pre></td></tr></table></figure>
+<h3 id="注意事项-2"><a href="#注意事项-2" class="headerlink" title="注意事项"></a>注意事项</h3><ul>
+<li>指令必须出现在列出的变量/公共块的声明之后。每个线程都有自己的变量/公共块的副本，所以一个线程写的数据对其他线程是不可见的。</li>
+<li>在第一次进入一个并行区域时，应该假设 threadprivate 变量和公共块中的数据是未定义的，除非在并行指令中指定了 copyin 子句。</li>
+<li>threadprivate 变量不同于 private 变量(稍后讨论)，因为它们能够在代码的不同并行区域之间持久存在。</li>
+</ul>
+<h3 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"><span class="keyword">int</span> a, b, i, tid;</span><br><span class="line"><span class="keyword">float</span> x;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp threadprivate(a, x)</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">/* 显式关闭动态线程 Explicitly turn off dynamic threads */</span></span><br><span class="line">    omp_set_dynamic(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"1st Parallel Region:\n"</span>);</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel private(b,tid)</span></span><br><span class="line">    &#123;</span><br><span class="line">        tid = omp_get_thread_num();</span><br><span class="line">        a = tid;</span><br><span class="line">        b = tid;</span><br><span class="line">        x = <span class="number">1.1</span> * tid + <span class="number">1.0</span>;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"Thread %d:   a,b,x= %d %d %f\n"</span>, tid, a, b, x);</span><br><span class="line">    &#125; <span class="comment">/* end of parallel region */</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"************************************\n"</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"Master thread doing serial work here\n"</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"************************************\n"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"2nd Parallel Region:\n"</span>);</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel private(tid)</span></span><br><span class="line">    &#123;</span><br><span class="line">        tid = omp_get_thread_num();</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"Thread %d:   a,b,x= %d %d %f\n"</span>, tid, a, b, x);</span><br><span class="line">    &#125; <span class="comment">/* end of parallel region */</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Output:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">1st Parallel Region:</span><br><span class="line">Thread 4:   a,b,x= 4 4 5.400000</span><br><span class="line">Thread 7:   a,b,x= 7 7 8.700000</span><br><span class="line">Thread 2:   a,b,x= 2 2 3.200000</span><br><span class="line">Thread 3:   a,b,x= 3 3 4.300000</span><br><span class="line">Thread 6:   a,b,x= 6 6 7.600000</span><br><span class="line">Thread 1:   a,b,x= 1 1 2.100000</span><br><span class="line">Thread 5:   a,b,x= 5 5 6.500000</span><br><span class="line">Thread 0:   a,b,x= 0 0 1.000000</span><br><span class="line">************************************</span><br><span class="line">Master thread doing serial work here</span><br><span class="line">************************************</span><br><span class="line">2nd Parallel Region:</span><br><span class="line">Thread 1:   a,b,x= 1 0 2.100000</span><br><span class="line">Thread 6:   a,b,x= 6 0 7.600000</span><br><span class="line">Thread 4:   a,b,x= 4 0 5.400000</span><br><span class="line">Thread 5:   a,b,x= 5 0 6.500000</span><br><span class="line">Thread 2:   a,b,x= 2 0 3.200000</span><br><span class="line">Thread 7:   a,b,x= 7 0 8.700000</span><br><span class="line">Thread 0:   a,b,x= 0 0 1.000000</span><br><span class="line">Thread 3:   a,b,x= 3 0 4.300000</span><br></pre></td></tr></table></figure></p>
+<h3 id="限制条件-11"><a href="#限制条件-11" class="headerlink" title="限制条件"></a>限制条件</h3><p>只有在动态线程机制“关闭”并且不同并行区域中的线程数量保持不变的情况下，threadprivate 对象中的数据才能保证持久。动态线程的默认设置是未定义的。</p>
+<h2 id="数据范围属性子句"><a href="#数据范围属性子句" class="headerlink" title="数据范围属性子句"></a>数据范围属性子句</h2><p>也称为数据共享属性子句。</p>
+<p>OpenMP 编程的一个重要考虑是理解和使用数据作用域。因为 OpenMP 是基于共享内存编程模型的，所以大多数变量在默认情况下是共享的。</p>
+<p>全局变量包括：</p>
+<ul>
+<li>Fortran: COMMON blocks, SAVE variables, MODULE variables</li>
+<li>文件作用域变量，static</li>
+</ul>
+<p>私有变量包括：</p>
+<ul>
+<li>循环索引变量</li>
+<li>从并行区域调用的子程序中的堆栈变量</li>
+<li>Fortran: Automatic variables within a statement block</li>
+</ul>
+<p>OpenMP 数据范围属性子句用于显式定义变量的范围。它们包括：</p>
+<ul>
+<li>private</li>
+<li>firstprivate</li>
+<li>lastprivate</li>
+<li>shared</li>
+<li>default</li>
+<li>reduction</li>
+<li>copyin</li>
+</ul>
+<p>数据范围属性子句与几个指令（parallel、DO/for 和 sections）一起使用，以控制所包含变量的范围。这些结构提供了在并行结构执行期间控制数据环境的能力。它们定义了如何将程序的串行部分中的哪些数据变量传输到程序的并行区域(以及向后传输)。它们定义哪些变量将对并行区域中的所有线程可见，哪些变量以私有形式分配给所有线程。数据范围属性子句仅在其词法/静态范围内有效。</p>
+<h3 id="private-子句"><a href="#private-子句" class="headerlink" title="private 子句"></a>private 子句</h3><h4 id="目的-12"><a href="#目的-12" class="headerlink" title="目的"></a>目的</h4><p>private 子句将在其列表中的变量声明为每个线程的私有变量。</p>
+<h4 id="格式-11"><a href="#格式-11" class="headerlink" title="格式"></a>格式</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> (<span class="built_in">list</span>)</span><br></pre></td></tr></table></figure>
+<h4 id="注意事项-3"><a href="#注意事项-3" class="headerlink" title="注意事项"></a>注意事项</h4><p>私有变量的行为如下：</p>
+<ul>
+<li>为团队中的每个线程声明一个相同类型的新对象</li>
+<li>所有对原始对象的引用都被替换为对新对象的引用</li>
+<li>应该假定每个线程都没有初始化</li>
+</ul>
+<h3 id="shared-子句"><a href="#shared-子句" class="headerlink" title="shared 子句"></a>shared 子句</h3><h4 id="目的-13"><a href="#目的-13" class="headerlink" title="目的"></a>目的</h4><p>shared 子句声明其列表中的变量在团队中的所有线程之间共享。</p>
+<h4 id="格式-12"><a href="#格式-12" class="headerlink" title="格式"></a>格式</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">shared (<span class="built_in">list</span>)</span><br></pre></td></tr></table></figure>
+<h4 id="注意事项-4"><a href="#注意事项-4" class="headerlink" title="注意事项"></a>注意事项</h4><p>共享变量只存在于一个内存位置，所有线程都可以读写该地址，程序员有责任确保多个线程正确地访问共享变量(例如通过临界区)</p>
+<h3 id="default-子句"><a href="#default-子句" class="headerlink" title="default 子句"></a>default 子句</h3><h4 id="目的-14"><a href="#目的-14" class="headerlink" title="目的"></a>目的</h4><p>default 子句允许用户为任何并行区域的词法范围内的所有变量指定默认作用域。</p>
+<h4 id="格式-13"><a href="#格式-13" class="headerlink" title="格式"></a>格式</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">default</span> (shared | none)</span><br></pre></td></tr></table></figure>
+<h4 id="注意事项-5"><a href="#注意事项-5" class="headerlink" title="注意事项"></a>注意事项</h4><p>使用 private、shared、firstprivate、lastprivate 和 reduction 子句可以避免使用特定变量。C/C++ OpenMP 规范不包括将 private 或 firstprivate 作为可能的默认值。但是，实际的实现可能会提供这个选项。使用 none 作为默认值要求程序员显式地限定所有变量的作用域。</p>
+<h3 id="firstprivate-子句"><a href="#firstprivate-子句" class="headerlink" title="firstprivate 子句"></a>firstprivate 子句</h3><h4 id="目的-15"><a href="#目的-15" class="headerlink" title="目的"></a>目的</h4><p>firstprivate 子句将 private 子句的行为与它的列表中变量的自动初始化相结合。</p>
+<h4 id="格式-14"><a href="#格式-14" class="headerlink" title="格式"></a>格式</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">firstprivate (<span class="built_in">list</span>)</span><br></pre></td></tr></table></figure>
+<h4 id="注意事项-6"><a href="#注意事项-6" class="headerlink" title="注意事项"></a>注意事项</h4><p>在进入并行或工作共享结构之前，将根据其原始对象的值初始化列出的变量。</p>
+<h3 id="lastprivate-子句"><a href="#lastprivate-子句" class="headerlink" title="lastprivate 子句"></a>lastprivate 子句</h3><h4 id="目的-16"><a href="#目的-16" class="headerlink" title="目的"></a>目的</h4><p>lastprivate 子句将 private 子句的行为与从最后一个循环迭代或部分到原始变量对象的复制相结合。</p>
+<h4 id="格式-15"><a href="#格式-15" class="headerlink" title="格式"></a>格式</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lastprivate (<span class="built_in">list</span>)</span><br></pre></td></tr></table></figure>
+<h4 id="注意事项-7"><a href="#注意事项-7" class="headerlink" title="注意事项"></a>注意事项</h4><p>复制回原始变量对象的值是从封闭结构的最后一次(顺序)迭代或部分获得的。例如，为 DO 部分执行最后一次迭代的团队成员，或者执行 sections 上下文的最后一部分的团队成员，使用其自身的值执行副本。</p>
+<h3 id="copyin-子句"><a href="#copyin-子句" class="headerlink" title="copyin 子句"></a>copyin 子句</h3><h4 id="目的-17"><a href="#目的-17" class="headerlink" title="目的"></a>目的</h4><p>copyin 子句提供了为团队中的所有线程分配相同值的 threadprivate 变量的方法。</p>
+<h4 id="格式-16"><a href="#格式-16" class="headerlink" title="格式"></a>格式</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">copyin  (<span class="built_in">list</span>)</span><br></pre></td></tr></table></figure>
+<h4 id="注意事项-8"><a href="#注意事项-8" class="headerlink" title="注意事项"></a>注意事项</h4><p>列表包含要复制的变量的名称。在Fortran中，列表既可以包含公共块的名称，也可以包含已命名变量的名称。主线程变量用作复制源。在进入并行结构时，将使用其值初始化团队线程。</p>
+<h3 id="copyprivate-子句"><a href="#copyprivate-子句" class="headerlink" title="copyprivate 子句"></a>copyprivate 子句</h3><h4 id="目的-18"><a href="#目的-18" class="headerlink" title="目的"></a>目的</h4><p>copyprivate 子句可用于将单个线程获得的值直接传播到其他线程中私有变量的所有实例。与 single 指令相关联</p>
+<h4 id="格式-17"><a href="#格式-17" class="headerlink" title="格式"></a>格式</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">copyprivate  (<span class="built_in">list</span>)</span><br></pre></td></tr></table></figure>
+<h3 id="reduction-子句"><a href="#reduction-子句" class="headerlink" title="reduction 子句"></a>reduction 子句</h3><h4 id="目的-19"><a href="#目的-19" class="headerlink" title="目的"></a>目的</h4><p>reduction 子句对出现在其列表中的变量执行约简操作。为每个线程创建并初始化每个列表变量的私有副本。在约简结束时，将约简变量应用于共享变量的所有私有副本，并将最终结果写入全局共享变量。</p>
+<h4 id="格式-18"><a href="#格式-18" class="headerlink" title="格式"></a>格式</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">reduction (<span class="keyword">operator</span>: <span class="built_in">list</span>)</span><br></pre></td></tr></table></figure>
+<h4 id="Example-REDUCTION-Vector-Dot-Product"><a href="#Example-REDUCTION-Vector-Dot-Product" class="headerlink" title="Example: REDUCTION - Vector Dot Product:"></a>Example: REDUCTION - Vector Dot Product:</h4><p>并行循环的迭代将以相同大小的块分配给团队中的每个线程(调度静态)，在并行循环构造的末尾，所有线程将添加它们的“result”值来更新主线程的全局副本。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i, n, chunk;</span><br><span class="line">    <span class="keyword">float</span> a[<span class="number">100</span>], b[<span class="number">100</span>], result;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Some initializations */</span></span><br><span class="line">    n = <span class="number">100</span>;</span><br><span class="line">    chunk = <span class="number">10</span>;</span><br><span class="line">    result = <span class="number">0.0</span>;</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; n; i++) &#123;</span><br><span class="line">        a[i] = i * <span class="number">1.0</span>;</span><br><span class="line">        b[i] = i * <span class="number">2.0</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for default(shared) private(i) \</span></span><br><span class="line">    schedule(<span class="keyword">static</span>,chunk) reduction(+:result)</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; n; i++)</span><br><span class="line">        result = result + (a[i] * b[i]);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"Final result= %f\n"</span>, result);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h4 id="限制条件-12"><a href="#限制条件-12" class="headerlink" title="限制条件"></a>限制条件</h4><ul>
+<li>列表项的类型必须对约简操作符有效。</li>
+<li>列表项/变量不能声明为共享或私有。</li>
+<li>约简操作可能与实数无关。</li>
+<li>有关其他限制，请参见 OpenMP 标准 API。</li>
+</ul>
+<h2 id="指令绑定和嵌套规则"><a href="#指令绑定和嵌套规则" class="headerlink" title="指令绑定和嵌套规则"></a>指令绑定和嵌套规则</h2><p>本节主要是作为管理 OpenMP 指令和绑定的规则的快速参考。用户应该参考他们的实现文档和 OpenMP 标准以了解其他规则和限制。除非另有说明，规则适用于 Fortran 和 C/C++ OpenMP 实现。</p>
+<p>注意：Fortran API 还定义了许多数据环境规则。这些没有在这里复制。</p>
+<h3 id="指令绑定"><a href="#指令绑定" class="headerlink" title="指令绑定"></a>指令绑定</h3><ul>
+<li>DO/for、sections、single、master 和 barrier 指令绑定到动态封闭的 parallel (如果存在的话)。如果当前没有并行区域被执行，指令就没有效果。</li>
+<li>有序指令绑定到动态封闭的 DO/for 。</li>
+<li>atomic 指令强制对所有线程中的 atomic 指令进行独占访问，而不仅仅是当前的团队。</li>
+<li>critical 指令强制对所有线程中的 critical 指令进行独占访问，而不仅仅是当前的团队。</li>
+<li>指令永远不能绑定到最接近的封闭并行之外的任何指令。</li>
+</ul>
+<h3 id="指令嵌套"><a href="#指令嵌套" class="headerlink" title="指令嵌套"></a>指令嵌套</h3><ul>
+<li>工作共享区域不能紧密嵌套在工作共享、显式任务、关键区域、有序区域、原子区域或主区域内。</li>
+<li>屏障区域不能紧密嵌套在工作共享、显式任务、关键区域、有序区域、原子区域或主区域中。</li>
+<li>主区域不能紧密嵌套在工作共享、原子或显式任务区域内。</li>
+<li>有序区域可能不会紧密嵌套在临界、原子或显式任务区域内。</li>
+<li>一个有序区域必须与一个有序子句紧密嵌套在一个循环区域(或并行循环区域)内。</li>
+<li>临界区不能嵌套(紧密嵌套或以其他方式嵌套)在具有相同名称的临界区内。注意，此限制不足以防止死锁。</li>
+<li>并行、刷新、临界、原子、taskyield 和显式任务区域可能不会紧密嵌套在原子区域内。</li>
+</ul>
+<h1 id="运行时库函数"><a href="#运行时库函数" class="headerlink" title="运行时库函数"></a>运行时库函数</h1><h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>OpenMP API 包括越来越多的运行时库函数。这些函数有多种用途，如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th>Routine</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>opm_set_num_threads</td>
+<td>设置将在下一个并行区域中使用的线程数</td>
+</tr>
+<tr>
+<td>opm_get_num_threads</td>
+<td>返回当前在团队中执行并行区域的线程数，该区域是调用该线程的地方</td>
+</tr>
+<tr>
+<td>opm_get_max_threads</td>
+<td>返回可通过调用 opm_get_num_threads 函数返回的最大值</td>
+</tr>
+<tr>
+<td>opm_get_thread_num</td>
+<td>返回在团队中执行此调用的线程的线程号</td>
+</tr>
+<tr>
+<td>opm_get_thread_limit</td>
+<td>返回程序可用的 OpenMP 线程的最大数量</td>
+</tr>
+<tr>
+<td>opm_get_num_procs</td>
+<td>返回程序可用的处理器数量</td>
+</tr>
+<tr>
+<td>opm_in_parallel</td>
+<td>用于确定正在执行的代码段是否并行</td>
+</tr>
+<tr>
+<td>opm_set_dynamic</td>
+<td>启用或禁用(由运行时系统)可用于执行并行区域的线程数的动态调整</td>
+</tr>
+<tr>
+<td>opm_get_dynamic</td>
+<td>用于确定是否启用动态线程调整</td>
+</tr>
+<tr>
+<td>opm_set_nested</td>
+<td>用于启用或禁用嵌套并行性</td>
+</tr>
+<tr>
+<td>opm_get_nested</td>
+<td>用于确定是否启用嵌套并行性</td>
+</tr>
+<tr>
+<td>opm_set_schedule</td>
+<td>在 OpenMP 指令中将“runtime”用作调度类型时，设置循环调度策略</td>
+</tr>
+<tr>
+<td>opm_get_schedule</td>
+<td>当 OpenMP 指令中使用“runtime”作为调度类型时，返回循环调度策略</td>
+</tr>
+<tr>
+<td>opm_set_max-active_levels</td>
+<td>设置嵌套并行区域的最大数目</td>
+</tr>
+<tr>
+<td>opm_get_max-active_levels</td>
+<td>返回嵌套并行区域的最大数目</td>
+</tr>
+<tr>
+<td>opm_get_level</td>
+<td>返回嵌套并行区域的当前级别</td>
+</tr>
+<tr>
+<td>opm_get_ancestor_thread_num</td>
+<td>对于当前线程的给定嵌套级别，返回祖先线程的线程数</td>
+</tr>
+<tr>
+<td>opm_get_team_size</td>
+<td>对于当前线程的给定嵌套级别，返回线程团队的大小</td>
+</tr>
+<tr>
+<td>opm_get_active_level</td>
+<td>返回包含调用的任务的嵌套活动并行区域的数目</td>
+</tr>
+<tr>
+<td>opm_in_final</td>
+<td>如果程序在最后一个任务区域执行，则返回true；否则返回false</td>
+</tr>
+<tr>
+<td>opm_init_lock</td>
+<td>初始化与锁变量关联的锁</td>
+</tr>
+<tr>
+<td>opm_destory_lock</td>
+<td>将给定的锁变量与任何锁分离</td>
+</tr>
+<tr>
+<td>opm_set_lock</td>
+<td>获得锁的所有权</td>
+</tr>
+<tr>
+<td>opm_unset_lock</td>
+<td>释放锁</td>
+</tr>
+<tr>
+<td>opm_test_lock</td>
+<td>尝试设置锁，但如果锁不可用，则不会阻塞</td>
+</tr>
+<tr>
+<td>opm_init_nest_lock</td>
+<td>初始化与锁变量关联的嵌套锁</td>
+</tr>
+<tr>
+<td>opm_destory_nest_lock</td>
+<td>将给定的嵌套锁变量与任何锁分离</td>
+</tr>
+<tr>
+<td>opm_set_nest_lock</td>
+<td>获取嵌套锁的所有权</td>
+</tr>
+<tr>
+<td>opm_unset_nest_lock</td>
+<td>释放嵌套锁</td>
+</tr>
+<tr>
+<td>opm_test_nest_lock</td>
+<td>尝试设置嵌套锁，但如果锁不可用，则不会阻塞</td>
+</tr>
+<tr>
+<td>opm_get_wtime</td>
+<td>提供便携式挂钟定时程序</td>
+</tr>
+<tr>
+<td>opm_get_wtick</td>
+<td>返回一个双精度浮点值，该值等于连续时钟滴答之间的秒数</td>
+</tr>
+</tbody>
+</table>
+<p>对于C/C++，所有运行时库函数都是实际的子程序。对于Fortran来说，有些是函数，有些是子程序。例如:<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">omp_get_num_threads</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br></pre></td></tr></table></figure></p>
+<p>注意，对于C/C++，通常需要包含<code>&lt;omp.h&gt;</code>头文件。</p>
+<p>对于锁程序/函数：</p>
+<ul>
+<li>锁变量只能通过锁程序访问</li>
+<li>对于Fortran，锁变量的类型应该是integer，并且要足够大，以便容纳一个地址。</li>
+<li>对于C/C++，lock 变量的类型必须是<code>omp_lock_t</code>或<code>omp_nest_lock_t</code>，这取决于所使用的函数。</li>
+</ul>
+<p>实现注意事项：</p>
+<ul>
+<li>实现可能支持也可能不支持所有 OpenMP API 特性。例如，如果支持嵌套并行，那么它可能只是名义上的，因为嵌套并行区域可能只有一个线程。</li>
+<li>有关详细信息，请参阅您的实现文档—或者亲自试验一下，如果您在文档中找不到它，请自己查找。</li>
+</ul>
+<h1 id="环境变量-1"><a href="#环境变量-1" class="headerlink" title="环境变量"></a>环境变量</h1><p>OpenMP 提供了以下环境变量来控制并行代码的执行。所有环境变量名都是大写的。分配给它们的值不区分大小写。</p>
+<p><code>OMP_SCHEDULE</code>只适用于DO， PARALLEL DO (Fortran)和 for， parallel for (C/C++)指令，它们的 schedule 子句设置为运行时。此变量的值决定如何在处理器上调度循环的迭代。例如：<br><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">setenv OMP_SCHEDULE <span class="string">"guided, 4"</span> </span><br><span class="line">setenv OMP_SCHEDULE <span class="string">"dynamic"</span></span><br></pre></td></tr></table></figure></p>
+<p><code>OMP_NUM_THREADS</code>设置执行期间使用的最大线程数。例如：<br><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setenv OMP_NUM_THREADS 8</span><br></pre></td></tr></table></figure></p>
+<p><code>OMP_DYNAMIC</code>启用或禁用可用于并行区域执行的线程数量的动态调整。有效值为 TRUE 或 FALSE。例如：<br><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setenv OMP_DYNAMIC TRUE</span><br></pre></td></tr></table></figure></p>
+<p><code>OMP_PROC_BIND</code>启用或禁用线程绑定到处理器。有效值为 TRUE 或 FALSE。例如：<br><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setenv OMP_PROC_BIND TRUE</span><br></pre></td></tr></table></figure></p>
+<p><code>OMP_NESTED</code>启用或禁用嵌套并行性。有效值为 TRUE 或 FALSE。例如：<br><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setenv OMP_NESTED TRUE</span><br></pre></td></tr></table></figure></p>
+<p><code>OMP_STACKSIZE</code>控制已创建(非主)线程的堆栈大小。例子:<br><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">setenv OMP_STACKSIZE 2000500B </span><br><span class="line">setenv OMP_STACKSIZE <span class="string">"3000 k "</span> </span><br><span class="line">setenv OMP_STACKSIZE 10M </span><br><span class="line">setenv OMP_STACKSIZE <span class="string">" 10 M "</span> </span><br><span class="line">setenv OMP_STACKSIZE <span class="string">"20 m "</span> </span><br><span class="line">setenv OMP_STACKSIZE <span class="string">" 1G"</span> </span><br><span class="line">setenv OMP_STACKSIZE 20000</span><br></pre></td></tr></table></figure></p>
+<p><code>OMP_WAIT_POLICY</code>为 OpenMP 实现提供有关等待线程的所需行为的提示。一个兼容的 OpenMP 实现可能遵守也可能不遵守环境变量的设置。有效值分为 ACTIVE 和 PASSIVE。ACTIVE 指定等待的线程大部分应该是活动的，即，在等待时消耗处理器周期。PASSIVE 指定等待的线程大部分应该是被动的，即，而不是在等待时消耗处理器周期。ACTIVE 和 PASSIVE 行为的细节是由实现定义的。例子:<br><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">setenv OMP_WAIT_POLICY ACTIVE </span><br><span class="line">setenv OMP_WAIT_POLICY active </span><br><span class="line">setenv OMP_WAIT_POLICY PASSIVE </span><br><span class="line">setenv OMP_WAIT_POLICY passive</span><br></pre></td></tr></table></figure></p>
+<p><code>OMP_MAX_ACTIVE_LEVELS</code>控制嵌套的活动并行区域的最大数目。该环境变量的值必须是非负整数。如果 OMP_MAX_ACTIVE_LEVELS 的请求值大于实现所能支持的嵌套活动并行级别的最大数量，或者该值不是一个非负整数，则该程序的行为是由实现定义的。例子:<br><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setenv OMP_MAX_ACTIVE_LEVELS 2</span><br></pre></td></tr></table></figure></p>
+<p><code>OMP_THREAD_LIMIT</code>设置用于整个 OpenMP 程序的 OpenMP 线程的数量。这个环境变量的值必须是正整数。如果 OMP_THREAD_LIMIT 的请求值大于实现所能支持的线程数，或者该值不是正整数，则程序的行为是由实现定义的。例子：<br><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setenv OMP_THREAD_LIMIT 8</span><br></pre></td></tr></table></figure></p>
+<h1 id="线程堆栈大小和线程绑定"><a href="#线程堆栈大小和线程绑定" class="headerlink" title="线程堆栈大小和线程绑定"></a>线程堆栈大小和线程绑定</h1><h2 id="线程堆栈大小"><a href="#线程堆栈大小" class="headerlink" title="线程堆栈大小"></a>线程堆栈大小</h2><p>OpenMP 标准没有指定一个线程应该有多少堆栈空间。因此，默认线程堆栈大小的实现将有所不同。<br>默认的线程堆栈大小很容易耗尽。它也可以在编译器之间不可移植。以过去版本的LC编译器为例：</p>
+<table>
+<thead>
+<tr>
+<th>Compiler</th>
+<th>Approx. Stack Limit</th>
+<th>Approx. Array Size (doubles)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Linux icc, ifort</td>
+<td>4 MB</td>
+<td>700 x 700</td>
+</tr>
+<tr>
+<td>Linux pgcc, pgf90</td>
+<td>8 MB</td>
+<td>1000 x 1000</td>
+</tr>
+<tr>
+<td>Linux gcc, gfortran</td>
+<td>2 MB</td>
+<td>500 x 500</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>超出其堆栈分配的线程可能存在或不存在段错误。当数据被破坏时，应用程序可以继续运行。</li>
+<li>静态链接代码可能受到进一步的堆栈限制。</li>
+<li>用户的登录shell还可以限制堆栈大小</li>
+</ul>
+<p>如果您的 OpenMP 环境支持 OpenMP 3.0  OMP_STACKSIZE 环境变量(在前一节中介绍过)，那么您可以使用它在程序执行之前设置线程堆栈大小。例如：<br><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">setenv OMP_STACKSIZE 2000500B</span><br><span class="line">setenv OMP_STACKSIZE <span class="string">"3000 k "</span></span><br><span class="line">setenv OMP_STACKSIZE 10M</span><br><span class="line">setenv OMP_STACKSIZE <span class="string">" 10 M "</span></span><br><span class="line">setenv OMP_STACKSIZE <span class="string">"20 m "</span></span><br><span class="line">setenv OMP_STACKSIZE <span class="string">" 1G"</span></span><br><span class="line">setenv OMP_STACKSIZE 20000</span><br></pre></td></tr></table></figure></p>
+<p>否则，在LC上，您应该能够对Linux集群使用下面的方法。该示例显示将线程堆栈大小设置为12 MB，作为预防措施，将shell堆栈大小设置为无限制。</p>
+<p>csh/tcsh:<br><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">setenv KMP_STACKSIZE 12000000</span><br><span class="line"><span class="built_in">limit</span> stacksize unlimited</span><br><span class="line"></span><br><span class="line">ksh/sh/bash:</span><br><span class="line">```sh</span><br><span class="line"><span class="built_in">export</span> KMP_STACKSIZE=12000000</span><br><span class="line"><span class="built_in">ulimit</span> -s unlimited</span><br></pre></td></tr></table></figure></p>
+<h2 id="线程绑定"><a href="#线程绑定" class="headerlink" title="线程绑定"></a>线程绑定</h2><ul>
+<li>在某些情况下，如果一个程序的线程被绑定到处理器/核心，那么它的性能会更好。</li>
+<li>“绑定”一个线程到一个处理器意味着操作系统将调度一个线程始终在同一个处理器上运行。否则，可以将线程调度为在任何处理器上执行，并在每个时间片的处理器之间来回“弹回”。也称为“线程关联性”或“处理器关联性”。</li>
+<li>将线程绑定到处理器可以更好地利用缓存，从而减少昂贵的内存访问。这是将线程绑定到处理器的主要动机。</li>
+</ul>
+<p>根据平台、操作系统、编译器和 OpenMP 实现的不同，可以通过几种不同的方式将线程绑定到处理器。OpenMP 3.1 版 API 提供了一个环境变量来“打开”或“关闭”处理器绑定。例如：<br><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">setenv OMP_PROC_BIND  TRUE</span><br><span class="line">setenv OMP_PROC_BIND  FALSE</span><br></pre></td></tr></table></figure></p>
+<p>在更高的级别上，进程也可以绑定到处理器。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/积累/" rel="tag"># 积累</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/11/27/内存管理——Slab 分配器/" rel="next" title="内存管理——Slab 分配器">
+                <i class="fa fa-chevron-left"></i> 内存管理——Slab 分配器
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/12/04/解读raft/" rel="prev" title="解读Raft">
+                解读Raft <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">342</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">14</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/xiaomeihao.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#摘要"><span class="nav-number">1.</span> <span class="nav-text">摘要</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#简介"><span class="nav-number">2.</span> <span class="nav-text">简介</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#什么是OpenMP"><span class="nav-number">2.1.</span> <span class="nav-text">什么是OpenMP</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#OpenMP编程模型"><span class="nav-number">3.</span> <span class="nav-text">OpenMP编程模型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#共享内存模型"><span class="nav-number">3.1.</span> <span class="nav-text">共享内存模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#在-HPC-中使用-OpenMP-的动机"><span class="nav-number">3.2.</span> <span class="nav-text">在 HPC 中使用 OpenMP 的动机</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基于线程的并行性"><span class="nav-number">3.3.</span> <span class="nav-text">基于线程的并行性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#显式并行性"><span class="nav-number">3.4.</span> <span class="nav-text">显式并行性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Fork-Join-模型"><span class="nav-number">3.5.</span> <span class="nav-text">Fork - Join 模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据范围"><span class="nav-number">3.6.</span> <span class="nav-text">数据范围</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#动态线程"><span class="nav-number">3.7.</span> <span class="nav-text">动态线程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#I-O"><span class="nav-number">3.8.</span> <span class="nav-text">I/O</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内存模型：经常刷新？"><span class="nav-number">3.9.</span> <span class="nav-text">内存模型：经常刷新？</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#OpenMP-API-概述"><span class="nav-number">4.</span> <span class="nav-text">OpenMP API 概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#三大构成"><span class="nav-number">4.1.</span> <span class="nav-text">三大构成</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编译器指令"><span class="nav-number">4.2.</span> <span class="nav-text">编译器指令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#运行时库函数-Run-time-Library-Routines"><span class="nav-number">4.3.</span> <span class="nav-text">运行时库函数 Run-time Library Routines:</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#环境变量"><span class="nav-number">4.4.</span> <span class="nav-text">环境变量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#OpenMP代码结构示例"><span class="nav-number">4.5.</span> <span class="nav-text">OpenMP代码结构示例</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#编译-OpenMP-程序"><span class="nav-number">5.</span> <span class="nav-text">编译 OpenMP 程序</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#OpenMP-指令"><span class="nav-number">6.</span> <span class="nav-text">OpenMP 指令</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#C-C-指令格式"><span class="nav-number">6.1.</span> <span class="nav-text">C/C++ 指令格式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#指令范围"><span class="nav-number">6.2.</span> <span class="nav-text">指令范围</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#静态-词法-范围"><span class="nav-number">6.2.1.</span> <span class="nav-text">静态(词法)范围</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#孤立的指令"><span class="nav-number">6.2.2.</span> <span class="nav-text">孤立的指令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#动态范围"><span class="nav-number">6.2.3.</span> <span class="nav-text">动态范围</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么这很重要？"><span class="nav-number">6.2.4.</span> <span class="nav-text">为什么这很重要？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#并行区域结构"><span class="nav-number">6.3.</span> <span class="nav-text">并行区域结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#目的"><span class="nav-number">6.3.1.</span> <span class="nav-text">目的</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#格式"><span class="nav-number">6.3.2.</span> <span class="nav-text">格式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#注意"><span class="nav-number">6.3.3.</span> <span class="nav-text">注意</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#有多少线程"><span class="nav-number">6.3.4.</span> <span class="nav-text">有多少线程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#动态线程-1"><span class="nav-number">6.3.5.</span> <span class="nav-text">动态线程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#子句"><span class="nav-number">6.3.6.</span> <span class="nav-text">子句</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#限制条件"><span class="nav-number">6.3.7.</span> <span class="nav-text">限制条件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#并行区域例子"><span class="nav-number">6.3.8.</span> <span class="nav-text">并行区域例子</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#工作共享结构"><span class="nav-number">6.3.9.</span> <span class="nav-text">工作共享结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#限制条件-1"><span class="nav-number">6.3.10.</span> <span class="nav-text">限制条件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DO-for-指令"><span class="nav-number">6.3.11.</span> <span class="nav-text">DO / for 指令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#限制条件-2"><span class="nav-number">6.3.11.1.</span> <span class="nav-text">限制条件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#DO-for-指令示例"><span class="nav-number">6.3.11.2.</span> <span class="nav-text">DO / for 指令示例</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sections-指令"><span class="nav-number">6.3.12.</span> <span class="nav-text">sections 指令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#目的-1"><span class="nav-number">6.3.12.1.</span> <span class="nav-text">目的</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#子句-1"><span class="nav-number">6.3.12.2.</span> <span class="nav-text">子句</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#限制条件-3"><span class="nav-number">6.3.12.3.</span> <span class="nav-text">限制条件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#sections-指令示例"><span class="nav-number">6.3.12.4.</span> <span class="nav-text">sections 指令示例</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#single-指令"><span class="nav-number">6.3.13.</span> <span class="nav-text">single 指令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#目的-2"><span class="nav-number">6.3.13.1.</span> <span class="nav-text">目的</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#格式-1"><span class="nav-number">6.3.13.2.</span> <span class="nav-text">格式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#子句-2"><span class="nav-number">6.3.13.3.</span> <span class="nav-text">子句</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#限制条件-4"><span class="nav-number">6.3.13.4.</span> <span class="nav-text">限制条件</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#合并并行工作共享结构"><span class="nav-number">6.4.</span> <span class="nav-text">合并并行工作共享结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#任务结构"><span class="nav-number">6.5.</span> <span class="nav-text">任务结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#目的-3"><span class="nav-number">6.5.1.</span> <span class="nav-text">目的</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#格式-2"><span class="nav-number">6.5.2.</span> <span class="nav-text">格式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#同步结构"><span class="nav-number">6.6.</span> <span class="nav-text">同步结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#master-指令"><span class="nav-number">6.6.1.</span> <span class="nav-text">master 指令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#目的-4"><span class="nav-number">6.6.1.1.</span> <span class="nav-text">目的</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#格式-3"><span class="nav-number">6.6.1.2.</span> <span class="nav-text">格式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#限制条件-5"><span class="nav-number">6.6.1.3.</span> <span class="nav-text">限制条件</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#critical-指令"><span class="nav-number">6.6.2.</span> <span class="nav-text">critical 指令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#目的-5"><span class="nav-number">6.6.2.1.</span> <span class="nav-text">目的</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#格式-4"><span class="nav-number">6.6.2.2.</span> <span class="nav-text">格式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#注意事项"><span class="nav-number">6.6.2.3.</span> <span class="nav-text">注意事项</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#限制条件-6"><span class="nav-number">6.6.2.4.</span> <span class="nav-text">限制条件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#critical-结构示例"><span class="nav-number">6.6.2.5.</span> <span class="nav-text">critical 结构示例</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#barrier-指令"><span class="nav-number">6.6.3.</span> <span class="nav-text">barrier 指令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#目的-6"><span class="nav-number">6.6.3.1.</span> <span class="nav-text">目的</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#格式-5"><span class="nav-number">6.6.3.2.</span> <span class="nav-text">格式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#限制条件-7"><span class="nav-number">6.6.3.3.</span> <span class="nav-text">限制条件</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#taskwait-指令"><span class="nav-number">6.6.4.</span> <span class="nav-text">taskwait 指令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#目的-7"><span class="nav-number">6.6.4.1.</span> <span class="nav-text">目的</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#格式-6"><span class="nav-number">6.6.4.2.</span> <span class="nav-text">格式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#限制条件-8"><span class="nav-number">6.6.4.3.</span> <span class="nav-text">限制条件</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#atomic-指令"><span class="nav-number">6.6.5.</span> <span class="nav-text">atomic 指令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#目的-8"><span class="nav-number">6.6.5.1.</span> <span class="nav-text">目的</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#格式-7"><span class="nav-number">6.6.5.2.</span> <span class="nav-text">格式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#限制条件-9"><span class="nav-number">6.6.5.3.</span> <span class="nav-text">限制条件</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#flush-指令"><span class="nav-number">6.6.6.</span> <span class="nav-text">flush 指令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#目的-9"><span class="nav-number">6.6.6.1.</span> <span class="nav-text">目的</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#格式-8"><span class="nav-number">6.6.6.2.</span> <span class="nav-text">格式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#注意事项-1"><span class="nav-number">6.6.6.3.</span> <span class="nav-text">注意事项</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ordered-指令"><span class="nav-number">6.6.7.</span> <span class="nav-text">ordered 指令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#目的-10"><span class="nav-number">6.6.7.1.</span> <span class="nav-text">目的</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#格式-9"><span class="nav-number">6.6.7.2.</span> <span class="nav-text">格式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#限制条件-10"><span class="nav-number">6.6.7.3.</span> <span class="nav-text">限制条件</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#threadprivate-指令"><span class="nav-number">6.7.</span> <span class="nav-text">threadprivate 指令</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#目的-11"><span class="nav-number">6.7.1.</span> <span class="nav-text">目的</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#格式-10"><span class="nav-number">6.7.2.</span> <span class="nav-text">格式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#注意事项-2"><span class="nav-number">6.7.3.</span> <span class="nav-text">注意事项</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#示例"><span class="nav-number">6.7.4.</span> <span class="nav-text">示例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#限制条件-11"><span class="nav-number">6.7.5.</span> <span class="nav-text">限制条件</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据范围属性子句"><span class="nav-number">6.8.</span> <span class="nav-text">数据范围属性子句</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#private-子句"><span class="nav-number">6.8.1.</span> <span class="nav-text">private 子句</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#目的-12"><span class="nav-number">6.8.1.1.</span> <span class="nav-text">目的</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#格式-11"><span class="nav-number">6.8.1.2.</span> <span class="nav-text">格式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#注意事项-3"><span class="nav-number">6.8.1.3.</span> <span class="nav-text">注意事项</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#shared-子句"><span class="nav-number">6.8.2.</span> <span class="nav-text">shared 子句</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#目的-13"><span class="nav-number">6.8.2.1.</span> <span class="nav-text">目的</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#格式-12"><span class="nav-number">6.8.2.2.</span> <span class="nav-text">格式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#注意事项-4"><span class="nav-number">6.8.2.3.</span> <span class="nav-text">注意事项</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#default-子句"><span class="nav-number">6.8.3.</span> <span class="nav-text">default 子句</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#目的-14"><span class="nav-number">6.8.3.1.</span> <span class="nav-text">目的</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#格式-13"><span class="nav-number">6.8.3.2.</span> <span class="nav-text">格式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#注意事项-5"><span class="nav-number">6.8.3.3.</span> <span class="nav-text">注意事项</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#firstprivate-子句"><span class="nav-number">6.8.4.</span> <span class="nav-text">firstprivate 子句</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#目的-15"><span class="nav-number">6.8.4.1.</span> <span class="nav-text">目的</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#格式-14"><span class="nav-number">6.8.4.2.</span> <span class="nav-text">格式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#注意事项-6"><span class="nav-number">6.8.4.3.</span> <span class="nav-text">注意事项</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#lastprivate-子句"><span class="nav-number">6.8.5.</span> <span class="nav-text">lastprivate 子句</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#目的-16"><span class="nav-number">6.8.5.1.</span> <span class="nav-text">目的</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#格式-15"><span class="nav-number">6.8.5.2.</span> <span class="nav-text">格式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#注意事项-7"><span class="nav-number">6.8.5.3.</span> <span class="nav-text">注意事项</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#copyin-子句"><span class="nav-number">6.8.6.</span> <span class="nav-text">copyin 子句</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#目的-17"><span class="nav-number">6.8.6.1.</span> <span class="nav-text">目的</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#格式-16"><span class="nav-number">6.8.6.2.</span> <span class="nav-text">格式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#注意事项-8"><span class="nav-number">6.8.6.3.</span> <span class="nav-text">注意事项</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#copyprivate-子句"><span class="nav-number">6.8.7.</span> <span class="nav-text">copyprivate 子句</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#目的-18"><span class="nav-number">6.8.7.1.</span> <span class="nav-text">目的</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#格式-17"><span class="nav-number">6.8.7.2.</span> <span class="nav-text">格式</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#reduction-子句"><span class="nav-number">6.8.8.</span> <span class="nav-text">reduction 子句</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#目的-19"><span class="nav-number">6.8.8.1.</span> <span class="nav-text">目的</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#格式-18"><span class="nav-number">6.8.8.2.</span> <span class="nav-text">格式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Example-REDUCTION-Vector-Dot-Product"><span class="nav-number">6.8.8.3.</span> <span class="nav-text">Example: REDUCTION - Vector Dot Product:</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#限制条件-12"><span class="nav-number">6.8.8.4.</span> <span class="nav-text">限制条件</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#指令绑定和嵌套规则"><span class="nav-number">6.9.</span> <span class="nav-text">指令绑定和嵌套规则</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#指令绑定"><span class="nav-number">6.9.1.</span> <span class="nav-text">指令绑定</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#指令嵌套"><span class="nav-number">6.9.2.</span> <span class="nav-text">指令嵌套</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#运行时库函数"><span class="nav-number">7.</span> <span class="nav-text">运行时库函数</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#概述"><span class="nav-number">7.1.</span> <span class="nav-text">概述</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#环境变量-1"><span class="nav-number">8.</span> <span class="nav-text">环境变量</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#线程堆栈大小和线程绑定"><span class="nav-number">9.</span> <span class="nav-text">线程堆栈大小和线程绑定</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#线程堆栈大小"><span class="nav-number">9.1.</span> <span class="nav-text">线程堆栈大小</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#线程绑定"><span class="nav-number">9.2.</span> <span class="nav-text">线程绑定</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<span id="busuanzi_container_site_uv"> 
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
