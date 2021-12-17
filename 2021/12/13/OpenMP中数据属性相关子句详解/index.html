@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="C++,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="private/firstprivate/lastprivate/threadprivate之间的比较private/firstprivate/lastprivate/threadprivate，首先要知道的是，它们分为两大类，一类是private/firstprivate/lastprivate子句，另一类是threadprivate，为指令。 privateprivate子句将一个或多个变量声">
+<meta name="keywords" content="C++">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OpenMP中数据属性相关子句详解">
+<meta property="og:url" content="http://yoursite.com/2021/12/13/OpenMP中数据属性相关子句详解/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="private/firstprivate/lastprivate/threadprivate之间的比较private/firstprivate/lastprivate/threadprivate，首先要知道的是，它们分为两大类，一类是private/firstprivate/lastprivate子句，另一类是threadprivate，为指令。 privateprivate子句将一个或多个变量声">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2021-12-17T09:09:01.452Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="OpenMP中数据属性相关子句详解">
+<meta name="twitter:description" content="private/firstprivate/lastprivate/threadprivate之间的比较private/firstprivate/lastprivate/threadprivate，首先要知道的是，它们分为两大类，一类是private/firstprivate/lastprivate子句，另一类是threadprivate，为指令。 privateprivate子句将一个或多个变量声">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2021/12/13/OpenMP中数据属性相关子句详解/">
+
+
+
+
+
+  <title>OpenMP中数据属性相关子句详解 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/resume.pdf" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-mybetterhalf">
+          <a href="/mybetterhalf/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            mybetterhalf
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/12/13/OpenMP中数据属性相关子句详解/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">OpenMP中数据属性相关子句详解</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-12-13T14:56:00+08:00">
+                2021-12-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="private-firstprivate-lastprivate-threadprivate之间的比较"><a href="#private-firstprivate-lastprivate-threadprivate之间的比较" class="headerlink" title="private/firstprivate/lastprivate/threadprivate之间的比较"></a>private/firstprivate/lastprivate/threadprivate之间的比较</h1><p>private/firstprivate/lastprivate/threadprivate，首先要知道的是，它们分为两大类，一类是private/firstprivate/lastprivate子句，另一类是threadprivate，为指令。</p>
+<h2 id="private"><a href="#private" class="headerlink" title="private"></a>private</h2><p>private子句将一个或多个变量声明为线程的私有变量。每个线程都有它自己的变量私有副本，其他线程无法访问。即使在并行区域外有同名的共享变量，共享变量在并行区域内不起任何作用，并且并行区域内不会操作到外面的共享变量。<br>注意：</p>
+<ol>
+<li>private variables are undefined on entry and exit of the parallel region.即private变量在进入和退出并行区域是“未定义“的。</li>
+<li>The value of the original variable (before the parallel region) is undefined after the parallel region!在并行区域之前定义的原来的变量，在并行区域后也是”未定义“的。</li>
+<li>A private variable within the parallel region has no storage association with the same variable outside of the region. 并行区域内的private变量和并行区域外同名的变量没有存储关联。</li>
+</ol>
+<p>说明：private的很容易理解错误。下面用例子来说明上面的注意事项，</p>
+<p>A. private变量在进入和退出并行区域是”未定义“的。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, _TCHAR* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> A=<span class="number">100</span>;</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for private(A)</span></span><br><span class="line">	<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i&lt;<span class="number">10</span>;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"%d\n"</span>,A);</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>初学OpenMP很容易认为这段代码是没有问题的。其实，这里的A在进入并行区域的时候是未定义的，所以在并行区域直接对其进行读操作，会导致运行时错误。<br>其实，在VS中编译这段代码，就会有编译警告：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">warning C4700: uninitialized local variable &apos;A&apos; used</span><br></pre></td></tr></table></figure></p>
+<p>很清楚的指向”printf”这句，A是没有初始化的变量。所以，运行时候会出现运行时崩溃的错误。</p>
+<p>这段代码能说明，private在进入并行区域是未定义的，至于退出并行区域就不容易举例说明了，本身，这里的三个注意事项是交叉理解的，说明的是一个含义，所以，看下面的例子来理解。</p>
+<p>B. 在并行区域之前定义的原来的变量，在并行区域后也是”未定义“的。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, _TCHAR* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> B;</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for private(B)</span></span><br><span class="line">	<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i&lt;<span class="number">10</span>;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		B = <span class="number">100</span>; </span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"%d\n"</span>,B);</span><br><span class="line"> </span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这里的B在并行区域内进行了赋值等操作，但是在退出并行区域后，是未定义的。理解”在并行区域之 前定义的 原来的变量，在并行区域 后也是” 未定义“的“这句话的时候，要注意，不是说所有的在并行区域内定义的原来的变量，使用了private子句后，退出并行区域后就一定是未定义的，如果原来的变量，本身已经初始化，那么，退出后，不会处于未定义的状态，就是下面的第三个注意事项要说明的问题。</p>
+<p>C. 并行区域内的private变量和并行区域外同名的变量没有存储关联<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, _TCHAR* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> C = <span class="number">100</span>;</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for private(C)</span></span><br><span class="line">	<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i&lt;<span class="number">10</span>;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		C = <span class="number">200</span>; </span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"%d\n"</span>,C);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"%d\n"</span>,C);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这里，在退出并行区域后，printf的C的结果是100，和并行区域内对其的操作无关。</p>
+<p>总结来说，上面的三点是交叉的，第三点包含了所有的情况。所以，private的关键理解是：A private variable within the parallel region has no storage association with the same variable outside of the region. 简单点理解，可以认为，并行区域内的private变量和并行区域外的变量没有任何关联。如果非要说点关联就是，在使用private的时候，在之前要先定义一下这个变量，但是，到了并行区域后，并行区域的每个线程会产生此变量的副本，而且是没有初始化的。</p>
+<p>下面是综合上面的例子，参考注释的解释：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, _TCHAR* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> A=<span class="number">100</span>,B,C=<span class="number">0</span>;</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for private(A) private(B)</span></span><br><span class="line">	<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i&lt;<span class="number">10</span>;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		B = A + i;		<span class="comment">// A is undefined! Runtime error!</span></span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"%d\n"</span>,i);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">/*--End of OpemMP paralle region. --*/</span></span><br><span class="line"> </span><br><span class="line">	C = B;			<span class="comment">// B is undefined outside of the parallel region!</span></span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"A:%d\n"</span>, A);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"B:%d\n"</span>, B);</span><br><span class="line"> </span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="firstprivate"><a href="#firstprivate" class="headerlink" title="firstprivate"></a>firstprivate</h2><p>private子句的私有变量不能继承同名变量的值，firstprivate则用于实现这一功能-继承并行区域额之外的变量的值，用于在进入并行区域之前进行一次初始化。</p>
+<p>Firstprivate(list): All variables in the list areinitialized with the value the original object had before entering the parallelconstruct.</p>
+<p>分析下面的例子：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, _TCHAR* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> A;</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for firstprivate(A)</span></span><br><span class="line">	<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i&lt;<span class="number">10</span>;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"%d: %d\n"</span>,i, A);	<span class="comment">// #1</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"%d\n"</span>,A);	<span class="comment">// #2</span></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>用VS编译发现，也会报一个“warning C4700: uninitialized local variable ‘A’ used”的警告，但是这里其实两个地方用到了A。实际上，这个警告是针对第二处的，可以看出，VS并没有给第一处OpenMP并行区域内的A有警告，这是由于使用firstprivate的时候，会对并行区域内的A使用其外的同名共享变量就行初始化，当然，如果严格分析，外面的变量其实也是没有初始化的，理论上也是可以认为应该报警告，但是，具体而言，这是跟VS的实现有关的，另外，在debug下，上面的程序会崩溃，release下，其实是可以输出值的，总之，上面的输出是无法预料的。<br>再看下面的例子，和前面private的例子很类似：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, _TCHAR* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> A = <span class="number">100</span>;</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for firstprivate(A)</span></span><br><span class="line">	<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i&lt;<span class="number">10</span>;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"%d: %d\n"</span>,i, A);	<span class="comment">// #1</span></span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"%d\n"</span>,A);	<span class="comment">// #2</span></span><br><span class="line"> </span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这里，如果使用private，那么并行区域内是有问题的，因为并行区域内的A是没有初始化的，导致无法预料的输出或崩溃。但是，使用了firstprivate后，这样，进入并行区域的时候，每一个线程的A的副本都会利用并行区域外的同名共享变量A的值进行一次初始化，所以，输出的A都是100.<br>继续探讨这里的“进行一次初始化”，为了理解“一次”的含义，看下面的例子：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, _TCHAR* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> A = <span class="number">100</span>;</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for firstprivate(A)</span></span><br><span class="line">	<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i&lt;<span class="number">10</span>;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"Thread ID: %d, %d: %d\n"</span>,omp_get_thread_num(), i, A);	<span class="comment">// #1</span></span><br><span class="line">		A = i;</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"%d\n"</span>,A);	<span class="comment">// #2</span></span><br><span class="line"> </span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这里，每次输出后，改变A的值，需要注意的是，这里的“进行一次初始化”是针对team内的每一个线程进行一次初始化，对于上面的程序，在4核的CPU上运行，并行区域内有四个线程，所以每一个线程都会有A的一个副本，因而，上面的程序输出结果可能如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Thread ID: 0, 0: 100</span><br><span class="line">Thread ID: 0, 1: 0</span><br><span class="line">Thread ID: 0, 2: 1</span><br><span class="line">Thread ID: 2, 6: 100</span><br><span class="line">Thread ID: 2, 7: 6</span><br><span class="line">Thread ID: 1, 3: 100</span><br><span class="line">Thread ID: 2, 4: 3</span><br><span class="line">Thread ID: 1, 5: 4</span><br><span class="line">Thread ID: 3, 8: 100</span><br><span class="line">Thread ID: 3, 9: 8</span><br><span class="line">100</span><br></pre></td></tr></table></figure></p>
+<p>其实，这个结果是很容易理解的，不可能是每一个for都有一个变量的副本，而是每一个线程，所以这个结果在预料之中。</p>
+<p>仍然借助上面这个例子，帮助理解private和firstprivate，从而引出lastprivate，private对于并行区域的每一个线程都有一个副本，并且和并行区域外的变量没有关联；firstprivate解决了进入并行区的问题，即在进入并行区域的每个线程的副本变量使用并行区域外的共享变量进行一个初始化的工作，那么下面有一个问题就是，如果希望并行区域的副本变量，在退出并行区的时候，能反过来赋值给并行区域外的共享变量，那么就需要依靠lastprivate了。</p>
+<h2 id="lastprivate"><a href="#lastprivate" class="headerlink" title="lastprivate"></a>lastprivate</h2><p>如果需要在并行区域内的私有变量经过计算后，在退出并行区域时，需要将其值赋给同名的共享变量，就可以使用lastprivate完成。</p>
+<p>Lastprivate(list):The thread that executes the sequentially last iteration or section updates thevalue of the objects in the list.</p>
+<p>从上面的firstprivate的最后一个例子可以看出，并行区域对A进行了赋值，但是退出并行区域后，其值仍然为原来的值。</p>
+<p>这里首先有一个问题是：退出并行区域后，需要将并行区域内的副本的值赋值为同名的共享变量，那么，并行区域内有多个线程，是哪一个线程的副本用于赋值呢？</p>
+<p>是否是最后一个运行完毕的线程？否！OpenMP规范中指出，如果是循环迭代，那么是将最后一次循环迭代中的值赋给对应的共享变量；如果是section构造，那么是最后一个section语句中的值赋给对应的共享变量。注意这里说的最后一个section是指程序语法上的最后一个，而不是实际运行时的最后一个运行完的。</p>
+<p>在理解这句话之前，先利用一个简单的例子来理解一下lastprivate的作用：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, _TCHAR* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> A = <span class="number">100</span>;</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for lastprivate(A)</span></span><br><span class="line">	<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i&lt;<span class="number">10</span>;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		A = <span class="number">10</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"%d\n"</span>,A);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这里，很容易知道结果为10，而不是100.这就是lastprivate带来的效果，退出后会有一个赋值的过程。<br>理解了lastprivate的基本含义，就可以继续来理解上面的红色文字部分的描述了，即到底是哪一个线程的副本用于对并行区域外的变量赋值的问题，下面的例子和前面firstprivate的例子很类似：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, _TCHAR* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> A = <span class="number">100</span>;</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for lastprivate(A)</span></span><br><span class="line">	<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i&lt;<span class="number">10</span>;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"Thread ID: %d, %d\n"</span>,omp_get_thread_num(), i);	<span class="comment">// #1</span></span><br><span class="line">		A = i;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"%d\n"</span>,A);	<span class="comment">// #2</span></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Thread ID: 0, 0</span><br><span class="line">Thread ID: 0, 1</span><br><span class="line">Thread ID: 0, 2</span><br><span class="line">Thread ID: 3, 8</span><br><span class="line">Thread ID: 3, 9</span><br><span class="line">Thread ID: 2, 6</span><br><span class="line">Thread ID: 1, 3</span><br><span class="line">Thread ID: 1, 4</span><br><span class="line">Thread ID: 1, 5</span><br><span class="line">Thread ID: 2, 7</span><br><span class="line">9</span><br></pre></td></tr></table></figure>
+<p>从结果可以看出，最后并行区域外的共享变量的值并不是最后一个线程退出的值，多次运行发现，并行区域的输出结果可能发生变化，但是最终的输出都是9，这就是上面的OpenMP规范说明的问题，退出并行区域的时候，是根据“逻辑上”的最后一个线程用于对共享变量赋值，而不是实际运行的最后一个线程，对于for而言，就是最后一个循环迭代所在线程的副本值，用于对共享变量赋值。</p>
+<p>另外，firstprivate和lastprivate分别是利用共享变量对线程副本初始化（进入）以及利用线程副本对共享变量赋值（退出），private是线程副本和共享变量无任何关联，那么如果希望进入的时候初始化并且退出的时候赋值呢？事实上，可以对同一个变量使用firstprivate和lastprivate的，下面的例子即可看出：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, _TCHAR* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> A = <span class="number">100</span>;</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for firstprivate(A) lastprivate(A)</span></span><br><span class="line">	<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i&lt;<span class="number">10</span>;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"Thread ID: %d, %d: %d\n"</span>,omp_get_thread_num(), i, A);	<span class="comment">// #1</span></span><br><span class="line">		A = i;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"%d\n"</span>,A);	<span class="comment">// #2</span></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>说明：不能对一个变量同时使用两次private，或者同时使用private和firstprivate/lastprivate，只能firstprivate和lastprivate一起使用。<br>关于lastprivate，还需要说明的一点是，如果是类（class）类型的变量使用在lastprivate参数中，那么使用时有些限制，需要一个可访问的，明确的缺省构造函数，除非变量也被使用作为firstprivate子句的参数；还需要一个拷贝赋值操作符，并且这个拷贝赋值操作符对于不同对象的操作顺序是未指定的，依赖于编译器的定义。</p>
+<p>另外，firstprivate和private可以用于所有的并行构造块，但是lastprivate只能用于for和section组成的并行块之中。</p>
+<h2 id="threadprivate"><a href="#threadprivate" class="headerlink" title="threadprivate"></a>threadprivate</h2><p>首先，threadprivate和上面几个子句的区别在于，threadprivate是指令，不是子句。threadprivate指定全局变量被OpenMP所有的线程各自产生一个私有的拷贝，即各个线程都有自己私有的全局变量。一个很明显的区别在于，threadprivate并不是针对某一个并行区域，而是整个于整个程序，所以，其拷贝的副本变量也是全局的，即在不同的并行区域之间的同一个线程也是共享的。</p>
+<p>threadprivate只能用于全局变量或静态变量，这是很容易理解的，根据其功能。</p>
+<p>根据下面的例子，来进一步理解threadprivate的使用：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"><span class="keyword">int</span> A = <span class="number">100</span>;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp threadprivate(A)</span></span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, _TCHAR* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for</span></span><br><span class="line">	<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i&lt;<span class="number">10</span>;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		A++;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"Thread ID: %d, %d: %d\n"</span>,omp_get_thread_num(), i, A);	<span class="comment">// #1</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"Global A: %d\n"</span>,A);	<span class="comment">// #2</span></span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for</span></span><br><span class="line">	<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i&lt;<span class="number">10</span>;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		A++;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"Thread ID: %d, %d: %d\n"</span>,omp_get_thread_num(), i, A);	<span class="comment">// #1</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"Global A: %d\n"</span>,A);	<span class="comment">// #2</span></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">Thread ID: 0, 0: 101</span><br><span class="line">Thread ID: 0, 1: 102</span><br><span class="line">Thread ID: 0, 2: 103</span><br><span class="line">Thread ID: 3, 8: 101</span><br><span class="line">Thread ID: 3, 9: 102</span><br><span class="line">Thread ID: 1, 3: 101</span><br><span class="line">Thread ID: 1, 4: 102</span><br><span class="line">Thread ID: 1, 5: 103</span><br><span class="line">Thread ID: 2, 6: 101</span><br><span class="line">Thread ID: 2, 7: 102</span><br><span class="line">Global A: 103</span><br><span class="line">Thread ID: 2, 6: 103</span><br><span class="line">Thread ID: 2, 7: 104</span><br><span class="line">Thread ID: 0, 0: 104</span><br><span class="line">Thread ID: 0, 1: 105</span><br><span class="line">Thread ID: 0, 2: 106</span><br><span class="line">Thread ID: 1, 3: 104</span><br><span class="line">Thread ID: 1, 4: 105</span><br><span class="line">Thread ID: 1, 5: 106</span><br><span class="line">Thread ID: 3, 8: 103</span><br><span class="line">Thread ID: 3, 9: 104</span><br><span class="line">Global A: 106</span><br></pre></td></tr></table></figure>
+<p>分析结果，发现，第二个并行区域是在第一个并行区域的基础上继续递增的；每一个线程都有自己的全局私有变量。另外，观察在并行区域外的打印的“Globa A”的值可以看出，这个值总是前面的thread 0的结果，这也是预料之中的，因为退出并行区域后，只有master线程运行。</p>
+<p>threadprivate指令也有自己的一些子句，就不在此分析了。另外，如果使用的是C++的类，对于类的构造函数也会有类似于lastprivate的一些限制。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>private/firstprivate/lastprivate都是子句，用于表示并行区域内的变量的数据范围属性。其中，private表示并行区域team内的每一个线程都会产生一个并行区域外同名变量的共享变量，且和共享变量没有任何关联；firstprivaet在private的基础上，在进入并行区域时（或说每个线程创建时，或副本变量构造时），会使用并行区域外的共享变量进行一次初始化工作；lastprivate在private的基础上，在退出并行区域时，会使用并行区域内的副本的变量，对共享变量进行赋值，由于有多个副本，OpenMP规定了如何确定使用哪个副本进行赋值。另外，private不能和firstprivate/lastprivate混用于同一个变量，firstprivate和lastprivate可以对同一变量使用，效果为两者的结合。</p>
+<p>threadprivate是指令，和private的区别在于，private是针对并行区域内的变量的，而threadprivate是针对全局的变量的。</p>
+<h1 id="shared-default-copyin-copyprivate子句的使用"><a href="#shared-default-copyin-copyprivate子句的使用" class="headerlink" title="shared/default/copyin/copyprivate子句的使用"></a>shared/default/copyin/copyprivate子句的使用</h1><h2 id="shared"><a href="#shared" class="headerlink" title="shared"></a>shared</h2><p>shared子句可以用于声明一个或多个变量为共享变量。所谓的共享变量，是在一个并行区域的team内的所有线程只拥有变量的一个内存地址，所有线程访问同一地址。所以，对于并行区域内的共享变量，需要考虑数据竞争条件，要防止竞争，需要增加对应的保护，这是程序员需要自行考虑的。</p>
+<p>下面的例子是一个求和的并行实现，使用共享变量，由于没有采取保护，会有数据竞争：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> COUNT	10000</span></span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, _TCHAR* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> sum = <span class="number">0</span>;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for shared(sum)</span></span><br><span class="line">	<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; COUNT;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		sum = sum + i;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"%d\n"</span>,sum);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>多次运行，结果可能不一样。</p>
+<p>另外，需要注意，循环迭代变量在循环构造区域里是私有的，声明在循环构造区域内的自动变量都是私有的。这一点其实也是比较容易理解的，很难想象，如果循环迭代变量也是共有的，OpenMP该如何去执行，所以也只能是私有的了。即使使用shared来修饰循环迭代变量，也不会改变循环迭代变量在循环构造区域中是私有的这一特点:<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> COUNT	10</span></span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, _TCHAR* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> sum = <span class="number">0</span>;</span><br><span class="line">	<span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for shared(sum, i)</span></span><br><span class="line">	<span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; COUNT;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		sum = sum + i;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"%d\n"</span>,i);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"%d\n"</span>,sum);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这个例子能侧面能说明问题，这里的最后输出i是0，并不是0到COUNT之内的一个可能的值，尽管这里使用shared修饰变量i。注意，这里的规则只是针对循环并行区域，对于其他的并行区域没有这样的要求：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> COUNT	10</span></span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, _TCHAR* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> sum = <span class="number">0</span>;</span><br><span class="line">	<span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel shared(sum) private(i)</span></span><br><span class="line">	<span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; COUNT;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		sum = sum + i;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"%d\n"</span>,i);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"%d\n"</span>,sum);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里输出的i为0，如果改为shared，那么就是10了。当然，这段代码和上面的求和的代码含义上就是不一样的。</p>
+<p>另外，这里顺便一个问题是，在循环并行区域内，循环迭代变量是不可修改的。这也是上面的例子，为何不采用下面的写法：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">	<span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for shared(sum) shared(i)</span></span><br><span class="line">	<span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; COUNT;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		i++;</span><br><span class="line">		sum = sum + i;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这里，i++会报错，原因是在循环并行区域内，迭代变量i是可读不可写的。</p>
+<h2 id="default"><a href="#default" class="headerlink" title="default"></a>default</h2><p>default指定并行区域内变量的属性，C++的OpenMP中default的参数只能为shared或none，对于Fortran，可以为private等参数，具体参考手册。</p>
+<p><code>default(shared)</code>：表示并行区域内的共享变量在不指定的情况下都是shared属性</p>
+<p><code>default(none)</code>：表示必须显式指定所有共享变量的数据属性，否则会报错，除非变量有明确的属性定义（比如循环并行区域的循环迭代变量只能是私有的）</p>
+<p>另外，如果一个并行区域，没有使用default子句，会是什么情况？实际测试，个人认为，没有使用default，那么其默认行为为default(shared)。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> COUNT	10</span></span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, _TCHAR* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> sum = <span class="number">0</span>;</span><br><span class="line">	<span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for</span></span><br><span class="line">	<span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; COUNT;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		sum = sum + i;</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"%d\n"</span>,i);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"%d\n"</span>,sum);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这里，sum为shared属性，而i的属性不会改变，仍然只能为私有。这里的效果和加上default(shared)是一样的。如果使用default(none)，那么编译会报错“没有给sum指定数据共享属性”，不会为变量i报错，因为i是有明确的含义的，只能为私有。</p>
+<h2 id="copyin"><a href="#copyin" class="headerlink" title="copyin"></a>copyin</h2><p>copyin子句用于将主线程中threadprivate变量的值拷贝到执行并行区域的各个线程的threadprivate变量中，从而使得team内的子线程都拥有和主线程同样的初始值。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;  </span></span></span><br><span class="line"><span class="keyword">int</span> A = <span class="number">100</span>;  </span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp threadprivate(A)  </span></span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, _TCHAR* argv[])</span>  </span></span><br><span class="line"><span class="function"></span>&#123;  </span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for  </span></span><br><span class="line">    <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i&lt;<span class="number">10</span>;i++)  </span><br><span class="line">    &#123;  </span><br><span class="line">        A++;  </span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"Thread ID: %d, %d: %d\n"</span>,omp_get_thread_num(), i, A);   <span class="comment">// #1  </span></span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"Global A: %d\n"</span>,A); <span class="comment">// #2  </span></span><br><span class="line">  </span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for copyin(A)</span></span><br><span class="line">    <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i&lt;<span class="number">10</span>;i++)  </span><br><span class="line">    &#123;  </span><br><span class="line">        A++;  </span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"Thread ID: %d, %d: %d\n"</span>,omp_get_thread_num(), i, A);   <span class="comment">// #1  </span></span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"Global A: %d\n"</span>,A); <span class="comment">// #2  </span></span><br><span class="line">  </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>输出如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">Thread ID: 0, 0: 101</span><br><span class="line">Thread ID: 0, 1: 102</span><br><span class="line">Thread ID: 0, 2: 103</span><br><span class="line">Thread ID: 3, 8: 101</span><br><span class="line">Thread ID: 3, 9: 102</span><br><span class="line">Thread ID: 1, 3: 101</span><br><span class="line">Thread ID: 1, 4: 102</span><br><span class="line">Thread ID: 1, 5: 103</span><br><span class="line">Thread ID: 2, 6: 101</span><br><span class="line">Thread ID: 2, 7: 102</span><br><span class="line">Global A: 103</span><br><span class="line"></span><br><span class="line">Thread ID: 2, 6: 104</span><br><span class="line">Thread ID: 2, 7: 105</span><br><span class="line">Thread ID: 1, 3: 104</span><br><span class="line">Thread ID: 1, 4: 105</span><br><span class="line">Thread ID: 1, 5: 106</span><br><span class="line">Thread ID: 3, 8: 104</span><br><span class="line">Thread ID: 3, 9: 105</span><br><span class="line">Thread ID: 0, 0: 104</span><br><span class="line">Thread ID: 0, 1: 105</span><br><span class="line">Thread ID: 0, 2: 106</span><br></pre></td></tr></table></figure></p>
+<p>运行此程序，得到的结果和不使用copyin的结果是不一样的。不使用copyin的情况下，进入第二个并行区域的时候，不同线程的私有副本A的初始值是不一样的，这里使用了copyin之后，发现所有的线程的初始值都使用主线程的值初始化，然后继续运算。</p>
+<p>为了更好的理解copyin，分析下面的例子：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;  </span></span></span><br><span class="line"><span class="keyword">int</span> A = <span class="number">100</span>;  </span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp threadprivate(A)  </span></span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, _TCHAR* argv[])</span>  </span></span><br><span class="line"><span class="function"></span>&#123;  </span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"Initial A = %d\n"</span>, A);</span><br><span class="line">		A = omp_get_thread_num();</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"Global A: %d\n"</span>,A);</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel copyin(A)			<span class="comment">// copyin</span></span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"Initial A = %d\n"</span>, A);</span><br><span class="line">		A = omp_get_thread_num();</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"Global A: %d\n"</span>,A);</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel				<span class="comment">// Will not copy, to check the result.</span></span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"Initial A = %d\n"</span>, A);</span><br><span class="line">		A = omp_get_thread_num();</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"Global A: %d\n"</span>,A);</span><br><span class="line"> </span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br></pre></td></tr></table></figure></p>
+<p>得到输出如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">Initial A = 100</span><br><span class="line">Initial A = 100</span><br><span class="line">Initial A = 100</span><br><span class="line">Initial A = 100</span><br><span class="line">Global A: 0</span><br><span class="line">Initial A = 0</span><br><span class="line">Initial A = 0</span><br><span class="line">Initial A = 0</span><br><span class="line">Initial A = 0</span><br><span class="line">Global A: 0</span><br><span class="line">Initial A = 0</span><br><span class="line">Initial A = 3</span><br><span class="line">Initial A = 2</span><br><span class="line">Initial A = 1</span><br><span class="line">Global A: 1</span><br></pre></td></tr></table></figure></p>
+<p>简单理解，在使用了copyin后，所有的线程的threadprivate类型的副本变量都会与主线程的副本变量进行一次“同步”。</p>
+<p>另外，copyin中的参数必须被声明成threadprivate的，对于类类型的变量，必须带有明确的拷贝赋值操作符。而且，对于第一个并行区域，是默认含有copyin的功能的（比如上面的例子的前面的四个A的输出都是100）。copyin的一个可能需要用到的情况是，比如程序中有多个并行区域，每个线程希望保存一个私有的全局变量，但是其中某一个并行区域执行前，希望与主线程的值相同，就可以利用copyin进行赋值。</p>
+<h2 id="copyprivate"><a href="#copyprivate" class="headerlink" title="copyprivate"></a>copyprivate</h2><p>copyprivate子句用于将线程私有副本变量的值从一个线程广播到执行同一并行区域的其他线程的同一变量。</p>
+<p>说明：copyprivate只能用于single指令的子句中，在一个single块的结尾处完成广播操作。copyprivate只能用于private/firstprivate或threadprivate修饰的变量。</p>
+<p>根据下面的程序，可以理解copyprivate的使用：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;omp.h&gt;  </span><br><span class="line">int A = 100;  </span><br><span class="line">#pragma omp threadprivate(A)  </span><br><span class="line"> </span><br><span class="line">int main(int argc, _TCHAR* argv[])  </span><br><span class="line">&#123;  </span><br><span class="line">	int B = 100;</span><br><span class="line">	int C = 1000;</span><br><span class="line">#pragma omp parallel firstprivate(B) copyin(A)	// copyin(A) can be ignored!</span><br><span class="line">	&#123;</span><br><span class="line">#pragma omp single copyprivate(A) copyprivate(B)// copyprivate(C)	// C is shared, cannot use copyprivate!</span><br><span class="line">		&#123;</span><br><span class="line">			A = 10;</span><br><span class="line">			B = 20;</span><br><span class="line">		&#125;</span><br><span class="line">		printf(&quot;Initial A = %d\n&quot;, A);		// 10 for all threads</span><br><span class="line">		printf(&quot;Initial B = %d\n&quot;, B);		// 20 for all threads</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	printf(&quot;Global A: %d\n&quot;,A);		// 10</span><br><span class="line">	printf(&quot;Global A: %d\n&quot;,B);		// 100. B is still 100! Will not be affected here!</span><br><span class="line"> </span><br><span class="line">	return 0;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="reduction子句"><a href="#reduction子句" class="headerlink" title="reduction子句"></a>reduction子句</h1><p>reduction的作用： A private copy for each list variable is created for each thread. At the end of the reduction, the reduction variable is applied to all private copies of the shared variable, and the final result is written to the global shared variable.</p>
+<p>reduction子句为变量指定一个操作符，每个线程都会创建reduction变量的私有拷贝，在OpenMP区域结束处，将使用各个线程的私有拷贝的值通过制定的操作符进行迭代运算，并赋值给原来的变量。</p>
+<p>reduction的语法为recutioin(operator:list)和其他的数据属性子句不一样的是多了一个operator参数。由于最后会进行迭代运算，所以不是所有的运算符都能作为reduction的参数，而且，迭代运算需要一个初始值，不是所有的操作符需要有相同的初始值，一般而言，常见的reduction操作符的初始值为：+(0),*(1),-(0),&amp;~(0),|(0),^(0),&amp;&amp;(1),||(0)，当然，这不是必须的，比如叠加运算的初始值，可以是任意值，只是表达的含义不一样而已，但是对于某些操作符，有些初始值是没有什么意义的，比如乘法迭代如果初始值为0没有什么意义，结果肯定是0了！</p>
+<p>典型的使用reduction的例子，就是迭加（求和）操作了：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;  </span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> COUNT 10</span></span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, _TCHAR* argv[])</span>  </span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> sum = <span class="number">100</span>;		<span class="comment">// Assign an initial value.</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for reduction(+:sum)</span></span><br><span class="line">	<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>;i &lt; COUNT; i++) </span><br><span class="line">	&#123;</span><br><span class="line">		sum += i;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"Sum: %d\n"</span>,sum);</span><br><span class="line"> </span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这个例子就是对0到COUNT进行求和，由于初始值为100，所以还会加一个100，如果只是为了求和，只需要初始值为0即可。使用reduction可以避免数据竞争的发生，将上面例子的COUNT修改为一个比较大的值，如果不使用reduction，会发现有数据竞争导致结果不一致，使用reduction后，每次都能得到正确的结果。</p>
+<p>reduction的使用是比较简单的，主要还是需要理解上面说到的“初始值”，第一个理解是这里的100这样的初始值，这是并行区域外的初始值，会在最后计算到迭代结果中，那么还有一个隐含的初始值，就是我们知道，使用了reduction，那么每个线程都会构造一个reduction变量的线程副本，那么其值为多少呢？从上面的例子可以看出，其初始值就是0，如果初始值都是100，那么结果应该是100会被加线程数目的次数。初始值的确定方法就是上面提到的：+(0),*(1),-(0),&amp;~(0),|(0),^(0),&amp;&amp;(1),||(0)。</p>
+<p>所以，理解reduction的工作过程：</p>
+<ol>
+<li>进入并行区域后，team内的每个新的线程都会对reduction变量构造一个副本，比如上面的例子，假设有四个线程，那么，进入并行区域的初始化值分别为：sum0=100，sum1 = sum2 = sum3 = 0。为何sum0为100呢？因为主线程不是一个新的线程，所以不需要再为主线程构造一个副本（没有找到官方这样的说法，但是从理解上，应该就是这样工作的，只会有一个线程使用到并行区域外的初始值，其余的都是0）。</li>
+<li>每个线程使用自己的副本变量完成计算。</li>
+<li>在退出并行区域时，对所有的线程的副本变量使用指定的操作符进行迭代操作，对于上面的例子，即sum’ = sum0’+sum1’+sum2’+sum3’.</li>
+<li>将迭代的结果赋值给原来的变量（sum），sum=sum’.</li>
+</ol>
+<p>注意：</p>
+<ul>
+<li>reduction只能用于标量类型（int、float等等）；</li>
+<li>reduction只用于一个区域构造或者工作共享构造的结构中，并且，在这个区域中，reduction的变量只能被用于类似如下的语句：</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">x = x op expr </span><br><span class="line">x = expr op x (except subtraction) </span><br><span class="line">x binop = expr </span><br><span class="line">x++ </span><br><span class="line">++x </span><br><span class="line">x-- </span><br><span class="line">--x</span><br></pre></td></tr></table></figure>
+<p>说明：经过测试，其实不符合这一规则的时候，编译运行都不会有问题，有些甚至也是可以解释清楚为什么结果是这样的，但是无论如何，一般使用reduction的时候，都是一些迭代的情况，语义应该是很清楚的情况。看下面的一个“错误”的例子：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> COUNT 10</span></span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, _TCHAR* argv[])</span>  </span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> sum = <span class="number">100</span>;		<span class="comment">// Assign an initial value.</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for reduction(+:sum)</span></span><br><span class="line">	<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>;i &lt; COUNT; i++) </span><br><span class="line">	&#123;</span><br><span class="line">		sum += i;</span><br><span class="line">		sum = <span class="number">1</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"Sum: %d\n"</span>,sum);</span><br><span class="line"> </span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>输出结果为104（4核机器）。这个例子，<code>sum=1;</code>这个表达式是不应该出现的，但是如果就这么写，编译运行都没问题，而且，这个结果甚至也算是预料中的。每一个线程计算结束后，其sum的值都是1，四个线程，然后初始值是100，所以最后结果是104。:) 无论如何，即使可以解释得通，相信也没有这样使用的场合，至少，不要依赖于这样的实现的结果。从这个错误的例子，反过来，我发现上面的关于”理解reduction的工作过程“似乎不太完全正确，其中第一步，进入并行区域后，初始值为”sum0=100,sum1 = sum2 = sum3 = 0“，如果这样，只是一个初始值，那么计算后，在这个例子里，所有线程的sum都是1，结果应该为4才对。所以看来，实际的理解应该是，主线程也会创建一个副本变量，其初始值也为0，在最后迭代的时候，是用sum原来的值和每个线程的副本进行计算。过程大概如下：</p>
+<ol>
+<li>sum=100</li>
+<li>进入并行区域，创建4个线程的4个副本：sum0=sum1=sum2=sum3=0;</li>
+<li>计算完成后，得到sum0’,sum1’,sum2’,sum3’</li>
+<li>计算sum，sum=sum op sum 0‘ op sum1’ op sum2‘ op sum3’。</li>
+</ol>
+<p>总之，具体编译器是如何实现的并不重要，关键是理解reduction是如何工作的。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/C/" rel="tag"># C++</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/12/13/effective_cpp简洁版/" rel="next" title="Effective C++ 简洁笔记">
+                <i class="fa fa-chevron-left"></i> Effective C++ 简洁笔记
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/12/14/Intel_MPI手册/" rel="prev" title="Intel MPI library developer reference for Linux">
+                Intel MPI library developer reference for Linux <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">348</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">14</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/xiaomeihao.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#private-firstprivate-lastprivate-threadprivate之间的比较"><span class="nav-number">1.</span> <span class="nav-text">private/firstprivate/lastprivate/threadprivate之间的比较</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#private"><span class="nav-number">1.1.</span> <span class="nav-text">private</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#firstprivate"><span class="nav-number">1.2.</span> <span class="nav-text">firstprivate</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#lastprivate"><span class="nav-number">1.3.</span> <span class="nav-text">lastprivate</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#threadprivate"><span class="nav-number">1.4.</span> <span class="nav-text">threadprivate</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">1.5.</span> <span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#shared-default-copyin-copyprivate子句的使用"><span class="nav-number">2.</span> <span class="nav-text">shared/default/copyin/copyprivate子句的使用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#shared"><span class="nav-number">2.1.</span> <span class="nav-text">shared</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#default"><span class="nav-number">2.2.</span> <span class="nav-text">default</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#copyin"><span class="nav-number">2.3.</span> <span class="nav-text">copyin</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#copyprivate"><span class="nav-number">2.4.</span> <span class="nav-text">copyprivate</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#reduction子句"><span class="nav-number">3.</span> <span class="nav-text">reduction子句</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<span id="busuanzi_container_site_uv"> 
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="积累,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="1. OpenMP基本介绍OpenMP是一个编译器指令和库函数的集合，主要是为共享式存储计算机上的并行程序设计使用的。目前支持OpenMP的语言主要有Fortran，C/C++。 1.1 fork/join并行执行模式的概念OpenMP在并行执行程序时，采用的是fork/join式并行模式，共享存储式并行程序就是使用fork/join式并行的。在开始时，只有一个叫做主线程的运行线程存在 。在运行过">
+<meta name="keywords" content="积累">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OpenMP基础">
+<meta property="og:url" content="http://yoursite.com/2021/12/06/openmp基础/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="1. OpenMP基本介绍OpenMP是一个编译器指令和库函数的集合，主要是为共享式存储计算机上的并行程序设计使用的。目前支持OpenMP的语言主要有Fortran，C/C++。 1.1 fork/join并行执行模式的概念OpenMP在并行执行程序时，采用的是fork/join式并行模式，共享存储式并行程序就是使用fork/join式并行的。在开始时，只有一个叫做主线程的运行线程存在 。在运行过">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2021-12-17T09:09:01.450Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="OpenMP基础">
+<meta name="twitter:description" content="1. OpenMP基本介绍OpenMP是一个编译器指令和库函数的集合，主要是为共享式存储计算机上的并行程序设计使用的。目前支持OpenMP的语言主要有Fortran，C/C++。 1.1 fork/join并行执行模式的概念OpenMP在并行执行程序时，采用的是fork/join式并行模式，共享存储式并行程序就是使用fork/join式并行的。在开始时，只有一个叫做主线程的运行线程存在 。在运行过">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2021/12/06/openmp基础/">
+
+
+
+
+
+  <title>OpenMP基础 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/resume.pdf" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-mybetterhalf">
+          <a href="/mybetterhalf/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            mybetterhalf
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/12/06/openmp基础/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">OpenMP基础</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-12-06T21:45:00+08:00">
+                2021-12-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="1-OpenMP基本介绍"><a href="#1-OpenMP基本介绍" class="headerlink" title="1. OpenMP基本介绍"></a>1. OpenMP基本介绍</h1><p>OpenMP是一个编译器指令和库函数的集合，主要是为共享式存储计算机上的并行程序设计使用的。目前支持OpenMP的语言主要有Fortran，C/C++。</p>
+<h2 id="1-1-fork-join并行执行模式的概念"><a href="#1-1-fork-join并行执行模式的概念" class="headerlink" title="1.1 fork/join并行执行模式的概念"></a>1.1 fork/join并行执行模式的概念</h2><p>OpenMP在并行执行程序时，采用的是fork/join式并行模式，共享存储式并行程序就是使用fork/join式并行的。在开始时，只有一个叫做主线程的运行线程存在 。在运行过程中，当遇到需要进行并行计算的时候，派生出（Fork）线程来执行并行任务 。在并行代码结束执行，派生线程退出或挂起，控制流程回到单独的主线程中（Join）。</p>
+<p>如图，标准并行模式执行代码的基本思想是，程序开始时只有一个主线程，程序中的串行部分都由主线程执行，并行的部分是通过派生其他线程来执行，但是如果并行部分没有结束时是不会执行串行部分的，先看一个简单例子：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">test</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">     <span class="keyword">int</span> a = <span class="number">0</span>;</span><br><span class="line">     <span class="keyword">clock_t</span> t1 = clock();</span><br><span class="line">     <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">100000000</span>; i++)</span><br><span class="line">     &#123;</span><br><span class="line">         a = i+<span class="number">1</span>;</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">clock_t</span> t2 = clock();</span><br><span class="line">     <span class="built_in">printf</span>(<span class="string">"Time = %d\n"</span>, t2-t1);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span>* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">     <span class="keyword">clock_t</span> t1 = clock();</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for</span></span><br><span class="line">     <span class="keyword">for</span> ( <span class="keyword">int</span> j = <span class="number">0</span>; j &lt; <span class="number">2</span>; j++ )&#123;</span><br><span class="line">         test();</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">clock_t</span> t2 = clock();</span><br><span class="line">     <span class="built_in">printf</span>(<span class="string">"Total time = %d\n"</span>, t2-t1);</span><br><span class="line">     test();</span><br><span class="line">     <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在<code>main()</code>函数中，没有执行完for循环中的代码之前，后面的<code>clock_t t2 = clock();</code>这行代码是不会执行的，如果和调用线程创建函数相比，它相当于先创建线程，并等待线程执行完，所以这种并行模式中在主线程里创建的线程并没有和主线程并行运行。</p>
+<h1 id="2-OpenMP编程模型"><a href="#2-OpenMP编程模型" class="headerlink" title="2. OpenMP编程模型"></a>2. OpenMP编程模型</h1><h2 id="2-1-OpenMP指令和库函数介绍"><a href="#2-1-OpenMP指令和库函数介绍" class="headerlink" title="2.1 OpenMP指令和库函数介绍"></a>2.1 OpenMP指令和库函数介绍</h2><p>下面来介绍OpenMP的基本指令和常用指令的用法，在C/C++中，OpenMP指令使用的格式为<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#pragma omp 指令 [子句[子句]…]</span><br></pre></td></tr></table></figure></p>
+<p>前面提到的<code>parallel for</code>就是一条指令，有些书中也将OpenMP的“指令”叫做“编译指导语句”，后面的子句是可选的。例如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#pragma omp parallel private(i, j)</span><br></pre></td></tr></table></figure></p>
+<p><code>parallel</code>就是指令，<code>private</code>是子句。为叙述方便把包含#pragma和OpenMP指令的一行叫做语句，如上面那行叫parallel语句。</p>
+<h2 id="2-2-OpenMP指令列表"><a href="#2-2-OpenMP指令列表" class="headerlink" title="2.2 OpenMP指令列表"></a>2.2 OpenMP指令列表</h2><p>这里我们先列举出OpenMP常用的指令和函数，并附上一些简单的说明。如果你看不懂，没关系，后面我们会对每个指令有详细的例子介绍。</p>
+<ul>
+<li><code>parallel</code>：用在一个代码段之前，表示这段代码将被多个线程并行执行</li>
+<li><code>for</code>：用于for循环之前，将循环分配到多个线程中并行执行，必须保证每次循环之间无相关性。</li>
+<li><code>parallel for</code>，<code>parallel</code>和<code>for</code>语句的结合，也是用在一个for循环之前，表示for循环的代码将被多个线程并行执行。</li>
+<li><code>sections</code>，用在可能会被并行执行的代码段之前</li>
+<li><code>parallel sections</code>，<code>parallel</code>和<code>sections</code>两个语句的结合</li>
+<li><code>critical</code>，用在一段代码临界区之前</li>
+<li><code>single</code>，用在一段只被单个线程执行的代码段之前，表示后面的代码段将被单线程执行。</li>
+<li><code>flush</code>，用来保证线程的内存临时视图和实际内存保持一致，即各个线程看到的共享变量是一致的</li>
+<li><code>barrier</code>，用于并行区内代码的线程同步，所有线程执行到barrier时要停止，直到所有线程都执行到barrier时才继续往下执行。</li>
+<li><code>atomic</code>，用于指定一块内存区域被制动更新</li>
+<li><code>master</code>，用于指定一段代码块由主线程执行</li>
+<li><code>ordered</code>， 用于指定并行区域的循环按顺序执行</li>
+<li><code>threadprivate</code>，用于指定一个变量是线程私有的</li>
+<li><code>copyprivate</code>，配合single指令，将指定线程的专有变量广播到并行域内其他线程的同名变量中；</li>
+<li><code>copyin n</code>，用来指定一个threadprivate类型的变量需要用主线程同名变量进行初始化；</li>
+<li><code>default</code>，用来指定并行域内的变量的使用方式，缺省是shared。</li>
+</ul>
+<h2 id="2-3-OpenMP库函数"><a href="#2-3-OpenMP库函数" class="headerlink" title="2.3 OpenMP库函数"></a>2.3 OpenMP库函数</h2><p>OpenMP除上述指令外，还有一些库函数，OpenMP运行时库函数原本用以设置和获取执行环境相关的信息.其也包含一系列用以同步的API.要使用运行时函数库所包含的函数，应该在相应的源文件中包含OpenMP头文件omp.h.OpenMP的运行时库函数的使用类似于相应编程语言内部的函数调用.</p>
+<p>由编译指导语句和运行时库函数可见，OpenMP同时结合了两种并行编程的方式，通过编译指导语句，可以将串行的程序逐步地改造成一个并行程序，达到增量更新程序的目的，从而减少程序编写人员的一定负担。同时，这样的方式也能将串行程序和并行程序保存在同一个源代码文件当中，减少了维护的负.OpenMP在运行的时候，需要运行函数库的支持，并会获取一些环境变量来控制运行的过程。环境变量是动态函数库中用来控制函数运行的一些参数.</p>
+<p>下面列出几个常用的库函数：</p>
+<ul>
+<li><code>omp_get_num_procs</code>，返回运行本线程的多处理机的处理器个数。</li>
+<li><code>omp_get_num_threads</code>，返回当前并行区域中的活动线程个数。</li>
+<li><code>omp_get_thread_num</code>，返回线程号</li>
+<li><code>omp_set_num_threads</code>，设置并行执行代码时的线程个数</li>
+<li><code>omp_init_lock</code>，初始化一个简单锁</li>
+<li><code>omp_set_lock</code>，上锁操作</li>
+<li><code>omp_unset_lock</code>，解锁操作，要和<code>omp_set_lock</code>函数配对使用。</li>
+<li><code>omp_destroy_lock</code>，<code>omp_init_lock</code>函数的配对操作函数，关闭一个锁</li>
+</ul>
+<h2 id="2-3-OpenMP子句"><a href="#2-3-OpenMP子句" class="headerlink" title="2.3 OpenMP子句"></a>2.3 OpenMP子句</h2><ul>
+<li><code>private</code>：指定每个线程都有它自己的变量私有副本。</li>
+<li><code>firstprivate</code>：指定每个线程都有它自己的变量私有副本，并且变量要被继承主线程中的初值。</li>
+<li><code>lastprivate</code>：主要是用来指定将线程中的私有变量的值在并行处理结束后复制回主线程中的对应变量。</li>
+<li><code>reduce</code>：用来指定一个或多个变量是私有的，并且在并行处理结束后这些变量要执行指定的运算。</li>
+<li><code>nowait</code>：忽略指定中暗含的等待</li>
+<li><code>num_threads</code>：指定线程的个数</li>
+<li><code>schedule</code>：指定如何调度for循环迭代</li>
+<li><code>shared</code>：指定一个或多个变量为多个线程间的共享变量</li>
+<li><code>ordered</code>：用来指定for循环的执行要按顺序执行</li>
+<li><code>copyprivate</code>：用于single指令中的指定变量为多个线程的共享变量</li>
+<li><code>copyin</code>：用来指定一个threadprivate的变量的值要用主线程的值进行初始化。</li>
+<li><code>default</code>：用来指定并行处理区域内的变量的使用方式，缺省是shared</li>
+</ul>
+<h1 id="3-OpenMP详细代码示例"><a href="#3-OpenMP详细代码示例" class="headerlink" title="3. OpenMP详细代码示例"></a>3. OpenMP详细代码示例</h1><h2 id="3-1-hello-openmp-cpp"><a href="#3-1-hello-openmp-cpp" class="headerlink" title="3.1 hello_openmp.cpp"></a>3.1 hello_openmp.cpp</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 尝试着在编译选项里使用和不使用-openmp 这个编译选项分别编译并执行代码 */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> _OPENMP  <span class="comment">// 如果定义了这个宏</span></span></span><br><span class="line">	<span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"Hello, OpenMP!"</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">else</span></span></span><br><span class="line">	<span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"OpenMP is not enabled."</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3-2-header-and-env-cpp"><a href="#3-2-header-and-env-cpp" class="headerlink" title="3.2 header_and_env.cpp"></a>3.2 header_and_env.cpp</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*  引入&lt;omp.h&gt;头文件，OpenMP的几乎所有函数定义都在这个头文件中。 */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;  // 包含OpenMP头文件 </span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="comment">// omp_get_max_threads() 等其它函数都定义在omp.h头文件中</span></span><br><span class="line">	<span class="comment">// omp_get_max_threads() 获取本机的CPU线程数</span></span><br><span class="line">	<span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"OpenMP will use "</span> &lt;&lt; omp_get_max_threads() &lt;&lt;</span><br><span class="line">	    <span class="string">" threads maximum."</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3-3-parallel-cpp"><a href="#3-3-parallel-cpp" class="headerlink" title="3.3 parallel.cpp"></a>3.3 parallel.cpp</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">  1. 尝试将环境变量改为 OMP_NUM_THREADS=2 和 OMP_NUM_THREADS=3 再编译运行程序试试</span></span><br><span class="line"><span class="comment">  2. 尝试在 #pragma omp parallel 后添加num_threads(5) 试试</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel   <span class="comment">// OpenMP 并行区域</span></span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="comment">// 花括号里的内容会被N个线程同时执行，N定义在环境变量OMP_NUM_THREADS中 </span></span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"Hello from thread %d of %d\n"</span>, omp_get_thread_num(), omp_get_num_threads());</span><br><span class="line">&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3-4-parallel-cout-cpp"><a href="#3-4-parallel-cout-cpp" class="headerlink" title="3.4 parallel_cout.cpp"></a>3.4 parallel_cout.cpp</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">   程序说明： 我们会发现打印在控制台的内容是乱的，这是因为在一个线程还没输出完成时，另一个线程就抢着要输出了！</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sstream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"Hello from thread "</span> &lt;&lt; omp_get_thread_num() &lt;&lt; <span class="string">" of "</span> &lt;&lt;  omp_get_num_threads() &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3-5-nested-cpp"><a href="#3-5-nested-cpp" class="headerlink" title="3.5 nested.cpp"></a>3.5 nested.cpp</h2><p>如果嵌套并行可用，则在并行区里还会继续创建线程，level 2会输出4次。否则的话level 2输出2次。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">    1. 看看打印输出是否跟您想的一样，如果不一样，为什么？</span></span><br><span class="line"><span class="comment">    2. 试着禁止嵌套并行;</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span>  <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	omp_set_nested(<span class="number">1</span>);   <span class="comment">// 允许嵌套并行可用 </span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel num_threads(2)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"Level 1, thread %d of %d\n"</span>, omp_get_thread_num(),omp_get_num_threads());</span><br><span class="line">	</span><br><span class="line">	<span class="meta">#<span class="meta-keyword">pragma</span> omp parallel num_threads(2)</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"Level 2, thread %d of %d\n"</span>, omp_get_thread_num(),omp_get_num_threads());</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3-6-parallel-for-cpp"><a href="#3-6-parallel-for-cpp" class="headerlink" title="3.6 parallel-for.cpp"></a>3.6 parallel-for.cpp</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">    for循环的并行</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">const</span> <span class="keyword">int</span> size = <span class="number">50</span>;</span><br><span class="line">	<span class="keyword">int</span> a[size];</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for</span></span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; size; i++)</span><br><span class="line">		a[i] = i;                     <span class="comment">// 这里的代码是并行执行的</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; size; i++)    <span class="comment">// 这里是串行执行的，#pragma omp parallel for作用范围只有紧接着的for循环，当然这个for循环是可以嵌套的.</span></span><br><span class="line">		<span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; a[i] &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3-7-scoping-cpp"><a href="#3-7-scoping-cpp" class="headerlink" title="3.7 scoping.cpp"></a>3.7 scoping.cpp</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">   1. 变量的作用范围在并行程序设计中非常重要</span></span><br><span class="line"><span class="comment">   2. 如果在并行区域再加一个私有的a变量，想想会发生什么？</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> a = <span class="number">-1</span>;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="comment">// a在并行块内部是共享(默认)的，所有线程都有权操作它(操作的都是同一个变量，没有备份)，而且并行快结束后，块内代码对其的修改有效</span></span><br><span class="line">	<span class="keyword">int</span> b;     <span class="comment">// 在并行区域外不可见，每个线程有一个备份拷贝</span></span><br><span class="line">	a = omp_get_thread_num() + <span class="number">100</span>;</span><br><span class="line">	b = omp_get_thread_num() + <span class="number">200</span>;</span><br><span class="line">&#125;</span><br><span class="line">	<span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"a = "</span> &lt;&lt; a &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;   <span class="comment">// 理论上这里的输出是[100+0,100+threads)之间随机的, 得看哪个线程最后执行完</span></span><br><span class="line">    <span class="comment">//	b = 0;   // 对外不可见，这里会发生错误，所以注释</span></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3-8-firstprivate-cpp"><a href="#3-8-firstprivate-cpp" class="headerlink" title="3.8 firstprivate.cpp"></a>3.8 firstprivate.cpp</h2><p>firstprivate的作用是，让i默认使用并行区域外i的值来初始化并行区域内的私有i，但是初始化后并行去内部的i就跟外面的没有关系了，各个线程仍然持有一个i的私有备份，运行结束时，原有的i值保持i=10不变。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> i = <span class="number">10</span>;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel private(i)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="comment">// 私有变量i是覆盖了并行区域外的共享变量i，所以这里并没有初始化，值应该为0</span></span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"thread %d, i = %d\n"</span>, omp_get_thread_num(), i);</span><br><span class="line">	i = <span class="number">200</span> + omp_get_thread_num();</span><br><span class="line">&#125;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"i = %d\n"</span>, i);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3-9-lastprivate-cpp"><a href="#3-9-lastprivate-cpp" class="headerlink" title="3.9 lastprivate.cpp"></a>3.9 lastprivate.cpp</h2><p>跟firstprivate相反，lastprivate主要是用来指定将线程中的私有变量的值在并行处理结束后复制回主线程中的对应变量。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">const</span> <span class="keyword">int</span> size = <span class="number">1000</span>;</span><br><span class="line">	<span class="keyword">int</span> i = <span class="number">-1</span>, a[size];</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for lastprivate(i)</span></span><br><span class="line">	<span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; size; i++)</span><br><span class="line">		a[i] = i;</span><br><span class="line"></span><br><span class="line">	<span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"i = "</span> &lt;&lt; i &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3-10-single-master-critical-cpp"><a href="#3-10-single-master-critical-cpp" class="headerlink" title="3.10 single-master-critical.cpp"></a>3.10 single-master-critical.cpp</h2><ol>
+<li>omp critical -&gt; execute by one thread at a time</li>
+<li>omp single   -&gt; execute by any one thread</li>
+<li>omp master   -&gt; execute by the master thread (id == 0)</li>
+</ol>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel num_threads(8)</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp critical</span></span><br><span class="line">	<span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"Hello from thread "</span> &lt;&lt; omp_get_thread_num() &lt;&lt; <span class="string">" of "</span> &lt;&lt;</span><br><span class="line">	    omp_get_num_threads() &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3-11-mutex-cpp"><a href="#3-11-mutex-cpp" class="headerlink" title="3.11 mutex.cpp"></a>3.11 mutex.cpp</h2><p>锁是多线程计算里非常重要的概念，他是保证数据一致性的基础，没有锁的并行计算会导致非常奇怪的结果。</p>
+<p>举个栗子：当多个线程操作一个数据时，一个线程在读取一个数的时候另两个线程在对这个数作写操作，那这个读线程到底应该拿哪一个数值去做计算呢？回答当然是，拿最后更改这个值的线程的值去计算，但是这个值就是对的么？</p>
+<p>很多时候即使是并行的，但是对于一个简单操作来讲，它也是需要有先后循序的，比如这个线程在操作这个变量的时候要求别的线程要等待这个线程操作完成，这时候就使用锁将该变量锁住。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">omp_lock_t</span> lock;</span><br><span class="line">	omp_init_lock(&amp;lock);</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel num_threads(4)</span></span><br><span class="line">&#123;</span><br><span class="line">	omp_set_lock(&amp;lock); <span class="comment">// mutual exclusion (mutex)</span></span><br><span class="line">	<span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"Thread "</span> &lt;&lt; omp_get_thread_num() &lt;&lt;  <span class="string">" has acquired the lock. Sleeping 2 seconds..."</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">	sleep(<span class="number">2</span>);</span><br><span class="line">	<span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"Thread "</span> &lt;&lt; omp_get_thread_num() &lt;&lt;<span class="string">" is releasing the lock..."</span> &lt;&lt; <span class="built_in">std</span>:: <span class="built_in">endl</span>; omp_unset_lock(&amp;lock);</span><br><span class="line">&#125;</span><br><span class="line">	omp_destroy_lock(&amp;lock);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3-12-barrier-cpp"><a href="#3-12-barrier-cpp" class="headerlink" title="3.12 barrier.cpp"></a>3.12 barrier.cpp</h2><ol>
+<li>同步也是并行计算中特别重要的概念，跟上面讲的锁一样;</li>
+<li>特别是在时间相关的计算领域里，如含时的有限差分等等;</li>
+<li>因为在具体程序中，每个线程执行的任务不一样，即使执行的任务一样，也不能保证每个线程执行任务消费的时间都完全一致。有的线程已经执行了5行代码，有的线程才执行到第0行。而含时的迭代需要所有线程都执行完t步骤后，才能继续执行t+1时间步，不然会导致错误的结果。</li>
+</ol>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"Hello from thread %d of %d\n"</span>, omp_get_thread_num(),</span><br><span class="line">	    omp_get_num_threads());</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp barrier <span class="comment">//  所有的线程都执行到这里时才能继续往后执行 </span></span></span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"Thread %d of %d have passed the barrier\n"</span>,</span><br><span class="line">	    omp_get_thread_num(), omp_get_num_threads());</span><br><span class="line">&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3-13-atomic-cpp"><a href="#3-13-atomic-cpp" class="headerlink" title="3.13 atomic.cpp"></a>3.13 atomic.cpp</h2><p>原子变量跟锁有相近似的作用，都是保证变量或者事务的一致性；举个栗子：银行转账，A给B转账过程中突然停电，A账户前丢失了B却没有收到，这是谁的责任？当然是银行的责任。当然，银行的程序员们可不是吃白米饭的，转账的操作就是一个原子操作，只有成功或失败，没有成功了一半这个说法。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">inline</span> <span class="keyword">double</span> <span class="title">two_body_energy</span><span class="params">(<span class="keyword">int</span> i, <span class="keyword">int</span> j)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> (<span class="number">2.0</span> * i + <span class="number">3.0</span> * j) / <span class="number">10.0</span>; <span class="comment">// some dummy return value</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">const</span> <span class="keyword">int</span> nbodies = <span class="number">1000</span>;</span><br><span class="line">	<span class="keyword">double</span> energy = <span class="number">0.0</span>;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel</span></span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; nbodies; i++) &#123;</span><br><span class="line">		<span class="keyword">for</span> (<span class="keyword">int</span> j = i+<span class="number">1</span>; j &lt; nbodies; j++) &#123;</span><br><span class="line">			<span class="keyword">double</span> eij = two_body_energy(i, j);</span><br><span class="line">            <span class="meta">#<span class="meta-keyword">pragma</span> omp atomic</span></span><br><span class="line">			energy += eij;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"energy = "</span> &lt;&lt; energy &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3-14-reduction-cpp"><a href="#3-14-reduction-cpp" class="headerlink" title="3.14 reduction.cpp"></a>3.14 reduction.cpp</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">double</span></span><br><span class="line">two_body_energy(<span class="keyword">int</span> i, <span class="keyword">int</span> j)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">return</span> (<span class="number">2.0</span> * i + <span class="number">3.0</span> * j) / <span class="number">10.0</span>; <span class="comment">// some dummy return value</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">const</span> <span class="keyword">int</span> nbodies = <span class="number">1000</span>;</span><br><span class="line">	<span class="keyword">double</span> energy = <span class="number">0.0</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// + 是进行加运算</span></span><br><span class="line"><span class="comment">// energy 是要进行归约的变量</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for reduction(+:energy)   </span></span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; nbodies; i++) &#123;</span><br><span class="line">		<span class="keyword">for</span> (<span class="keyword">int</span> j = i+<span class="number">1</span>; j &lt; nbodies; j++) &#123;</span><br><span class="line">			<span class="keyword">double</span> eij = two_body_energy(i, j);</span><br><span class="line">			energy += eij;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"energy = "</span> &lt;&lt; energy &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3-15-scheduling-cpp"><a href="#3-15-scheduling-cpp" class="headerlink" title="3.15 scheduling.cpp"></a>3.15 scheduling.cpp</h2><p>schedule只能用于循环并行构造中，其作用是用于控制循环并行结构的任务调度。一个简单的理解，一个for循环假设有10次迭代，使用4个线程去执行，那么哪些线程去执行哪些迭代呢？可以通过schedule去控制迭代的调度和分配，从而适应不同的使用情况，提高性能。</p>
+<ul>
+<li>static -&gt; 大部分的编译器实现，在没有使用schedule子句的时候，系统就是采用static方式调度的。<ul>
+<li>对于<code>schedule(static,size)</code>的含义，OpenMP会给每个线程分配size次迭代计算。这个分配是静态的，“静态”体现在这个分配过程跟实际的运行是无关的，可以从逻辑上推断出哪几次迭代会在哪几个线程上运行。具体而言，对于一个N次迭代，使用M个线程，那么，<code>[0,size-1]</code>的size次的迭代是在第一个线程上运行，<code>[size, size + size -1]</code>是在第二个线程上运行，依次类推。那么，如果M太大，size也很大，就可能出现很多个迭代在一个线程上运行，而某些线程不执行任何迭代。需要说明的是，这个分配过程就是这样确定的，不会因为运行的情况改变，比如，我们知道，进入OpenMP后，假设有M个线程，这M个线程开始执行的时间不一定是一样的，这是由OpenMP去调度的，并不会因为某一个线程先被启动，而去改变for的迭代的分配，这就是静态的含义。</li>
+</ul>
+</li>
+<li>dynamic -&gt; 每个线程运行结束时获得新的计算任务<ul>
+<li>动态调度迭代的分配是依赖于运行状态进行动态确定的，所以哪个线程上将会运行哪些迭代是无法像静态一样事先预料的。对于dynamic，没有size参数的情况下，每个线程按先执行完先分配的方式执行1次循环，比如，刚开始，线程1先启动，那么会为线程1分配一次循环开始去执行（i=0的迭代），然后，可能线程2启动了，那么为线程2分配一次循环去执行（i=1的迭代），假设这时候线程0和线程3没有启动，而线程1的迭代已经执行完，可能会继续为线程1分配一次迭代，如果线程0或3先启动了，可能会为之分配一次迭代，直到把所有的迭代分配完。所以，动态分配的结果是无法事先知道的，因为我们无法知道哪一个线程会先启动，哪一个线程执行某一个迭代需要多久等等，这些都是取决于系统的资源、线程的调度等等。</li>
+</ul>
+</li>
+<li>guided -&gt; 类似动态钓鱼，但是 chunk size是自适应的。<ul>
+<li>类似于动态调度，但每次分配的循环次数不同，开始比较大，以后逐渐减小。size表示每次分配的迭代次数的最小值，由于每次分配的迭代次数会逐渐减少，较少到size时，将不再减少。如果不知道size的大小，那么默认size为1，即一直减少到1。具体是如何减少的，以及开始比较大（具体是多少？），参考相关手册的信息。</li>
+</ul>
+</li>
+<li>auto -&gt; 编译器动态决定采用那种策略<ul>
+<li>runtime表示根据环境变量确定上述调度策略中的某一种，默认也是静态的（static）。</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> CHUNK_SIZE 5</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// scheduling:</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">const</span> <span class="keyword">int</span> niter = <span class="number">25</span>;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for schedule(static, CHUNK_SIZE)</span></span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; niter; i++) &#123;</span><br><span class="line">		<span class="keyword">int</span> thr = omp_get_thread_num();</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"iter %d of %d on thread %d\n"</span>, i, niter, thr);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3-16-ordered-cpp"><a href="#3-16-ordered-cpp" class="headerlink" title="3.16 ordered.cpp"></a>3.16 ordered.cpp</h2><p>在循环代码中某些代码的执行需要按规定的顺序执行，比如在一个循环中，一部分的工作可以并行执行，而特定的部分需要按照串行的工作流程依次执行。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">const</span> <span class="keyword">int</span> niter = <span class="number">10</span>;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for ordered       <span class="comment">// 这里必须这么写</span></span></span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; niter; i++) &#123;</span><br><span class="line">		<span class="keyword">int</span> thr = omp_get_thread_num();</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"unordered iter %d of %d on thread %d\n"</span>, i, niter, thr);</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp ordered                    <span class="comment">// 这里是需要顺序执行的部分</span></span></span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"ordered iter %d of %d on thread %d\n"</span>, i, niter, thr);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3-17-loop-dependencies-cpp"><a href="#3-17-loop-dependencies-cpp" class="headerlink" title="3.17 loop-dependencies.cpp"></a>3.17 loop-dependencies.cpp</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">work</span><span class="params">( <span class="keyword">int</span> N, <span class="keyword">int</span> M, <span class="keyword">double</span> **A, <span class="keyword">double</span> **B, <span class="keyword">double</span> **C )</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"><span class="keyword">int</span> i, j;</span><br><span class="line"><span class="keyword">double</span> alpha = <span class="number">1.2</span>;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp for collapse(2) ordered(2)</span></span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">1</span>; i &lt; N<span class="number">-1</span>; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">for</span> (j = <span class="number">1</span>; j &lt; M<span class="number">-1</span>; j++)</span><br><span class="line">        &#123;</span><br><span class="line">        A[i][j] = foo(i, j);</span><br><span class="line">        <span class="meta">#<span class="meta-keyword">pragma</span> omp ordered depend(source)</span></span><br><span class="line"></span><br><span class="line">        B[i][j] = alpha * A[i][j];</span><br><span class="line"></span><br><span class="line">        <span class="meta">#<span class="meta-keyword">pragma</span> omp ordered depend(sink: i-1,j) depend(sink: i,j-1)</span></span><br><span class="line">        C[i][j] = <span class="number">0.2</span> * (A[i<span class="number">-1</span>][j] + A[i+<span class="number">1</span>][j] + A[i][j<span class="number">-1</span>] + A[i][j+<span class="number">1</span>] + A[i][j]);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3-18-sections-cpp"><a href="#3-18-sections-cpp" class="headerlink" title="3.18 sections.cpp"></a>3.18 sections.cpp</h2><ol>
+<li>有些需要并行的任务并不是一个for循环之类的，而是一个个代码块，这种情况下就可以使用sections的情形；</li>
+<li>sections下包含多个section，section相互之间只并行执行的，但是section内部是串行执行的；</li>
+<li>多个sections之间也是串行执行的</li>
+<li>如果<code>#pragma omp parallel sections</code> 写成<code>#pragma omp sections</code>，则各个section之间是串行执行的 </li>
+<li>如果变成两个线程的话，会有一个线程执行两个section</li>
+</ol>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span>  <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel sections num_threads(4)</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp section <span class="comment">// 独立线程</span></span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">int</span> thr = omp_get_thread_num();</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"section 1, thread %d - sleeping 1 second\n"</span>, thr);</span><br><span class="line">		sleep(<span class="number">1</span>);</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"section 1 done\n"</span>);</span><br><span class="line">	&#125;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp section <span class="comment">// 独立线程</span></span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">int</span> thr = omp_get_thread_num();</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"section 2, thread %d - sleeping 2 second\n"</span>, thr);</span><br><span class="line">		sleep(<span class="number">2</span>);</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"section 2 done\n"</span>);</span><br><span class="line">	&#125;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp section <span class="comment">// 独立线程</span></span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">int</span> thr = omp_get_thread_num();</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"section 3, thread %d - sleeping 3 second\n"</span>, thr);</span><br><span class="line">		sleep(<span class="number">3</span>);</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"section 3 done\n"</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// printf("not in omp section"); // error - code must be in section</span></span><br><span class="line">&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3-19-threadprivate-cpp"><a href="#3-19-threadprivate-cpp" class="headerlink" title="3.19 threadprivate.cpp"></a>3.19 threadprivate.cpp</h2><p>threadprivate指令用来指定全局的对象被各个线程各自复制了一个私有的拷贝，即各个线程具有各自私有的全局对象。threadprivate和private的区别在于threadprivate声明的变量通常是全局范围内有效的，而private声明的变量只在它所属的并行构造中有效。用作threadprivate的变量的地址不能是常数。对于C++的类（class）类型变量，用作threadprivate的参数时有些限制，当定义时带有外部初始化时，必须具有明确的拷贝构造函数。程序示例如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> g;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp threadprivate(g)       <span class="comment">//一定要先声明</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">/* Explicitly turn off dynamic threads */</span></span><br><span class="line">    omp_set_dynamic(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel</span></span><br><span class="line">    &#123;</span><br><span class="line">       g = omp_get_thread_num();   </span><br><span class="line">       <span class="built_in">printf</span>(<span class="string">"tid: %d\n"</span>,g);         <span class="comment">//随机依次输出0~3</span></span><br><span class="line">    &#125; <span class="comment">// End of parallel region</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">int</span> temp = g*g;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"tid : %d, tid*tid: %d\n"</span>,g, temp);  <span class="comment">//不同线程中全局变量值不同</span></span><br><span class="line">    &#125; <span class="comment">// End of parallel region</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>注意：在使用threadprivate的时候，要用omp_set_dynamic(0)关闭动态线程的属性，才能保证结果正确。</p>
+<h2 id="3-20-Copyin-cpp"><a href="#3-20-Copyin-cpp" class="headerlink" title="3.20 Copyin.cpp"></a>3.20 Copyin.cpp</h2><p>copyin子句用于将主线程中threadprivate变量的值拷贝到执行并行区域的各个线程的threadprivate变量中，从而使得team内的子线程都拥有和主线程同样的初始值。程序示例如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt; </span></span></span><br><span class="line"><span class="keyword">int</span> A = <span class="number">100</span>; </span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp threadprivate(A) </span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, _TCHAR* argv[])</span> </span></span><br><span class="line"><span class="function"></span>&#123; </span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for </span></span><br><span class="line">    <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i&lt;<span class="number">10</span>;i++) </span><br><span class="line">    &#123; </span><br><span class="line">        A++; </span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"Thread ID: %d, %d: %d\n"</span>,omp_get_thread_num(), i, A);   <span class="comment">// #1 </span></span><br><span class="line">    &#125; </span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"Global A: %d\n"</span>,A); <span class="comment">// 并行区域外的打印的“Globa A”的值总是和前面的thread 0的结果相等，因为退出并行区域后，只有master线程即0号线程运行。</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for copyin(A)</span></span><br><span class="line">    <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i&lt;<span class="number">10</span>;i++) </span><br><span class="line">    &#123; </span><br><span class="line">        A++; </span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"Thread ID: %d, %d: %d\n"</span>,omp_get_thread_num(), i, A);   <span class="comment">// #1 </span></span><br><span class="line">    &#125; </span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"Global A: %d\n"</span>,A); <span class="comment">// #2 </span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="3-21-Copyprivate-cpp"><a href="#3-21-Copyprivate-cpp" class="headerlink" title="3.21 Copyprivate.cpp"></a>3.21 Copyprivate.cpp</h2><p>copyprivate子句用于将线程私有副本变量的值从一个线程广播到执行同一并行区域的其他线程的同一变量。copyprivate只能用于single指令（single指令:用在一段只被单个线程执行的代码段之前,表示后面的代码段将被单线程执行）的子句中，在一个single块的结尾处完成广播操作。copyprivate只能用于private/firstprivate或threadprivate修饰的变量。程序示例如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> counter = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp threadprivate(counter)</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">increment_counter</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    counter++;</span><br><span class="line">    <span class="keyword">return</span>(counter);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">int</span>    count;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp single copyprivate(counter)</span></span><br><span class="line">        &#123;</span><br><span class="line">            counter = <span class="number">50</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        count = increment_counter();</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"ThreadId: %ld, count = %ld/n"</span>, omp_get_thread_num(), count);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// count 都是51</span></span><br></pre></td></tr></table></figure></p>
+<h2 id="3-22-nowait-cpp"><a href="#3-22-nowait-cpp" class="headerlink" title="3.22 nowait.cpp"></a>3.22 nowait.cpp</h2><p>栅障（Barrier）是OpenMP用于线程同步的一种方法。线程遇到栅障是必须等待，直到并行区中的所有线程都到达同一点。注意：在任务分配for循环和任务分配section结构中，我们已经隐含了栅障，在parallel,for,sections,single结构的最后，也会有一个隐式的栅障。</p>
+<p>隐式的栅障会使线程等到所有的线程继续完成当前的循环、结构化块或并行区，再继续执行后面的工作。可以使用nowait去掉这个隐式的栅障.去掉隐式栅障，例如：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel <span class="comment">//并行区内</span></span></span><br><span class="line">&#123;</span><br><span class="line">   <span class="meta">#<span class="meta-keyword">pragma</span> omp for nowait <span class="comment">// 任务分配for循环</span></span></span><br><span class="line">        <span class="keyword">for</span>(k=<span class="number">0</span>;k&lt;m;k++)&#123;</span><br><span class="line">             fun1(k);</span><br><span class="line">        &#125;</span><br><span class="line">   <span class="meta">#<span class="meta-keyword">pragma</span> omp sections private(y,z)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="meta">#pragme omp section<span class="comment">//任务分配section</span></span></span><br><span class="line">            &#123;y=sectionA(x);&#125;</span><br><span class="line">        <span class="meta">#pragme omp section</span></span><br><span class="line">            &#123;z=sectionB(x);&#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>因为第一个 任务分配for循环和第二个任务分配section代码块之间不存在数据相关。加上显示栅障，例如：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel shared(x,y,z) num_threads(2)<span class="comment">//使用的线程数为2</span></span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">int</span> tid=omp_get_thread_num();</span><br><span class="line">    <span class="keyword">if</span>(tid==<span class="number">0</span>)</span><br><span class="line">        y=fun1();<span class="comment">//第一个线程得到y</span></span><br><span class="line">    <span class="keyword">else</span> </span><br><span class="line">        z=fun2();<span class="comment">//第二个线程得到z</span></span><br><span class="line">    <span class="meta">#<span class="meta-keyword">pragma</span> omp barrier <span class="comment">//显示加上栅障，保证y和z在使用前已有值</span></span></span><br><span class="line"></span><br><span class="line">    <span class="meta">#<span class="meta-keyword">pragma</span> omp for</span></span><br><span class="line">    <span class="keyword">for</span>(k=<span class="number">0</span>;k&lt;<span class="number">100</span>;k++)</span><br><span class="line">        x[k]=y+z;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>单线程和多线程交错执行： 当开发人员为了减少开销而把并行区设置的很大时，有些代码很可能只执行一次，并且由一个线程执行，这样单线程和多线程需要交错执行</p>
+<p>举例如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel <span class="comment">//并行区</span></span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">int</span> tid=omp_get_thread_num();<span class="comment">//每个线程都调用这个函数，得到线程号</span></span><br><span class="line">    <span class="comment">//这个循环被划分到多个线程上进行</span></span><br><span class="line">    <span class="meta">#<span class="meta-keyword">pragma</span> omp for nowait</span></span><br><span class="line">    <span class="keyword">for</span>(k=<span class="number">0</span>;k&lt;<span class="number">100</span>;k++)</span><br><span class="line">        x[k]=fun1(tid);<span class="comment">//这个循环的结束处不存在使所有线程进行同步的隐式栅障</span></span><br><span class="line">    <span class="meta">#<span class="meta-keyword">pragma</span> omp master</span></span><br><span class="line">    y=fn_input_only(); <span class="comment">//只有主线程会调用这个函数</span></span><br><span class="line">    <span class="meta">#<span class="meta-keyword">pragma</span> omp barrier   <span class="comment">//添加一个显示的栅障对所有的线程同步，从而确保x[0-99]和y处于就绪状态</span></span></span><br><span class="line">    <span class="comment">//这个循环也被划分到多个线程上进行</span></span><br><span class="line">    </span><br><span class="line">    <span class="meta">#<span class="meta-keyword">pragma</span> omp for nowait</span></span><br><span class="line">    <span class="keyword">for</span>(k=<span class="number">0</span>;k&lt;<span class="number">100</span>;k++)</span><br><span class="line">        x[k]=y+fn2(x[k]); <span class="comment">//这个线程没有栅障，所以不会相互等待</span></span><br><span class="line">    <span class="comment">//一旦某个线程执行完上面的代码，不需要等待就可以马上执行下面的代码</span></span><br><span class="line">    <span class="meta">#<span class="meta-keyword">pragma</span> omp single <span class="comment">//注意：single后面意味着有隐式barrier</span></span></span><br><span class="line">    fn_single_print(y);</span><br><span class="line">    <span class="comment">//所有的线程在执行下面的函数前会进行同步</span></span><br><span class="line">    <span class="meta">#<span class="meta-keyword">pragma</span> omp master</span></span><br><span class="line">    fn_print_array(x);<span class="comment">//只有主线程会调用这个函数</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="3-23-task"><a href="#3-23-task" class="headerlink" title="3.23 task"></a>3.23 task</h2><p>从功能上说：</p>
+<ol>
+<li>The TASK construct defines an explicit task, which may be executed by the encountering thread, or deferred for execution by any other thread in the team.</li>
+<li>The data environment of the task is determined by the data sharing attribute clauses.</li>
+<li>Task execution is subject to task scheduling - see the OpenMP 3.0 specification document for details.</li>
+</ol>
+<p>任务构造定义一个显式的任务，可能会被遇到的线程马上执行，也可能被延迟给线程组内其他线程来执行。任务的执行，依赖于OpenMP的任务调度。</p>
+<p>语法：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">#pragma omp task [clause ...]  newline </span><br><span class="line">                   if (scalar expression) </span><br><span class="line">                   final (scalar expression) </span><br><span class="line">                   untied</span><br><span class="line">                   default (shared | none)</span><br><span class="line">                   mergeable</span><br><span class="line">                   private (list) </span><br><span class="line">                   firstprivate (list) </span><br><span class="line">                   shared (list) </span><br><span class="line">     structured_block</span><br></pre></td></tr></table></figure></p>
+<p>task，简单的理解，就是定义一个任务，线程组内的某一个线程来执行此任务。和工作共享结构很类似，我们都知道，for也是某一个线程执行某一个迭代，如果把每一个迭代看成一个task，那么就是task的工作方式了，在for只能用于循环迭代的基础上，OpenMP提供了sections构造，用于构造一个sections，然后里面定义一堆的section，每一个section被一个线程去执行，这样，每一个section也类似于for的每一次迭代，只是使用sections会更灵活，更简单，但是其实，for和sections在某种程度上是可以转换的，用下面的例子来看一个使用sections和for指令分别执行“三个”任务的例子：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> TASK_COUNT	3</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">task1</span><span class="params">(<span class="keyword">int</span> p)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"task1, Thread ID: %d, task: %d\n"</span>, omp_get_thread_num(), p);</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">task2</span><span class="params">(<span class="keyword">int</span> p)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"task2, Thread ID: %d, task: %d\n"</span>, omp_get_thread_num(), p);</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">task3</span><span class="params">(<span class="keyword">int</span> p)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"task3, Thread ID: %d, task: %d\n"</span>, omp_get_thread_num(), p);</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, _TCHAR* argv[])</span>  </span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel num_threads(2)</span></span><br><span class="line">	&#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp sections</span></span><br><span class="line">		&#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp section</span></span><br><span class="line">			task1(<span class="number">10</span>);</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp section</span></span><br><span class="line">			task2(<span class="number">20</span>);</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp section</span></span><br><span class="line">			task3(<span class="number">1000</span>);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel num_threads(2)</span></span><br><span class="line">	&#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp for</span></span><br><span class="line">		<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>;i &lt; TASK_COUNT; i ++)</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="keyword">if</span>(i == <span class="number">0</span>)</span><br><span class="line">				task1(<span class="number">10</span>);</span><br><span class="line">			<span class="keyword">else</span> <span class="keyword">if</span> (i == <span class="number">1</span>)</span><br><span class="line">				task2(<span class="number">20</span>);</span><br><span class="line">			<span class="keyword">else</span> <span class="keyword">if</span> (i == <span class="number">2</span>) </span><br><span class="line">				task3(<span class="number">1000</span>);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>当然，这个程序不是这里要讨论的重点，只是为了说明for和sections的一些类似之处，或者其实可以理解为sections其实是for的展开形式，适合于少量的“任务”，并且适合于没有迭代关系的“任务”。很显然，上面的例子适合用sections去解决，因为本身是三个任务，不存在迭代的关系，三个任务和循环迭代变量没有什么关联。</p>
+<p>接下来，分析下面的例子：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">task</span><span class="params">(<span class="keyword">int</span> p)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"task, Thread ID: %d, task: %d\n"</span>, omp_get_thread_num(), p);</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> N		3</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">init</span><span class="params">(<span class="keyword">int</span>*a)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>;i &lt; N;i++)</span><br><span class="line">		a[i] = i + <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, _TCHAR* argv[])</span>  </span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> a[N];</span><br><span class="line">	init(a);</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel num_threads(2)</span></span><br><span class="line">	&#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp sections</span></span><br><span class="line">		&#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp section</span></span><br><span class="line">			task(a[<span class="number">0</span>]);</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp section</span></span><br><span class="line">			task(a[<span class="number">1</span>]);</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp section</span></span><br><span class="line">			task(a[<span class="number">2</span>]);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel num_threads(2)</span></span><br><span class="line">	&#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp for</span></span><br><span class="line">		<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>;i &lt; N; i++)</span><br><span class="line">		&#123;</span><br><span class="line">			task(a[i]);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这个例子，很容易理解了，把一个数组内的每一个元素“并行”的传递给<code>task()</code>函数，执行一个“任务”。同样，for和sections都能解决，但是如果N太大了，比如N是100，那sections就为难了，这里要说明的是：sections不能使用嵌套的形式，比如：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>;i &lt; N;i++)</span><br><span class="line">&#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp section</span></span><br><span class="line">	task(a[<span class="number">0</span>]);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这样是不行的，section只能显式的，直接的在sections里面书写，可以理解为”静态“的。继续研究这个例子，假设现在的需求是对如下的代码进行并行化：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>;i &lt; N; i=i+a[i])</span><br><span class="line">&#123;</span><br><span class="line">	task(a[i]);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>对于这样的需求，OpenMP的for指令也是无法完成的，因为for指令在进行并行执行之前，就需要”静态“的知道任务该如何划分，而上面的i=i+a[i]，在运行之前，是无法知道有那些迭代，需要如何进行划分，因为其迭代的循环依赖于数组a里面保存的值。那么对于这样的循环，该如何并行？最关键的是，从语义上，这个循环是明显可以进行并行的。这就是之所以OpenMP3.0提供task的原因了。</p>
+<p>在此，先总结一下for和sections指令的”缺陷“：无法根据运行时的环境动态的进行任务划分，必须是预先能知道的任务划分的情况。</p>
+<p>使用task解决上面遗留的问题的方法如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;omp.h&gt;</span></span></span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">task</span><span class="params">(<span class="keyword">int</span> p)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"task, Thread ID: %d, task: %d\n"</span>, omp_get_thread_num(), p);</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> N		50</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">init</span><span class="params">(<span class="keyword">int</span>*a)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>;i &lt; N;i++)</span><br><span class="line">		a[i] = i + <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, _TCHAR* argv[])</span>  </span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> a[N];</span><br><span class="line">	init(a);</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel num_threads(2)</span></span><br><span class="line">	&#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp single</span></span><br><span class="line">		&#123;</span><br><span class="line">			<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>;i &lt; N; i=i+a[i])</span><br><span class="line">			&#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp task</span></span><br><span class="line">				task(a[i]);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这里之所以用single表示只有一个线程会执行下面的代码，否则会执行两次（这里用的线程数量为2），这是single的子句的理解，就不在此分析了。看其中task的代码，其实很简单，OpenMP遇到了task之后，就会使用当前的线程或者延迟一会后接下来的线程来执行task定义的任务。task的作用，就是定义了一个显式的任务。</p>
+<p>那么，task和前面的for和sections的区别在于：task是“动态”定义任务的，在运行过程中，只需要使用task就会定义一个任务，任务就会在一个线程上去执行，那么其它的任务就可以并行的执行。可能某一个任务执行了一半的时候，或者甚至要执行完的时候，程序可以去创建第二个任务，任务在一个线程上去执行，一个动态的过程，不像sections和for那样，在运行之前，已经可以判断出可以如何去分配任务。而且，task是可以进行嵌套定义的，可以用于递归的情况等等。</p>
+<p>总结task的使用：task主要适用于不规则的循环迭代（如上面的循环）和递归的函数调用。都是无法使用for来完成的情况。</p>
+<p>显示任务和隐式任务（implicit&amp;explicit）</p>
+<p>task的作用就是创建一个显式的任务，那么什么是隐式的任务呢？OpenMP的任务分为显式和隐式两种，根据我的个人理解，分析下面的代码：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp parallel num_threads(2)</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp single</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>;i &lt; N; i=i+a[i])</span><br><span class="line">		&#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp task</span></span><br><span class="line">			task(a[i]);</span><br><span class="line">		&#125;</span><br><span class="line">	    task(<span class="number">1000</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>其中task(1000);就属于一个隐式的任务。因为执行完for后，会执行这一个任务，而上面的任务可能也会同时执行。</p>
+<p>task的嵌套</p>
+<p>任务构造结构可以嵌套在另一个task结构中，但是内部的task结构并不属于外部的task区域的一部分。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp task</span></span><br><span class="line">&#123;</span><br><span class="line">    task(a[i]);</span><br><span class="line">    <span class="meta">#<span class="meta-keyword">pragma</span> omp task</span></span><br><span class="line">    task(a[i]);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>简单的理解，OpenMP遇到task指令就会定义一个显式的任务，就会在当前的线程或者延迟等待其它线程去执行，而不是将嵌套task的部分当作外部task的一部分。</p>
+<p>task指令的子句</p>
+<p>如果给一个task使用了if子句，如果if子句的表达式是false，会生成一个不延迟的任务，这样，遇到这个task的当前线程必须挂起当前的task区域，直到当前的任务完成之后才会恢复。个人理解，当前线程挂起，那么这个task是不是由其它的线程去执行呢，还是就是当前的这个线程执行这个任务？</p>
+<p>如果给task使用了final子句，如果final表达式的值为true，生成的任务是一个终结任务。所有任务遇到终结任务执行的时候会生成终结和包含的任务。PS：不太理解！</p>
+<h2 id="3-25-flush-cpp"><a href="#3-25-flush-cpp" class="headerlink" title="3.25 flush.cpp"></a>3.25 flush.cpp</h2><p>当并行区域里存在一共享变量，并且对其进行修改时，需要用flush更新变量，确保并行的多线程对共享变量的读操作是最新值.<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">done=<span class="number">0</span>;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> omp flush(done)</span></span><br><span class="line"> <span class="keyword">if</span>(!done)</span><br><span class="line"> &#123;</span><br><span class="line">    ...</span><br><span class="line">    done=<span class="number">1</span>;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/积累/" rel="tag"># 积累</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/12/06/有趣的cache测量数据/" rel="next" title="有趣的cache测量数据">
+                <i class="fa fa-chevron-left"></i> 有趣的cache测量数据
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/12/13/effective_cpp简洁版/" rel="prev" title="Effective C++ 简洁笔记">
+                Effective C++ 简洁笔记 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">348</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">14</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/xiaomeihao.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-OpenMP基本介绍"><span class="nav-number">1.</span> <span class="nav-text">1. OpenMP基本介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-fork-join并行执行模式的概念"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 fork/join并行执行模式的概念</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-OpenMP编程模型"><span class="nav-number">2.</span> <span class="nav-text">2. OpenMP编程模型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-OpenMP指令和库函数介绍"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 OpenMP指令和库函数介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-OpenMP指令列表"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 OpenMP指令列表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-OpenMP库函数"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 OpenMP库函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-OpenMP子句"><span class="nav-number">2.4.</span> <span class="nav-text">2.3 OpenMP子句</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-OpenMP详细代码示例"><span class="nav-number">3.</span> <span class="nav-text">3. OpenMP详细代码示例</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-hello-openmp-cpp"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 hello_openmp.cpp</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-header-and-env-cpp"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 header_and_env.cpp</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-parallel-cpp"><span class="nav-number">3.3.</span> <span class="nav-text">3.3 parallel.cpp</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-4-parallel-cout-cpp"><span class="nav-number">3.4.</span> <span class="nav-text">3.4 parallel_cout.cpp</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-5-nested-cpp"><span class="nav-number">3.5.</span> <span class="nav-text">3.5 nested.cpp</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-6-parallel-for-cpp"><span class="nav-number">3.6.</span> <span class="nav-text">3.6 parallel-for.cpp</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-7-scoping-cpp"><span class="nav-number">3.7.</span> <span class="nav-text">3.7 scoping.cpp</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-8-firstprivate-cpp"><span class="nav-number">3.8.</span> <span class="nav-text">3.8 firstprivate.cpp</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-9-lastprivate-cpp"><span class="nav-number">3.9.</span> <span class="nav-text">3.9 lastprivate.cpp</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-10-single-master-critical-cpp"><span class="nav-number">3.10.</span> <span class="nav-text">3.10 single-master-critical.cpp</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-11-mutex-cpp"><span class="nav-number">3.11.</span> <span class="nav-text">3.11 mutex.cpp</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-12-barrier-cpp"><span class="nav-number">3.12.</span> <span class="nav-text">3.12 barrier.cpp</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-13-atomic-cpp"><span class="nav-number">3.13.</span> <span class="nav-text">3.13 atomic.cpp</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-14-reduction-cpp"><span class="nav-number">3.14.</span> <span class="nav-text">3.14 reduction.cpp</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-15-scheduling-cpp"><span class="nav-number">3.15.</span> <span class="nav-text">3.15 scheduling.cpp</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-16-ordered-cpp"><span class="nav-number">3.16.</span> <span class="nav-text">3.16 ordered.cpp</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-17-loop-dependencies-cpp"><span class="nav-number">3.17.</span> <span class="nav-text">3.17 loop-dependencies.cpp</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-18-sections-cpp"><span class="nav-number">3.18.</span> <span class="nav-text">3.18 sections.cpp</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-19-threadprivate-cpp"><span class="nav-number">3.19.</span> <span class="nav-text">3.19 threadprivate.cpp</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-20-Copyin-cpp"><span class="nav-number">3.20.</span> <span class="nav-text">3.20 Copyin.cpp</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-21-Copyprivate-cpp"><span class="nav-number">3.21.</span> <span class="nav-text">3.21 Copyprivate.cpp</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-22-nowait-cpp"><span class="nav-number">3.22.</span> <span class="nav-text">3.22 nowait.cpp</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-23-task"><span class="nav-number">3.23.</span> <span class="nav-text">3.23 task</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-25-flush-cpp"><span class="nav-number">3.24.</span> <span class="nav-text">3.25 flush.cpp</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<span id="busuanzi_container_site_uv"> 
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
