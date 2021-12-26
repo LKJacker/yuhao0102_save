@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="积累,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="背景首先，我们介绍下什么是内存池？ ❝预先在内存中申请一定数量的内存块留作备用，当有新的内存需求时，就先从内存池中分配内存返回，在释放的时候，将内存返回给内存池而不是OS，在下次申请的时候，重新进行分配❞ 那么为什么要有内存池呢？这就需要从传统内存分配的特点来进行分析，传统内存分配释放的优点无非就是通用性强，应用广泛，但是传统的内存分配、释放在某些特定的项目中，其不一定是最优、效率最高的方案。 传">
+<meta name="keywords" content="积累">
+<meta property="og:type" content="article">
+<meta property="og:title" content="内存池的一个实践">
+<meta property="og:url" content="http://yoursite.com/2021/12/20/内存池的一个实现/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="背景首先，我们介绍下什么是内存池？ ❝预先在内存中申请一定数量的内存块留作备用，当有新的内存需求时，就先从内存池中分配内存返回，在释放的时候，将内存返回给内存池而不是OS，在下次申请的时候，重新进行分配❞ 那么为什么要有内存池呢？这就需要从传统内存分配的特点来进行分析，传统内存分配释放的优点无非就是通用性强，应用广泛，但是传统的内存分配、释放在某些特定的项目中，其不一定是最优、效率最高的方案。 传">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/20211220142105.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20211220142323.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20211220142350.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20211220142552.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20211220142913.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20211220142950.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20211220143104.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20211220144136.jpg">
+<meta property="og:image" content="http://yoursite.com/img/20211220144402.jpg">
+<meta property="og:updated_time" content="2021-12-26T08:52:37.030Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="内存池的一个实践">
+<meta name="twitter:description" content="背景首先，我们介绍下什么是内存池？ ❝预先在内存中申请一定数量的内存块留作备用，当有新的内存需求时，就先从内存池中分配内存返回，在释放的时候，将内存返回给内存池而不是OS，在下次申请的时候，重新进行分配❞ 那么为什么要有内存池呢？这就需要从传统内存分配的特点来进行分析，传统内存分配释放的优点无非就是通用性强，应用广泛，但是传统的内存分配、释放在某些特定的项目中，其不一定是最优、效率最高的方案。 传">
+<meta name="twitter:image" content="http://yoursite.com/img/20211220142105.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2021/12/20/内存池的一个实现/">
+
+
+
+
+
+  <title>内存池的一个实践 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/resume.pdf" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-mybetterhalf">
+          <a href="/mybetterhalf/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            mybetterhalf
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/12/20/内存池的一个实现/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">内存池的一个实践</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-12-20T14:20:00+08:00">
+                2021-12-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>首先，我们介绍下什么是内存池？</p>
+<p>❝预先在内存中申请一定数量的内存块留作备用，当有新的内存需求时，就先从内存池中分配内存返回，在释放的时候，将内存返回给内存池而不是OS，在下次申请的时候，重新进行分配❞</p>
+<p>那么为什么要有内存池呢？这就需要从传统内存分配的特点来进行分析，传统内存分配释放的优点无非就是通用性强，应用广泛，但是传统的内存分配、释放在某些特定的项目中，其不一定是最优、效率最高的方案。</p>
+<p>传统内存分配、释放的缺点总结如下：</p>
+<ol>
+<li>调用malloc/new,系统需要根据“最先匹配”、“最优匹配”或其他算法在内存空闲块表中查找一块空闲内存，调用free/delete,系统可能需要合并空闲内存块，这些会产生额外开销</li>
+<li>频繁的在堆上申请和释放内存必然需要大量时间，降低了程序的运行效率。对于一个需要频繁申请和释放内存的程序来说，频繁调用new/malloc申请内存，delete/free释放内存都需要花费系统时间，频繁的调用必然会降低程序的运行效率。</li>
+<li>经常申请小块内存，会将物理内存“切”得很碎，导致内存碎片。申请内存的顺序并不是释放内存的顺序，因此频繁申请小块内存必然会导致内存碎片，造成“有内存但是申请不到大块内存”的现象。</li>
+</ol>
+<p><img src="/img/20211220142105.jpg" alt></p>
+<p>从上图中，可以看出，应用程序会调用glibc运行时库的malloc函数进行内存申请，而malloc函数则会根据具体申请的内存块大小，根据实际情况最终从sys_brk或者sys_mmap_pgoff系统调用申请内存，而大家都知道，跟os打交道，<em>性能损失</em>是毋庸置疑的。</p>
+<p>其次，glibc作为通用的运行时库，malloc/free需要满足各种场景需求，比如申请的字节大小不一，多线程访问等。有没有比传统malloc/free性能更优的方案呢？答案是：有。</p>
+<p>在程序启动的时候，我们预分配特定数量的固定大小的块，这样每次申请的时候，就从预分配的块中获取，释放的时候，将其放入预分配块中以备下次复用，这就是所谓的<em>内存池技术</em>，每个内存池对应特定场景，这样的话，较传统的传统的malloc/free少了很多复杂逻辑，性能显然会提升不少。结合传统malloc/free的缺点，我们总结下使用内存池方案的优点：</p>
+<ol>
+<li>比malloc/free进行内存申请/释放的方式快</li>
+<li>不会产生或很少产生堆碎片</li>
+<li>可避免内存泄漏</li>
+</ol>
+<p>根据分配出去的字节大小是否固定，分为固定大小内存池和可变大小内存池两类。而可变大小内存池，可分配任意大小的内存池，比如ptmalloc、jemalloc以及google的tcmalloc。固定大小内存池，顾名思义，每次申请和释放的内存大小都是固定的。每次分配出去的内存块大小都是程序预先定义的值，而在释放内存块时候，则简单的挂回内存池链表即可。</p>
+<h1 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h1><p>内存池，重点在”池“字上，之所以称之为内存池，是在真正使用之前，先预分配一定数量、大小预设的块，如果有新的内存需求时候，就从内存池中根据申请的内存大小，分配一个内存块，若当前内存块已经被完全分配出去，则继续申请一大块，然后进行分配。</p>
+<p>当进行内存块释放的时候，则将其归还内存池，后面如果再有申请的话，则将其重新分配出去。</p>
+<h2 id="原理-1"><a href="#原理-1" class="headerlink" title="原理"></a>原理</h2><ul>
+<li>创建并初始化头结点MemoryPool</li>
+<li>通过MemoryPool进行内存分配，如果发现MemoryPool所指向的第一块MemoryBlock或者现有MemoryPool没有空闲内存块，则创建一个新的MemoryBlock初始化之后将其插入MemoryPool的头</li>
+<li>在内存分配的时候，遍历MemoryPool中的单链表MemoryBlock，根据地址判断所要释放的内存属于哪个MemoryBlock，然后根据偏移设置MemoryBlock的第一块空闲块索引，同时将空闲块个数+1</li>
+</ul>
+<p>上述只是一个简单的逻辑讲解，比较宏观，下面我们将通过图解和代码的方式来进行讲解。</p>
+<p><img src="/img/20211220142323.jpg" alt><br>在上图中，我们画出了内存池的结构图，从图中，可以看出，有两个结构变量，分别为MemoryPool和MemoryBlock。</p>
+<p>下面我们将从数据结构和接口两个部分出发，详细讲解内存池的设计。</p>
+<h2 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h2><h3 id="MemoryBlock"><a href="#MemoryBlock" class="headerlink" title="MemoryBlock"></a>MemoryBlock</h3><p>本文中所讲述的内存块的分配和释放都是通过该结构进行操作，下面是MemoryBlock的示例图：<br><img src="/img/20211220142350.jpg" alt></p>
+<p>在上图中，Header存储该MemoryBlock的内存块情况，比如可用的内存块索引、当前MemoryBlock中可用内存块的个数等等。</p>
+<p>定义如下所示：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">MemoryBlock</span> &#123;</span></span><br><span class="line"> <span class="keyword">unsigned</span> <span class="keyword">int</span> size;</span><br><span class="line"> <span class="keyword">unsigned</span> <span class="keyword">int</span> free_size;</span><br><span class="line"> <span class="keyword">unsigned</span> <span class="keyword">int</span> first_free;</span><br><span class="line"></span><br><span class="line"> <span class="class"><span class="keyword">struct</span> <span class="title">MemoryBlock</span> *<span class="title">next</span>;</span></span><br><span class="line"> <span class="keyword">char</span> a_data[<span class="number">0</span>]; </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>其中：</p>
+<ul>
+<li><code>size</code>为MemoryBlock下内存块的个数</li>
+<li><code>free_size</code>为MemoryBlock下空闲内存块的个数</li>
+<li><code>first_free</code>为MemoryBlock中第一个空闲块的索引</li>
+<li><code>next</code>指向下一个MemoryBlock</li>
+<li><code>a_data</code>是一个柔性数组</li>
+</ul>
+<p>柔性数组即数组大小待定的数组， C语言中结构体的最后一个元素可以是大小未知的数组，也就是所谓的0长度，所以我们可以用结构体来创建柔性数组。它的主要用途是为了满足需要变长度的结构体，为了解决使用数组时内存的冗余和数组的越界问题。</p>
+<h3 id="MemoryPool"><a href="#MemoryPool" class="headerlink" title="MemoryPool"></a>MemoryPool</h3><p>MemoryPool为内存池的头，里面定义了该内存池的信息，比如本内存池分配的固定对象的大小，第一个MemoryBlock等<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">MemoryPool</span> &#123;</span></span><br><span class="line"> <span class="keyword">unsigned</span> <span class="keyword">int</span> obj_size;</span><br><span class="line"> <span class="keyword">unsigned</span> <span class="keyword">int</span> init_size;</span><br><span class="line"> <span class="keyword">unsigned</span> <span class="keyword">int</span> grow_size;</span><br><span class="line"></span><br><span class="line"> MemoryBlock *first_block;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>其中：</p>
+<ul>
+<li>obj_size为内存池分配的固定内存块的大小</li>
+<li>init_size初始化内存池时候创建的内存块的个数</li>
+<li>grow_size当初始化内存块使用完后，再次申请内存块时候的个数</li>
+<li>first_block指向第一个MemoryBlock</li>
+</ul>
+<h3 id="接口"><a href="#接口" class="headerlink" title="接口"></a>接口</h3><p>memory_pool_create<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">MemoryPool *<span class="title">memory_pool_create</span><span class="params">(<span class="keyword">unsigned</span> <span class="keyword">int</span> init_size, </span></span></span><br><span class="line"><span class="function"><span class="params">                               <span class="keyword">unsigned</span> <span class="keyword">int</span> grow_size, </span></span></span><br><span class="line"><span class="function"><span class="params">                               <span class="keyword">unsigned</span> <span class="keyword">int</span> size)</span></span>;</span><br></pre></td></tr></table></figure></p>
+<p>本函数用来创建一个MemoryPool，并对其进行初始化，下面是参数说明：</p>
+<ul>
+<li>init_size 表示第一个MemoryBlock中创建块的个数</li>
+<li>grow_size 表示当MemoryPool中没有空闲块可用，则创建一个新的MemoryBlock时其块的个数</li>
+<li>size 为块的大小(即每次分配相同大小的固定size)</li>
+</ul>
+<h3 id="memory-alloc"><a href="#memory-alloc" class="headerlink" title="memory_alloc"></a>memory_alloc</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> *<span class="title">memory_alloc</span><span class="params">(MemoryPool *mp)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>本函数用了从mp中申请一块内存返回</p>
+<ul>
+<li>mp 为MemoryPool类型指针，即内存池的头</li>
+<li>如果内存分配失败，则返回NULL</li>
+</ul>
+<h3 id="memory-free"><a href="#memory-free" class="headerlink" title="memory_free"></a>memory_free</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span>* <span class="title">memory_free</span><span class="params">(MemoryPool *mp, <span class="keyword">void</span> *pfree)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>本函数用来释放内存</p>
+<ul>
+<li>mp 为MemoryPool类型指针，即内存池的头</li>
+<li>pfree 为要释放的内存</li>
+</ul>
+<h3 id="free-memory-pool"><a href="#free-memory-pool" class="headerlink" title="free_memory_pool"></a>free_memory_pool</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">free_memory_pool</span><span class="params">(MemoryPool *mp)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>本函数用来释放内存池</p>
+<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><p>在讲解整个实现之前，我们先看先内存池的详细结构图。<br><img src="/img/20211220142552.jpg" alt></p>
+<h3 id="初始化内存池"><a href="#初始化内存池" class="headerlink" title="初始化内存池"></a>初始化内存池</h3><p>MemoryPool是整个内存池的入口结构，该函数主要是用来创建MemoryPool对象，并使用参数对其内部的成员变量进行初始化。</p>
+<p>函数定义如下:<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">MemoryPool *<span class="title">memory_pool_create</span><span class="params">(<span class="keyword">unsigned</span> <span class="keyword">int</span> init_size, <span class="keyword">unsigned</span> <span class="keyword">int</span> grow_size, <span class="keyword">unsigned</span> <span class="keyword">int</span> size)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    MemoryPool *mp;</span><br><span class="line">    mp = (MemoryPool*)<span class="built_in">malloc</span>(<span class="keyword">sizeof</span>(MemoryPool));</span><br><span class="line">    mp-&gt;first_block = <span class="literal">NULL</span>;</span><br><span class="line">    mp-&gt;init_size = init_size;</span><br><span class="line">    mp-&gt;grow_size = grow_size;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(size &lt; <span class="keyword">sizeof</span>(<span class="keyword">unsigned</span> <span class="keyword">int</span>))</span><br><span class="line">        mp-&gt;obj_size = <span class="keyword">sizeof</span>(<span class="keyword">unsigned</span> <span class="keyword">int</span>);</span><br><span class="line">    mp-&gt;obj_size = (size + (MEMPOOL_ALIGNMENT<span class="number">-1</span>)) &amp; ~(MEMPOOL_ALIGNMENT<span class="number">-1</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> mp;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="内存分配"><a href="#内存分配" class="headerlink" title="内存分配"></a>内存分配</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> *<span class="title">memory_alloc</span><span class="params">(MemoryPool *mp)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> length;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(mp-&gt;first_block == <span class="literal">NULL</span>) &#123;</span><br><span class="line">        MemoryBlock *mb;</span><br><span class="line">        length = (mp-&gt;init_size)*(mp-&gt;obj_size) + <span class="keyword">sizeof</span>(MemoryBlock);</span><br><span class="line">        mb = <span class="built_in">malloc</span>(length);</span><br><span class="line">        <span class="keyword">if</span>(mb == <span class="literal">NULL</span>) &#123;</span><br><span class="line">            perror(<span class="string">"memory allocate failed!\n"</span>);</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* init the first block */</span></span><br><span class="line">        mb-&gt;next = <span class="literal">NULL</span>;</span><br><span class="line">        mb-&gt;free_size = mp-&gt;init_size - <span class="number">1</span>;</span><br><span class="line">        mb-&gt;first_free = <span class="number">1</span>;</span><br><span class="line">        mb-&gt;size = mp-&gt;init_size*mp-&gt;obj_size;</span><br><span class="line"></span><br><span class="line">        mp-&gt;first_block = mb;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">char</span> *data = mb-&gt;a_data;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* set the mark */</span></span><br><span class="line">        <span class="keyword">for</span>(i=<span class="number">1</span>; i&lt;mp-&gt;init_size; ++i) &#123;</span><br><span class="line">            *(<span class="keyword">unsigned</span> <span class="keyword">long</span> *)data = i;</span><br><span class="line">            data += mp-&gt;obj_size;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> (<span class="keyword">void</span> *)mb-&gt;a_data;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    MemoryBlock *pm_block = mp-&gt;first_block;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span>((pm_block != <span class="literal">NULL</span>) &amp;&amp; (pm_block-&gt;free_size == <span class="number">0</span>)) &#123;</span><br><span class="line">        pm_block = pm_block-&gt;next;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(pm_block != <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="keyword">char</span> *pfree = pm_block-&gt;a_data + pm_block-&gt;first_free * mp-&gt;obj_size;</span><br><span class="line"></span><br><span class="line">        pm_block-&gt;first_free = *((<span class="keyword">unsigned</span> <span class="keyword">long</span> *)pfree);</span><br><span class="line">        pm_block-&gt;free_size--;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> (<span class="keyword">void</span> *)pfree;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">if</span>(mp-&gt;grow_size == <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">        </span><br><span class="line">        MemoryBlock *new_block = (MemoryBlock *)<span class="built_in">malloc</span>((mp-&gt;grow_size)*(mp-&gt;obj_size) + <span class="keyword">sizeof</span>(MemoryBlock));</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span>(new_block == <span class="literal">NULL</span>)</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">char</span> *data = new_block-&gt;a_data;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span>(i=<span class="number">1</span>; i&lt;mp-&gt;grow_size; ++i) &#123;</span><br><span class="line">            *(<span class="keyword">unsigned</span> <span class="keyword">long</span> *)data = i;</span><br><span class="line">            data += mp-&gt;obj_size;</span><br><span class="line">        &#125;  </span><br><span class="line"></span><br><span class="line">        new_block-&gt;size = mp-&gt;grow_size*mp-&gt;obj_size;</span><br><span class="line">        new_block-&gt;free_size = mp-&gt;grow_size<span class="number">-1</span>;</span><br><span class="line">        new_block-&gt;first_free = <span class="number">1</span>;</span><br><span class="line">        new_block-&gt;next = mp-&gt;first_block;</span><br><span class="line">        mp-&gt;first_block = new_block;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">return</span> (<span class="keyword">void</span> *)new_block-&gt;a_data;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>内存块主要在MemoryBlock结构中，也就是说申请的内存，都是从MemoryBlock中进行获取，流程如下：</p>
+<ul>
+<li>获取MemoryPool中的first_block指针</li>
+<li>如果该指针为空，则创建一个MemoryBlock，first_block指向新建的MemoryBlock，并返回</li>
+<li>否则，从first_block进行单链表遍历，查找第一个free_size不为0的MemoryBlock，如果找到，则对该MemoryBlock的相关参数进行设置，然后返回内存块</li>
+<li>否则，创建一个新的MemoryBlock，进行初始化分配之后，将其插入到链表的头部(这样做的目的是为了方便下次分配效率，即减小了链表的遍历)</li>
+</ul>
+<p>在上述代码中，需要注意的是第30-33行或者67-70行，这两行的功能一样，都是对新申请的内存块进行初始化，这几行的意思，是要将空闲块连接起来，但是，并没有使用传统意义上的链表方式，而是通过index方式进行连接，具体如下图所示：</p>
+<p><img src="/img/20211220142913.jpg" alt></p>
+<p>在上图中，第0块空闲块的下一个空闲块索引为1，而第1块空闲块的索引为2，依次类推，形成了如下链表方式</p>
+<p>1-&gt;2-&gt;3-&gt;4-&gt;5</p>
+<p>内存分配流程图如下所示：</p>
+<p><img src="/img/20211220142950.jpg" alt></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span>* <span class="title">memory_free</span><span class="params">(MemoryPool *mp, <span class="keyword">void</span> *pfree)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(mp-&gt;first_block == <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    MemoryBlock *pm_block = mp-&gt;first_block;</span><br><span class="line">    MemoryBlock *pm_pre_block = mp-&gt;first_block;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* research the MemoryBlock which the pfree in */</span></span><br><span class="line">    <span class="keyword">while</span>(pm_block &amp;&amp; ((<span class="keyword">unsigned</span> <span class="keyword">long</span>)pfree &lt; (<span class="keyword">unsigned</span> <span class="keyword">long</span>)pm_block-&gt;a_data || </span><br><span class="line">        (<span class="keyword">unsigned</span> <span class="keyword">long</span>)pfree&gt;((<span class="keyword">unsigned</span> <span class="keyword">long</span>)pm_block-&gt;a_data+pm_block-&gt;size))) &#123;</span><br><span class="line">        <span class="comment">//pm_pre_block = pm_block;</span></span><br><span class="line">        pm_block = pm_block-&gt;next;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span>(pm_block == <span class="literal">NULL</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> pfree;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> offset = pfree -(<span class="keyword">void</span>*) pm_block-&gt;a_data;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>((offset&amp;(mp-&gt;obj_size <span class="number">-1</span>)) &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> pfree;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    pm_block-&gt;free_size++;</span><br><span class="line">    *((<span class="keyword">unsigned</span> <span class="keyword">int</span> *)pfree) = pm_block-&gt;first_free;</span><br><span class="line"></span><br><span class="line">    pm_block-&gt;first_free=(<span class="keyword">unsigned</span> <span class="keyword">int</span>)(offset/mp-&gt;obj_size);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>内存释放过程如下：</p>
+<ul>
+<li>判断当前MemoryPool的first_block指针是否为空，如果为空，则返回</li>
+<li>否则，遍历MemoryBlock链表，根据所释放的指针参数判断是否在某一个MemoryBlock中</li>
+<li>如果找到，则对MemoryBlock中的各个参数进行操作，然后返回</li>
+<li>否则，没有合适的MemoryBlock，则表明该被释放的指针不在内存池中，返回</li>
+</ul>
+<p>在上述代码中，需要注意第20-29行。</p>
+<ul>
+<li>第20行，求出被释放的内存块在MemoryBlock中的偏移</li>
+<li>第22行，判断是否能被整除，即是否在这个内存块中，算是个double check</li>
+<li>第26行，将该MemoryBlock中的空闲块个数加1</li>
+<li>第27-29行，类似于链表的插入，将新释放的内存块的索引放入链表头，而其内部的指向下一个可用内存块</li>
+</ul>
+<p>现在举个例子，以便于理解，假设在一开始有5个空闲块，其中前三个空闲块都分配出去了，那么此时，空闲块链表如下:</p>
+<p>4-&gt;5，其中first_free = 4</p>
+<p>然后在某一个时刻，第1块释放了，那么释放归还之后，如下:</p>
+<p>1-&gt;4-&gt;5，其中first_free = 1</p>
+<p>内存释放流程图如下：</p>
+<p><img src="/img/20211220143104.jpg" alt></p>
+<h2 id="释放内存池"><a href="#释放内存池" class="headerlink" title="释放内存池"></a>释放内存池</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">free_memory_pool</span><span class="params">(MemoryPool *mp)</span> </span>&#123;</span><br><span class="line">    MemoryBlock *mb = mp-&gt;first_block;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(mb != <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="keyword">while</span>(mb-&gt;next != <span class="literal">NULL</span>) &#123;</span><br><span class="line">            s_memory_block *delete_block = mb;</span><br><span class="line">            mb = mb-&gt;next;</span><br><span class="line"></span><br><span class="line">            <span class="built_in">free</span>(delete_block);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="built_in">free</span>(mb);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">free</span>(mp);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/img/20211220144136.jpg" alt></p>
+<p>上图是一个完整的分配和释放示意图，下面，我结合代码来分析：</p>
+<ul>
+<li>(a)步，创建了一个MemoryPool结构体<ul>
+<li>obj_size = 4代表本内存池分配的内存块大小为4</li>
+<li>init_size = 5代表创建内存池的时候，第一块MemoryBlock的空闲内存块个数为5</li>
+<li>grow_size = 5代表当申请内存的时候，如果没有空闲内存，则创建的新的MemoryBlock的空闲内存块个数为5</li>
+</ul>
+</li>
+<li>(b)步，分配出去一块内存<ul>
+<li>此时，free_size即该MemoryBlock中可用空闲块个数为4</li>
+<li>first_free = 1，代表将内存块分配出去之后，下一个可用的内存块的index为1</li>
+</ul>
+</li>
+<li>(c)步，分配出去一块内存<ul>
+<li>此时，free_size即该MemoryBlock中可用空闲块个数为3</li>
+<li>first_free = 2，代表将内存块分配出去之后，下一个可用的内存块的index为2</li>
+</ul>
+</li>
+<li>(d)步，分配出去一块内存<ul>
+<li>此时，free_size即该MemoryBlock中可用空闲块个数为2</li>
+<li>first_free = 3，代表将内存块分配出去之后，下一个可用的内存块的index为3</li>
+</ul>
+</li>
+<li>(e)步，分配出去一块内存<ul>
+<li>此时，free_size即该MemoryBlock中可用空闲块个数为1</li>
+<li>first_free = 4，代表将内存块分配出去之后，下一个可用的内存块的index为4</li>
+</ul>
+</li>
+<li>(f)步，释放第1个内存块<ul>
+<li>将free_size进行+1操作</li>
+<li>fire_free值为此次释放的内存块的索引，而释放的内存块的索引里面的值则为之前first_free的值(此处释放用的前差法)</li>
+</ul>
+</li>
+<li>(g)步，释放第3个内存块<ul>
+<li>将free_size进行+1操作</li>
+<li>fire_free值为此次释放的内存块的索引，而释放的内存块的索引里面的值则为之前first_free的值(此处释放用的前差法)</li>
+</ul>
+</li>
+<li>(h)步，释放第3个内存块<ul>
+<li>将free_size进行+1操作</li>
+<li>fire_free值为此次释放的内存块的索引，而释放的内存块的索引里面的值则为之前first_free的值(此处释放用的前差法)</li>
+</ul>
+</li>
+</ul>
+<h1 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h1><p>测试代码如下:<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"memory_pool.h"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/time.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;malloc.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    MemoryPool *mp = memory_pool_create(<span class="number">8</span>);</span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">timeval</span> <span class="title">start</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">timeval</span> <span class="title">end</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> t[] = &#123;<span class="number">20000</span>, <span class="number">40000</span>, <span class="number">80000</span>, <span class="number">100000</span>, <span class="number">120000</span>, <span class="number">140000</span>, <span class="number">160000</span>, <span class="number">180000</span>, <span class="number">200000</span>&#125;;</span><br><span class="line">    <span class="keyword">int</span> s = <span class="keyword">sizeof</span>(t)/<span class="keyword">sizeof</span>(<span class="keyword">int</span>);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; s; ++i) &#123;</span><br><span class="line">        gettimeofday(&amp;start, <span class="literal">NULL</span>);</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; t[i]; ++j) &#123;</span><br><span class="line">          </span><br><span class="line">            <span class="keyword">void</span> *p = memory_alloc(mp);</span><br><span class="line">            memory_free(mp, p);</span><br><span class="line">            <span class="comment">//void *p = malloc(8);</span></span><br><span class="line">            <span class="comment">//free(p);</span></span><br><span class="line">        &#125;</span><br><span class="line">        gettimeofday(&amp;end, <span class="literal">NULL</span>);</span><br><span class="line">        <span class="keyword">long</span> cost = <span class="number">1000000</span> * (end.tv_sec - start.tv_sec) +</span><br><span class="line">                      end.tv_usec - start.tv_usec;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"%ld\n"</span>,cost);</span><br><span class="line">    &#125;</span><br><span class="line">    free_memory_pool(mp);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>数据对比如下：<br><img src="/img/20211220144402.jpg" alt></p>
+<p>从上图可以看出，pool的分配效率高于传统的malloc方式，性能提高接近100%</p>
+<h1 id="扩展"><a href="#扩展" class="headerlink" title="扩展"></a>扩展</h1><p>在文章前面，我们有提过本内存池是<strong>单线程、固定大小的</strong>，但是往往这种还是不能满足要求，如下几个场景</p>
+<ul>
+<li>单线程多固定大小</li>
+<li>多线程固定大小</li>
+<li>多线程多固定大小</li>
+</ul>
+<p>多固定大小，指的是提前预支需要申请的内存大小。</p>
+<p>单线程多固定大小: 针对此场景，由于已经预知了所申请的size，所以可以针对每个size创建一个内存池。</p>
+<p>多线程固定大小：针对此场景，有以下两个方案</p>
+<ul>
+<li>使用ThreadLocalCache</li>
+<li>每个线程创建一个内存池</li>
+<li>使用加锁，操作全局唯一内存池(每次加锁解锁耗时100ns左右)</li>
+</ul>
+<p>多线程多固定大小：针对此场景，可以结合上述两个方案，即</p>
+<ul>
+<li>使用ThreadCache，每个线程内创建多固定大小的内存池</li>
+<li>每个线程内创建一个多固定大小的内存池</li>
+<li>使用加锁，操作全局唯一内存池(每次加锁解锁耗时100ns左右)</li>
+</ul>
+<p>上述几种方案，仅仅是在使用固定大小内存池基础上进行的扩展，具体的方案，需要根据具体情况来具体分析</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/积累/" rel="tag"># 积累</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/12/19/在Linux中使用线程/" rel="next" title="在Linux中使用线程">
+                <i class="fa fa-chevron-left"></i> 在Linux中使用线程
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/12/26/cpp优化指南/" rel="prev" title="C++优化手册 Agner Fog">
+                C++优化手册 Agner Fog <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">352</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">14</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/xiaomeihao.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#背景"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#原理"><span class="nav-number">2.</span> <span class="nav-text">原理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#原理-1"><span class="nav-number">2.1.</span> <span class="nav-text">原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据结构"><span class="nav-number">2.2.</span> <span class="nav-text">数据结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#MemoryBlock"><span class="nav-number">2.2.1.</span> <span class="nav-text">MemoryBlock</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MemoryPool"><span class="nav-number">2.2.2.</span> <span class="nav-text">MemoryPool</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#接口"><span class="nav-number">2.2.3.</span> <span class="nav-text">接口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#memory-alloc"><span class="nav-number">2.2.4.</span> <span class="nav-text">memory_alloc</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#memory-free"><span class="nav-number">2.2.5.</span> <span class="nav-text">memory_free</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#free-memory-pool"><span class="nav-number">2.2.6.</span> <span class="nav-text">free_memory_pool</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实现"><span class="nav-number">2.3.</span> <span class="nav-text">实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#初始化内存池"><span class="nav-number">2.3.1.</span> <span class="nav-text">初始化内存池</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#内存分配"><span class="nav-number">2.3.2.</span> <span class="nav-text">内存分配</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#释放内存池"><span class="nav-number">2.4.</span> <span class="nav-text">释放内存池</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#测试"><span class="nav-number">3.</span> <span class="nav-text">测试</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#扩展"><span class="nav-number">4.</span> <span class="nav-text">扩展</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<span id="busuanzi_container_site_uv"> 
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
