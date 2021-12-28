@@ -591,6 +591,7 @@
 <h4 id="AOF-文件的写入与同步"><a href="#AOF-文件的写入与同步" class="headerlink" title="AOF 文件的写入与同步"></a>AOF 文件的写入与同步</h4><p>Redis 的服务器进程就是一个事件循环（loop）， 这个循环中的文件事件负责接收客户端的命令请求， 以及向客户端发送命令回复， 而时间事件则负责执行像 serverCron 函数这样需要定时运行的函数。</p>
 <p>在服务器每次结束一个事件循环之前， 它都会调用 flushAppendOnlyFile 函数， 考虑是否需要将 aof_buf 缓冲区中的内容写入和保存到 AOF 文件里面， 这个过程可以用以下伪代码表示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">def eventLoop():</span><br><span class="line"></span><br><span class="line">    while True:</span><br><span class="line"></span><br><span class="line">        # 处理文件事件，接收命令请求以及发送命令回复</span><br><span class="line">        # 处理命令请求时可能会有新内容被追加到 aof_buf 缓冲区中</span><br><span class="line">        processFileEvents()</span><br><span class="line"></span><br><span class="line">        # 处理时间事件</span><br><span class="line">        processTimeEvents()</span><br><span class="line"></span><br><span class="line">        # 考虑是否要将 aof_buf 中的内容写入和保存到 AOF 文件里面</span><br><span class="line">        flushAppendOnlyFile()</span><br></pre></td></tr></table></figure></p>
 <p>flushAppendOnlyFile 函数的行为由服务器配置的 appendfsync 选项的值来决定， 各个不同值产生的行为如表 TABLE_APPENDFSYNC 所示。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -613,6 +614,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>如果用户没有主动为 appendfsync 选项设置值， 那么 <strong>appendfsync 选项的默认值为 everysec</strong> 。</p>
 <p>举个例子， 假设服务器在处理文件事件期间， 执行了以下三个写入命令：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SADD databases &quot;Redis&quot; &quot;MongoDB&quot; &quot;MariaDB&quot;</span><br><span class="line">SET date &quot;2013-9-5&quot;</span><br><span class="line">INCR click_counter 10086</span><br></pre></td></tr></table></figure></p>
 <p>那么 aof_buf 缓冲区将包含这三个命令的协议内容：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">*5\r\n$4\r\nSADD\r\n$9\r\ndatabases\r\n$5\r\nRedis\r\n$7\r\nMongoDB\r\n$7\r\nMariaDB\r\n</span><br><span class="line">*3\r\n$3\r\nSET\r\n$4\r\ndate\r\n$8\r\n2013-9-5\r\n</span><br><span class="line">*3\r\n$4\r\nINCR\r\n$13\r\nclick_counter\r\n$5\r\n10086\r\n</span><br></pre></td></tr></table></figure></p>
@@ -1068,7 +1070,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">352</span>
+                  <span class="site-state-item-count">351</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

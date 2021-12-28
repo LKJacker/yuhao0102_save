@@ -407,7 +407,7 @@
 <li>因为逻辑门的增多，信号的 扇出（Fan Out） 会变大，从而延迟增加</li>
 </ul>
 <p>延迟的增大，导致了处理器和内存通信时间的增长，影响了处理器的性能。所以，我们需要在处理器和内存中间加一层更快的结构，来缓存我们从内存中拿取的数据。这个中间的结构就叫做 Cache 缓存器。</p>
-<p>Register —&gt; Cache 缓存器 (SRAM) —&gt; Main Memory 内存 (DRAM)</p>
+<p>Register —-&gt; Cache 缓存器 (SRAM) —-&gt; Main Memory 内存 (DRAM)</p>
 <p>根据上面讨论的三种存储器的技术，我们可以利用 SRAM 的特点，来设计制造这个缓存器：</p>
 <ul>
 <li>缓存器的容量 - Register File 寄存器 &lt;&lt; Cache 缓存器 (SRAM) &lt;&lt; Main Memory 内存 (DRAM)</li>
@@ -707,8 +707,8 @@
 <p>软件或者编译器也可以提前从缓存中驱逐一个之后不会再用到的数据，就像是预取（Prefetch）的反向操作。一些数据是因为空间局部性（Spatial Locality）而存进缓存，如果这些数据在后面不会用到，那么可以提早将他们逐出去，避免污染缓存，造成 miss</p>
 <h2 id="非阻塞缓存-Non-Blocking-Caches"><a href="#非阻塞缓存-Non-Blocking-Caches" class="headerlink" title="非阻塞缓存 Non-Blocking Caches"></a>非阻塞缓存 Non-Blocking Caches</h2><p>非阻塞缓存 Non-blocking Cache, 别名 Out-of-order Cache，Lookup Free Cache。它的核心思想是如果处理器遇到 Cache Miss，那么后续的 Mem 指令依然可以执行。所以，non-blocking cache 会出现两种情况：</p>
 <ul>
-<li>Miss –&gt; Miss (Concurrent Miss，也叫做 Miss-under-Miss)</li>
-<li>Miss –&gt; Hit (Hit-under-Miss)</li>
+<li>Miss —&gt; Miss (Concurrent Miss，也叫做 Miss-under-Miss)</li>
+<li>Miss —&gt; Hit (Hit-under-Miss)</li>
 </ul>
 <p><img src="/img/v2-aad552f145b456765d8f292c1d5919d5_1440w.jpg" alt></p>
 <h3 id="Memory-乱序带来的挑战"><a href="#Memory-乱序带来的挑战" class="headerlink" title="Memory 乱序带来的挑战"></a>Memory 乱序带来的挑战</h3><p>这些乱序的改动，会给缓存系统带来不小的挑战：</p>
@@ -720,15 +720,15 @@
 <p>聪明的工程师和设计人员为 Non-blocking Cache 系统添加两块新的模块：</p>
 <ul>
 <li>新模块一 —— Miss Status Handling Register (MSHR) / Miss Address File (MAF)<ul>
-<li>Block Addr —- 缓存块（Cache Block）的地址</li>
-<li>Issue —- 有没有发行出去（Get issued）? 设立这个是因为 Memory 并不是在 miss 之后马上去寻找数据，比如系统的 Bus 正在忙碌其他事情</li>
+<li>Block Addr —— 缓存块（Cache Block）的地址</li>
+<li>Issue —— 有没有发行出去（Get issued）? 设立这个是因为 Memory 并不是在 miss 之后马上去寻找数据，比如系统的 Bus 正在忙碌其他事情</li>
 </ul>
 </li>
 <li>新模块二 —— Load/Store Entry Table (简称 L/S ET)<ul>
-<li>MSHR Entry —- 是一个指针，指向 MSHR/MAF</li>
-<li>Offset —- 缓存线（Cacheline） 中的偏移量</li>
-<li>Type —- Memory 指令的种类</li>
-<li>Destination —- 当前的指令要写到哪个 Register，或者是哪个 Memory Location / Store Buffer</li>
+<li>MSHR Entry —— 是一个指针，指向 MSHR/MAF</li>
+<li>Offset —— 缓存线（Cacheline） 中的偏移量</li>
+<li>Type —— Memory 指令的种类</li>
+<li>Destination —— 当前的指令要写到哪个 Register，或者是哪个 Memory Location / Store Buffer</li>
 </ul>
 </li>
 </ul>
@@ -751,7 +751,7 @@
 </ul>
 <h3 id="关键词优先和提前重启-Critical-Word-First-amp-Early-Restart"><a href="#关键词优先和提前重启-Critical-Word-First-amp-Early-Restart" class="headerlink" title="关键词优先和提前重启 Critical Word First &amp; Early Restart"></a>关键词优先和提前重启 Critical Word First &amp; Early Restart</h3><p>Critical Word First</p>
 <p><img src="/img/v2-7d54aece00b870a89120c0da45ce903e_1440w.jpg" alt></p>
-<p>重要的先行 – 优先拿取重要的字（word），这样处理器就可以提前开始工作。例如上图，数据 3 更重要，所以 3 的 miss 最先被处理，CPU 下一次的工作时间提早了，所以这个方法可以减少 Miss Penalty。</p>
+<p>重要的先行 — 优先拿取重要的字（word），这样处理器就可以提前开始工作。例如上图，数据 3 更重要，所以 3 的 miss 最先被处理，CPU 下一次的工作时间提早了，所以这个方法可以减少 Miss Penalty。</p>
 <p>Early Restart</p>
 <p>在通常情况下，CPU 需要等到整个 Cache line 都上来之后才重新工作。所以 Early Restart 的核心思想是 —— 当想要的数据一上来之后，CPU 立马开始工作。<br><img src="/img/v2-59061948559127e79e522574337eb805_1440w.jpg" alt></p>
 <p>如上图的例子，数据 3 是处理器想要的数据，但正常处理器需要等到 0~7 全部写入 Cache，才重新开始工作。如果有 Early Restart 功能，0~7 拿取的顺序还是一样的，但是当数据 3 写入缓存之后，CPU 不必等接下来的数据，直接可以重新工作。这个方法也可以减少 Miss Penalty。</p>
@@ -875,7 +875,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">352</span>
+                  <span class="site-state-item-count">351</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

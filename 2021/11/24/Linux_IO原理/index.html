@@ -377,7 +377,7 @@
 <h2 id="物理内存"><a href="#物理内存" class="headerlink" title="物理内存"></a>物理内存</h2><p>我们平时一直提及的物理内存就是上文中对应的第三种计算机存储器，RAM 主存，它在计算机中以内存条的形式存在，嵌在主板的内存槽上，用来加载各式各样的程序与数据以供 CPU 直接运行和使用。</p>
 <h2 id="虚拟内存"><a href="#虚拟内存" class="headerlink" title="虚拟内存"></a>虚拟内存</h2><p>在计算机领域有一句如同摩西十诫般神圣的哲言：”计算机科学领域的任何问题都可以通过增加一个间接的中间层来解决”，从内存管理、网络模型、并发调度甚至是硬件架构，都能看到这句哲言在闪烁着光芒，而虚拟内存则是这一哲言的完美实践之一。</p>
 <p>虚拟内存是现代计算机中的一个非常重要的存储器抽象，主要是用来解决应用程序日益增长的内存使用需求：现代物理内存的容量增长已经非常快速了，然而还是跟不上应用程序对主存需求的增长速度，对于应用程序来说内存还是不够用，因此便需要一种方法来解决这两者之间的容量差矛盾。</p>
-<p>计算机对多程序内存访问的管理经历了 静态重定位 –&gt; 动态重定位 –&gt; 交换(swapping)技术 –&gt; 虚拟内存，最原始的多程序内存访问是直接访问绝对内存地址，这种方式几乎是完全不可用的方案，因为如果每一个程序都直接访问物理内存地址的话，比如两个程序并发执行以下指令的时候：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">mov cx, 2</span><br><span class="line">mov bx, 1000H</span><br><span class="line">mov ds, bx</span><br><span class="line">mov [0], cx</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line">mov ax, [0]</span><br><span class="line">add ax, ax</span><br></pre></td></tr></table></figure></p>
+<p>计算机对多程序内存访问的管理经历了 静态重定位 —&gt; 动态重定位 —&gt; 交换(swapping)技术 —&gt; 虚拟内存，最原始的多程序内存访问是直接访问绝对内存地址，这种方式几乎是完全不可用的方案，因为如果每一个程序都直接访问物理内存地址的话，比如两个程序并发执行以下指令的时候：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">mov cx, 2</span><br><span class="line">mov bx, 1000H</span><br><span class="line">mov ds, bx</span><br><span class="line">mov [0], cx</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line">mov ax, [0]</span><br><span class="line">add ax, ax</span><br></pre></td></tr></table></figure></p>
 <p>这一段汇编表示在地址 1000:0 处存入数值 2，然后在后面的逻辑中把该地址的值取出来乘以 2，最终存入 ax 寄存器的值就是 4，如果第二个程序存入 cx 寄存器里的值是 3，那么并发执行的时候，第一个程序最终从 ax 寄存器里得到的值就可能是 6，这就完全错误了，得到脏数据还顶多算程序结果错误，要是其他程序往特定的地址里写入一些危险的指令而被另一个程序取出来执行，还可能会导致整个系统的崩溃。所以，为了确保进程间互不干扰，每一个用户进程都需要实时知晓当前其他进程在使用哪些内存地址，这对于写程序的人来说无疑是一场噩梦。</p>
 <p>因此，操作绝对内存地址是完全不可行的方案，那就只能用操作相对内存地址，我们知道每个进程都会有自己的进程地址，从 0 开始，可以通过相对地址来访问内存，但是这同样有问题，还是前面类似的问题，比如有两个大小为 16KB 的程序 A 和 B，现在它们都被加载进了内存，内存地址段分别是 0 ~ 16384，16384 ~ 32768。A 的第一条指令是 jmp 1024，而在地址 1024 处是一条<code>mov</code>指令，下一条指令是 add，基于前面的<code>mov</code>指令做加法运算，与此同时，B 的第一条指令是 jmp 1028，本来在 B 的相对地址 1028 处应该也是一条<code>mov</code>去操作自己的内存地址上的值，但是由于这两个程序共享了段寄存器，因此虽然他们使用了各自的相对地址，但是依然操作的还是绝对内存地址，于是 B 就会跳去执行 add 指令，这时候就会因为非法的内存操作而 crash。</p>
 <p>有一种静态重定位的技术可以解决这个问题，它的工作原理非常简单粗暴：当 B 程序被加载到地址 16384 处之后，把 B 的所有相对内存地址都加上 16384，这样的话当 B 执行 jmp 1028 之时，其实执行的是<code>jmp 1028+16384</code>，就可以跳转到正确的内存地址处去执行正确的指令了，但是这种技术并不通用，而且还会对程序装载进内存的性能有影响。</p>
@@ -418,7 +418,7 @@
 <li>写磁盘：内核直接把数据写入 Page Cache，并把对应的页标记为 dirty，添加到 dirty list 里，然后就直接返回，内核会定期把 dirty list 的页缓存 flush 到磁盘，保证页缓存和磁盘的最终一致性。</li>
 </ul>
 <p>Page Cache 会通过页面置换算法如 LRU 定期淘汰旧的页面，加载新的页面。可以看出，所谓 I/O 缓冲区缓存就是在内核和磁盘、网卡等外设之间的一层缓冲区，用来提升读写性能的。</p>
-<p>在 Linux 还不支持虚拟内存技术之前，还没有页的概念，因此 Buffer Cache 是基于操作系统读写磁盘的最小单位 – 块（block）来进行的，所有的磁盘块操作都是通过 Buffer Cache 来加速，Linux 引入虚拟内存的机制来管理内存后，页成为虚拟内存管理的最小单位，因此也引入了 Page Cache 来缓存 Linux 文件内容，主要用来作为文件系统上的文件数据的缓存，提升读写性能，常见的是针对文件的<code>read()/write()</code>操作，另外也包括了通过<code>mmap()</code>映射之后的块设备，也就是说，事实上 Page Cache 负责了大部分的块设备文件的缓存工作。而 Buffer Cache 用来在系统对块设备进行读写的时候，对块进行数据缓存的系统来使用，实际上负责所有对磁盘的 I/O 访问：<br><img src="/img/v2-e5dcc4158c745179454a4add2794fbcb_720w.jpg" alt></p>
+<p>在 Linux 还不支持虚拟内存技术之前，还没有页的概念，因此 Buffer Cache 是基于操作系统读写磁盘的最小单位 — 块（block）来进行的，所有的磁盘块操作都是通过 Buffer Cache 来加速，Linux 引入虚拟内存的机制来管理内存后，页成为虚拟内存管理的最小单位，因此也引入了 Page Cache 来缓存 Linux 文件内容，主要用来作为文件系统上的文件数据的缓存，提升读写性能，常见的是针对文件的<code>read()/write()</code>操作，另外也包括了通过<code>mmap()</code>映射之后的块设备，也就是说，事实上 Page Cache 负责了大部分的块设备文件的缓存工作。而 Buffer Cache 用来在系统对块设备进行读写的时候，对块进行数据缓存的系统来使用，实际上负责所有对磁盘的 I/O 访问：<br><img src="/img/v2-e5dcc4158c745179454a4add2794fbcb_720w.jpg" alt></p>
 <p>因为 Buffer Cache 是对粒度更细的设备块的缓存，而 Page Cache 是基于虚拟内存的页单元缓存，因此还是会基于 Buffer Cache，也就是说如果是缓存文件内容数据就会在内存里缓存两份相同的数据，这就会导致同一份文件保存了两份，冗余且低效。另外一个问题是，调用 write 后，有效数据是在 Buffer Cache 中，而非 Page Cache 中。这就导致 mmap 访问的文件数据可能存在不一致问题。为了规避这个问题，所有基于磁盘文件系统的 write，都需要调用 update_vm_cache() 函数，该操作会把调用 write 之后的 Buffer Cache 更新到 Page Cache 去。由于有这些设计上的弊端，因此在 Linux 2.4 版本之后，kernel 就将两者进行了统一，Buffer Cache 不再以独立的形式存在，而是以融合的方式存在于 Page Cache 中：<br><img src="/img/v2-92f0fd4f60c9ce2b21ec6fd32c75d35d_720w.jpg" alt></p>
 <p>融合之后就可以统一操作 Page Cache 和 Buffer Cache：处理文件 I/O 缓存交给 Page Cache，而当底层 RAW device 刷新数据时以 Buffer Cache 的块单位来实际处理。</p>
 <h2 id="I-O-模式"><a href="#I-O-模式" class="headerlink" title="I/O 模式"></a>I/O 模式</h2><p>在 Linux 或者其他 Unix-like 操作系统里，I/O 模式一般有三种：</p>
@@ -467,7 +467,7 @@
 </blockquote>
 <p>零拷贝技术是指计算机执行操作时，CPU不需要先将数据从某处内存复制到另一个特定区域。这种技术通常用于通过网络传输文件时节省 CPU 周期和内存带宽。</p>
 <h3 id="Zero-copy-能做什么？"><a href="#Zero-copy-能做什么？" class="headerlink" title="Zero-copy 能做什么？"></a>Zero-copy 能做什么？</h3><ul>
-<li>减少甚至完全避免操作系统内核和用户应用程序地址空间这两者之间进行数据拷贝操作，从而减少用户态 – 内核态上下文切换带来的系统开销。</li>
+<li>减少甚至完全避免操作系统内核和用户应用程序地址空间这两者之间进行数据拷贝操作，从而减少用户态 — 内核态上下文切换带来的系统开销。</li>
 <li>减少甚至完全避免操作系统内核缓冲区之间进行数据拷贝操作。</li>
 <li>帮助用户进程绕开操作系统内核空间直接访问硬件存储接口操作数据。</li>
 <li>利用 DMA 而非 CPU 来完成硬件接口和内核缓冲区之间的数据拷贝，从而解放 CPU，使之能去执行其他的任务，提升系统性能。</li>
@@ -492,7 +492,7 @@
 <li><code>write()</code>返回，上下文从内核态切换回用户态。</li>
 </ul>
 <p>通过这种方式，有两个优点：一是节省内存空间，因为用户进程上的这一段内存是虚拟的，并不真正占据物理内存，只是映射到文件所在的内核缓冲区上，因此可以节省一半的内存占用；二是省去了一次 CPU 拷贝，对比传统的 Linux I/O 读写，数据不需要再经过用户进程进行转发了，而是直接在内核里就完成了拷贝。所以使用<code>mmap()</code>之后的拷贝次数是 2 次 DMA 拷贝，1 次 CPU 拷贝，加起来一共 3 次拷贝操作，比传统的 I/O 方式节省了一次 CPU 拷贝以及一半的内存，不过因为<code>mmap()</code>也是一个系统调用，因此用户态和内核态的切换还是 4 次。</p>
-<p><code>mmap()</code>因为既节省 CPU 拷贝次数又节省内存，所以比较适合大文件传输的场景。虽然<code>mmap()</code>完全是符合 POSIX 标准的，但是它也不是完美的，因为它并不总是能达到理想的数据传输性能。首先是因为数据数据传输过程中依然需要一次 CPU 拷贝，其次是内存映射技术是一个开销很大的虚拟存储操作：这种操作需要修改页表以及用内核缓冲区里的文件数据汰换掉当前 TLB 里的缓存以维持虚拟内存映射的一致性。但是，因为内存映射通常针对的是相对较大的数据区域，所以对于相同大小的数据来说，内存映射所带来的开销远远低于 CPU 拷贝所带来的开销。此外，使用<code>mmap()</code>还可能会遇到一些需要值得关注的特殊情况，例如，在<code>mmap()</code>–&gt;<code>write()</code>这两个系统调用的整个传输过程中，如果有其他的进程突然截断了这个文件，那么这时用户进程就会因为访问非法地址而被一个从总线传来的 SIGBUS 中断信号杀死并且产生一个 core dump。有两种解决办法：</p>
+<p><code>mmap()</code>因为既节省 CPU 拷贝次数又节省内存，所以比较适合大文件传输的场景。虽然<code>mmap()</code>完全是符合 POSIX 标准的，但是它也不是完美的，因为它并不总是能达到理想的数据传输性能。首先是因为数据数据传输过程中依然需要一次 CPU 拷贝，其次是内存映射技术是一个开销很大的虚拟存储操作：这种操作需要修改页表以及用内核缓冲区里的文件数据汰换掉当前 TLB 里的缓存以维持虚拟内存映射的一致性。但是，因为内存映射通常针对的是相对较大的数据区域，所以对于相同大小的数据来说，内存映射所带来的开销远远低于 CPU 拷贝所带来的开销。此外，使用<code>mmap()</code>还可能会遇到一些需要值得关注的特殊情况，例如，在<code>mmap()</code>—&gt;<code>write()</code>这两个系统调用的整个传输过程中，如果有其他的进程突然截断了这个文件，那么这时用户进程就会因为访问非法地址而被一个从总线传来的 SIGBUS 中断信号杀死并且产生一个 core dump。有两种解决办法：</p>
 <ul>
 <li>设置一个信号处理器，专门用来处理 SIGBUS 信号，这个处理器直接返回，<code>write()</code>就可以正常返回已写入的字节数而不会被<code>SIGBUS</code>中断，<code>errno</code>错误码也会被设置成 success。然而这实际上是一个掩耳盗铃的解决方案，因为 BIGBUS 信号的带来的信息是系统发生了一些很严重的错误，而我们却选择忽略掉它，一般不建议采用这种方式。</li>
 <li>通过内核的文件租借锁（这是 Linux 的叫法，Windows 上称之为机会锁）来解决这个问题，这种方法相对来说更好一些。我们可以通过内核对文件描述符上读/写的租借锁，当另外一个进程尝试对当前用户进程正在进行传输的文件进行截断的时候，内核会发送给用户一个实时信号：RT_SIGNAL_LEASE 信号，这个信号会告诉用户内核正在破坏你加在那个文件上的读/写租借锁，这时<code>write()</code>系统调用会被中断，并且当前用户进程会被 SIGBUS 信号杀死，返回值则是中断前写的字节数，errno 同样会被设置为 success。文件租借锁需要在对文件进行内存映射之前设置，最后在用户进程结束之前释放掉。</li>
@@ -518,7 +518,7 @@
 </ul>
 <p>此外，需要说明下，<code>sendfile()</code>的最初设计并不是用来处理大文件的，因此如果需要处理很大的文件的话，可以使用另一个系统调用<code>sendfile64()</code>，它支持对更大的文件内容进行寻址和偏移。</p>
 <h3 id="sendﬁle-with-DMA-Scatter-Gather-Copy"><a href="#sendﬁle-with-DMA-Scatter-Gather-Copy" class="headerlink" title="sendﬁle() with DMA Scatter/Gather Copy"></a>sendﬁle() with DMA Scatter/Gather Copy</h3><p>上一小节介绍的<code>sendfile()</code>技术已经把一次数据读写过程中的 CPU 拷贝的降低至只有 1 次了，但是人永远是贪心和不知足的，现在如果想要把这仅有的一次 CPU 拷贝也去除掉，有没有办法呢？</p>
-<p>当然有！通过引入一个新硬件上的支持，我们可以把这个仅剩的一次 CPU 拷贝也给抹掉：Linux 在内核 2.4 版本里引入了 DMA 的 scatter/gather – 分散/收集功能，并修改了<code>sendfile()</code>的代码使之和 DMA 适配。scatter 使得 DMA 拷贝可以不再需要把数据存储在一片连续的内存空间上，而是允许离散存储，gather 则能够让 DMA 控制器根据少量的元信息：一个包含了内存地址和数据大小的缓冲区描述符，收集存储在各处的数据，最终还原成一个完整的网络包，直接拷贝到网卡而非套接字缓冲区，避免了最后一次的 CPU 拷贝：<br><img src="/img/v2-0d99113bd0d67e41d288b1f1034d4704_720w.jpg" alt></p>
+<p>当然有！通过引入一个新硬件上的支持，我们可以把这个仅剩的一次 CPU 拷贝也给抹掉：Linux 在内核 2.4 版本里引入了 DMA 的 scatter/gather — 分散/收集功能，并修改了<code>sendfile()</code>的代码使之和 DMA 适配。scatter 使得 DMA 拷贝可以不再需要把数据存储在一片连续的内存空间上，而是允许离散存储，gather 则能够让 DMA 控制器根据少量的元信息：一个包含了内存地址和数据大小的缓冲区描述符，收集存储在各处的数据，最终还原成一个完整的网络包，直接拷贝到网卡而非套接字缓冲区，避免了最后一次的 CPU 拷贝：<br><img src="/img/v2-0d99113bd0d67e41d288b1f1034d4704_720w.jpg" alt></p>
 <p><code>sendfile() + DMA gather</code>的数据传输过程如下：</p>
 <ul>
 <li>用户进程调用<code>sendfile()</code>，从用户态陷入内核态；</li>
@@ -750,7 +750,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">352</span>
+                  <span class="site-state-item-count">351</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

@@ -342,7 +342,7 @@
 <p>如同linux应用一样，内核的共享资源也要防止并发，因为如果多个执行线程同时访问和操作数据有可能发生各个线程之间相互覆盖共享数据的情况。</p>
 <p>在linux只是单一处理器的时候，只有在中断发生或内核请求重新调度执行另一个任务时，数据才可能会并发访问。但自从内核开始支持对称多处理器之后，内核代码可以同时运行在多个处理器上，如果此时不加保护，运行在多个处理器上的代码完全可能在同一时刻并发访问共享数据。</p>
 <p>一般把访问和操作共享数据的代码段称作临界区，为了避免在临界区中发生并发访问，程序员必须保证临界区代码原子执行，也就是要么全部执行，要么不执行。如果两个执行线程在同一个临界区同时执行，就发生了竞态（race conditions），避免并发防止竞态就是所谓的同步。</p>
-<p>在linux内核中造成并发的原因主要有如下:<br>中断 – 中断几乎可以在任何时刻异步发生，也就可能随时打断当前正在执行的代码。<br>软中断和tasklet – 内核能在任何时刻唤醒或调度软中断和tasklet，打断当前正在执行的代码。<br>内核抢占 – 因为内核具有抢占性，所以内核中的任务可能会被另一任务抢占。<br>睡眠及与用户空间的同步 – 在内核执行的进程可能会睡眠，这就会唤醒调度程序，从而导致调度一个新的用户进程执行。<br>对称多处理 –  两个或多个处理器可以同时执行代码。（真并发）</p>
+<p>在linux内核中造成并发的原因主要有如下:<br>中断 — 中断几乎可以在任何时刻异步发生，也就可能随时打断当前正在执行的代码。<br>软中断和tasklet — 内核能在任何时刻唤醒或调度软中断和tasklet，打断当前正在执行的代码。<br>内核抢占 — 因为内核具有抢占性，所以内核中的任务可能会被另一任务抢占。<br>睡眠及与用户空间的同步 — 在内核执行的进程可能会睡眠，这就会唤醒调度程序，从而导致调度一个新的用户进程执行。<br>对称多处理 —  两个或多个处理器可以同时执行代码。（真并发）</p>
 <p>通过锁可以防止并发执行，并且保护临界区不受竞态影响。任何执行线程要访问临界区代码时首先先获得锁，这样当后面另外的执行线程要访问临界区时就不能再获得该锁，这样临界区就禁止后来执行线程访问。linux自身实现了多种不同的锁机制，各种锁各有差别，区别主要在于当锁被争用时，有些会简单地执行等待，而有些锁会使当前任务睡眠直到锁可用为止。本节将会分析各锁的使用和实现。但是使用锁也会带来副作用，锁使得线程按串行方式对资源进行访问，所以使用锁无疑会降低系统性能；并且锁使用不当还会造成死锁。</p>
 <p>下面来看一下linux下同步的方法，包括原子操作、自旋锁、信号量等方式。</p>
 <h2 id="原子操作"><a href="#原子操作" class="headerlink" title="原子操作"></a>原子操作</h2><p>该操作是其它同步方法的基础，原子操作可以保证指令以原子的方式执行，执行过程不会被打断。linux内核提供了两组原子操作接口：原子整数操作和原子位操作。</p>
@@ -356,6 +356,7 @@
 <p>原子操作是对普通内存地址指针进行的操作，只要指针指向了任何你希望的数据，你就可以对它进行操作。原子位操作(以x86为例)相关函数定义在文件<code>&lt;arch/x86/include/asm/bitops.h&gt;</code>中。</p>
 <h2 id="自旋锁"><a href="#自旋锁" class="headerlink" title="自旋锁"></a>自旋锁</h2><p>不是所有的临界区都是像增加或减少变量这么简单，有的时候临界区可能会跨越多个函数，这这时就需要使用更为复杂的同步方法——锁。linux内核中最常见的锁是自旋锁，自旋锁最多只能被一个可执行线程持有，如果一个可执行线程视图获取一个已经被持有的锁，那么该线程将会一直进行忙循环等待锁重新可用。在任意时候，自旋锁都可以防止多余一个执行线程同时进入临界区。由于自旋忙等过程是很费时间的，所以自旋锁不应该被长时间持有。</p>
 <p>自旋锁相关方法如下：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -414,6 +415,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>自旋锁的实现和体系结构密切相关，代码通常通过汇编实现。与体系结构相关的部分定义在<code>&lt;asm/spinlock.h&gt;</code>,实际需要用到的接口定义在文件<code>&lt;linux/spinlock.h&gt;</code>中。一个实际的锁的类型为spinlock_t，定义在文件<code>&lt;include/linux/spinlock_types.h&gt;</code>中:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">typedef struct &#123;</span><br><span class="line">    raw_spinlock_t raw_lock;</span><br><span class="line">#ifdef CONFIG_GENERIC_LOCKBREAK</span><br><span class="line">    unsigned int break_lock;</span><br><span class="line">#endif</span><br><span class="line">#ifdef CONFIG_DEBUG_SPINLOCK</span><br><span class="line">    unsigned int magic, owner_cpu;</span><br><span class="line">    void *owner;</span><br><span class="line">#endif</span><br><span class="line">#ifdef CONFIG_DEBUG_LOCK_ALLOC</span><br><span class="line">    struct lockdep_map dep_map;</span><br><span class="line">#endif</span><br><span class="line">&#125; spinlock_t;</span><br></pre></td></tr></table></figure></p>
 <p>自旋锁基本使用形式如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">DEFINE_SPINLOCK(lock);</span><br><span class="line">spin_lock(&amp;lock);</span><br><span class="line">/* 临界区 */</span><br><span class="line">spin_unlock(&amp;lock);</span><br></pre></td></tr></table></figure></p>
 <p>实际上有 4 个函数可以加锁一个自旋锁:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">void spin_lock(spinlock_t *lock);</span><br><span class="line">void spin_lock_irq(spinlock_t *lock);    //相当于spin_lock() + local_irq_disable()。</span><br><span class="line">void spin_lock_irqsave(spinlock_t *lock, unsigned long flags);</span><br><span class="line">//禁止中断(只在本地处理器)在获得自旋锁之前; 之前的中断状态保存在 flags里。相当于spin_lock() + local_irq_save()。</span><br><span class="line">void spin_lock_bh(spinlock_t *lock);    //获取锁之前禁止软件中断, 但是硬件中断留作打开的，相当于spin_lock() + local_bh_disable()。</span><br></pre></td></tr></table></figure></p>
@@ -572,7 +574,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">352</span>
+                  <span class="site-state-item-count">351</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

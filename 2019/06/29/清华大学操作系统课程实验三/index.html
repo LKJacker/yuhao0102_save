@@ -341,8 +341,6 @@
         <h1 id="实验三"><a href="#实验三" class="headerlink" title="实验三"></a>实验三</h1><h2 id="实验内容"><a href="#实验内容" class="headerlink" title="实验内容"></a>实验内容</h2><p>在实验二的基础上，借助页表机制和实验一中涉及的中断异常处理机制，完成Pgfault异常处理和FIFO页替换算法的实现，结合磁盘提供的缓存空间，从而能够支持虚存管理，提供一个比实际物理内存空间“更大”的虚拟内存空间给系统使用。<br>这个实验与实际操作系统中的实现比较起来要简单，不过需要了解实验一和实验二的具体实现。实际操作系统系统中的虚拟内存管理设计与实现是相当复杂的，涉及到与进程管理系统、文件系统等的交叉访问。</p>
 <h2 id="简单原理"><a href="#简单原理" class="headerlink" title="简单原理"></a>简单原理</h2><blockquote>
 <p>copy from gitbook<br>通过内存地址虚拟化，可以使得软件在没有访问某虚拟内存地址时不分配具体的物理内存，而只有在实际访问某虚拟内存地址时，操作系统再动态地分配物理内存，建立虚拟内存到物理内存的页映射关系，这种技术称为按需分页（demand paging）。  </p>
-</blockquote>
-<blockquote>
 <p>把不经常访问的数据所占的内存空间临时写到硬盘上，这样可以腾出更多的空闲内存空间给经常访问的数据；当CPU访问到不经常访问的数据时，再把这些数据从硬盘读入到内存中，这种技术称为页换入换出（page swap in/out）。这种内存管理技术给了程序员更大的内存“空间”，从而可以让更多的程序在内存中并发运行。</p>
 </blockquote>
 <p>参考ucore总控函数kern_init的代码，在调用完成虚拟内存初始化的vmm_init函数之前，需要首先调用pmm_init函数完成物理内存的管理，调用pic_init函数完成中断控制器的初始化，调用idt_init函数完成中断描述符表的初始化。<br>在调用完idt_init函数之后，将进一步调用新函数<strong>vmm_init、ide_init、swap_init</strong>。<br>do_pgfault函数会申请一个空闲物理页，并建立好虚实映射关系，从而使得这样的“合法”虚拟页有实际的物理页帧对应。<br>ide_init就是完成对用于页换入换出的硬盘（简称swap硬盘）的初始化工作。完成ide_init函数后，ucore就可以对这个swap硬盘进行读写操作了。</p>
@@ -359,7 +357,7 @@
 <p>CPU在当前<strong>内核栈</strong>保存当前被打断的程序现场，即依次压入当前被打断程序使用的EFLAGS，CS，EIP，errorCode；由于页访问异常的中断号是0xE，CPU把异常中断号0xE对应的中断服务例程的地址（vectors.S中的标号vector14处）加载到CS和EIP寄存器中，开始执行中断服务例程。</p>
 <p>这时ucore开始处理异常中断，首先需要保存硬件没有保存的寄存器。在vectors.S中的标号vector14处先把中断号压入内核栈，然后再在trapentry.S中的标号__alltraps处把DS、ES和其他通用寄存器都压栈。自此，被打断的程序执行现场（context）被保存在内核栈中。接下来，在trap.c的trap函数开始了中断服务例程的处理流程，大致调用关系为：</p>
 <blockquote>
-<p>trap –&gt; trap_dispatch –&gt; pgfault_handler –&gt; do_pgfault</p>
+<p>trap —&gt; trap_dispatch —&gt; pgfault_handler —&gt; do_pgfault</p>
 </blockquote>
 <p>ucore中do_pgfault函数是完成页访问异常处理的主要函数，它根据从CPU的控制寄存器CR2中获取的页访问异常的物理地址以及根据errorCode的错误类型来查找此地址是否在某个VMA的地址范围内以及是否满足正确的读写权限，如果在此范围内并且权限也正确，这认为这是一次<strong>合法访问，但没有建立虚实对应关系</strong>。所以需要分配一个空闲的内存页，并修改页表完成虚地址到物理地址的映射，刷新TLB，然后调用iret产生软中断，返回到产生页访问异常的指令处重新执行此指令。如果该虚地址不在某VMA范围内，则认为是一次非法访问。</p>
 <h2 id="页面置换机制的实现"><a href="#页面置换机制的实现" class="headerlink" title="页面置换机制的实现"></a>页面置换机制的实现</h2><p>当缺页中断发生时，操作系统把应用程序当前需要的数据或代码放到内存中来，然后重新执行应用程序产生异常的访存指令。如果在把硬盘中对应的数据或代码调入内存前，操作系统发现物理内存已经没有空闲空间了，这时操作系统必须把它认为“不常用”的页换出到磁盘上去，以腾出内存空闲空间给应用程序所需的数据或代码。 </p>
@@ -374,7 +372,7 @@
 <h2 id="页面置换机制"><a href="#页面置换机制" class="headerlink" title="页面置换机制"></a>页面置换机制</h2><h3 id="可以被换出的页"><a href="#可以被换出的页" class="headerlink" title="可以被换出的页"></a>可以被换出的页</h3><p>只有映射到用户空间且被用户程序直接访问的页面才能被交换，被内核直接使用的内核空间的页面不能被换出！！！操作系统是执行的关键代码，需要保证运行的高效性和实时性，如果在操作系统执行过程中，发生了缺页现象，则操作系统不得不等很长时间（硬盘的访问速度比内存的访问速度慢2到3个数量级），这将导致整个系统运行低效。</p>
 <p><strong>当一个Page Table Entry用来描述一般意义上的物理页时，它维护各种权限和映射关系，以及应该有PTE_P标记；但当它用来描述一个被置换出去的物理页时，它被用来维护该物理页与swap磁盘上扇区的映射关系，并且该PTE不应该由MMU将它解释成物理页映射(即没有 PTE_P 标记)</strong>。</p>
 <p>与此同时对应的权限则交由mm_struct来维护，当对位于该页的内存地址进行访问的时候，必然导致 page fault，然后ucore能够根据 PTE 描述的swap项将相应的物理页重新建立起来，并根据虚存所描述的权限重新设置好 PTE 使得内存访问能够继续正常进行。</p>
-<h3 id="虚存中的页与硬盘上的扇区之间的映射关系"><a href="#虚存中的页与硬盘上的扇区之间的映射关系" class="headerlink" title="虚存中的页与硬盘上的扇区之间的映射关系"></a>虚存中的页与硬盘上的扇区之间的映射关系</h3><p>一个页被换出到硬盘，则PTE最低位present位应该是0，表示虚实地址映射关系不存在，接下来7位为保留位，表示页帧号的24位地址用来表示在硬盘上的地址。<br>-—————————-<br>| offset     |       reserved       |       0       |<br>-—————————-<br>24 bits  &nbsp;&nbsp; 7 bits &nbsp;&nbsp; 1 bit  </p>
+<h3 id="虚存中的页与硬盘上的扇区之间的映射关系"><a href="#虚存中的页与硬盘上的扇区之间的映射关系" class="headerlink" title="虚存中的页与硬盘上的扇区之间的映射关系"></a>虚存中的页与硬盘上的扇区之间的映射关系</h3><p>一个页被换出到硬盘，则PTE最低位present位应该是0，表示虚实地址映射关系不存在，接下来7位为保留位，表示页帧号的24位地址用来表示在硬盘上的地址。<br>-——————————————<br>| offset     |       reserved       |       0       |<br>-——————————————<br>24 bits  &nbsp;&nbsp; 7 bits &nbsp;&nbsp; 1 bit  </p>
 <h3 id="执行换入换出的时机"><a href="#执行换入换出的时机" class="headerlink" title="执行换入换出的时机"></a>执行换入换出的时机</h3><p>当ucore或应用程序访问地址所在的页不在内存时，就会产生page fault异常，引起调用do_pgfault函数，此函数会判断产生访问异常的地址属于check_mm_struct某个vma表示的合法虚拟地址空间，且保存在硬盘swap文件中。</p>
 <p>ucore目前大致有两种策略来实现换出操作，即<strong>积极换出策略</strong>和<strong>消极换出策略</strong>。积极换出策略是指操作系统周期性地（或在系统不忙的时候）主动把某些认为“不常用”的页换出到硬盘上，从而确保系统中总有一定数量的空闲页存在，这样当需要空闲页时，基本上能够及时满足需求；消极换出策略是指，只是当试图得到空闲页时，发现当前没有空闲的物理页可供分配，这时才开始查找“不常用”页面，并把一个或多个这样的页换出到硬盘上。</p>
 <h3 id="页替换算法的数据结构设计"><a href="#页替换算法的数据结构设计" class="headerlink" title="页替换算法的数据结构设计"></a>页替换算法的数据结构设计</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">struct Page &#123;  </span><br><span class="line">……   </span><br><span class="line">list_entry_t pra_page_link;   </span><br><span class="line">uintptr_t pra_vaddr;   </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
@@ -397,7 +395,7 @@
 <li>访问权限不符合（此时页表项P标志=1，比如企图写只读页面）。<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">do_pgfault - 处理缺页中断的中断处理例程 interrupt handler to process the page fault execption</span><br><span class="line">@mm         : the control struct for a set of vma using the same PDT</span><br><span class="line">@error_code : the error code recorded in trapframe-&gt;tf_err which is setted by x86 hardware</span><br><span class="line">@addr       : the addr which causes a memory access exception, (the contents of the CR2 register)</span><br></pre></td></tr></table></figure>
 </li>
 </ul>
-<p>调用栈： trap–&gt; trap_dispatch–&gt;pgfault_handler–&gt;do_pgfault<br>处理器为ucore的do_pgfault函数提供了两项信息，以帮助诊断异常并从中恢复。<br>(1) CR2寄存器的内容。 处理器使用产生异常的32位线性地址加载CR2寄存器。 do_pgfault可以使用此地址来查找相应的页面目录和页表条目。<br>(2) 在内核栈中的错误码。缺页错误码与其他异常的错误码不同，错误码可以通知中断处理例程以下信息:</p>
+<p>调用栈： trap—&gt; trap_dispatch—&gt;pgfault_handler—&gt;do_pgfault<br>处理器为ucore的do_pgfault函数提供了两项信息，以帮助诊断异常并从中恢复。<br>(1) CR2寄存器的内容。 处理器使用产生异常的32位线性地址加载CR2寄存器。 do_pgfault可以使用此地址来查找相应的页面目录和页表条目。<br>(2) 在内核栈中的错误码。缺页错误码与其他异常的错误码不同，错误码可以通知中断处理例程以下信息:</p>
 <ul>
 <li>P flag(bit 0) 表明异常是否是因为一个不存在的页(0)或违反访问权限或使用保留位(1)；</li>
 <li>W/R flag(bit 1) 表明引起异常的访存操作是读(0)还是写(1)；</li>
@@ -505,8 +503,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/06/29/清华大学操作系统课程实验一/" rel="next" title="清华大学操作系统课程实验一">
-                <i class="fa fa-chevron-left"></i> 清华大学操作系统课程实验一
+              <a href="/2019/06/29/清华大学操作系统课程实验七/" rel="next" title="清华大学操作系统课程实验七">
+                <i class="fa fa-chevron-left"></i> 清华大学操作系统课程实验七
               </a>
             
           </div>
@@ -595,7 +593,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">352</span>
+                  <span class="site-state-item-count">351</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

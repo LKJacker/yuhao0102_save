@@ -343,6 +343,7 @@
 <p>内核中的每个物理页用<code>struct  page</code>结构表示，结构定义于文件<code>&lt;include/linux/mm_types.h&gt;</code>：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">struct page &#123;</span><br><span class="line">    unsigned long flags;        /*页的状态*/</span><br><span class="line">    atomic_t _count;        /* 页引用计数 */</span><br><span class="line">    union &#123;</span><br><span class="line">        atomic_t _mapcount; /* 已经映射到mms的pte的个数*/</span><br><span class="line">        struct &#123;        /* */</span><br><span class="line">            u16 inuse;</span><br><span class="line">            u16 objects;</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;;</span><br><span class="line">    union &#123;</span><br><span class="line">        struct &#123;</span><br><span class="line">        unsigned long private;     </span><br><span class="line">        struct address_space *mapping;</span><br><span class="line">        &#125;;</span><br><span class="line">#if USE_SPLIT_PTLOCKS</span><br><span class="line">        spinlock_t ptl;</span><br><span class="line">#endif</span><br><span class="line">        struct kmem_cache *slab;    /* 指向slab层 */</span><br><span class="line">        struct page *first_page;    /* Compound tail pages */</span><br><span class="line">    &#125;;</span><br><span class="line">    union &#123;</span><br><span class="line">        pgoff_t index;      /* Our offset within mapping. */</span><br><span class="line">        void *freelist;     /* SLUB: freelist req. slab lock */</span><br><span class="line">    &#125;;</span><br><span class="line">    struct list_head lru;       /* 将页关联起来的链表项 */</span><br><span class="line"> </span><br><span class="line">#if defined(WANT_PAGE_VIRTUAL)</span><br><span class="line">    void *virtual;          /* Kernel virtual address (NULL if</span><br><span class="line">                       not kmapped, ie. highmem) */</span><br><span class="line">#endif /* WANT_PAGE_VIRTUAL */</span><br><span class="line">#ifdef CONFIG_WANT_PAGE_DEBUG_FLAGS</span><br><span class="line">    unsigned long debug_flags;  /* Use atomic bitops on this */</span><br><span class="line">#endif</span><br><span class="line"> </span><br><span class="line">#ifdef CONFIG_KMEMCHECK</span><br><span class="line">    void *shadow;</span><br><span class="line">#endif</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
 <p>内核使用这一结构来管理系统中所有的页，因为内核需要知道一个该页是否被分配，是被谁拥有的等信息。</p>
 <p>由于ISA总线的DMA处理器有严格的限制，只能对物理内存前16M寻址，内核线性地址空间只有1G,CPU不能直接访问所有的物理内存。这样就导致有一些内存不能永久地映射在内核空间上。所以在linux中，把页分为不同的区，使用区来对具有相似特性的页进行分组。分组如下（以x86-32为例）：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -365,10 +366,11 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>linux 把系统的页划分区，形成不同的内存池，这样就可以根据用途进行分配了。</p>
 <p>每个区都用<code>struct zone</code>表示，定义于<code>&lt;include/linux/mmzone.h&gt;</code>中。该结构体较大，详细结构体信息可以查看源码文件。</p>
 <p>linux提供了几个以页为单位分配释放内存的接口，定义于<code>&lt;include/linux/gfp.h&gt;</code>中。分配内存主要有以下方法：</p>
-<p>—|—<br>alloc_page(gfp_mask)|只分配一页，返回指向页结构的指针<br>alloc_pages(gfp_mask, order)|分配 2^order 个页，返回指向第一页页结构的指针<br><strong>get_free_page(gfp_mask)|只分配一页，返回指向其逻辑地址的指针
+<p>—-|—-<br>alloc_page(gfp_mask)|只分配一页，返回指向页结构的指针<br>alloc_pages(gfp_mask, order)|分配 2^order 个页，返回指向第一页页结构的指针<br><strong>get_free_page(gfp_mask)|只分配一页，返回指向其逻辑地址的指针
 </strong>get_free_pages(gfp_mask, order)|分配 2^order 个页，返回指向第一页逻辑地址的指针<br>get_zeroed_page(gfp_mask)|只分配一页，让其内容填充为0，返回指向其逻辑地址的指针</p>
 <p>alloc_<em>函数返回的是内存的物理地址，get_</em> 函数返回内存物理地址映射后的逻辑地址。如果无须直接操作物理页结构体的话，一般使用 get_*函数。</p>
 <p>释放页的函数有：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">externvoid__free_pages( struct page *page, unsignedintorder); </span><br><span class="line">externvoidfree_pages(unsigned longaddr, unsigned intorder); </span><br><span class="line">externvoidfree_hot_page( struct page *page);</span><br></pre></td></tr></table></figure></p>
@@ -381,6 +383,7 @@
 <li>类型标志 ：由上面2种标志组合而成的一些常用的场景。</li>
 </ul>
 <p>行为标志主要有以下几种：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -435,7 +438,9 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>标志主要有以下3种：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -458,7 +463,9 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>类型标志是编程中最常用的，在使用标志时，应首先看看类型标志中是否有合适的，如果没有，再去自己组合 行为标志和区标志。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -510,7 +517,9 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>以上各种类型标志的使用场景总结：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -549,6 +558,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>kmalloc 所对应的释放内存的方法为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">void kfree(const void *)；</span><br></pre></td></tr></table></figure></p>
 <p>vmalloc()也可以按字节来分配内存。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">void *vmalloc(unsigned long size)</span><br></pre></td></tr></table></figure></p>
 <p>和kmalloc是一样的作用，不同在于前者分配的内存虚拟地址是连续的，而物理地址则无需连续。kmalloc()可以保证在物理地址上都是连续的，虚拟地址当然也是连续的。vmalloc()函数只确保页在虚拟机地址空间内是连续的。它通过分配非联系的物理内存块，再“修正”页表，把内存映射到逻辑地址空间的连续区域中，就能做到这点。但很显然这样会降低处理性能，因为内核不得不做“拼接”的工作。所以这也是为什么不得已才使用 vmalloc()的原因 。 vmalloc()可能睡眠，不能从中断上下文中进行调用，也不能从其他不允许阻塞的情况下进行调用。释放时必须使用vfree()。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">void vfree(const void *)；</span><br></pre></td></tr></table></figure></p>
@@ -670,7 +680,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">352</span>
+                  <span class="site-state-item-count">351</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

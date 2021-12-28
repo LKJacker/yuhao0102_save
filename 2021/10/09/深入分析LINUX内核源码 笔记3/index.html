@@ -382,6 +382,7 @@
 <p>在它们已被阻塞的情况下，带有一个<code>EAGAIN</code>错误信息。由于命名管道可以被很多无关系的进程同时访问，那么，在有多个读进程和/或多个写进程的应用中使用<code>FIFO</code>是非常有用的。</p>
 <p>多个进程写一个管道会出现这样的问题，即多个进程所写的数据混在一起怎么办？幸好系统有这样的规则：一个<code>write()</code>调用可以写管道能容纳(<code>Linux</code>为 4KB)的任意个字节，系统将保证这些数据是分开的。这表示多个写操作的数据在<code>FIFO</code>文件中并不混合而将被维持分离的信息。 </p>
 <h2 id="信号-signal"><a href="#信号-signal" class="headerlink" title="信号(signal)"></a>信号(signal)</h2><h3 id="信号种类"><a href="#信号种类" class="headerlink" title="信号种类"></a>信号种类</h3><p>每一种信号都给予一个符号名。<code>Linux</code>定义了<code>i386</code>的 32 个信号，在<code>include/asm/signal.h</code>中定义。表给出常用的符号名、描述和它们的信号值。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -508,6 +509,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>每种信号类型都有对应的信号处理程序(也叫信号的操作)，就好像每个中断都有一个中断服务例程一样。大多数信号的默认操作是结束接收信号的进程。然而，一个进程通常可以请求系统采取某些代替的操作，各种代替操作如下所述。</p>
 <ol>
 <li>忽略信号。随着这一选项的设置，进程将忽略信号的出现。有两个信号不可以被忽略：<code>SIGKILL</code>，它将结束进程；<code>SIGSTOP</code>，它是作业控制机制的一部分，将挂起作业的执行。</li>
@@ -523,6 +525,7 @@
 <h3 id="信号掩码"><a href="#信号掩码" class="headerlink" title="信号掩码"></a>信号掩码</h3><p>在<code>POSIX</code>下，每个进程有一个信号掩码(Signal Mask)。简单地说，信号掩码是一个“位图”，其中每一位都对应着一种信号。如果位图中的某一位为 1，就表示在执行当前信号的处理程序期间相应的信号暂时被“屏蔽”，使得在执行的过程中不会嵌套地响应那种信号。</p>
 <p>当一个程序正在运行时，在键盘上按一下<code>CTRL+C</code>，内核就会向相应的进程发出一个<code>SIGINT</code>信号，而对这个信号的默认操作就是通过<code>do_exit()</code>结束该进程的运行。在实践中却发现，两次<code>CTRL+C</code>事件往往过于密集，有时候刚刚进入第 1 个信号的处理程序，第 2 个<code>SIGINT</code>信号就到达了，而第 2 个信号的默认操作是杀死进程，这样，第 1 个信号的处理程序根本没有执行完。为了避免这种情况的出现，就在执行一个信号处理程序的过程中将该种信号自动屏蔽掉。所谓“屏蔽”，与将信号忽略是不同的，它只是将信号暂时“遮盖”一下，一旦屏蔽去掉，已到达的信号又继续得到处理。</p>
 <p><code>Linux</code>内核中有一个专门的函数集合来执行设置和修改信号掩码，它们放在<code>kernel/signal.c</code>中，其函数形式和功能如下：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -553,6 +556,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>另外，进程也可以利用<code>sigprocmask()</code>系统调用改变和检查自己的信号掩码的值，其实现代码在<code>kernel/signal.c</code>中，原型为：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">sys_sigprocmask</span><span class="params">(<span class="keyword">int</span> how, <span class="keyword">sigset_t</span> *<span class="built_in">set</span>, <span class="keyword">sigset_t</span> *oset)</span></span></span><br></pre></td></tr></table></figure></p>
 <p>其中，<code>set</code>是指向信号掩码的指针，进程的信号掩码是根据参数<code>how</code>的取值设置成<code>set</code>。参数<code>how</code>的取值及含义如下：</p>
 <ul>
@@ -564,6 +568,7 @@
 <p>其中<code>current</code>为指向当前进程<code>task_struc</code>结构的指针。第 3 个参数<code>oset</code>也是指向信号掩码的指针，它将包含以前的信号掩码值，使得在必要的时候，可以恢复它。</p>
 <p>进程可以用<code>sigpending()</code>系统调用来检查是否有挂起的阻塞信号。</p>
 <h3 id="系统调用"><a href="#系统调用" class="headerlink" title="系统调用"></a>系统调用</h3><p>除了<code>signal()</code>系统调用，<code>Linux</code>还提供关于信号的系统调用如下：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -602,6 +607,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>其中<code>sigset_t</code>定义为：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="keyword">unsigned</span> <span class="keyword">long</span> <span class="keyword">sigset_t</span>; <span class="comment">/* 至少 32 位*/</span></span><br></pre></td></tr></table></figure></p>
 <p>下面介绍几个典型的系统调用。</p>
 <h4 id="kill系统调用"><a href="#kill系统调用" class="headerlink" title="kill系统调用"></a>kill系统调用</h4><p>从前面的叙述可以看到，一个进程接收到的信号，或者是由异常的错误产生(如浮点异常)，或者是用户在键盘上用中断和退出信号干涉而产生，那么，一个进程能否给另一个进程发送信号？回答是肯定的，但发送者进程必须有适当的权限。<code>Kill()</code>系统调用可以完成此任务：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">kill</span><span class="params">(<span class="keyword">pid_t</span> pid, <span class="keyword">int</span> sig)</span></span></span><br></pre></td></tr></table></figure></p>
@@ -689,6 +695,7 @@
 </li>
 </ul>
 <p>这个联合体中，有 3 个成员已经在表 7.1 中提到，剩下的两个成员<code>_buf</code>和<code>_pad</code>用在内核中信号量的实现代码，开发者很少用到。事实上，这两个成员是<code>Linux</code>操作系统所特有的，在<code>UINX</code>中没有。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -739,6 +746,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>这个系统调用比较复杂，我们举例说明。下面这个程序段返回集合上索引为<code>semnum</code>对应信号量的值。当用<code>GETVAL</code>命令时，最后的参数(semnum)被忽略。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">get_sem_val</span><span class="params">( <span class="keyword">int</span> sid, <span class="keyword">int</span> semnum )</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">return</span>( semctl(sid, semnum, GETVAL, <span class="number">0</span>));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <h4 id="死锁"><a href="#死锁" class="headerlink" title="死锁"></a>死锁</h4><p>和信号量操作相关的概念还有“死锁”。当某个进程修改了信号量而进入临界区之后，却因为崩溃或被“杀死(kill)”而没有退出临界区，这时，其他被挂起在信号量上的进程永远得不到运行机会，这就是所谓的死锁。<code>Linux</code>通过维护一个信号量数组的调整列表(semadj)来避免这一问题。其基本思想是，当应用这些“调整”时，让信号量的状态退回到操作实施前的状态。</p>
 <p>关于调整的描述是在<code>sem_undo</code>数据结构中，在<code>include/linux/sem.h</code>描述如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*每一个任务都有一系列的恢复(undo)请求，当进程退出时，自动执行`undo`请求*/</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">sem_undo</span> &#123;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">sem_undo</span> * <span class="title">proc_next</span>;</span> <span class="comment">/*在这个进程上的下一个sem_undo节点 */</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">sem_undo</span> * <span class="title">id_next</span>;</span> <span class="comment">/* 在这个信号量集和上的下一个sem_undo节点*/</span></span><br><span class="line">	<span class="keyword">int</span> semid; <span class="comment">/* 信号量集的标识号*/</span> </span><br><span class="line">	<span class="keyword">short</span> * semadj; <span class="comment">/* 信号量数组的调整，每个进程一个*/</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
@@ -812,6 +820,7 @@
 <li>接受内核其他子系统的操作请求，特别是内存管理子系统。 </li>
 </ol>
 <p>通过<code>VFS</code>，<code>Linux</code>可以支持很多种具体文件系统，表是<code>Linux</code>支持的部分具体文件系统。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -878,7 +887,9 @@
 </tr>
 </tbody>
 </table>
+</div>
 <h3 id="VFS所处理的系统调用"><a href="#VFS所处理的系统调用" class="headerlink" title="VFS所处理的系统调用"></a>VFS所处理的系统调用</h3><p>表列出<code>VFS</code>的系统调用，这些系统调用涉及文件系统、常规文件、目录及符号链接。另外还有少数几个由<code>VFS</code>处理的其他系统调用：诸如<code>ioperm()</code>、<code>ioctl()</code>、<code>pipe()</code>和<code>mknod()</code>，涉及设备文件和管道文件。由<code>VFS</code>处理的最后一组系统调用，诸如<code>socket()</code>、<code>connect()</code>、<code>bind()</code>和<code>protocols()</code>，属于套接字系统调用并用于实现网络功能。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -973,6 +984,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <h2 id="VFS中的数据结构"><a href="#VFS中的数据结构" class="headerlink" title="VFS中的数据结构"></a>VFS中的数据结构</h2><p>你可以把通用文件模型看作是面向对象的，在这里，对象是一个软件结构，其中既定义了数据结构也定义了其上的操作方法。出于效率的考虑，<code>Linux</code>的编码并未采用面向对象的程序设计语言(比如C++)。因此对象作为数据结构来实现：数据结构中指向函数的域就对应于对象的方法。</p>
 <p>通用文件模型由下列对象类型组成。</p>
 <ul>
@@ -1043,6 +1055,7 @@
 <h3 id="有关操作的数据结构"><a href="#有关操作的数据结构" class="headerlink" title="有关操作的数据结构"></a>有关操作的数据结构</h3><p>各种<code>Linux</code>支持的具体文件系统都有一套自己的操作函数，在安装时，这些结构体的成员指针将被初始化，指向对应的函数。如果说<code>VFS</code>体现了<code>Linux</code>的优越性，那么这些数据结构的设计就体现了<code>VFS</code>的优越性所在。</p>
 <h4 id="超级块操作"><a href="#超级块操作" class="headerlink" title="超级块操作"></a>超级块操作</h4><p>超级块操作是由<code>super_operations</code>数据结构来描述的，该结构的起始地址存放在超级块的<code>s_op</code>域中。该结构定义于<code>fs.h</code>中：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">* <span class="doctag">NOTE:</span> write_inode, delete_inode, clear_inode, put_inode can be called</span></span><br><span class="line"><span class="comment">* without the big kernel lock held in all filesystems.</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">super_operations</span> &#123;</span></span><br><span class="line">	<span class="keyword">void</span> (*read_inode) (struct inode *);</span><br><span class="line">	<span class="keyword">void</span> (*read_inode2) (struct inode *, <span class="keyword">void</span> *) ;</span><br><span class="line">	<span class="keyword">void</span> (*dirty_inode) (struct inode *);</span><br><span class="line">	<span class="keyword">void</span> (*write_inode) (struct inode *, <span class="keyword">int</span>);</span><br><span class="line">	<span class="keyword">void</span> (*put_inode) (struct inode *);</span><br><span class="line">	<span class="keyword">void</span> (*delete_inode) (struct inode *);</span><br><span class="line">	<span class="keyword">void</span> (*put_super) (struct super_block *);</span><br><span class="line">	<span class="keyword">void</span> (*write_super) (struct super_block *);</span><br><span class="line">	<span class="keyword">void</span> (*write_super_lockfs) (struct super_block *);</span><br><span class="line">	<span class="keyword">void</span> (*unlockfs) (struct super_block *);</span><br><span class="line">	<span class="keyword">int</span> (*statfs) (struct super_block *, struct statfs *);</span><br><span class="line">	<span class="keyword">int</span> (*remount_fs) (struct super_block *, <span class="keyword">int</span> *, <span class="keyword">char</span> *);</span><br><span class="line">	<span class="keyword">void</span> (*clear_inode) (struct inode *);</span><br><span class="line">	<span class="keyword">void</span> (*umount_begin) (struct super_block *);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>其中的每个函数就叫做超级块的一个方法，表给予描述。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -1101,9 +1114,11 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>上面这些方法对所有的文件系统都是适用的，但对于一个具体的文件系统来说，可能只用到其中的几个方法。如果那些方法没有定义，则对应的域为空。</p>
 <h4 id="索引节点操作inode-operations"><a href="#索引节点操作inode-operations" class="headerlink" title="索引节点操作inode_operations"></a>索引节点操作inode_operations</h4><p>索引节点操作是由<code>inode_operations</code>结构来描述的，主要是用来将<code>VFS</code>对索引节点的操作转化为具体文件系统处理相应操作的函数，在<code>fs.h</code>中描述如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">inode_operations</span> &#123;</span></span><br><span class="line">	<span class="keyword">int</span> (*create) (struct inode *,struct dentry *,<span class="keyword">int</span>);</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">dentry</span> * (*<span class="title">lookup</span>) (<span class="title">struct</span> <span class="title">inode</span> *,<span class="title">struct</span> <span class="title">dentry</span> *);</span></span><br><span class="line">	<span class="keyword">int</span> (*link) (struct dentry *,struct inode *,struct dentry *);</span><br><span class="line">	<span class="keyword">int</span> (*unlink) (struct inode *,struct dentry *);</span><br><span class="line">	<span class="keyword">int</span> (*symlink) (struct inode *,struct dentry *,<span class="keyword">const</span> <span class="keyword">char</span> *);</span><br><span class="line">	<span class="keyword">int</span> (*mkdir) (struct inode *,struct dentry *,<span class="keyword">int</span>);</span><br><span class="line">	<span class="keyword">int</span> (*rmdir) (struct inode *,struct dentry *);</span><br><span class="line">	<span class="keyword">int</span> (*mknod) (struct inode *,struct dentry *,<span class="keyword">int</span>,<span class="keyword">int</span>);</span><br><span class="line">	<span class="keyword">int</span> (*rename) (struct inode *, struct dentry *,</span><br><span class="line">	struct inode *, struct dentry *);</span><br><span class="line">	<span class="keyword">int</span> (*readlink) (struct dentry *, <span class="keyword">char</span> *,<span class="keyword">int</span>);</span><br><span class="line">	<span class="keyword">int</span> (*follow_link) (struct dentry *, struct nameidata *);</span><br><span class="line">	<span class="keyword">void</span> (*truncate) (struct inode *);</span><br><span class="line">	<span class="keyword">int</span> (*permission) (struct inode *, <span class="keyword">int</span>); </span><br><span class="line">	<span class="keyword">int</span> (*revalidate) (struct dentry *);</span><br><span class="line">	<span class="keyword">int</span> (*setattr) (struct dentry *, struct iattr *);</span><br><span class="line">	<span class="keyword">int</span> (*getattr) (struct dentry *, struct iattr *);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
 <p>表所示为对索引节点的每个方法给予描述。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -1174,9 +1189,11 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>以上这些方法均适用于所有的文件系统，但对某一个具体文件系统来说，可能只用到其中的一部分方法。例如，<code>msdos</code>文件系统其公用索引节点的操作在<code>fs/msdos/namei.c</code>中定义如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">inode_operations</span> <span class="title">msdos_dir_inode_operations</span> = &#123;</span></span><br><span class="line">	create: msdos_create,</span><br><span class="line">	lookup: msdos_lookup,</span><br><span class="line">	unlink: msdos_unlink,</span><br><span class="line">	mkdir: msdos_mkdir, </span><br><span class="line">	rmdir: msdos_rmdir,</span><br><span class="line">	rename: msdos_rename,</span><br><span class="line">	setattr: fat_notify_change,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
 <h4 id="目录项操作"><a href="#目录项操作" class="headerlink" title="目录项操作"></a>目录项操作</h4><p>目录项操作是由<code>dentry_operations</code>数据结构来描述的，定义于<code>include/linux/dcache.h</code>中：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">dentry_operations</span> &#123;</span></span><br><span class="line">	<span class="keyword">int</span> (*d_revalidate)(struct dentry *, <span class="keyword">int</span>);</span><br><span class="line">	<span class="keyword">int</span> (*d_hash) (struct dentry *, struct qstr *);</span><br><span class="line">	<span class="keyword">int</span> (*d_compare) (struct dentry *, struct qstr *, struct qstr *);</span><br><span class="line">	<span class="keyword">int</span> (*d_delete)(struct dentry *);</span><br><span class="line">	<span class="keyword">void</span> (*d_release)(struct dentry *);</span><br><span class="line">	<span class="keyword">void</span> (*d_iput)(struct dentry *, struct inode *);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
 <p>表给出目录项对象的方法及其描述。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -1211,8 +1228,10 @@
 </tr>
 </tbody>
 </table>
+</div>
 <h4 id="文件操作"><a href="#文件操作" class="headerlink" title="文件操作"></a>文件操作</h4><p>文件操作是由<code>file_operations</code>结构来描述的，定义在<code>fs.h</code>中：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * <span class="doctag">NOTE:</span></span></span><br><span class="line"><span class="comment"> * read, write, poll, fsync, readv, writev can be called</span></span><br><span class="line"><span class="comment"> * without the big kernel lock held in all filesystems.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span> &#123;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">module</span> *<span class="title">owner</span>;</span></span><br><span class="line">	<span class="keyword">loff_t</span> (*llseek) (struct file *, <span class="keyword">loff_t</span>, <span class="keyword">int</span>);</span><br><span class="line">	<span class="keyword">ssize_t</span> (*read) (struct file *, <span class="keyword">char</span> *, <span class="keyword">size_t</span>, <span class="keyword">loff_t</span> *); </span><br><span class="line">	<span class="keyword">ssize_t</span> (*write) (struct file *, <span class="keyword">const</span> <span class="keyword">char</span> *, <span class="keyword">size_t</span>, <span class="keyword">loff_t</span> *);</span><br><span class="line">	<span class="keyword">int</span> (*readdir) (struct file *, <span class="keyword">void</span> *, <span class="keyword">filldir_t</span>);</span><br><span class="line">	<span class="function"><span class="keyword">unsigned</span> <span class="title">int</span> <span class="params">(*poll)</span> <span class="params">(struct file *, struct poll_table_struct *)</span></span>;</span><br><span class="line">	<span class="keyword">int</span> (*ioctl) (struct inode *, struct file *, <span class="keyword">unsigned</span> <span class="keyword">int</span>, <span class="keyword">unsigned</span> <span class="keyword">long</span>);</span><br><span class="line">	<span class="keyword">int</span> (*mmap) (struct file *, struct vm_area_struct *);</span><br><span class="line">	<span class="keyword">int</span> (*open) (struct inode *, struct file *);</span><br><span class="line">	<span class="keyword">int</span> (*flush) (struct file *);</span><br><span class="line">	<span class="keyword">int</span> (*release) (struct inode *, struct file *);</span><br><span class="line">	<span class="keyword">int</span> (*fsync) (struct file *, struct dentry *, <span class="keyword">int</span> datasync);</span><br><span class="line">	<span class="keyword">int</span> (*fasync) (<span class="keyword">int</span>, struct file *, <span class="keyword">int</span>);</span><br><span class="line">	<span class="keyword">int</span> (*lock) (struct file *, <span class="keyword">int</span>, struct file_lock *);</span><br><span class="line">	<span class="keyword">ssize_t</span> (*readv) (struct file *, <span class="keyword">const</span> struct iovec *, <span class="keyword">unsigned</span> <span class="keyword">long</span>, <span class="keyword">loff_t</span> *);</span><br><span class="line">	<span class="keyword">ssize_t</span> (*writev) (struct file *, <span class="keyword">const</span> struct iovec *, <span class="keyword">unsigned</span> <span class="keyword">long</span>, <span class="keyword">loff_t</span> *);</span><br><span class="line">	<span class="keyword">ssize_t</span> (*sendpage) (struct file *, struct page *, <span class="keyword">int</span>, <span class="keyword">size_t</span>, <span class="keyword">loff_t</span> *, <span class="keyword">int</span>);</span><br><span class="line">	<span class="function"><span class="keyword">unsigned</span> <span class="title">long</span> <span class="params">( *get_unmapped_area)</span><span class="params">( struct file *, <span class="keyword">unsigned</span> <span class="keyword">long</span>, <span class="keyword">unsigned</span> <span class="keyword">long</span>, <span class="keyword">unsigned</span> <span class="keyword">long</span>, <span class="keyword">unsigned</span> <span class="keyword">long</span>)</span></span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
 <p>这个数据结构就是连接<code>VFS</code>文件操作与具体文件系统的文件操作之间的枢纽，也是编写设备驱动程序的重要接口，后面还会给出进一步的说明。对每个函数的描述如表所示。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -1295,6 +1314,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p><code>VFS</code>中定义的这个<code>file_operations</code>数据结构相当于一个标准模板，对于一个具体的文件系统来说，可能只用到其中的一些函数。注意，2.2 和 2.4 版在对<code>file_operations</code>进行初始化时有所不同，在 2.2 版中，如果某个函数没有定义，则将其置为<code>NULL</code>，如：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span> <span class="title">device_fops</span> = &#123;</span></span><br><span class="line">	<span class="literal">NULL</span>, <span class="comment">/* seek */</span></span><br><span class="line">	device_read, <span class="comment">/* read */</span></span><br><span class="line">	device_write, <span class="comment">/* write */</span></span><br><span class="line">	<span class="literal">NULL</span>, <span class="comment">/* readdir */</span></span><br><span class="line">	<span class="literal">NULL</span>, <span class="comment">/* poll */</span></span><br><span class="line">	<span class="literal">NULL</span>, <span class="comment">/* ioctl */</span></span><br><span class="line">	<span class="literal">NULL</span>, <span class="comment">/* mmap */</span></span><br><span class="line">	device_open, <span class="comment">/* open */</span></span><br><span class="line">	<span class="literal">NULL</span>, <span class="comment">/* flush */</span></span><br><span class="line">	device_release <span class="comment">/* release */</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
 <p>这是标准<code>C</code>的用法，在 2.4 版中，采用了<code>gcc</code>的扩展用法，如：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span> <span class="title">device_fops</span> = &#123;</span></span><br><span class="line">	read : device_read, <span class="comment">/* read */</span></span><br><span class="line">	write : device_write, <span class="comment">/* write */</span></span><br><span class="line">	open : device_open, <span class="comment">/* open */</span></span><br><span class="line">	release : device_release <span class="comment">/* release */</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
 <p>这种方式显然简单明了，在设备驱动程序的开发中，经常会用到这种形式。</p>
@@ -1656,7 +1676,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">352</span>
+                  <span class="site-state-item-count">351</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

@@ -404,7 +404,7 @@
 <li>ssh user:pass@remotehost，远程登录后，再在shell中执行cat test.txt命令；</li>
 <li>ssh user:pass@remotehost ‘cat test.txt’，直接由sshd启动一个shell、自动执行’cat test.txt’命令；<br>第一种方式，是登录之后，再通过人机交互输入命令，这时sshd会为登录后得到的shell程序准备一个pty，以支持人机交互；而第二种方式，在登录之后并不需要交互，所以sshd就并不会使用pty，而是直接通过socket将shell的输入输出跟自己连接起来（再由sshd将其转发给ssh-client）。</li>
 </ol>
-<p>下面再说一下pty。pty分master和slave两端，跟pipe的两端很像，写入到master端的数据可以原样从slave端读出，反之亦然。在上面所述的第一种方式下，各个进程的联系如下：<br>ssh-client <-> [socket] <-> sshd <-> [master] <-> [slave] <-> shell<br>pty的master和slave两端分别被sshd和shell打开，就像pipe一样，将它们的输入输出连接起来。而pty跟pipe的不同之处，则正是前面所说的终端的功能（pty的slave端对于shell来说就是一个终端）。<br>跟tty不同，tty是系统初始化时生成的，其数目是固定的（比如12个）。而pty是系统启动后动态创建的。其创建的方法是：fd = open(‘/dev/ptms’)，这样就得到了一个pty。open返回的fd代表master端，通过ptyname(fd)可以得到对应slave端的文件路径（比如’/dev/pts/2’），这个设备文件是master端被open之后动态生成的。</-></-></-></-></-></p>
+<p>下面再说一下pty。pty分master和slave两端，跟pipe的两端很像，写入到master端的数据可以原样从slave端读出，反之亦然。在上面所述的第一种方式下，各个进程的联系如下：<br>ssh-client &lt;-&gt; [socket] &lt;-&gt; sshd &lt;-&gt; [master] &lt;-&gt; [slave] &lt;-&gt; shell<br>pty的master和slave两端分别被sshd和shell打开，就像pipe一样，将它们的输入输出连接起来。而pty跟pipe的不同之处，则正是前面所说的终端的功能（pty的slave端对于shell来说就是一个终端）。<br>跟tty不同，tty是系统初始化时生成的，其数目是固定的（比如12个）。而pty是系统启动后动态创建的。其创建的方法是：fd = open(‘/dev/ptms’)，这样就得到了一个pty。open返回的fd代表master端，通过ptyname(fd)可以得到对应slave端的文件路径（比如’/dev/pts/2’），这个设备文件是master端被open之后动态生成的。</p>
 <h1 id="权限控制"><a href="#权限控制" class="headerlink" title="权限控制"></a>权限控制</h1><p>用户登录验证成功后，getty、sshd这样的程序就会为用户启动他所对应的”登录后执行的程序”，并且在此之前会通过setuid()、setgid()这样的系统调用，设置好进程的uid和gid（用户和组）。之后，这个进程对文件的读、写、执行，以及对系统调用的使用，等都会受到进程uid和gid的限制。</p>
 <p>用户对系统的各种操作都是通过进程来完成的。而用户的输入输出都被定向到他登录后所得到的那个进程上，于是用户能够控制这个进程，来干他想干的事情（如果这个进程接受控制的话，比如进程运行着一个shell程序）。<br>用户的操作都受限于进程的uid和gid，比如文件访问、向进程发送信号、使用系统调用、监听网络端口、等都需要对其做检查。</p>
 <p>除非是root用户，否则没有权限使用setuid()、setgid()这样的系统调用来修改进程的uid和gid。而login时，login、sshd这样的进程之所以能够设置登录后进程的uid和gid，正是因为它们都是root用户的进程。<br>如果想要改变登录用户，则必须利用属于root用户的进程。一种办法是退出登录，然后走老路，重新跟getty、sshd这样的进程打交道，而使用其他用户名登录。另一种办法是执行一个setuid/setgid程序（参见《记一个linux内核内存提权问题》中的说明），临时获得root权限，再实现用户的切换（例如su就是这样一个能实现用户切换的setuid命令）。</p>
@@ -548,7 +548,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">352</span>
+                  <span class="site-state-item-count">351</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

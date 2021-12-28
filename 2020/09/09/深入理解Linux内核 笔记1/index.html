@@ -982,7 +982,7 @@
 <ul>
 <li>首先，该宏有三个参数，它们是<code>prev</code>，<code>next</code>和<code>last</code>。prev和next仅是局部变量prev和next的占位符，即它们是输入参数，分别表示<strong>被替换进程和新进程描述符的地址在内存中的位置</strong>。</li>
 <li>当内核想再次激活A，就必须暂停另一个进程C，于是就要用<strong>prev指向C而next指向A来执行另一个swithch_to宏</strong>。当A恢复它的执行流时，就会找到它原来的内核栈，于是prev局部变量还是指向A的描述符而next指向B的描述符。此时，代表进程A执行的内核就失去了对C的任何引用。</li>
-<li><code>switch_to</code>宏的最后一个参数是输出参数，它表示<strong>宏把进程C的描述符地址写在内存的什么位置了</strong>。在进程切换之前，宏把第一个输入参数prev表示的变量的内容存入CPU的eax寄存器。在完成进程切换，A已经恢复执行时，宏把CPU的eax寄存器的内容写入由第三个输出参数——-last所指示的A在内存中的位置。因为CPU寄存器不会在切换点发生变化，所以C的描述符地址也存在内存的这个位置。在schedule()执行过程中，参数last指向A的局部变量prev，所以prev被C的地址覆盖。</li>
+<li><code>switch_to</code>宏的最后一个参数是输出参数，它表示<strong>宏把进程C的描述符地址写在内存的什么位置了</strong>。在进程切换之前，宏把第一个输入参数prev表示的变量的内容存入CPU的eax寄存器。在完成进程切换，A已经恢复执行时，宏把CPU的eax寄存器的内容写入由第三个输出参数———-last所指示的A在内存中的位置。因为CPU寄存器不会在切换点发生变化，所以C的描述符地址也存在内存的这个位置。在schedule()执行过程中，参数last指向A的局部变量prev，所以prev被C的地址覆盖。</li>
 </ul>
 <p>图3-7显示了进程A，B，C内核堆栈的内容以及eax寄存器的内容。图中显示的是在被eax寄存器的内容覆盖以前的prev局部变量的值。<br><img src="/img/1600259072.jpg" alt></p>
 <p>我们将采用标准汇编语言而不是麻烦的内联汇编语言来描述switch_to宏在80x86微处理器上所完成的典型工作。</p>
@@ -1792,6 +1792,7 @@
 </ul>
 <p>处理器间中断处理程序的汇编语言代码是由<code>BUILD_INTERRUPT</code>宏产生的，它保存寄存器，从栈顶押入向量号减256的值，然后调用高级C函数，其名字就是<strong>第几处理程序的名字加前缀smp_</strong>，例如<code>CALL_FUNCTION_VECTOR</code>类型的处理器间中断的低级处理程序时<code>call_function_interrupt()</code>，它调用名为<code>smp_call_function_interrupt()</code>的高级处理程序，每个高级处理程序应答本地APIC上的处理器间中断，然后执行由中断触发的特定操作。</p>
 <p>Linux有一组函数使得发生处理器间中断变为一件容易的事：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -1818,6 +1819,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <h2 id="软中断及tasklet"><a href="#软中断及tasklet" class="headerlink" title="软中断及tasklet"></a>软中断及tasklet</h2><p><strong>把可廷迟中断从中断处理程序中抽出来有助于使内核保持较短的响应时间</strong>。这对于那些期望它们的中断能在几毫秒内得到处理的”急迫”应用来说是非常重要的。</p>
 <p>Linux2.6迎接这种挑战是通过两种非紧迫、可中断内核函数：所谓的<strong>可延迟函数</strong>和<strong>通过工作队列来执行的函数</strong>。</p>
 <p><strong>软中断的分配是静态的，而tasklet的分配和初始化可以在运行是进行</strong>。软中断可以并发地运行在多个CPU上。因此，软中断是<strong>可重入函数</strong>而且必须明确地使用自旋锁保护其数据结构。tasklet不必担心这些问题，因为内核对tasklet的执行了更加严格的控制。<strong>相同类型的tasklet总是被串行地执行</strong>，换句话说就是：<strong>不能在两个CPU上同时运行相同类型的tasklet</strong>。</p>
@@ -2113,7 +2115,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">352</span>
+                  <span class="site-state-item-count">351</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

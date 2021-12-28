@@ -341,7 +341,7 @@
         <p>【摘要】本文分析了Linux内核对于信号的实现机制和应用层的相关处理。首先介绍了软中断信号的本质及信号的两种不同分类方法尤其是不可靠信号的原理。接着分析了内核对于信号的处理流程包括信号的触发/注册/执行及注销等。最后介绍了应用层的相关处理，主要包括信号处理函数的安装、信号的发送、屏蔽阻塞等，最后给了几个简单的应用实例。</p>
 <h1 id="中断和异常"><a href="#中断和异常" class="headerlink" title="中断和异常"></a>中断和异常</h1><h2 id="中断（也称硬件中断）"><a href="#中断（也称硬件中断）" class="headerlink" title="中断（也称硬件中断）"></a>中断（也称硬件中断）</h2><p>定义：中断是由其他硬件设备依照CPU时钟周期信号随机产生的。<br>分类： 可屏蔽中断、非可屏蔽中断<br>来源：间隔定时器和I/O</p>
 <h2 id="异常（也称软件中断）"><a href="#异常（也称软件中断）" class="headerlink" title="异常（也称软件中断）"></a>异常（也称软件中断）</h2><p>定义：当指令执行时由CPU控制单元产生的，异常也称为“异步中断”是因为只有在 一条指令终止执行后CPU才会发出中断。<br>分类： 处理器探测到的异常、故障、陷阱、异常终止、编程异常(也称软中断)、int指令<br>来源：程序的错误产生的<br>内核必须处理的异常(例如：缺页和内核服务的请求-int)</p>
-<h2 id="异常处理"><a href="#异常处理" class="headerlink" title="异常处理"></a>异常处理</h2><p>当发生异常时，CPU控制单元产生一个硬件出错码。CPU根据该中断吗找到中断向量表内的对应向量，根据该向量转到中断处理程序。中断处理程序处理完之后向当前进程发送一个SIG***信号。若进程定义了相应的信号处理程序则转移到相应的程序执行，若没有，则执行内核定义的操作。</p>
+<h2 id="异常处理"><a href="#异常处理" class="headerlink" title="异常处理"></a>异常处理</h2><p>当发生异常时，CPU控制单元产生一个硬件出错码。CPU根据该中断吗找到中断向量表内的对应向量，根据该向量转到中断处理程序。中断处理程序处理完之后向当前进程发送一个SIG<em>*</em>信号。若进程定义了相应的信号处理程序则转移到相应的程序执行，若没有，则执行内核定义的操作。</p>
 <h2 id="中断处理"><a href="#中断处理" class="headerlink" title="中断处理"></a>中断处理</h2><p>设备产生中断，PIC（可编程中断控制器）会产生一个对应的中断向量和中断向量表中的每一个中断向量进行比较，转到对应的中断处理程序，中断处理程序进行保存现场，做相关处理，恢复现场，内核调度，返回用户进程。</p>
 <h2 id="硬件中断的上半部和下半部及实现方式"><a href="#硬件中断的上半部和下半部及实现方式" class="headerlink" title="硬件中断的上半部和下半部及实现方式"></a>硬件中断的上半部和下半部及实现方式</h2><p>硬件中断的分类</p>
 <ul>
@@ -488,11 +488,11 @@
 </ol>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">siginfo_t &#123;</span><br><span class="line">    int si_signo;  /* 信号值，对所有信号有意义*/</span><br><span class="line">    int si_errno;  /* errno值，对所有信号有意义*/</span><br><span class="line">    int si_code;   /* 信号产生的原因，对所有信号有意义*/</span><br><span class="line">    union&#123;                               /* 联合数据结构，不同成员适应不同信号 */</span><br><span class="line">        //确保分配足够大的存储空间</span><br><span class="line">        int _pad[SI_PAD_SIZE];</span><br><span class="line">        //对SIGKILL有意义的结构</span><br><span class="line">        struct&#123;</span><br><span class="line">            ...</span><br><span class="line">        &#125;...</span><br><span class="line">        ... ...</span><br><span class="line">        ... ...                               </span><br><span class="line">        //对SIGILL, SIGFPE, SIGSEGV, SIGBUS有意义的结构</span><br><span class="line">        struct&#123;</span><br><span class="line">            ...</span><br><span class="line">        &#125;...</span><br><span class="line">        ... ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>前面在讨论系统调用sigqueue发送信号时，sigqueue的第三个参数就是sigval联合数据结构，当调用sigqueue时，该数据结构中的数据就将拷贝到信号处理函数的第二个参数中。这样，在发送信号同时，就可以让信号传递一些附加信息。信号可以传递信息对程序开发是非常有意义的。</p>
-<ol start="3">
+<ol>
 <li>sa_mask指定在信号处理程序执行过程中，哪些信号应当被阻塞。缺省情况下当前信号本身被阻塞，防止信号的嵌套发送，除非指定SA_NODEFER或者SA_NOMASK标志位。</li>
 </ol>
 <p>注：请注意sa_mask指定的信号阻塞的前提条件，是在由sigaction（）安装信号的处理函数执行过程中由sa_mask指定的信号才被阻塞。</p>
-<ol start="4">
+<ol>
 <li>sa_flags中包含了许多标志位，包括刚刚提到的SA_NODEFER及SA_NOMASK标志位。另一个比较重要的标志位是SA_SIGINFO，当设定了该标志位时，表示信号附带的参数可以被传递到信号处理函数中，因此，应该为sigaction结构中的sa_sigaction指定处理函数，而不应该为sa_handler指定信号处理函数，否则，设置该标志变得毫无意义。即使为sa_sigaction指定了信号处理函数，如果不设置SA_SIGINFO，信号处理函数同样不能得到信号传递过来的数据，在信号处理函数中对这些信息的访问都将导致段错误（Segmentation fault）。 </li>
 </ol>
 <h1 id="信号的发送"><a href="#信号的发送" class="headerlink" title="信号的发送"></a>信号的发送</h1><p>发送信号的主要函数有：kill()、raise()、 sigqueue()、alarm()、setitimer()以及abort()。</p>
@@ -682,7 +682,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">352</span>
+                  <span class="site-state-item-count">351</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

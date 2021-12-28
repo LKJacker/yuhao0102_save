@@ -376,7 +376,7 @@
 <h4 id="屏蔽与使能中断"><a href="#屏蔽与使能中断" class="headerlink" title="屏蔽与使能中断"></a>屏蔽与使能中断</h4><p>之前用过，这里简单看看。</p>
 <p>在ucore中提供的底层机制包括中断屏蔽/使能控制等。<code>kern/sync.c</code>有开关中断的控制函数<code>local_intr_save(x)</code>和<code>local_intr_restore(x)</code>，它们是基于<code>kern/driver</code>文件下的<code>intr_enable()</code>、<code>intr_disable()</code>函数实现的。具体调用关系为：</p>
 <blockquote>
-<p>关中断：<code>local_intr_save</code> –&gt; <code>__intr_save</code> –&gt; <code>intr_disable</code> –&gt; <code>cli</code><br>开中断：<code>local_intr_restore</code> –&gt; <code>__intr_restore</code> –&gt; <code>intr_enable</code> –&gt; <code>sti</code></p>
+<p>关中断：<code>local_intr_save</code> —&gt; <code>__intr_save</code> —&gt; <code>intr_disable</code> —&gt; <code>cli</code><br>开中断：<code>local_intr_restore</code> —&gt; <code>__intr_restore</code> —&gt; <code>intr_enable</code> —&gt; <code>sti</code></p>
 </blockquote>
 <p>最终的cli和sti是x86的机器指令，最终实现了关（屏蔽）中断和开（使能）中断，即设置了eflags寄存器中与中断相关的位。通过关闭中断，可以防止对当前执行的控制流被其他中断事件处理所打断。既然不能中断，那也就意味着在内核运行的当前进程无法被打断或被重新调度，即实现了对临界区的互斥操作。所以在单处理器情况下，可以通过开关中断实现对临界区的互斥保护，需要互斥的临界区代码的一般写法为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">local_intr_save(intr_flag);</span><br><span class="line">&#123;</span><br><span class="line">  临界区代码</span><br><span class="line">&#125;</span><br><span class="line">local_intr_restore(intr_flag);</span><br></pre></td></tr></table></figure></p>
 <p>但是，在多处理器情况下，这种方法是无法实现互斥的，因为屏蔽了一个CPU的中断，只能阻止本地CPU上的进程不会被中断或调度，并不意味着其他CPU上执行的进程不能执行临界区的代码。所以，开关中断只对单处理器下的互斥操作起作用。</p>
@@ -394,7 +394,7 @@
 <p><code>wait_queue_first</code>：取得wait queue的第一个wait<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">wait_t *</span><br><span class="line">wait_queue_first(wait_queue_t *queue) &#123;</span><br><span class="line">    list_entry_t *le = list_next(&amp;(queue-&gt;wait_head));</span><br><span class="line">    if (le != &amp;(queue-&gt;wait_head)) &#123;</span><br><span class="line">        return le2wait(le, wait_link);</span><br><span class="line">    &#125;</span><br><span class="line">    return NULL;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p><code>wait_queue_last</code>：取得wait queue的最后一个wait<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">wait_t *</span><br><span class="line">wait_queue_last(wait_queue_t *queue) &#123;</span><br><span class="line">    list_entry_t *le = list_prev(&amp;(queue-&gt;wait_head));</span><br><span class="line">    if (le != &amp;(queue-&gt;wait_head)) &#123;</span><br><span class="line">        return le2wait(le, wait_link);</span><br><span class="line">    &#125;</span><br><span class="line">    return NULL;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p><code>bool wait_queue_empty</code>：wait queue是否为空<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">bool</span><br><span class="line">wait_queue_empty(wait_queue_t *queue) &#123;</span><br><span class="line">    return list_empty(&amp;(queue-&gt;wait_head));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>高层函数基于底层函数实现了让进程进入等待队列–wait_current_set，以及从等待队列中唤醒进程–wakeup_wait，相关函数如下：</p>
+<p>高层函数基于底层函数实现了让进程进入等待队列—wait_current_set，以及从等待队列中唤醒进程—wakeup_wait，相关函数如下：</p>
 <p><code>wait_current_set</code>：进程进入等待队列，当前进程的状态设置成睡眠<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">void</span><br><span class="line">wait_current_set(wait_queue_t *queue, wait_t *wait, uint32_t wait_state) &#123;</span><br><span class="line">    assert(current != NULL);</span><br><span class="line">    wait_init(wait, current);</span><br><span class="line">    current-&gt;state = PROC_SLEEPING;</span><br><span class="line">    current-&gt;wait_state = wait_state;</span><br><span class="line">    wait_queue_add(queue, wait);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p><code>wait_current_del</code>：把与当前进程关联的wait从等待队列queue中删除<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#define wait_current_del(queue, wait)                                       \</span><br><span class="line">    do &#123;                                                                    \</span><br><span class="line">        if (wait_in_queue(wait)) &#123;                                          \</span><br><span class="line">            wait_queue_del(queue, wait);                                    \</span><br><span class="line">        &#125;                                                                   \</span><br><span class="line">    &#125; while (0)</span><br></pre></td></tr></table></figure></p>
 <p><code>wakeup_wait</code>：唤醒等待队列上的wait所关联的进程<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">void</span><br><span class="line">wakeup_wait(wait_queue_t *queue, wait_t *wait, uint32_t wakeup_flags, bool del) &#123;</span><br><span class="line">    if (del) &#123;</span><br><span class="line">        wait_queue_del(queue, wait);</span><br><span class="line">    &#125;</span><br><span class="line">    wait-&gt;wakeup_flags = wakeup_flags;</span><br><span class="line">    wakeup_proc(wait-&gt;proc);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
@@ -504,8 +504,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/06/29/清华大学操作系统课程实验二/" rel="next" title="清华大学操作系统课程实验二">
-                <i class="fa fa-chevron-left"></i> 清华大学操作系统课程实验二
+              <a href="/2019/06/29/清华大学操作系统课程笔记六/" rel="next" title="清华大学操作系统课程笔记六">
+                <i class="fa fa-chevron-left"></i> 清华大学操作系统课程笔记六
               </a>
             
           </div>
@@ -514,8 +514,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2019/06/29/清华大学操作系统课程实验五/" rel="prev" title="清华大学操作系统课程实验五">
-                清华大学操作系统课程实验五 <i class="fa fa-chevron-right"></i>
+              <a href="/2019/06/29/清华大学操作系统课程实验三/" rel="prev" title="清华大学操作系统课程实验三">
+                清华大学操作系统课程实验三 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -594,7 +594,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">352</span>
+                  <span class="site-state-item-count">351</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

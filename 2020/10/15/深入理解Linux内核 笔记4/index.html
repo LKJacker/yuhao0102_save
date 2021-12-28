@@ -1092,7 +1092,7 @@
 <p>存放在文件对象中的主要信息是文件指针，即文件中当前的位置，下一个操作将在该位置发生。由于几个进程可能同时访问同一文件，因此<strong>文件指针必须存放在文件对象而不是索引节点对象中</strong>。</p>
 <p>文件对象通过一个名为<code>filp</code>的slab高速缓存分配，<code>filp</code>描述符地址存放在<code>filp_cachep</code>变量中。由于分配的文件对象数目是有限的，因此<code>files_stat</code>变量在其<code>max_files</code>字段中指定了可分配文件对象的最大数目，也就是系统可同时访问的最大文件数。</p>
 <p>在使用文件对象包含在由具体文件系统的超级块所确立的几个链表中。每个超级块对象把文件对象链表的头存放在<code>s_files</code>字段中；因此，属于不同文件系统的文件对象就包含在不同的链表中。链表中分别指向前一个元素和后一个元素的指针都存放在文件对象的<code>f_list</code>字段中。<code>files_lock</code>自旋锁保护超级块的<code>s_files</code>链表免受多处理器系统上的同时访问。</p>
-<p>文件对象的<code>f_count</code>字段是一个引用计数器：它记录使用文件对象的进程数(记住，以<code>CLONE_FILES</code>标志创建的轻量级进程共享打开文件表，因此它们可以使用相同的文件对象)。当内核本身使用该文件对象时也要增加计数器的值–例如，把对象插入链表中或发出<code>dup()</code>系统调用时。</p>
+<p>文件对象的<code>f_count</code>字段是一个引用计数器：它记录使用文件对象的进程数(记住，以<code>CLONE_FILES</code>标志创建的轻量级进程共享打开文件表，因此它们可以使用相同的文件对象)。当内核本身使用该文件对象时也要增加计数器的值—例如，把对象插入链表中或发出<code>dup()</code>系统调用时。</p>
 <p>当VFS代表进程必须打开一个文件时，它调用<code>get_empty_filp()</code>函数来分配一个新的文件对象。该函数调用<code>kmem_cache_alloc()</code>从filp高速缓存中获得一个空闲的文件对像，然后初始化这个对象的字段，如下所示：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">f = kmem_cache_alloc(filp_cachep, GFP_KERNEL);</span><br><span class="line">percpu_counter_inc(&amp;nr_files);</span><br><span class="line"><span class="built_in">memset</span>(f, <span class="number">0</span>, <span class="keyword">sizeof</span>(*f));</span><br><span class="line">tsk = current;</span><br><span class="line">INIT_LIST_HEAD(&amp;f-&gt;f_u.fu_list);</span><br><span class="line">atomic_set(&amp;f-&gt;f_count, <span class="number">1</span>);</span><br><span class="line">rwlock_init(&amp;f-&gt;f_owner.lock);</span><br><span class="line">f-&gt;f_uid = tsk-&gt;fsuid;</span><br><span class="line">f-&gt;f_gid = tsk-&gt;fsgid;</span><br></pre></td></tr></table></figure></p>
 <p>每个文件系统都有其自己的文件操作集合，执行诸如读写文件这样的操作。当内核将一个索引节点从磁盘装入内存时，就会把指向这些文件操作的指针存放在<code>file_operations</code>结构中，而该结构的地址存放在该索引节点对象的<code>i_fop</code>字段中。当进程打开这个文件时，VFS就用存放在索引节点中的这个地址初始化新文件对象的<code>f_op</code>字段，使得对文件操作的后续调用能够使用这些函数。如果需要，VFS随后也可以通过在<code>f_op</code>字段存放一个新值而修改文件操作的集合。</p>
 <p>下面的列表描述了文件的操作：</p>
@@ -1160,7 +1160,7 @@
 <p>对于在fd数组中有元素的每个文件来说，数组的索引就是<strong>文件描述符</strong>(file descriptor)。通常，数组的第一个元素(索引为0)是进程的标准输入文件，数组的第二个元素(索引为1)是进程的标准输出文件，数组的第三个元素(索引为2)是进程的标准错误文件。两个文件描述符可以指向同一个文件。进程不能使用多于<code>NR_OPEN</code>个文件描述符。内核也在进程描述符的<code>signal-&gt;rlim[RLIMIT_NOFILE]</code>结构上强制动态限制文件描述符的最大数。</p>
 <p><code>open_fds</code>字段最初包含<code>open_fds_init</code>的地址，<code>open_fds_init</code>表示当前已打开文件的文件描述符的位图。<code>max_fdset</code>存放位图中的位数。当内核开始使用一个文件对象时，内核提供<code>fget()</code>函数。这个函数接收文件描述符<code>fd</code>作为参数，返回在<code>current-&gt;files-&gt;fd[fd]</code>中的地址，即对应文件对象的地址，如果没有任何文件与fd对应，则返回NULL。<br><img src="/img/1603195761.jpg" alt></p>
 <p>当内核控制路径完成对文件对象的使用时，调用内核提供的<code>fput()</code>函数。该函数将文件对象的地址作为参数，并递减文件对象引用计数器<code>f_count</code>的值，另外，如果这个域变为0，该函数就调用文件操作的release方法（如果已定义），释放相应的目录项对象，并递减对应索引节点对象的i_write域的值（如果该文件是写打开），最后，将该文件对象从“正在使用”链表移到“未使用”链表。　</p>
-<h2 id="文件系统类型"><a href="#文件系统类型" class="headerlink" title="文件系统类型"></a>文件系统类型</h2><p><strong>文件系统注册</strong>—-也就是通常在系统初始化期间并且在使用文件系统类型之前必须执行的基本操作。一旦文件系统被注册，其特定的函数对内核就是可用的，因此文件系统类型可以安装在系统的目录树上。</p>
+<h2 id="文件系统类型"><a href="#文件系统类型" class="headerlink" title="文件系统类型"></a>文件系统类型</h2><p><strong>文件系统注册</strong>——也就是通常在系统初始化期间并且在使用文件系统类型之前必须执行的基本操作。一旦文件系统被注册，其特定的函数对内核就是可用的，因此文件系统类型可以安装在系统的目录树上。</p>
 <h3 id="特殊文件系统"><a href="#特殊文件系统" class="headerlink" title="特殊文件系统"></a>特殊文件系统</h3><p><strong>特殊文件系统</strong>为系统程序员和管理员提供一种容易的方式来<strong>操作内核的数据结构并实现系统的特殊特征</strong>。常用特殊文件系统如表，有几个文件系统没有固定的安装点，可以自由安装使用。一些文件系统不是用于与用户交互，所以没有安装点。<br><img src="/img/1603211045.jpg" alt></p>
 <p>特殊文件系统不限于物理设备。然而，内核给每个安装的特殊文件系统分配一个虚拟的块设备，让其主设备号是0，而次设备号具有任意值（每个特定文件系统具有不同的值）。<code>set_anon_super()</code>函数用于<strong>初始化特殊文件系统的超级块</strong>；该函数本质上获得一个未使用的次设备号<code>dev</code>，然后用主设备号0和次设备号<code>dev</code>设置新超级块的<code>s_dev</code>字段。而另一个<code>kill_anon_super()</code>函数<strong>移走特殊文件系统的超级块</strong>。<code>unnamed_dev_ida</code>变量包含一个辅助结构（记录当前在用的次设备号）的指针。</p>
 <h3 id="文件系统类型注册"><a href="#文件系统类型注册" class="headerlink" title="文件系统类型注册"></a>文件系统类型注册</h3><p>文件系统的源代码实际上要么包含在内核映像中，要么作为一个模块被动态装入。VFS必须对代码目前已经在内核中的所有文件系统的类型进行跟踪，这是通过进行文件系统类型注册实现的。注册的文件系统用<code>file_system_type</code>类型表示。<br><img src="/img/1603211266.jpg" alt></p>
@@ -1169,7 +1169,7 @@
 <p><code>get_fs_type()</code>函数扫描已注册的文件系统链表以查找文件系统类型的<code>name</code>字段，并返回指向相应的<code>file_system_type</code>对象的指针。</p>
 <h2 id="文件系统处理"><a href="#文件系统处理" class="headerlink" title="文件系统处理"></a>文件系统处理</h2><p>就像每个传统的Unix系统一样，Linux也使用<strong>系统的根文件系统</strong>(system’s root filesystem)：<strong>它由内核在引导阶段直接安装，并拥有系统初始化脚本以及最基本的系统程序</strong>。</p>
 <p>其他文件系统要么由初始化脚本安装，要么由用户直接安装在已安装文件系统的目录上。<strong>作为一个目录树，每个文件系统都拥有自己的根目录</strong>(root directory)。安装文件系统的这个目录称之为<strong>安装点</strong>(mount point)。<strong>已安装文件系统属于安装点目录的一个子文件系统</strong>。例如，<code>/proc</code>虚拟文件系统是系统的根文件系统的孩子(且系统的根文件系统是<code>/proc</code>的父亲)。已安装文件系统的根目录隐藏了父文件系统的安装点目录原来的内容，而且父文件系统的整个子树位于安装点之下。</p>
-<h3 id="命名空间"><a href="#命名空间" class="headerlink" title="命名空间"></a>命名空间</h3><p>在传统的Unix系统中，只有一个已安装文件系统树：从系统的根文件系统开始，<strong>每个进程通过指定合适的路径名可以访问已安装文件系统中的任何文件</strong>。从这个方面考虑，Linux2.6更加的精确：每个进程可拥有自己的已安装文件系统树—-叫做<strong>进程的命令空间</strong>(namespace)。</p>
+<h3 id="命名空间"><a href="#命名空间" class="headerlink" title="命名空间"></a>命名空间</h3><p>在传统的Unix系统中，只有一个已安装文件系统树：从系统的根文件系统开始，<strong>每个进程通过指定合适的路径名可以访问已安装文件系统中的任何文件</strong>。从这个方面考虑，Linux2.6更加的精确：每个进程可拥有自己的已安装文件系统树——叫做<strong>进程的命令空间</strong>(namespace)。</p>
 <p>通常大多数进程共享同一个命名空间，即<strong>位于系统的根文件系统且被init进程使用的已安装文件系统树</strong>。不过，如果<code>clone()</code>系统调用以<code>CLONE_NEWNS</code>标志创建一个新进程，那么进程将获取一个新的命名空间。这个新的命名空间随后由子进程继承(如果父进程没有以<code>CLONE_NEWNS</code>标志创建这些子进程)。</p>
 <p>当进程安装或卸载一个文件系统时，仅修改它的命名空间。因此，所做的修改对共享同一命名空间的所有进程都是可见的，并且也只对它们可见。进程甚至可通过使用Linux特有的<code>pivot_root()</code>系统调用来改变它的命名空间的根文件系统。</p>
 <p>进程的命名空间由进程描述符的<code>namespace</code>字段指向的<code>namespace</code>结构描述。<code>root</code>表示已安装文件系统。<br><img src="/img/1603211726.jpg" alt></p>
@@ -1761,7 +1761,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">352</span>
+                  <span class="site-state-item-count">351</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

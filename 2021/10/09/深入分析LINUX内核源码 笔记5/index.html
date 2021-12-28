@@ -417,6 +417,7 @@
 <p>设备文件是通过<code>mknod</code>系统调用创建的。其原型为：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mknod(<span class="keyword">const</span> <span class="keyword">char</span> * filename, <span class="keyword">int</span> mode, <span class="keyword">dev_t</span> dev)</span><br></pre></td></tr></table></figure></p>
 <p>其参数有设备文件名、操作模式、主设备号及从设备号。最后两个参数合并成一个 16位的<code>dev_t</code>无符号短整数，高 8 位用于主设备号，低 8 位用于从设备号。内核中定义了 3 个宏来处理主、从设备号：<code>MAJOR</code>和<code>MINOR</code>宏可以从 16 位数中提取出主、从设备号，而<code>MKDEV</code>宏可以把主、从号合并为一个 16 位数。实际上，<code>dev_t</code>是专用于应用程序的一个数据类型；在内核中使用<code>kdev_t</code>数据类型。</p>
 <p>分配给设备号的正式注册信息及<code>/dev</code>目录索引节点存放在<code>documentation/devices.txt</code>文件中。也可以在<code>include/linux/major.h</code>文件中找到所支持的主设备号。设备文件通常位于<code>/dev</code>目录下。表 11.1 显示了一些设备文件的属性。注意同一主设备号既可以标识字符设备，也可以标识块设备。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -507,6 +508,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <h4 id="块设备和字符设备的比较"><a href="#块设备和字符设备的比较" class="headerlink" title="块设备和字符设备的比较"></a>块设备和字符设备的比较</h4><p>块设备具有以下特点。</p>
 <ul>
 <li>可以在一次<code>I/O</code>操作中传送固定大小的数据块。</li>
@@ -835,6 +837,7 @@
 <h4 id="监听-listen-INET-BSD套接字"><a href="#监听-listen-INET-BSD套接字" class="headerlink" title="监听(listen)INET BSD套接字"></a>监听(listen)INET BSD套接字</h4><p>当某个套接字被绑定了地址之后，该套接字就可以用来监听专属于该绑定地址的传入连接。网络应用程序也可以在未绑定地址之前监听套接字，这时，<code>INET</code>套接字层将利用空闲的端口编号并自动绑定到该套接字。套接字的监听函数将<code>socket</code>的状态改变为<code>TCP_LISTEN</code>。当接收到某个传入的<code>TCP</code>连接请求时，<code>TCP</code>建立一个新的<code>sock</code>数据结构来描述该连接。当该连接最终被接受时，新的<code>sock</code>数据结构将变成该<code>TCP</code>连接的内核<code>bottom_half</code>部分，这时，它要克隆包含连接请求的传入<code>sk_buff</code>中的信息，并在监听<code>sock</code>数据结构的<code>receive_queue</code>队列中将克隆的信息排队。克隆的<code>sk_buff</code>中包含有指向新<code>sock</code>数据结构的指针。</p>
 <h4 id="接受连接请求-accept"><a href="#接受连接请求-accept" class="headerlink" title="接受连接请求(accept)"></a>接受连接请求(accept)</h4><p>接受操作在监听套接字上进行，从监听<code>socket</code>中克隆一个新的<code>socket</code>数据结构。其过程如下：接受操作首先传递到支持协议层，即<code>INET</code>中，以便接受任何传入的连接请求。相反，接受操作进一步传递到实际的协议，例如<code>TCP</code>上。接受操作可以是阻塞的，也可以是非阻塞的。接受操作为非阻塞的情况下，如果没有可接受的传入连接，则接受操作将失败，而新建立的<code>socket</code>数据结构被抛弃。接受操作为阻塞的情况下，执行阻塞操作的网络应用程序将添加到等待队列中，并保持挂起直到接收到一个<code>TCP</code>连接请求为至。当连接请求到达之后，包含连接请求的<code>sk_buff</code>被丢弃，而由<code>TCP</code>建立的新<code>sock</code>数据结构返回到<code>INET</code>套接字层，在这里，<code>sock</code>数据结构和先前建立的新<code>socket</code>数据结构建立链接。而新<code>socket</code>的文件描述符被返回到网络应用程序，此后，应用程序就可以利用该文件描述符在新建立的<code>INET BSD</code>套接字上进行套接字操作。</p>
 <h3 id="socket为用户提供的系统调用"><a href="#socket为用户提供的系统调用" class="headerlink" title="socket为用户提供的系统调用"></a>socket为用户提供的系统调用</h3><p><code>socket</code>系统调用是<code>socket</code>最有价值的一部分，也是用户唯一能够接触到的一部分，它是我们进行网络编程的接口。如表所示。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -921,6 +924,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <h2 id="套接字缓冲区-sk-buff"><a href="#套接字缓冲区-sk-buff" class="headerlink" title="套接字缓冲区(sk_buff)"></a>套接字缓冲区(sk_buff)</h2><p>套接字缓冲区是网络部分一个重要的数据结构，它描述了内存中的一块数据区域，该数据区域存放着网络传输的数据包。</p>
 <h3 id="套接字缓冲区的特点"><a href="#套接字缓冲区的特点" class="headerlink" title="套接字缓冲区的特点"></a>套接字缓冲区的特点</h3><p>当套接字缓冲区在协议层流动过程中，每个协议都需要对数据区的内容进行修改，也就是每个协议都需要在发送数据时向缓冲区添加自己的协议头和协议尾，而在接收数据时去掉这些协议头和协议尾，这样就存在一个问题，当缓冲区在不同的协议之间传递时，每层协议都要寻找自己特定的协议头和协议尾，从而导致数据缓冲区的传递非常困难。我们设置<code>sk_buff</code>数据结构的主要目的就是为网络部分提供一种统一有效的缓冲区操作方法，从而可让协议层以标准的函数或方法对缓冲区数据进行处理，这是<code>Linux</code>系统网络高效运行的关键。</p>
 <h3 id="套接字缓冲区操作基本原理"><a href="#套接字缓冲区操作基本原理" class="headerlink" title="套接字缓冲区操作基本原理"></a>套接字缓冲区操作基本原理</h3><p>在传输过程中，存在着多个套接字缓冲区，这些缓冲区组成一个链表，每个链表都有一个链表头<code>sk_buff_head</code>，链表中每个节点分别对应内存中一块数据区。因此对它的操作有两种基本方式：第 1 种是对缓冲区链表进行操作；第 2 种是对缓冲区对应的数据区进行控制。</p>
@@ -1026,7 +1030,7 @@
 <li>pa_alen：保存一个地址的长度，就<code>IP</code>地址而言，应该初始化为 4。</li>
 </ul>
 <h3 id="支持函数"><a href="#支持函数" class="headerlink" title="支持函数"></a>支持函数</h3><h4 id="初始化设置-init"><a href="#初始化设置-init" class="headerlink" title="初始化设置(init)"></a>初始化设置(init)</h4><p><code>init</code>函数在设备初始化和注册时被调用，它执行的是底层的确认和检查工作。在初始化程序里可以完成对硬件资源的配置。如果设备没有就绪或设备不能注册或其他任何原因而导致初始化工作不能正常进行，该函数就返回出错信息。一旦初始化函数返回出错信息，<code>register_netdev()</code>也返回出错信息，这样该设备就不能安装。</p>
-<h4 id="打开-open"><a href="#打开-open" class="headerlink" title="打开(open)"></a>打开(open)</h4><p><code>open</code>这个函数在网络设备驱动程序里是网络设备被激活的时候被调用(即设备状态由down–&gt;up)。所以实际上很多在<code>init</code>中的工作可以放到这里来做。比如资源的申请，硬件的激活。如果<code>dev-&gt;open</code>返回非零(error)，则硬件的状态还是<code>down</code>。<code>open</code>函数另一个作用是如果驱动程序作为一个模块被装入，则要防止模块卸载时设备处于打开状态。在<code>open</code>方法里要调用<code>MOD_INC_USE_COUNT</code>宏。</p>
+<h4 id="打开-open"><a href="#打开-open" class="headerlink" title="打开(open)"></a>打开(open)</h4><p><code>open</code>这个函数在网络设备驱动程序里是网络设备被激活的时候被调用(即设备状态由down—&gt;up)。所以实际上很多在<code>init</code>中的工作可以放到这里来做。比如资源的申请，硬件的激活。如果<code>dev-&gt;open</code>返回非零(error)，则硬件的状态还是<code>down</code>。<code>open</code>函数另一个作用是如果驱动程序作为一个模块被装入，则要防止模块卸载时设备处于打开状态。在<code>open</code>方法里要调用<code>MOD_INC_USE_COUNT</code>宏。</p>
 <h4 id="关闭-stop"><a href="#关闭-stop" class="headerlink" title="关闭(stop)"></a>关闭(stop)</h4><p><code>close</code>函数做和<code>open</code>函数相反的工作。可以释放某些资源以减少系统负担。<code>close</code>是在设备状态由<code>up</code>转为<code>down</code>时被调用的。另外如果是作为模块装入的驱动程序，<code>close</code>里应调用<code>MOD_DEC_USE_COUNT</code>，减少设备被引用的次数，以使驱动程序可以被卸载。另外<code>close</code>方法必须返回成功(0==success)。</p>
 <h4 id="数据帧传输例程"><a href="#数据帧传输例程" class="headerlink" title="数据帧传输例程"></a>数据帧传输例程</h4><p>所有的设备驱动程序都必须提供传输例程，如果一个设备不能传输，也就没有存在的必要性。事实上，设备的所谓的传输仅仅是释放传送给它的缓冲区，而真正实现传输功能是虚拟设备。</p>
 <p><code>dev-&gt;hard_start_xmit()</code>：该函数的功能是将网络缓冲区，也就是<code>sk_buff</code>发送到硬件设备。如果设备不能接受缓冲区，它就会返回 1，并置<code>dev-&gt;tbusy</code>为非零值。这样缓冲区就排成队列，等待着<code>dev-&gt;tbusy</code>置零以后会再次发送。如果协议层决定释放被设备抛弃的缓冲区，那么缓冲区就不会再被送回设备；如果设备知道缓冲区短时间内不被能传送，例如设备严重堵塞，那么它就调用<code>dev_kfree_skb()</code>函数丢掉缓冲区，该函数返回零值标明缓冲区已经被处理完毕。</p>
@@ -1052,6 +1056,7 @@
 <p>首先是上电自检(POST Power-On Self Test)，然后是对系统内的硬件设备进行监测和连接，并把测试所得的数据存放到<code>BIOS</code>数据区，以便操作系统在启动时或启动后使用，最后，<code>BIOS</code>将从软盘或硬盘上读入<code>Boot Loader</code>，到底是从软盘还是从硬盘启动要看<code>BIOS</code>的设置，如果是从硬盘启动，<code>BIOS</code>将读入该盘的零柱面零磁道上的 1 扇区(MBR)，这个扇区上就存放着<code>Boot Loader</code>，该扇区的最后一个字存放着系统标志，如果该标志的值为<code>AA55</code>，<code>BIOS</code>在完成硬件监测后会把控制权交给<code>Boot Loader</code>。</p>
 <p>除了启动程序以外，<code>BIOS</code>还提供一组中断以便对硬件设备的访问。我们知道，当键盘上的某一键被按下时，<code>CPU</code>就会产生一个中断并把这个键的信息读入，在操作系统没有被装入以前(如<code>Linux</code>的<code>Bootsect.S</code>还没有被读入)或操作系统没有专门提供另外的中断响应程序的情况下，中断的响应程序就是由<code>BIOS</code>提供的。</p>
 <p>这里介绍一个具体的<code>BIOS</code>系统，它的上电自检(POST)程序包含 14 个项目，具体内容如表所示，执行过<code>POST</code>后，该系统将调入硬盘上的<code>Boot Loader</code>。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -1106,6 +1111,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <h3 id="Boot-Loader"><a href="#Boot-Loader" class="headerlink" title="Boot Loader"></a>Boot Loader</h3><p><code>Boot Loader</code>通常是一段汇编代码，存放在<code>MBR</code>中，它的主要作用就是将系统启动代码读入内存。</p>
 <h3 id="操作系统的初始化"><a href="#操作系统的初始化" class="headerlink" title="操作系统的初始化"></a>操作系统的初始化</h3><p>这部分实际上是初始化的关键。<code>Boot Loader</code>将控制权交给操作系统的初始化代码后，操作系统所要完成的存储管理、设备管理、文件管理、进程管理等任务的初始化必须马上进行，以便进入用户态。其实不管是单任务的<code>DOS</code>操作系统还是这里介绍的多任务<code>Linux</code>操作系统，当启动过程完成以后，系统都进入用户态，等待用户的操作命令。</p>
 <h2 id="Linux的Boot-Loader"><a href="#Linux的Boot-Loader" class="headerlink" title="Linux的Boot Loader"></a>Linux的Boot Loader</h2><h3 id="Boot-Loader-1"><a href="#Boot-Loader-1" class="headerlink" title="Boot Loader"></a>Boot Loader</h3><p>实际上<code>Boot Loader</code>的来源有多种，最常见的一种是你的操作系统就是<code>DOS</code>，而<code>Boot Loader</code>是<code>DOS</code>系统提供的<code>MS-Boot Loader</code>。这种情况下比较简单：如果是软盘启动，<code>Boot Loader</code>会检查盘上是否存在两个隐含的系统文件(IBMBIO.COM、IBMDOS.COM)，若有，读出并送至内存中指定的区域，把控制权转移给<code>IBMBIO</code>这个模块，否则显示出错信息。如果是硬盘启动，<code>Boot Loader</code>将查找主分区表中标记为活动分区的表项，把该表项对应的分区的引导扇区读入，然后把控制权交给该扇区内的引导程序，这段程序也可以被看作是<code>Boot Loader</code>的一部分，它完成的工作与软盘的<code>Boot Loader</code>大致相同。</p>
@@ -1192,7 +1198,7 @@
 <p>此后，<code>getty</code>会在每个终端上显示<code>login</code>提示符，以等待用户的登录。此时<code>getty</code>会调用<code>exec</code>执行<code>login</code>程序，<code>login</code>将核对用户帐户和密码，如果密码正确，<code>login</code>调用<code>exec</code>执行<code>shell</code>的命令行解释程序。<code>shell</code>接着去执行用户默认的系统环境配置脚本文件(通常是用户的<code>home</code>目录下的<code>profile</code>文件)。</p>
 <p><code>init</code>还有另外一个任务，当某个终端或虚拟控制台上的用户注销之后，<code>init</code>进程要为该终端或虚拟控制台重新启动一个<code>getty</code>，以便能够让其他用户登录。你应该发现，当用户登录时，<code>getty</code>用的是<code>exec</code>而不是<code>fork</code>系统调用来执行<code>login</code>，这样，<code>login</code>在执行的时候会覆盖<code>getty</code>的执行环境(同理，用户注册成功后，<code>login</code>的执行环境也会被<code>shell</code>占用)。所以，如果想再次使用同一终端，必须再启动一个<code>getty</code>。</p>
 <p>此外，<code>init</code>进程还负责管理系统中的“孤儿”进程。如果某个进程创建子进程之后，在子进程终止之前终止，则子进程成为孤儿进程。<code>init</code>进程负责“收养”该进程，即孤儿进程会立即成为<code>init</code>进程的子进程。这是为了保持进程树的完整性。</p>
-<h3 id="启动所需的Shell脚本文件"><a href="#启动所需的Shell脚本文件" class="headerlink" title="启动所需的Shell脚本文件"></a>启动所需的Shell脚本文件</h3><p>在启动的过程中，多次用到了<code>Shell</code>的脚本文件——Shell Script，如<code>$HOME/profile</code>、<code>/etc/inittab</code>等等。这里有必要把它们的格式和作用稍加说明。我们把启动所需要的脚本文件分为两部分，一部分是<code>Linux</code>系统启动所必需的，也就是从<code>/etc/inittab</code>开始直到出现<code>Login:</code>提示符时要用到的所用脚本，另外一部分是用户登录后自己设定的用于支持个性化的操作环境的脚本。在后者中，我们可以设定提示符用<code>$</code>或是其他什么任意你喜欢的字符，可以设所用的<code>Shell</code>是<code>bash</code>、<code>ksh，还是</code>zsh`。显然，这部分不是我们的重点，我们要重点描述的是前一部分——系统启动所必需的脚本。</p>
+<h3 id="启动所需的Shell脚本文件"><a href="#启动所需的Shell脚本文件" class="headerlink" title="启动所需的Shell脚本文件"></a>启动所需的Shell脚本文件</h3><p>在启动的过程中，多次用到了<code>Shell</code>的脚本文件——Shell Script，如<script type="math/tex">HOME/profile`、`/etc/inittab`等等。这里有必要把它们的格式和作用稍加说明。我们把启动所需要的脚本文件分为两部分，一部分是`Linux`系统启动所必需的，也就是从`/etc/inittab`开始直到出现`Login:`提示符时要用到的所用脚本，另外一部分是用户登录后自己设定的用于支持个性化的操作环境的脚本。在后者中，我们可以设定提示符用`</script>或是其他什么任意你喜欢的字符，可以设所用的<code>Shell</code>是<code>bash</code>、<code>ksh，还是</code>zsh`。显然，这部分不是我们的重点，我们要重点描述的是前一部分——系统启动所必需的脚本。</p>
 <p>系统启动所必需的脚本存放在系统默认的配置文件目录<code>/etc</code>下。用一条<code>ls</code>指令你可以看到所用的配置文件。不过，<code>/etc</code>下面还有一些子目录，比如说，<code>rc.d</code>就是启动中非常重要的一部分。我们主要介绍的是<code>/etc/inittab</code>和<code>rc.d</code>下的一些文件，我们还是按启动时<code>init</code>进程调用它们的顺序来一一介绍。</p>
 <p>首先调用的是<code>/etc/inittab</code>。<code>init</code>进程将会读取它并依据其中所记载的内容进入不同的启动级别，从而启动不同的进程。所谓运行级别就是系统中定义了许多不同的级别，根据这些级别，系统在启动时给用户分配资源。比如说，以系统管理员级别登录的用户，就拥有使用几乎所有系统资源的权力，而一般用户显然不会被赋予如此大的特权。</p>
 <p>下面是系统的 7 个启动级别。</p>
@@ -1351,7 +1357,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">352</span>
+                  <span class="site-state-item-count">351</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

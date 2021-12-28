@@ -384,7 +384,7 @@
 <p>新系统调用的参数、返回值和错误码又该是什么呢？系统调用的接口应该力求简洁，参数尽可能少。设计接口的时候要尽量为将来多做考虑。你是不是对函数做了不必要的限制?系统调用设计得越通用越好。不要假设这个系统调用现在怎么用将来也一定就是这么用。系统调用的目的可能不变，但它的用法却可能改变。这个系统调用可移植吗?别对机器的字节长度和字节序做假设。当你写一个系统调用的时候，要时刻注意可移植性和健壮性，不但要考虑当前，还要为将来做打算。 </p>
 <p>当编写完一个系统调用后，把它注册成一个正式的系统调用是件琐碎的工作：</p>
 <p>在系统调用表的最后加入一个表项。每种支持该系统调用的硬件体系都必须做这样的工作。从0开始算起，系统调用在该表中的位置就是它的系统调用号。</p>
-<p>对于所支持的各种体系结构，系统调用号都必须定义于&lt;asm/unistd.h&gt;中。</p>
+<p>对于所支持的各种体系结构，系统调用号都必须定义于<asm unistd.h>中。</asm></p>
 <p>系统调用必须被编译进内核映象(不能被编译成模块)。这只要把它放进kernel/下的一个相关文件中就可以。 </p>
 <p>让我们通过一个虚构的系统调用f00()来仔细观察一下这些步骤。首先，我们要把sys_foo加入到系统调用表中去。对于大多数体系结构来说，该表位干entry.s文件中，形式如下:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">ENTRY(sys_ call_ table)</span><br><span class="line">      .long sys_ restart_ syscall/*0*/</span><br><span class="line">      .long sys_ exit</span><br><span class="line">      .long sys_ fork</span><br><span class="line">      .long sys_ read</span><br><span class="line">      .long sys_write</span><br></pre></td></tr></table></figure></p>
 <p>我们把新的系统调用加到这个表的末尾:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.long sys_foo</span><br></pre></td></tr></table></figure></p>
@@ -403,10 +403,11 @@
 <h2 id="从用户空间直接访问系统调用"><a href="#从用户空间直接访问系统调用" class="headerlink" title="从用户空间直接访问系统调用"></a>从用户空间直接访问系统调用</h2><p>通常，系统调用靠C库支持。用户程序通过包含标准头文件并和C库链接，就可以使用系统调用(或者调用库函数，再由库函数实际调用)。但如果你仅仅写出系统调用，glibc库恐怕并不提供支持。值得庆幸的是，Linux本身提供了一组宏，用于直接对系统调用进行访问。它会设置好寄存器并调用陷人指令。这些宏是_syscalln()，其中n的范围从0到6。代表需要传递给系统调用的参数个数，这是由于该宏必须了解到底有多少参数按照什么次序压入寄存器。举个例子，open()系统调用的定义是:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">long open(const char *filename, int flags, int mode)</span><br></pre></td></tr></table></figure></p>
 <p>而不靠库支持，直接调用此系统调用的宏的形式为:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#define NR_ open 5</span><br><span class="line">syscall3(long, open, const char*，filename, int, flags, int, mode)</span><br></pre></td></tr></table></figure></p>
 <p>这样，应用程序就可以直接使用open()</p>
-<p>对于每个宏来说，都有2+ n个参数。第一个参数对应着系统调用的返回值类型。第二个参数是系统调用的名称。再以后是按照系统调用参数的顺序排列的每个参数的类型和名称。_NR_ open在&lt;asm/unistd.h&gt;中定义，是系统调用号。该宏会被扩展成为内嵌汇编的C函数。由汇编语言执行前一节所讨论的步骤，将系统调用号和参数压入寄存器并触发软中断来陷入内核。调用open()系统调用直接把上面的宏放置在应用程序中就可以了。</p>
+<p>对于每个宏来说，都有2+ n个参数。第一个参数对应着系统调用的返回值类型。第二个参数是系统调用的名称。再以后是按照系统调用参数的顺序排列的每个参数的类型和名称。_NR_ open在<asm unistd.h>中定义，是系统调用号。该宏会被扩展成为内嵌汇编的C函数。由汇编语言执行前一节所讨论的步骤，将系统调用号和参数压入寄存器并触发软中断来陷入内核。调用open()系统调用直接把上面的宏放置在应用程序中就可以了。</asm></p>
 <p>让我们写一个宏来使用前面编写的foo()系统调用，然后再写出测试代码炫耀一下我们所做的努力。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">#define NR foo 283</span><br><span class="line">_sysca110(long, foo)</span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">    long stack size;</span><br><span class="line">    stack_ size=foo();</span><br><span class="line">    printf(&quot;The kernel stack size is 81d/n&quot;，stack_ size);</span><br><span class="line">    return;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <h1 id="系统调用表"><a href="#系统调用表" class="headerlink" title="系统调用表"></a>系统调用表</h1><p>以下是Linux系统调用的一个列表，包含了大部分常用系统调用和由系统调用派生出的的函数。其中有一些函数的作用完全相同，只是参数不同。可能很多熟悉C++朋友马上就能联想起函数重载，但是别忘了Linux核心是用C语言写的，所以只能取成不同的函数名。</p>
-<h2 id="进程控制："><a href="#进程控制：" class="headerlink" title="进程控制："></a>进程控制：</h2><table>
+<h2 id="进程控制："><a href="#进程控制：" class="headerlink" title="进程控制："></a>进程控制：</h2><div class="table-container">
+<table>
 <thead>
 <tr>
 <th>函数名</th>
@@ -568,7 +569,9 @@
 </tr>
 </tbody>
 </table>
-<h2 id="文件系统控制"><a href="#文件系统控制" class="headerlink" title="文件系统控制"></a>文件系统控制</h2><h3 id="文件读写操作"><a href="#文件读写操作" class="headerlink" title="文件读写操作"></a>文件读写操作</h3><table>
+</div>
+<h2 id="文件系统控制"><a href="#文件系统控制" class="headerlink" title="文件系统控制"></a>文件系统控制</h2><h3 id="文件读写操作"><a href="#文件读写操作" class="headerlink" title="文件读写操作"></a>文件读写操作</h3><div class="table-container">
+<table>
 <thead>
 <tr>
 <th>函数名</th>
@@ -658,7 +661,9 @@
 </tr>
 </tbody>
 </table>
-<h3 id="文件系统操作"><a href="#文件系统操作" class="headerlink" title="文件系统操作"></a>文件系统操作</h3><table>
+</div>
+<h3 id="文件系统操作"><a href="#文件系统操作" class="headerlink" title="文件系统操作"></a>文件系统操作</h3><div class="table-container">
+<table>
 <thead>
 <tr>
 <th>函数名</th>
@@ -788,7 +793,9 @@
 </tr>
 </tbody>
 </table>
-<h2 id="系统控制"><a href="#系统控制" class="headerlink" title="系统控制"></a>系统控制</h2><table>
+</div>
+<h2 id="系统控制"><a href="#系统控制" class="headerlink" title="系统控制"></a>系统控制</h2><div class="table-container">
+<table>
 <thead>
 <tr>
 <th>函数名</th>
@@ -934,7 +941,9 @@
 </tr>
 </tbody>
 </table>
-<h2 id="内存管理"><a href="#内存管理" class="headerlink" title="内存管理"></a>内存管理</h2><table>
+</div>
+<h2 id="内存管理"><a href="#内存管理" class="headerlink" title="内存管理"></a>内存管理</h2><div class="table-container">
+<table>
 <thead>
 <tr>
 <th>函数名</th>
@@ -1000,7 +1009,9 @@
 </tr>
 </tbody>
 </table>
-<h2 id="网络管理"><a href="#网络管理" class="headerlink" title="网络管理"></a>网络管理</h2><table>
+</div>
+<h2 id="网络管理"><a href="#网络管理" class="headerlink" title="网络管理"></a>网络管理</h2><div class="table-container">
+<table>
 <thead>
 <tr>
 <th>函数名</th>
@@ -1034,7 +1045,9 @@
 </tr>
 </tbody>
 </table>
-<h2 id="socket控制"><a href="#socket控制" class="headerlink" title="socket控制"></a>socket控制</h2><table>
+</div>
+<h2 id="socket控制"><a href="#socket控制" class="headerlink" title="socket控制"></a>socket控制</h2><div class="table-container">
+<table>
 <thead>
 <tr>
 <th>函数名</th>
@@ -1124,7 +1137,9 @@
 </tr>
 </tbody>
 </table>
-<h2 id="用户管理"><a href="#用户管理" class="headerlink" title="用户管理"></a>用户管理</h2><table>
+</div>
+<h2 id="用户管理"><a href="#用户管理" class="headerlink" title="用户管理"></a>用户管理</h2><div class="table-container">
+<table>
 <thead>
 <tr>
 <th>函数名</th>
@@ -1206,7 +1221,9 @@
 </tr>
 </tbody>
 </table>
-<h2 id="进程间通信"><a href="#进程间通信" class="headerlink" title="进程间通信"></a>进程间通信</h2><table>
+</div>
+<h2 id="进程间通信"><a href="#进程间通信" class="headerlink" title="进程间通信"></a>进程间通信</h2><div class="table-container">
+<table>
 <thead>
 <tr>
 <th>函数名</th>
@@ -1220,7 +1237,9 @@
 </tr>
 </tbody>
 </table>
-<h3 id="信号"><a href="#信号" class="headerlink" title="信号"></a>信号</h3><table>
+</div>
+<h3 id="信号"><a href="#信号" class="headerlink" title="信号"></a>信号</h3><div class="table-container">
+<table>
 <thead>
 <tr>
 <th>函数名</th>
@@ -1282,7 +1301,9 @@
 </tr>
 </tbody>
 </table>
-<h3 id="消息"><a href="#消息" class="headerlink" title="消息"></a>消息</h3><table>
+</div>
+<h3 id="消息"><a href="#消息" class="headerlink" title="消息"></a>消息</h3><div class="table-container">
+<table>
 <thead>
 <tr>
 <th>函数名</th>
@@ -1308,7 +1329,9 @@
 </tr>
 </tbody>
 </table>
-<h3 id="管道"><a href="#管道" class="headerlink" title="管道"></a>管道</h3><table>
+</div>
+<h3 id="管道"><a href="#管道" class="headerlink" title="管道"></a>管道</h3><div class="table-container">
+<table>
 <thead>
 <tr>
 <th>函数名</th>
@@ -1322,7 +1345,9 @@
 </tr>
 </tbody>
 </table>
-<h3 id="信号量"><a href="#信号量" class="headerlink" title="信号量"></a>信号量</h3><table>
+</div>
+<h3 id="信号量"><a href="#信号量" class="headerlink" title="信号量"></a>信号量</h3><div class="table-container">
+<table>
 <thead>
 <tr>
 <th>函数名</th>
@@ -1344,7 +1369,9 @@
 </tr>
 </tbody>
 </table>
-<h3 id="共享内存"><a href="#共享内存" class="headerlink" title="共享内存"></a>共享内存</h3><table>
+</div>
+<h3 id="共享内存"><a href="#共享内存" class="headerlink" title="共享内存"></a>共享内存</h3><div class="table-container">
+<table>
 <thead>
 <tr>
 <th>函数名</th>
@@ -1370,6 +1397,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 
       
     </div>
@@ -1490,7 +1518,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">352</span>
+                  <span class="site-state-item-count">351</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

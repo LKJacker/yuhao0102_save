@@ -364,14 +364,14 @@
 </ol>
 <p>这种方法当代码等待时，处理器只能在原地旋转等待，它不会去处理其他任何任务。最好在任务等待时，允许内核重新调度其它任务执行。将上面代码修改如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">unsigned long delay = jiffies+10;   //10个节拍</span><br><span class="line">while(time_before(jiffies,delay))</span><br><span class="line">    cond_resched();</span><br></pre></td></tr></table></figure></p>
 <p>看一下cond_resched()函数具体实现代码：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">#define cond_resched() (&#123;           \</span><br><span class="line">    __might_sleep(__FILE__, __LINE__, 0);   \</span><br><span class="line">    _cond_resched();            \</span><br><span class="line">&#125;)</span><br><span class="line"> </span><br><span class="line">int __sched _cond_resched(void)</span><br><span class="line">&#123;</span><br><span class="line">    if (should_resched()) &#123;</span><br><span class="line">        __cond_resched();</span><br><span class="line">        return 1;</span><br><span class="line">    &#125;</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">static void __cond_resched(void)                                                                 </span><br><span class="line">&#123;</span><br><span class="line">    add_preempt_count(PREEMPT_ACTIVE);</span><br><span class="line">    schedule(); //最终还是调用schedule()函数来重新调度其它程序运行</span><br><span class="line">    sub_preempt_count(PREEMPT_ACTIVE);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>函数cond_resched()将重新调度一个新程序投入运行，但它只有在设置完need_resched标志后才能生效。换句话说，就是系统中存在更重要的任务需要运行。再由于该方法需要调用调度程序，所以它不能在中断上下文中使用—-只能在进程上下文中使用。事实上，所有延迟方法在进程上下文中使用，因为中断处理程序都应该尽可能快的执行。另外，延迟执行不管在哪种情况下都不应该在持有锁时或者禁止中断时发生。</p>
-<ol start="2">
+<p>函数cond_resched()将重新调度一个新程序投入运行，但它只有在设置完need_resched标志后才能生效。换句话说，就是系统中存在更重要的任务需要运行。再由于该方法需要调用调度程序，所以它不能在中断上下文中使用——只能在进程上下文中使用。事实上，所有延迟方法在进程上下文中使用，因为中断处理程序都应该尽可能快的执行。另外，延迟执行不管在哪种情况下都不应该在持有锁时或者禁止中断时发生。</p>
+<ol>
 <li>有时内核需要更短的延迟，甚至比节拍间隔还要短。这时可以使用内核提供的ms、ns、us级别的延迟函数。<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">void udelay(unsigned long usecs);    //arch/x86/include/asm/delay.h</span><br><span class="line">void ndelay(unsigned long nsecs);    //arch/x86/include/asm/delay.h</span><br><span class="line">void mdelay(unsigned long msecs);</span><br></pre></td></tr></table></figure>
 </li>
 </ol>
 <p><code>udelay()</code>使用忙循环将任务延迟指定的ms后执行,其依靠执行数次循环达到延迟效果，<code>mdelay()</code>函数是通过<code>udelay()</code>函数实现，如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#define mdelay(n) (\ </span><br><span class="line">    (__builtin_constant_p(n) &amp;&amp; (n)&lt;=MAX_UDELAY_MS) ? udelay((n)*1000) : \</span><br><span class="line">    (&#123;unsigned long __ms=(n); while (__ms--) udelay(1000);&#125;))</span><br><span class="line">#endif</span><br></pre></td></tr></table></figure></p>
 <p>udelay()函数仅能在要求的延迟时间很短的情况下执行，而在高速机器中时间很长的延迟会造成溢出。对于较长的延迟，mdelay()工作良好。</p>
-<ol start="3">
+<ol>
 <li><code>schedule_timeout()</code>函数是更理想的延迟执行方法。该方法会让需要延迟执行的任务睡眠到指定的延迟时间耗尽后再重新运行。但该方法也不能保证睡眠时间正好等于指定的延迟时间，只能尽量是睡眠时间接近指定的延迟时间。当指定的时间到期后，内核唤醒被延迟的任务并将其重新放回运行队列。用法如下：<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">set_current_state(TASK_INTERRUPTIBLE);    //将任务设置为可中断睡眠状态</span><br><span class="line">schedule_timeout(s*HZ);    //小睡一会儿，“s”秒后唤醒</span><br></pre></td></tr></table></figure>
 </li>
 </ol>
@@ -490,7 +490,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">352</span>
+                  <span class="site-state-item-count">351</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

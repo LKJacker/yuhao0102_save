@@ -394,7 +394,7 @@
 <li>调用根据执行程序各个段的大小分配物理内存空间，并根据执行程序各个段的起始位置确定虚拟地址，并在页表中建立好物理地址和虚拟地址的映射关系，然后把执行程序各个段的内容拷贝到相应的内核虚拟地址中，至此应用程序执行码和数据已经根据编译时设定地址放置到虚拟内存中了；</li>
 </ol>
 <ul>
-<li>需要<strong>给用户进程设置用户栈</strong>，为此调用mm_mmap函数建立用户栈的vma结构，明确用户栈的位置在用户虚空间的顶端，大小为256个页，即1MB，并分配一定数量的物理内存且建立好栈的虚地址<-->物理地址映射关系；</--></li>
+<li>需要<strong>给用户进程设置用户栈</strong>，为此调用mm_mmap函数建立用户栈的vma结构，明确用户栈的位置在用户虚空间的顶端，大小为256个页，即1MB，并分配一定数量的物理内存且建立好栈的虚地址&lt;—&gt;物理地址映射关系；</li>
 <li>至此,进程内的内存管理vma和mm数据结构已经建立完成，于是把<strong>mm-&gt;pgdir赋值到cr3寄存器中</strong>，即<strong>更新了用户进程的虚拟内存空间</strong>，此时的initproc已经被hello的代码和数据覆盖，成为了第一个用户进程，但此时这个用户进程的执行现场还没建立好；</li>
 <li>先清空进程的中断帧，再<strong>重新设置进程的中断帧</strong>，使得在执行中断返回指令“iret”后，能够让CPU转到用户态特权级，并回到用户态内存空间，使用用户态的代码段、数据段和堆栈，且能够跳转到用户进程的第一条指令执行，并确保在用户态能够响应中断；</li>
 <li>至此，用户进程的用户环境已经搭建完毕。此时initproc将按产生系统调用的函数调用路径原路返回，执行中断返回指令“iret”（位于trapentry.S的最后一句）后，将切换到用户进程hello的第一条语句位置_start处（位于user/libs/initcode.S的第三句）开始执行。</li>
@@ -413,7 +413,7 @@
 <li>调用mm_destroy函数释放mm中的vma所占内存，最后释放mm所占内存；</li>
 <li>此时设置current-&gt;mm为NULL，表示与当前进程相关的用户虚拟内存空间和对应的内存管理成员变量所占的内核虚拟内存空间已经回收完毕；</li>
 </ul>
-<ol start="2">
+<ol>
 <li>这时，设置当前进程的执行状态<code>current-&gt;state=PROC_ZOMBIE</code>，当前进程的退出码current-&gt;exit_code=error_code。此时当前进程已经不能被调度了，需要此进程的父进程来做最后的回收工作（即回收描述此进程的内核栈和进程控制块）；</li>
 <li>如果当前进程的父进程current-&gt;parent处于等待子进程状态：<br><code>current-&gt;parent-&gt;wait_state==WT_CHILD</code>，<br>则唤醒父进程（即执行“<code>wakup_proc(current-&gt;parent)</code>”），让父进程帮助自己完成最后的资源回收；</li>
 <li>如果当前进程还有子进程，则需要把这些子进程的父进程指针设置为内核线程initproc，且各个子进程指针需要插入到initproc的子进程链表中。如果某个子进程的执行状态是PROC_ZOMBIE，则需要唤醒initproc来完成对此子进程的最后回收工作。</li>
@@ -437,7 +437,7 @@
 <h5 id="建立系统调用的用户库准备"><a href="#建立系统调用的用户库准备" class="headerlink" title="建立系统调用的用户库准备"></a>建立系统调用的用户库准备</h5><p>在操作系统中初始化好系统调用相关的中断描述符、中断处理起始地址等后，还需在用户态的应用程序中初始化好相关工作，简化应用程序访问系统调用的复杂性。为此在用户态建立了一个中间层，即简化的libc实现，在user/libs/ulib.[ch]和user/libs/syscall.[ch]中完成了对访问系统调用的封装。用户态最终的访问系统调用函数是syscall，实现如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">static inline int</span><br><span class="line">syscall(int num, ...) &#123;</span><br><span class="line">    va_list ap;</span><br><span class="line">    va_start(ap, num);</span><br><span class="line">    uint32_t a[MAX_ARGS];</span><br><span class="line">    int i, ret;</span><br><span class="line">    for (i = 0; i &lt; MAX_ARGS; i ++) &#123;</span><br><span class="line">        a[i] = va_arg(ap, uint32_t);</span><br><span class="line">    &#125;</span><br><span class="line">    va_end(ap);</span><br><span class="line"></span><br><span class="line">    asm volatile (</span><br><span class="line">        &quot;int %1;&quot;</span><br><span class="line">        : &quot;=a&quot; (ret)</span><br><span class="line">        : &quot;i&quot; (T_SYSCALL),</span><br><span class="line">          &quot;a&quot; (num),</span><br><span class="line">          &quot;d&quot; (a[0]),</span><br><span class="line">          &quot;c&quot; (a[1]),</span><br><span class="line">          &quot;b&quot; (a[2]),</span><br><span class="line">          &quot;D&quot; (a[3]),</span><br><span class="line">          &quot;S&quot; (a[4])</span><br><span class="line">        : &quot;cc&quot;, &quot;memory&quot;);</span><br><span class="line">    return ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>从中可以看出，应用程序调用的exit/fork/wait/getpid等库函数最终都会调用syscall函数，只是调用的参数不同而已，如果看最终的汇编代码会更清楚：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">……</span><br><span class="line">  34:    8b 55 d4               mov    -0x2c(%ebp),%edx</span><br><span class="line">  37:    8b 4d d8               mov    -0x28(%ebp),%ecx</span><br><span class="line">  3a:    8b 5d dc               mov    -0x24(%ebp),%ebx</span><br><span class="line">  3d:    8b 7d e0               mov    -0x20(%ebp),%edi</span><br><span class="line">  40:    8b 75 e4               mov    -0x1c(%ebp),%esi</span><br><span class="line">  43:    8b 45 08               mov    0x8(%ebp),%eax</span><br><span class="line">  46:    cd 80                  int    $0x80</span><br><span class="line">  48:    89 45 f0               mov    %eax,-0x10(%ebp)</span><br><span class="line">……</span><br></pre></td></tr></table></figure></p>
 <p>可以看到其实是把系统调用号放到EAX，其他5个参数a[0]~a[4]分别保存到EDX/ECX/EBX/EDI/ESI五个寄存器中，及最多用6个寄存器来传递系统调用的参数，且系统调用的返回结果是EAX。比如对于getpid库函数而言，系统调用号（SYS_getpid=18）是保存在EAX中，返回值（调用此库函数的的当前进程号pid）也在EAX中。</p>
-<h5 id="与用户进程相关的系统调用"><a href="#与用户进程相关的系统调用" class="headerlink" title="与用户进程相关的系统调用"></a>与用户进程相关的系统调用</h5><p>在本实验中，与进程相关的各个系统调用属性如下所示：<br>|系统调用名  | 含义 | 具体完成服务的函数 |<br>|—-|—-|—-|<br>|SYS_exit   | process exit  |  do_exit |<br>|SYS_fork   | create child process, dup mm  |  do_fork–&gt;wakeup_proc |<br>|SYS_wait   | wait child process | do_wait |<br>|SYS_exec   | after fork, process execute a new program  | load a program and refresh the mm |<br>|SYS_yield  | process flag itself need resecheduling | proc-&gt;need_sched=1, then scheduler will rescheule this process |<br>|SYS_kill   | kill process  |  do_kill–&gt;proc-&gt;flags |= PF_EXITING, –&gt;wakeup_proc–&gt;do_wait–&gt;do_exit |<br>|SYS_getpid | get the process’s pid |  |</p>
+<h5 id="与用户进程相关的系统调用"><a href="#与用户进程相关的系统调用" class="headerlink" title="与用户进程相关的系统调用"></a>与用户进程相关的系统调用</h5><p>在本实验中，与进程相关的各个系统调用属性如下所示：<br>|系统调用名  | 含义 | 具体完成服务的函数 |<br>|——|——|——|<br>|SYS_exit   | process exit  |  do_exit |<br>|SYS_fork   | create child process, dup mm  |  do_fork—&gt;wakeup_proc |<br>|SYS_wait   | wait child process | do_wait |<br>|SYS_exec   | after fork, process execute a new program  | load a program and refresh the mm |<br>|SYS_yield  | process flag itself need resecheduling | proc-&gt;need_sched=1, then scheduler will rescheule this process |<br>|SYS_kill   | kill process  |  do_kill—&gt;proc-&gt;flags |= PF_EXITING, —&gt;wakeup_proc—&gt;do_wait—&gt;do_exit |<br>|SYS_getpid | get the process’s pid |  |</p>
 <p><br></p>
 <h5 id="系统调用的执行过程"><a href="#系统调用的执行过程" class="headerlink" title="系统调用的执行过程"></a>系统调用的执行过程</h5><p>与用户态的函数库调用执行过程相比，系统调用执行过程的有四点主要的不同：</p>
 <ul>
@@ -528,8 +528,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/06/29/清华大学操作系统课程实验七/" rel="next" title="清华大学操作系统课程实验七">
-                <i class="fa fa-chevron-left"></i> 清华大学操作系统课程实验七
+              <a href="/2019/06/29/清华大学操作系统课程笔记一/" rel="next" title="清华大学操作系统课程笔记一">
+                <i class="fa fa-chevron-left"></i> 清华大学操作系统课程笔记一
               </a>
             
           </div>
@@ -538,8 +538,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2019/06/29/清华大学操作系统课程笔记一/" rel="prev" title="清华大学操作系统课程笔记一">
-                清华大学操作系统课程笔记一 <i class="fa fa-chevron-right"></i>
+              <a href="/2019/06/29/清华大学操作系统课程实验四/" rel="prev" title="清华大学操作系统课程实验四">
+                清华大学操作系统课程实验四 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -618,7 +618,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">352</span>
+                  <span class="site-state-item-count">351</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

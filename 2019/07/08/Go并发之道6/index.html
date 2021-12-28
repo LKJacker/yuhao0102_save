@@ -351,6 +351,7 @@
 <p>以下是计算fibonacci数列的程序<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">func main() &#123;</span><br><span class="line">    var fib func(n int) &lt;-chan int</span><br><span class="line">    fib = func(n int) &lt;-chan int &#123;</span><br><span class="line">        result := make(chan int)</span><br><span class="line">        go func() &#123;</span><br><span class="line">            defer close(result)</span><br><span class="line">            if n &lt;= 2 &#123;</span><br><span class="line">                result &lt;- 1</span><br><span class="line">                return</span><br><span class="line">            &#125;</span><br><span class="line">            result &lt;- &lt;-fib(n-1) + &lt;-fib(n-2)</span><br><span class="line">        &#125;()</span><br><span class="line">        return result</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    fmt.Printf(&quot;fib(4) = %d.\n&quot;, &lt;-fib(4))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>首先只有一个goroutine，main goroutine，假设在处理器1上；接下来调用fib(4)，这个goroutine被安排在T1的工作队列尾部，并且父goroutine将继续运行；此时根据时机不同，可能会发生T1或T2盗取调用fib(4)的goroutine，如果fib(4)在T1上，则在T1的工作队列上将添加fib(3)和fib(2)。</p>
 <p>此时T2仍然是空闲的，所以从T1的队列头部取出fib(3)。此时fib(2)是fib(4)推入队列的最后一个任务，因此T1最有可能需要计算的第一个任务仍然在T1上！与此同时，由于在fib(3)和fib(2)返回的channel上等待着，T1不足以继续处理fib(4)，它会自己从队列中出栈一个fib(2)。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -380,7 +381,9 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>调用fib(3)的goroutine：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -410,7 +413,9 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>T1到达了Fibonacci收敛处，返回1：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -440,7 +445,9 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>T2到达了join点，并从其队列的尾部出栈一个任务：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -470,7 +477,9 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>T1又一次处于空闲所以从T2的队列中窃取工作：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -500,7 +509,9 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>T2到达终点返回1：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -530,7 +541,9 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>T1到达终点返回1：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -560,7 +573,9 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>T2对fib(3)的调用现在有两个已完成的join点，fib(2)和fib(1)已经通过channel返回了结果，并且fib(3)产生的两个goroutine已经运行结束。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -584,6 +599,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>fib(4)调用的goroutine有两个join点，fib(3)和fib(2)，在T2最后一个任务结束时完成了fib(2)的join。执行加法，通过fib(4)的channel返回。</p>
 <p>位于队列尾部的任务：</p>
 <ol>
@@ -721,7 +737,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">352</span>
+                  <span class="site-state-item-count">351</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

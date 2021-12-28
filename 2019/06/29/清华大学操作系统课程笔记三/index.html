@@ -498,15 +498,15 @@
 <li>找到线程队列中哪个是处于就绪的，切换switch kstack、页表、上下文，根据trapframe跳到内核线程的入口地址，开始执行函数。</li>
 </ul>
 <h2 id="13-4-实际操作"><a href="#13-4-实际操作" class="headerlink" title="13.4 实际操作"></a>13.4 实际操作</h2><p>关注proc_init创建第0、1号线程。switch_to完成两个内核线程的切换。</p>
-<h1 id="第十四讲-实验五-用户进程管理"><a href="#第十四讲-实验五-用户进程管理" class="headerlink" title="第十四讲 实验五 用户进程管理"></a>第十四讲 实验五 用户进程管理</h1><h2 id="14-1-总体介绍"><a href="#14-1-总体介绍" class="headerlink" title="14.1 总体介绍"></a>14.1 总体介绍</h2><p>第一个用户进程如何创建、进程管理的实现机制、系统调用的框架实现。<br>构造出第一个用户进程：建立用户代码/数据段 —&gt; 创建内核线程 —&gt; 创建用户进程“壳” —&gt; 填写用户进程 —&gt; 执行用户进程(特权级转换) —&gt; 完成系统调用 —&gt; 结束用户进程(资源回收)</p>
+<h1 id="第十四讲-实验五-用户进程管理"><a href="#第十四讲-实验五-用户进程管理" class="headerlink" title="第十四讲 实验五 用户进程管理"></a>第十四讲 实验五 用户进程管理</h1><h2 id="14-1-总体介绍"><a href="#14-1-总体介绍" class="headerlink" title="14.1 总体介绍"></a>14.1 总体介绍</h2><p>第一个用户进程如何创建、进程管理的实现机制、系统调用的框架实现。<br>构造出第一个用户进程：建立用户代码/数据段 —-&gt; 创建内核线程 —-&gt; 创建用户进程“壳” —-&gt; 填写用户进程 —-&gt; 执行用户进程(特权级转换) —-&gt; 完成系统调用 —-&gt; 结束用户进程(资源回收)</p>
 <h2 id="14-2-进程的内存布局"><a href="#14-2-进程的内存布局" class="headerlink" title="14.2 进程的内存布局"></a>14.2 进程的内存布局</h2><p>内核虚拟内存布局有一部分是对实际物理空间的映射，0xC0000000到0xF8000000，映射为物理空间。一个Page Tabel，0xFAC00000到0xB0000000，一开始只是管理内核空间的映射关系，有了用户进程后，页表需要扩展。</p>
-<p>进程虚拟内存空间：<br>Ivalid Memory<br>User Stack————0xB0000000<br>………..<br>User Program &amp; Heap—0x00800000<br>Invalid Memory<br>User STAB Data(optional，调试信息)<br>Invalid Memory    </p>
+<p>进程虚拟内存空间：<br>Ivalid Memory<br>User Stack——————0xB0000000<br>………..<br>User Program &amp; Heap—-0x00800000<br>Invalid Memory<br>User STAB Data(optional，调试信息)<br>Invalid Memory    </p>
 <p>Invalid Memory一旦访问为非法，确保访问到这些是产生page fault，使之不能随意访问。</p>
 <h2 id="14-3-执行ELF格式的二进制代码-do-execve的实现"><a href="#14-3-执行ELF格式的二进制代码-do-execve的实现" class="headerlink" title="14.3 执行ELF格式的二进制代码-do_execve的实现"></a>14.3 执行ELF格式的二进制代码-do_execve的实现</h2><p>do_execve建好一个壳并把程序加载进来。本实验用到一个PCB（process control block），其实是跟上一个实验的TCB一样的。</p>
 <p>首先，把之前的内存空间清空，只留下PCB，换成自己的程序。把cr3这个页表基址指向boot_cr3内核页表；把进程内存管理区域清空，对应页表清空，导致内存没有了；<strong>load_icode</strong>加载执行程序。</p>
 <h2 id="14-4-执行ELF格式的二进制代码-load-icode的实现"><a href="#14-4-执行ELF格式的二进制代码-load-icode的实现" class="headerlink" title="14.4 执行ELF格式的二进制代码-load_icode的实现"></a>14.4 执行ELF格式的二进制代码-load_icode的实现</h2><p>前边已经把内存管理清空了，先创建一个新内存管理空间mm_create和新页表setup_pgdir；填上我执行代码的内容，找到要加载的程序的代码段和数据段，根据代码段和数据段的虚拟地址通过mm_map完成对合法空间的建立；从程序的内存区域拷贝过来，建立物理地址和虚拟地址的映射关系；准备all_zero的内存；设置相应堆栈空间（用户态空间），使用mm_map建立；把页表的起始地址换成新建好的页表的起始地址。</p>
 <p>完成trapframe的设置。trapframe保存了打断的中断状态保存，完成特权级转变，从kernel转换到user。</p>
-<p>x86特权级：从ring 0 —&gt; ring 3，一个ring 0栈空间，构造一个信息使得执行iret时能回到用户态，重新设置ss和cs，从ring0到ring3。</p>
+<p>x86特权级：从ring 0 —-&gt; ring 3，一个ring 0栈空间，构造一个信息使得执行iret时能回到用户态，重新设置ss和cs，从ring0到ring3。</p>
 <p>用户进程有两个栈，用户栈和内核栈，通过系统调用转化。</p>
 <h2 id="14-5-进程复制"><a href="#14-5-进程复制" class="headerlink" title="14.5 进程复制"></a>14.5 进程复制</h2><p>父进程如何构造子进程？<br>一个函数叫do_fork，是一个内核函数，完成用户空间的拷贝。首先，父进程创建进程控制块，初始化kernel stack，分配页空间和内核里的虚地址。copy_mm为新进程建立新虚存空间。copy_range拷贝父进程的内存到新进程。拷贝父进程的trapframe到新进程。添加新的proc_struct到proc_list并唤醒新进程。执行完do_fork后父进程得到子进程的pid，子进程得到0。</p>
 <h2 id="14-6-内存管理的copy-on-write机制"><a href="#14-6-内存管理的copy-on-write机制" class="headerlink" title="14.6 内存管理的copy-on-write机制"></a>14.6 内存管理的copy-on-write机制</h2><p>进程A通过do_fork创建进程B，二者重用一段空间，使得空间占用量大大减少，如果是只读的话没问题。一旦某进程做了写操作，因为页表设置成只读，则产生page_fault，触发copy-on-write机制，真正为子进程复制页表。进程创建的开销大大减小，且有效减少空间。</p>
@@ -542,8 +542,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/06/29/清华大学操作系统课程实验八/" rel="next" title="清华大学操作系统课程实验八">
-                <i class="fa fa-chevron-left"></i> 清华大学操作系统课程实验八
+              <a href="/2019/06/27/golang学习/" rel="next" title="golang学习">
+                <i class="fa fa-chevron-left"></i> golang学习
               </a>
             
           </div>
@@ -552,8 +552,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2019/06/29/清华大学操作系统课程笔记四/" rel="prev" title="清华大学操作系统课程笔记四">
-                清华大学操作系统课程笔记四 <i class="fa fa-chevron-right"></i>
+              <a href="/2019/06/29/清华大学操作系统课程笔记二/" rel="prev" title="清华大学操作系统课程笔记二">
+                清华大学操作系统课程笔记二 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -632,7 +632,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">352</span>
+                  <span class="site-state-item-count">351</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

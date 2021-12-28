@@ -497,6 +497,7 @@
 </blockquote>
 <p>首先明确cr0是什么。cr0全称是control register 0.下面是wiki中的解释。</p>
 <p>The CR0 register is 32 bits long on the 386 and higher processors. On x86-64 processors in long mode, it (and the other control registers) is 64 bits long. CR0 has various control flags that modify the basic operation of the processor.</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -575,6 +576,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>把eax赋给cr0时，eax=0x80110001，对应上面的标志位就能知道发出了什么控制信息。最关键的是PG，这个信号打开了页表机制，以后都会自动将 0xf0000000 到 0xf0400000 的虚拟（逻辑）地址转成 0x00000000 到 0x00400000 的物理地址。</p>
 <p>所以此处会自动把0xf0100000转换成0x00100000，所以两者的值相等。</p>
 <p>如果映射机制失败，我觉得<code>jmp *%eax</code>之后会失败。因为此时eax的值是0xf010002f，如果没有地址映射，那会指向这个物理高地址，而不是本应指向的0x100000附近的低地址，就会出错。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">=&gt; 0x100025:    mov    $0xf010002c,%eax</span><br><span class="line">0x00100025 in ?? ()</span><br><span class="line">(gdb) </span><br><span class="line">=&gt; 0x10002a:    jmp    *%eax</span><br><span class="line">0x0010002a in ?? ()</span><br><span class="line">(gdb) </span><br><span class="line">=&gt; 0xf010002c &lt;relocated&gt;:      add    %al,(%eax)</span><br><span class="line">relocated () at kern/entry.S:74</span><br><span class="line">74              movl    $0x0,%ebp                       # nuke frame pointer</span><br><span class="line">(gdb) </span><br><span class="line">Remote connection closed</span><br><span class="line">(gdb)</span><br></pre></td></tr></table></figure></p>
@@ -814,7 +816,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">352</span>
+                  <span class="site-state-item-count">351</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

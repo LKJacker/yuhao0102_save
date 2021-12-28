@@ -387,6 +387,7 @@
 </ul>
 <p>下面我们对<code>task_struct</code>结构进行具体描述。</p>
 <h2 id="task-struct-结构描述"><a href="#task-struct-结构描述" class="headerlink" title="task_struct`结构描述"></a>task_struct`结构描述</h2><h3 id="进程状态-State"><a href="#进程状态-State" class="headerlink" title="进程状态(State)"></a>进程状态(State)</h3><p>进程执行时，它会根据具体情况改变状态。进程状态是调度和对换的依据。Linux中的进程主要有如下状态，如表所示。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -421,11 +422,13 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>(1)可运行状态：处于这种状态的进程，要么正在运行、要么正准备运行。正在运行的进程就是当前进程(由<code>current</code>所指向的进程)，而准备运行的进程只要得到CPU就可以立即投入运行。系统中有一个运行队列(run_queue)，用来容纳所有处于可运行状态的进程，调度程序执行时，从中选择一个进程投入运行。当前运行进程一直处于该队列中，也就是说，current`总是指向运行队列中的某个元素，只是具体指向谁由调度程序决定。</p>
 <p>(2)等待状态：处于该状态的进程正在等待某个事件(Event)或某个资源，它肯定位于系统中的某个等待队列(wait_queue)中。Linux中处于等待状态的进程分为两种：可中断的等待状态和不可中断的等待状态。处于可中断等待态的进程可以被信号唤醒，如果收到信号，该进程就从等待状态进入可运行状态，并且加入到运行队列中，等待被调度；而处于不可中断等待态的进程是因为硬件环境不能满足而等待，例如等待特定的系统资源，它任何情况下都不能被打断，只能用特定的方式来唤醒它，例如唤醒函数<code>wake_up()</code>等。</p>
 <p>(3)暂停状态：此时的进程暂时停止运行来接受某种特殊处理。通常当进程接收到<code>SIGSTOP</code>、<code>SIGTSTP</code>、<code>SIGTTIN</code>或<code>SIGTTOU</code>信号后就处于这种状态。</p>
 <p>(4)僵死状态：进程虽然已经终止，但由于某种原因，父进程还没有执行<code>wait()</code>系统调用，终止进程的信息也还没有回收。顾名思义，处于该状态的进程就是死进程，这种进程实际上是系统中的垃圾，必须进行相应处理以释放其占用的资源。</p>
 <h3 id="进程调度信息"><a href="#进程调度信息" class="headerlink" title="进程调度信息"></a>进程调度信息</h3><p>这一部分信息通常包括进程的类别(普通进程还是实时进程)、进程的优先级等，如表所示。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -456,8 +459,10 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>当<code>need_resched</code>被设置时，在“下一次的调度机会”就调用调度程序<code>schedule()</code>。<code>counter</code>代表进程剩余的时间片，是进程调度的主要依据，也可以说是进程的动态优先级，因为这个值在不断地减少；<code>nice</code>是进程的静态优先级，同时也代表进程的时间片，用于对<code>counter</code>赋值，可以用<code>nice()</code>系统调用改变这个值；<code>policy</code>是适用于该进程的调度策略，实时进程和普通进程的调度策略是不同的；<code>rt_priority</code>只对实时进程有意义，它是实时进程调度的依据。</p>
 <p>进程的调度策略有 3 种，如表所示。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -484,9 +489,11 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>只有<code>root</code>用户能通过<code>sched_setscheduler()</code>系统调用来改变调度策略。</p>
 <h3 id="标识符-Identifiers"><a href="#标识符-Identifiers" class="headerlink" title="标识符(Identifiers)"></a>标识符(Identifiers)</h3><p>每个进程都有一个唯一的进程标识符(PID，process identifier)，内核通过这个标识符来识别不同的进程，同时，进程标识符<code>PID</code>也是内核提供给用户程序的接口。PID是 32 位的无符号整数，它被顺序编号：新创建进程的<code>PID</code>通常是前一个进程的<code>PID</code>加 1。</p>
 <h3 id="进程通信有关信息"><a href="#进程通信有关信息" class="headerlink" title="进程通信有关信息"></a>进程通信有关信息</h3><p>Linux支持多种不同形式的通信机制。它支持典型的<code>UNIX</code>通信机制(IPC Mechanisms)：信号(Signals)、管道(Pipes)，也支持<code>SystemV</code>通信机制：共享内存(Shared Memory)、信号量和消息队列(Message Queues)。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -517,11 +524,13 @@
 </tr>
 </tbody>
 </table>
+</div>
 <h3 id="进程链接信息-Links"><a href="#进程链接信息-Links" class="headerlink" title="进程链接信息(Links)"></a>进程链接信息(Links)</h3><p>程序创建的进程具有父/子关系。因为一个进程能创建几个子进程，而子进程之间有兄弟关系，在<code>task_struct</code>结构中有几个域来表示这种关系。</p>
 <p>每个进程的<code>task_struct</code>结构有许多指针，通过这些指针，系统中所有进程的<code>task_struct</code>结构就构成了一棵进程树，这棵进程树的根就是初始化进程<code>init</code>的<code>task_struct</code>结构(<code>init</code>进程是Linux内核建立起来后人为创建的一个进程，是所有进程的祖先进程)。</p>
 <h3 id="时间和定时器信息-Times-and-Timers"><a href="#时间和定时器信息-Times-and-Timers" class="headerlink" title="时间和定时器信息(Times and Timers)"></a>时间和定时器信息(Times and Timers)</h3><p>一个进程从创建到终止叫做该进程的生存期(lifetime)。进程在其生存期内使用CPU的时间，内核都要进行记录，以便进行统计、计费等有关操作。进程耗费CPU的时间由两部分组成：一是在用户模式(或称为用户态)下耗费的时间、一是在系统模式(或称为系统态)下耗费的时间。每个时钟滴答，也就是每个时钟中断，内核都要更新当前进程耗费CPU的时间信息。</p>
 <h3 id="文件系统信息-File-System"><a href="#文件系统信息-File-System" class="headerlink" title="文件系统信息(File System)"></a>文件系统信息(File System)</h3><p>进程可以打开或关闭文件，文件属于系统资源，Linux内核要对进程使用文件的情况进行记录。<code>task_struct</code>结构中有两个数据结构用于描述进程与文件相关的信息。其中，<code>fs_struct</code>中描述了两个<code>VFS</code>索引节点(VFS inode)，这两个索引节点叫做<code>root</code>和<code>pwd</code>，分别指向进程的可执行映像所对应的根目录(Home Directory)和当前目录或工作目录。</p>
 <p><code>file_struct</code>结构用来记录了进程打开的文件的描述符(Descriptor)。如表所示。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -540,8 +549,10 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>在文件系统中，每个<code>VFS</code>索引节点唯一描述一个文件或目录，同时该节点也是向更低层的文件系统提供的统一的接口。</p>
 <h3 id="虚拟内存信息-Virtual-Memory"><a href="#虚拟内存信息-Virtual-Memory" class="headerlink" title="虚拟内存信息(Virtual Memory)"></a>虚拟内存信息(Virtual Memory)</h3><p>除了内核线程(Kernel Thread)，每个进程都拥有自己的地址空间(也叫虚拟空间)，用<code>mm_struct</code>来描述。另外Linux 2.4 还引入了另外一个域<code>active_mm</code>，这是为内核线程而引入的。因为内核线程没有自己的地址空间，为了让内核线程与普通进程具有统一的上下文切换方式，当内核线程进行上下文切换时，让切换进来的线程的<code>active_mm</code>指向刚被调度出去的进程的<code>active_mm</code>(如果进程的<code>mm</code>域不为空，则其<code>active_mm</code>域与<code>mm</code>域相同)。内存信息如表所示。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -560,7 +571,9 @@
 </tr>
 </tbody>
 </table>
+</div>
 <h3 id="页面管理信息"><a href="#页面管理信息" class="headerlink" title="页面管理信息"></a>页面管理信息</h3><p>当物理内存不足时，Linux内存管理子系统需要把内存中的部分页面交换到外存，其交换是以页为单位的。有关页面的描述信息如表。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -583,7 +596,9 @@
 </tr>
 </tbody>
 </table>
+</div>
 <h3 id="对称多处理机-SMP-信息"><a href="#对称多处理机-SMP-信息" class="headerlink" title="对称多处理机(SMP)信息"></a>对称多处理机(SMP)信息</h3><p>Linux 2.4 对<code>SMP</code>进行了全面的支持，表是与多处理机相关的几个域。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -606,7 +621,9 @@
 </tr>
 </tbody>
 </table>
+</div>
 <h3 id="和处理器相关的环境-上下文-信息-Processor-Specific-Context"><a href="#和处理器相关的环境-上下文-信息-Processor-Specific-Context" class="headerlink" title="和处理器相关的环境(上下文)信息(Processor Specific Context)"></a>和处理器相关的环境(上下文)信息(Processor Specific Context)</h3><p>因为不同的处理器对内部寄存器和堆栈的定义不尽相同，所以叫做“和处理器相关的环境”，也叫做“处理机状态”。当进程暂时停止运行时，处理机状态必须保存在进程的<code>task_struct</code>结构中，当进程被调度重新运行时再从中恢复这些环境，也就是恢复这些寄存器和堆栈的值。处理机信息如表所示。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -621,6 +638,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <h3 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h3><h4 id="struct-wait-queue-wait-chldexit"><a href="#struct-wait-queue-wait-chldexit" class="headerlink" title="struct wait_queue *wait_chldexit"></a>struct wait_queue *wait_chldexit</h4><p>在进程结束时,或发出系统调用<code>wait4</code>时，为了等待子进程的结束，而将自己(父进程)睡眠在该等待队列上，设置状态标志为<code>TASK_INTERRUPTIBLE</code>，并且把控制权转给调度程序。</p>
 <h4 id="struct-rlimit-rlim-RLIM-NLIMITS"><a href="#struct-rlimit-rlim-RLIM-NLIMITS" class="headerlink" title="struct rlimit rlim[RLIM_NLIMITS]"></a>struct rlimit rlim[RLIM_NLIMITS]</h4><p>每一个进程可以通过系统调用<code>setlimit</code>和<code>getlimit</code>来限制它资源的使用。</p>
 <h4 id="int-exit-code-exit-signal"><a href="#int-exit-code-exit-signal" class="headerlink" title="int exit_code exit_signal"></a>int exit_code exit_signal</h4><p>程序的返回代码以及程序异常终止产生的信号，这些数据由父进程(子进程完成后)轮流查询。</p>
@@ -700,6 +718,7 @@
 </ul>
 <p>内核线程是由<code>kernel_thread()</code>函数在内核态下创建的，这个函数所包含的代码大部分是内联式汇编语言，但在某种程度上等价于下面的代码：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">kernel_thread</span><span class="params">(<span class="keyword">int</span> (*fn)(<span class="keyword">void</span> *), <span class="keyword">void</span> * arg, <span class="keyword">unsigned</span> <span class="keyword">long</span> flags)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">pid_t</span> p ;</span><br><span class="line">    p = clone( <span class="number">0</span>, flags | CLONE_VM );</span><br><span class="line">    <span class="keyword">if</span> ( p ) <span class="comment">/* parent */</span></span><br><span class="line">        <span class="keyword">return</span> p;</span><br><span class="line">    <span class="keyword">else</span> &#123; <span class="comment">/* child */</span></span><br><span class="line">        fn(arg);</span><br><span class="line">        <span class="built_in">exit</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <h2 id="进程的权能"><a href="#进程的权能" class="headerlink" title="进程的权能"></a>进程的权能</h2><p>Linux用“权能(capability)”表示一进程所具有的权力。一种权能仅仅是一个标志，它表明是否允许进程执行一个特定的操作或一组特定的操作。这个模型不同于传统的“超级用户对普通用户”模型，在后一种模型中，一个进程要么能做任何事情，要么什么也不能做，这取决于它的有效`UID。也就是说，超级用户与普通用户的划分过于笼统。如表给出了在Linux内核中已定义的权能。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -818,6 +837,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>任何时候，每个进程只需要有限种权能，这是其主要优势。因此，即使一位有恶意的用户使用有潜在错误程序，他也只能非法地执行有限个操作类型。</p>
 <h2 id="内核同步"><a href="#内核同步" class="headerlink" title="内核同步"></a>内核同步</h2><h3 id="信号量"><a href="#信号量" class="headerlink" title="信号量"></a>信号量</h3><p>进程间对共享资源的互斥访问是通过“信号量”机制来实现的。信号量机制是操作系统教科书中比较重要的内容之一。Linux内核中提供了两个函数<code>down()</code>和<code>up()</code>，分别对应于操作系统教科书中的<code>P、V</code>操作。</p>
 <p>信号量在内核中定义为<code>semaphore</code>数据结构，位于<code>include/i386/semaphore.h</code>：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">semaphore</span> &#123;</span></span><br><span class="line">    <span class="keyword">atomic_t</span> count;</span><br><span class="line">    <span class="keyword">int</span> sleepers;</span><br><span class="line">    <span class="keyword">wait_queue_head_t</span> wait;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> WAITQUEUE_DEBUG</span></span><br><span class="line">    <span class="keyword">long</span> __magic;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
@@ -837,6 +857,7 @@
 </ul>
 <p>这些操作利用了<code>LOCK_PREFIX</code>宏，对于<code>SMP</code>内核，该宏是总线锁指令的前缀，对于单CPU这个宏不起任何作用。这就保证了在<code>SMP</code>环境下访问的原子性。</p>
 <h4 id="算术操作"><a href="#算术操作" class="headerlink" title="算术操作"></a>算术操作</h4><p>有时候位操作是不方便的，取而代之的是需要执行算术操作，即加、减操作及加 1、减1 操作。典型的例子是很多数据结构中的引用计数域<code>count</code>(如<code>inode</code>结构)。这些操作的原子性是由<code>atomic_t</code>数据类型和表中的函数保证的。<code>atomic_t</code>的类型在<code>include/i386/atomic.h</code>，定义如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span> <span class="keyword">volatile</span> <span class="keyword">int</span> counter; &#125; <span class="keyword">atomic_t</span>;</span><br></pre></td></tr></table></figure></p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -887,6 +908,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <h3 id="自旋锁、读写自旋锁和大读者自旋锁"><a href="#自旋锁、读写自旋锁和大读者自旋锁" class="headerlink" title="自旋锁、读写自旋锁和大读者自旋锁"></a>自旋锁、读写自旋锁和大读者自旋锁</h3><p>在Linux内核中，临界区的代码或者是由进程上下文来执行，或者是由中断上下文来执行。在单CPU上，可以用<code>cli/sti</code>指令来保护临界区的使用，例如：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">unsigned</span> <span class="keyword">long</span> flags;</span><br><span class="line">save_flags(flags);</span><br><span class="line">cli();</span><br><span class="line"><span class="comment">/* critical code */</span></span><br><span class="line">restore_flags(flags);</span><br></pre></td></tr></table></figure></p>
 <p>但是，在<code>SMP</code>上，这种方法明显是没有用的，因为同一段代码序列可能由另一个进程同时执行,而<code>cli()</code>仅能单独地为每个CPU上的中断上下文提供对竞争资源的保护，它无法对运行在不同CPU上的上下文提供对竞争资源的访问。因此，必须用到自旋锁。</p>
 <p>所谓自旋锁，就是当一个进程发现锁被另一个进程锁着时，它就不停地“旋转”，不断执行一个指令的循环直到锁打开。自旋锁只对<code>SMP</code>有用，对单CPU没有意义。有 3 种类型的自旋锁：基本的、读写以及大读者自旋锁。读写自旋锁适用于“多个读者少数写者”的场合，例如，有多个读者仅有一个写者，或者没有读者只有一个写者。大读者自旋锁是读写自旋锁的一种，但更照顾读者。大读者自旋锁现在主要用在`Sparc64 和网络系统中。</p>
@@ -1403,7 +1425,7 @@
 <p><code>expand()</code>函数源代码如下。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> struct page * <span class="title">expand</span> <span class="params">(<span class="keyword">zone_t</span> *zone, struct page *page,</span></span></span><br><span class="line"><span class="function"><span class="params"><span class="keyword">unsigned</span> <span class="keyword">long</span> index, <span class="keyword">int</span> low, <span class="keyword">int</span> high, <span class="keyword">free_area_t</span> * area)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> size = <span class="number">1</span> &lt;&lt; high;</span><br><span class="line">    <span class="keyword">while</span> (high &gt; low) &#123;</span><br><span class="line">        <span class="keyword">if</span> (BAD_RANGE(zone,page))</span><br><span class="line">            BUG();</span><br><span class="line">        area--;</span><br><span class="line">        high--;</span><br><span class="line">        size &gt;&gt;= <span class="number">1</span>;</span><br><span class="line">        memlist_add_head(&amp;(page)-&gt;<span class="built_in">list</span>, &amp;(area)-&gt;free_list);</span><br><span class="line">        MARK_USED(index, high, area);</span><br><span class="line">        index += size;</span><br><span class="line">        page += size;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (BAD_RANGE(zone,page))</span><br><span class="line">        BUG();</span><br><span class="line">    <span class="keyword">return</span> page;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>参数<code>zone</code>指向已分配页块所在的管理区；<code>page</code>指向已分配的页块；<code>index</code>是已分配的页面在<code>mem_map</code>中的下标；<code>low</code>表示所需页面块大小为<code>2^low</code>，而<code>high</code>表示从空闲队列中实际进行分配的页面块大小为<code>2^high</code>；<code>area</code>是<code>free_area_struct</code>结构，指向实际要分配的页块。</p>
 <p>通过上面介绍可以知道，返回给请求者的块大小为<code>2^low</code>个页面，并把剩余的页面放入合适的空闲队列，且对伙伴系统的位图进行相应的修改。例如，假定我们需要一个 2 页面的块，但是，我们不得不从<code>order</code>为 3(8 个页面)的空闲队列中进行分配，又假定我们碰巧选择物理页面 800 作为该页面块的底部。在我们这个例子中，这几个参数值为：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">page == mem_map+<span class="number">800</span></span><br><span class="line">index == <span class="number">800</span></span><br><span class="line">low == <span class="number">1</span></span><br><span class="line">high == <span class="number">3</span></span><br><span class="line">area == zone-&gt;free_area+high ( 也就是`frea_area`数组中下标为 <span class="number">3</span> 的元素)</span><br></pre></td></tr></table></figure></p>
-<p>首先把<code>size</code>初始化为分配块的页面数(例如，size = 1&lt;<3 =="8)" `while`循环进行循环查找。每次循环都把`size`减半。如果我们从空闲队列中分配的一个块与所要求的大小匹配，那么`low="high`，就彻底从循环中跳出，返回所分配的页块。如果分配到的物理块所在的空闲块大于所需块的大小(即`2^high"> 2^low<code>)，那就将该空闲块分为两半(即</code>area–;high–; size &gt;&gt;= 1)<code>，然后调用</code>memlist_add_head()<code>把刚分配出去的页面块又加入到低一档(物理块减半)的空闲队列中，准备从剩下的一半空闲块中重新进行分配，并调用</code>MARK_USED()`设置位图。</3></p>
+<p>首先把<code>size</code>初始化为分配块的页面数(例如，size = 1&lt;<3 =="8)" `while`循环进行循环查找。每次循环都把`size`减半。如果我们从空闲队列中分配的一个块与所要求的大小匹配，那么`low="high`，就彻底从循环中跳出，返回所分配的页块。如果分配到的物理块所在的空闲块大于所需块的大小(即`2^high"> 2^low<code>)，那就将该空闲块分为两半(即</code>area—;high—; size &gt;&gt;= 1)<code>，然后调用</code>memlist_add_head()<code>把刚分配出去的页面块又加入到低一档(物理块减半)的空闲队列中，准备从剩下的一半空闲块中重新进行分配，并调用</code>MARK_USED()`设置位图。</3></p>
 <p>在上面的例子中，第 1 次循环，我们从页面 800 开始，把页面大小为 4的块其首地址插入到<code>frea_area[2]</code>中的空闲队列；因为<code>low&lt;high</code>，又开始第 2 次循环，这次从页面 804 开始，把页面大小为 2 的块插入到<code>frea_area[1]</code>中的空闲队列，此时，page＝806，high=low=1，退出循环，我们给调用者返回从 806 页面开始的一个 2 页面块。从这个例子可以看出，这是一种巧妙的分配算法。</p>
 <h4 id="释放页面"><a href="#释放页面" class="headerlink" title="释放页面"></a>释放页面</h4><p>从上面的介绍可以看出，页面块的分配必然导致内存的碎片化，而页面块的释放则可以将页面块重新组合成大的页面块。页面的释放函数为<code>__free_pages(page struct *page, unsigned long order)</code>，该函数从给定的页面开始，释放的页面块大小为<code>2^order</code>。原函数为:<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> __free_pages(page struct *page, <span class="keyword">unsigned</span> <span class="keyword">long</span> order)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (!PageReserved(page) &amp;&amp; put_page_testzero(page))</span><br><span class="line">        __free_pages_ok(page, order);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>其中比较巧妙的部分就是调用<code>put_page_testzero()</code>宏，该函数把页面的引用计数减 1，如果减 1 后引用计数为 0，则该函数返回 1。因此，如果调用者不是该页面的最后一个用户，那么，这个页面实际上就不会被释放。另外要说明的是不可释放保留页<code>PageReserved</code>，这是通过<code>PageReserved()</code>宏进行检查的。</p>
@@ -1493,6 +1515,7 @@
 <p>这里的段是对程序的逻辑划分，与我们前面所描述的段机制是不同的。</p>
 <h4 id="VM-AREA-STRUCT结构"><a href="#VM-AREA-STRUCT结构" class="headerlink" title="VM_AREA_STRUCT结构"></a>VM_AREA_STRUCT结构</h4><p><code>vm_area_struct</code>描述进程的一个虚拟地址区间，在<code>/include/linux/mm.h</code>中描述如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">vm_area_struct</span></span></span><br><span class="line"><span class="class">    <span class="title">struct</span> <span class="title">mm_struct</span> * <span class="title">vm_mm</span>;</span> <span class="comment">/* 虚拟区间所在的地址空间*/</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> vm_start; <span class="comment">/* 在vm_mm中的起始地址*/</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> vm_end; <span class="comment">/*在vm_mm中的结束地址 */</span></span><br><span class="line">    <span class="comment">/* linked list of VM areas per task, sorted by address */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">vm_area_struct</span> *<span class="title">vm_next</span>;</span></span><br><span class="line">    <span class="keyword">pgprot_t</span> vm_page_prot; <span class="comment">/* 对这个虚拟区间的存取权限 */</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> vm_flags; <span class="comment">/* 虚拟区间的标志 */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">rb_node_t</span> vm_rb;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    * For areas with an address space and backing store,</span></span><br><span class="line"><span class="comment">    * one of the address_space-&gt;i_mmap&#123;,shared&#125; lists,</span></span><br><span class="line"><span class="comment">    * for shm areas, the list of attaches, otherwise unused.</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">vm_area_struct</span> *<span class="title">vm_next_share</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">vm_area_struct</span> **<span class="title">vm_pprev_share</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/*对这个区间进行操作的函数 */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">vm_operations_struct</span> * <span class="title">vm_ops</span>;</span></span><br><span class="line">    <span class="comment">/* Information about our backing store: */</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> vm_pgoff; <span class="comment">/* Offset (within vm_file) in PAGE_SIZE units, *not* PAGE_CACHE_SIZE */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">file</span> * <span class="title">vm_file</span>;</span> <span class="comment">/* File we map to (can be NULL). */</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> vm_raend; <span class="comment">/* <span class="doctag">XXX:</span> put full readahead info here. */</span></span><br><span class="line">    <span class="keyword">void</span> * vm_private_data; <span class="comment">/* was vm_pte (shared mem) */</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
 <p><code>vm_flag</code>是描述对虚拟区间的操作的标志，其定义和描述如表所示。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -1548,6 +1571,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>较高层次的结构<code>vm_area_struct</code>是由双向链表连接起来的，它们是按虚地址的降顺序来排列的，每个这样的结构都对应描述一个相邻的地址空间范围。之所以这样分割，是因为每个虚拟区间可能来源不同，有的可能来自可执行映像，有的可能来自共享库，而有的则可能是动态分配的内存区，所以对每一个由<code>vm_area_struct</code>结构所描述的区间的处理操作和它前后范围的处理操作不同。因此Linux把虚拟内存分割管理，并利用了虚拟内存处理例程(vm_ops)来抽象对不同来源虚拟内存的处理方法。不同的虚拟区间其处理操作可能不同，Linux在这里利用了面向对象的思想，即把一个虚拟区间看成一个对象，用<code>vm_area_struct</code>描述了这个对象的属性，其中的<code>vm_operation s-stract</code>结构描述了在这个对象上的操作，其定义在<code>/include/linux/mm.h</code>中：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"> <span class="comment">/*</span></span><br><span class="line"><span class="comment"> * These are the virtual MM functions - opening of an area, closing and</span></span><br><span class="line"><span class="comment"> * unmapping it (needed to keep files on disk up-to-date etc), pointer</span></span><br><span class="line"><span class="comment"> * to the functions called when a no-page or a wp-page exception occurs.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">vm_operations_struct</span> &#123;</span></span><br><span class="line">    <span class="keyword">void</span> (*open)(struct vm_area_struct * area);</span><br><span class="line">    <span class="keyword">void</span> (*close)(struct vm_area_struct * area);</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">page</span> * (*<span class="title">nopage</span>)(<span class="title">struct</span> <span class="title">vm_area_struct</span> * <span class="title">area</span>, <span class="title">unsigned</span> <span class="title">long</span> <span class="title">address</span>, <span class="title">int</span> <span class="title">unused</span>);</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
 <p><code>vm_operations</code>结构中包含的是函数指针；其中，<code>open</code>、<code>close</code>分别用于虚拟区间的打开、关闭，而<code>nopage</code>用于当虚存页面不在物理内存而引起的“缺页异常”时所应该调用的函数。图 6.15 给出了虚拟区间的操作集。<br><img src="/img/1633775726.jpg" alt></p>
 <h4 id="红黑树结构"><a href="#红黑树结构" class="headerlink" title="红黑树结构"></a>红黑树结构</h4><p>一颗红黑树是具有以下特点的二叉树：</p>
@@ -1883,6 +1907,7 @@
 <p>对这个问题的解决，有人提出了一个解决方案，这个方案基于这样的观察：大部分程序倾向于对较少的页面进行大量的访问。因此，只有一小部分页表项经常被用到，其他的很少被使用。</p>
 <p>采取的解决办法是为计算机装备一个不需要经过页表就能把虚拟地址映射成物理地址的小的硬件设备，这个设备叫做<code>TLB</code>(翻译后援存储器，Translation Lookside Buffer)，有时也叫做相联存储器(Associative Memory)，如图 6.21 所示。它通常在<code>MMU</code>内部，条目的数量较少，在这个例子中是 6 个，80386 有 32 个。<br><img src="/img/1633848455.png" alt></p>
 <p>每一个<code>TLB</code>寄存器的每个条目包含一个页面的信息：有效位、虚页面号、修改位、保护码和页面所在的物理页面号，它们和页面表中的表项一一对应，如表所示。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -1945,6 +1970,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>当一个虚地址被送到<code>MMU</code>翻译时，硬件首先把它和<code>TLB</code>中的所有条目同时(并行地)进行比较。如果它的虚页面号在<code>TLB</code>中，并且访问没有违反保护位，它的页面会直接从<code>TLB</code>中取出而不去访问页表；如果虚页面号在<code>TLB</code>中，但当前指令试图写一个只读的页面，这时将产生一个缺页异常，与直接访问页表时相同。</p>
 <p>如<code>MMU</code>发现在<code>TLB</code>中没有命中，它将随即进行一次常规的页表查找，然后从<code>TLB</code>中淘汰一个条目并把它替换为刚刚找到的页表项。因此如果这个页面很快再被用到的话，第 2 次访问时它就能在<code>TLB</code>中直接找到。在一个<code>TLB</code>条目被淘汰时，被修改的位被复制回在内存中的页表项，其他的值则已经在那里了。当<code>TLB</code>从页表装入时，所有的域都从内存中取得。必须明确在分页机制中，<code>TLB</code>中的数据和页表中的数据的相关性，不是由处理器进行维护，而是必须由操作系统来维护，高速缓存的刷新是通过装入处理器(80386)中的寄存器 CR3 来完成的。</p>
 <p>这里提到的命中率，指一个页面在<code>TBL</code>中找到的概率。一般来说<code>TLB</code>的尺寸大可增加命中率，但会增加成本和软件的管理。所以一般都采用 8～64 个条目的数量。假如命中率是 0.85，访问内存时间是 120 纳秒，访<code>TLB</code>时间是 15 纳秒。那么访问时间是：0.85×(15+120)+(1-0.85)×(15+120+120)=153 纳秒。</p>
@@ -2071,8 +2097,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2021/09/24/深入分析LINUX内核源码 笔记1/" rel="next" title="深入分析Linux内核源码笔记1">
-                <i class="fa fa-chevron-left"></i> 深入分析Linux内核源码笔记1
+              <a href="/2021/08/15/深入理解cpp11 笔记3/" rel="next" title="深入理解C++11：C++11新特性解析与应用 笔记3">
+                <i class="fa fa-chevron-left"></i> 深入理解C++11：C++11新特性解析与应用 笔记3
               </a>
             
           </div>
@@ -2081,8 +2107,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2021/09/26/msvc_unique_ptr源码/" rel="prev" title="MSVC C++ STL 源码解析系列">
-                MSVC C++ STL 源码解析系列 <i class="fa fa-chevron-right"></i>
+              <a href="/2021/09/24/深入分析LINUX内核源码 笔记1/" rel="prev" title="深入分析Linux内核源码笔记1">
+                深入分析Linux内核源码笔记1 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -2161,7 +2187,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">352</span>
+                  <span class="site-state-item-count">351</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
