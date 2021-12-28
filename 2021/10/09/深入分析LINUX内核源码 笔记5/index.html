@@ -1198,7 +1198,7 @@
 <p>此后，<code>getty</code>会在每个终端上显示<code>login</code>提示符，以等待用户的登录。此时<code>getty</code>会调用<code>exec</code>执行<code>login</code>程序，<code>login</code>将核对用户帐户和密码，如果密码正确，<code>login</code>调用<code>exec</code>执行<code>shell</code>的命令行解释程序。<code>shell</code>接着去执行用户默认的系统环境配置脚本文件(通常是用户的<code>home</code>目录下的<code>profile</code>文件)。</p>
 <p><code>init</code>还有另外一个任务，当某个终端或虚拟控制台上的用户注销之后，<code>init</code>进程要为该终端或虚拟控制台重新启动一个<code>getty</code>，以便能够让其他用户登录。你应该发现，当用户登录时，<code>getty</code>用的是<code>exec</code>而不是<code>fork</code>系统调用来执行<code>login</code>，这样，<code>login</code>在执行的时候会覆盖<code>getty</code>的执行环境(同理，用户注册成功后，<code>login</code>的执行环境也会被<code>shell</code>占用)。所以，如果想再次使用同一终端，必须再启动一个<code>getty</code>。</p>
 <p>此外，<code>init</code>进程还负责管理系统中的“孤儿”进程。如果某个进程创建子进程之后，在子进程终止之前终止，则子进程成为孤儿进程。<code>init</code>进程负责“收养”该进程，即孤儿进程会立即成为<code>init</code>进程的子进程。这是为了保持进程树的完整性。</p>
-<h3 id="启动所需的Shell脚本文件"><a href="#启动所需的Shell脚本文件" class="headerlink" title="启动所需的Shell脚本文件"></a>启动所需的Shell脚本文件</h3><p>在启动的过程中，多次用到了<code>Shell</code>的脚本文件——Shell Script，如<script type="math/tex">HOME/profile`、`/etc/inittab`等等。这里有必要把它们的格式和作用稍加说明。我们把启动所需要的脚本文件分为两部分，一部分是`Linux`系统启动所必需的，也就是从`/etc/inittab`开始直到出现`Login:`提示符时要用到的所用脚本，另外一部分是用户登录后自己设定的用于支持个性化的操作环境的脚本。在后者中，我们可以设定提示符用`</script>或是其他什么任意你喜欢的字符，可以设所用的<code>Shell</code>是<code>bash</code>、<code>ksh，还是</code>zsh`。显然，这部分不是我们的重点，我们要重点描述的是前一部分——系统启动所必需的脚本。</p>
+<h3 id="启动所需的Shell脚本文件"><a href="#启动所需的Shell脚本文件" class="headerlink" title="启动所需的Shell脚本文件"></a>启动所需的Shell脚本文件</h3><p>在启动的过程中，多次用到了<code>Shell</code>的脚本文件——Shell Script，如<code>$HOME/profile</code>、<code>/etc/inittab</code>等等。这里有必要把它们的格式和作用稍加说明。我们把启动所需要的脚本文件分为两部分，一部分是<code>Linux</code>系统启动所必需的，也就是从<code>/etc/inittab</code>开始直到出现<code>Login:</code>提示符时要用到的所用脚本，另外一部分是用户登录后自己设定的用于支持个性化的操作环境的脚本。在后者中，我们可以设定提示符用<code>$</code>或是其他什么任意你喜欢的字符，可以设所用的<code>Shell</code>是<code>bash</code>、<code>ksh，还是</code>zsh`。显然，这部分不是我们的重点，我们要重点描述的是前一部分——系统启动所必需的脚本。</p>
 <p>系统启动所必需的脚本存放在系统默认的配置文件目录<code>/etc</code>下。用一条<code>ls</code>指令你可以看到所用的配置文件。不过，<code>/etc</code>下面还有一些子目录，比如说，<code>rc.d</code>就是启动中非常重要的一部分。我们主要介绍的是<code>/etc/inittab</code>和<code>rc.d</code>下的一些文件，我们还是按启动时<code>init</code>进程调用它们的顺序来一一介绍。</p>
 <p>首先调用的是<code>/etc/inittab</code>。<code>init</code>进程将会读取它并依据其中所记载的内容进入不同的启动级别，从而启动不同的进程。所谓运行级别就是系统中定义了许多不同的级别，根据这些级别，系统在启动时给用户分配资源。比如说，以系统管理员级别登录的用户，就拥有使用几乎所有系统资源的权力，而一般用户显然不会被赋予如此大的特权。</p>
 <p>下面是系统的 7 个启动级别。</p>
@@ -1641,6 +1641,8 @@
   
 
   
+  
+
 
   
 
