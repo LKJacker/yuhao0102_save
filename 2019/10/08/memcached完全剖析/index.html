@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="积累,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="memcached是什么？memcached是以LiveJournal旗下Danga Interactive 公司的Brad Fitzpatric为首开发的一款软件。现在已成为mixi、hatena、 Facebook、Vox、LiveJournal等众多服务中提高Web应用扩展性的重要因素。 许多Web应用都将数据保存到RDBMS中，应用服务器从中读取数据并在浏览器中显示。 但随着数据量的增大、">
+<meta name="keywords" content="积累">
+<meta property="og:type" content="article">
+<meta property="og:title" content="memcached完全剖析">
+<meta property="og:url" content="http://yoursite.com/2019/10/08/memcached完全剖析/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="memcached是什么？memcached是以LiveJournal旗下Danga Interactive 公司的Brad Fitzpatric为首开发的一款软件。现在已成为mixi、hatena、 Facebook、Vox、LiveJournal等众多服务中提高Web应用扩展性的重要因素。 许多Web应用都将数据保存到RDBMS中，应用服务器从中读取数据并在浏览器中显示。 但随着数据量的增大、">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/20191008001.png">
+<meta property="og:image" content="http://yoursite.com/img/20191008002.png">
+<meta property="og:image" content="http://yoursite.com/img/20191008003.png">
+<meta property="og:image" content="http://yoursite.com/img/20191008004.png">
+<meta property="og:image" content="http://yoursite.com/img/20191008005.png">
+<meta property="og:image" content="http://yoursite.com/img/20191008006.png">
+<meta property="og:image" content="http://yoursite.com/img/20191008007.png">
+<meta property="og:image" content="http://yoursite.com/img/20191008008.png">
+<meta property="og:image" content="http://yoursite.com/img/20191008009.png">
+<meta property="og:image" content="http://yoursite.com/img/20191008010.png">
+<meta property="og:image" content="http://yoursite.com/img/20191008011.png">
+<meta property="og:updated_time" content="2022-01-02T03:27:22.278Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="memcached完全剖析">
+<meta name="twitter:description" content="memcached是什么？memcached是以LiveJournal旗下Danga Interactive 公司的Brad Fitzpatric为首开发的一款软件。现在已成为mixi、hatena、 Facebook、Vox、LiveJournal等众多服务中提高Web应用扩展性的重要因素。 许多Web应用都将数据保存到RDBMS中，应用服务器从中读取数据并在浏览器中显示。 但随着数据量的增大、">
+<meta name="twitter:image" content="http://yoursite.com/img/20191008001.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/10/08/memcached完全剖析/">
+
+
+
+
+
+  <title>memcached完全剖析 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/resume.pdf" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-mybetterhalf">
+          <a href="/mybetterhalf/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            mybetterhalf
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/10/08/memcached完全剖析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">memcached完全剖析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-10-08T17:02:00+08:00">
+                2019-10-08
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="memcached是什么？"><a href="#memcached是什么？" class="headerlink" title="memcached是什么？"></a>memcached是什么？</h1><p>memcached是以LiveJournal旗下Danga Interactive 公司的Brad Fitzpatric为首开发的一款软件。现在已成为mixi、hatena、 Facebook、Vox、LiveJournal等众多服务中提高Web应用扩展性的重要因素。</p>
+<p>许多Web应用都将数据保存到RDBMS中，应用服务器从中读取数据并在浏览器中显示。 但随着数据量的增大、访问的集中，就会出现RDBMS的负担加重、数据库响应恶化、 网站显示延迟等重大影响。</p>
+<p>这时就该memcached大显身手了。memcached是高性能的分布式内存缓存服务器。 一般的使用目的是，通过缓存数据库查询结果，减少数据库访问次数，以提高动态Web应用的速度、 提高可扩展性。</p>
+<p><img src="/img/20191008001.png" alt="图1 一般情况下memcached的用途"></p>
+<h1 id="memcached的特征"><a href="#memcached的特征" class="headerlink" title="memcached的特征"></a>memcached的特征</h1><p>memcached作为高速运行的分布式缓存服务器，具有以下的特点。</p>
+<ul>
+<li>协议简单</li>
+<li>基于libevent的事件处理</li>
+<li>内置内存存储方式</li>
+<li>memcached不互相通信的分布式</li>
+</ul>
+<h2 id="协议简单"><a href="#协议简单" class="headerlink" title="协议简单"></a>协议简单</h2><p>memcached的服务器客户端通信并不使用复杂的XML等格式，而使用简单的基于文本行的协议。因此，通过telnet 也能在memcached上保存数据、取得数据。下面是例子。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$ telnet localhost 11211</span><br><span class="line">Trying 127.0.0.1...</span><br><span class="line">Connected to localhost.localdomain (127.0.0.1).</span><br><span class="line">Escape character is &apos;^]&apos;.</span><br><span class="line">set foo 0 0 3     （保存命令）</span><br><span class="line">bar               （数据）</span><br><span class="line">STORED            （结果）</span><br><span class="line">get foo           （取得命令）</span><br><span class="line">VALUE foo 0 3     （数据）</span><br><span class="line">bar               （数据）</span><br></pre></td></tr></table></figure></p>
+<p>协议文档位于memcached的源代码内，也可以参考以下的URL。</p>
+<p><a href="http://code.sixapart.com/svn/memcached/trunk/server/doc/protocol.txt" target="_blank" rel="noopener">http://code.sixapart.com/svn/memcached/trunk/server/doc/protocol.txt</a></p>
+<h2 id="基于libevent的事件处理"><a href="#基于libevent的事件处理" class="headerlink" title="基于libevent的事件处理"></a>基于libevent的事件处理</h2><p>libevent是个程序库，它将Linux的epoll、BSD类操作系统的kqueue等事件处理功能 封装成统一的接口。即使对服务器的连接数增加，也能发挥O(1)的性能。 memcached使用这个libevent库，因此能在Linux、BSD、Solaris等操作系统上发挥其高性能。 关于事件处理这里就不再详细介绍，可以参考Dan Kegel的The C10K Problem。</p>
+<p>libevent: <a href="http://www.monkey.org/~provos/libevent/" target="_blank" rel="noopener">http://www.monkey.org/~provos/libevent/</a><br>The C10K Problem: <a href="http://www.kegel.com/c10k.html" target="_blank" rel="noopener">http://www.kegel.com/c10k.html</a></p>
+<h2 id="内置内存存储方式"><a href="#内置内存存储方式" class="headerlink" title="内置内存存储方式"></a>内置内存存储方式</h2><p>为了提高性能，memcached中保存的数据都存储在memcached内置的内存存储空间中。 由于数据仅存在于内存中，因此重启memcached、重启操作系统会导致全部数据消失。 另外，内容容量达到指定值之后，就基于LRU(Least Recently Used)算法自动删除不使用的缓存。 memcached本身是为缓存而设计的服务器，因此并没有过多考虑数据的永久性问题。 关于内存存储的详细信息，本连载的第二讲以后前坂会进行介绍，请届时参考。</p>
+<h2 id="memcached不互相通信的分布式"><a href="#memcached不互相通信的分布式" class="headerlink" title="memcached不互相通信的分布式"></a>memcached不互相通信的分布式</h2><p>memcached尽管是“分布式”缓存服务器，但服务器端并没有分布式功能。 各个memcached不会互相通信以共享信息。那么，怎样进行分布式呢？ 这完全取决于客户端的实现。本连载也将介绍memcached的分布式。</p>
+<p><img src="/img/20191008002.png" alt="图2 memcached的分布式"></p>
+<p>接下来简单介绍一下memcached的使用方法。</p>
+<h2 id="memcached的安装"><a href="#memcached的安装" class="headerlink" title="memcached的安装"></a>memcached的安装</h2><p>运行memcached需要本文开头介绍的libevent库。Fedora 8中有现成的rpm包， 通过yum命令安装即可。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ sudo yum install libevent libevent-devel</span><br></pre></td></tr></table></figure></p>
+<p>memcached的源代码可以从memcached网站上下载。本文执笔时的最新版本为1.2.5。 Fedora 8虽然也包含了memcached的rpm，但版本比较老。因为源代码安装并不困难， 这里就不使用rpm了。</p>
+<p>下载memcached：<a href="http://www.danga.com/memcached/download.bml" target="_blank" rel="noopener">http://www.danga.com/memcached/download.bml</a><br>memcached安装与一般应用程序相同，configure、make、make install就行了。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ wget http://www.danga.com/memcached/dist/memcached-1.2.5.tar.gz</span><br><span class="line">$ tar zxf memcached-1.2.5.tar.gz</span><br><span class="line">$ cd memcached-1.2.5</span><br><span class="line">$ ./configure</span><br><span class="line">$ make</span><br><span class="line">$ sudo make install</span><br></pre></td></tr></table></figure></p>
+<p>默认情况下memcached安装到/usr/local/bin下。</p>
+<h2 id="memcached的启动"><a href="#memcached的启动" class="headerlink" title="memcached的启动"></a>memcached的启动</h2><p>从终端输入以下命令，启动memcached。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">$ /usr/local/bin/memcached -p 11211 -m 64m -vv</span><br><span class="line">slab class   1: chunk size     88 perslab 11915</span><br><span class="line">slab class   2: chunk size    112 perslab  9362</span><br><span class="line">slab class   3: chunk size    144 perslab  7281</span><br><span class="line">中间省略</span><br><span class="line">slab class  38: chunk size 391224 perslab     2</span><br><span class="line">slab class  39: chunk size 489032 perslab     2</span><br><span class="line">&lt;23 server listening</span><br><span class="line">&lt;24 send buffer was 110592, now 268435456</span><br><span class="line">&lt;24 server listening (udp)</span><br><span class="line">&lt;24 server listening (udp)</span><br><span class="line">&lt;24 server listening (udp)</span><br><span class="line">&lt;24 server listening (udp)</span><br></pre></td></tr></table></figure></p>
+<p>这里显示了调试信息。这样就在前台启动了memcached，监听TCP端口11211 最大内存使用量为64M。调试信息的内容大部分是关于存储的信息， 下次连载时具体说明。</p>
+<p>作为daemon后台启动时，只需<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ /usr/local/bin/memcached -p 11211 -m 64m -d</span><br></pre></td></tr></table></figure></p>
+<p>这里使用的memcached启动选项的内容如下。</p>
+<ul>
+<li><code>-p</code>使用的TCP端口。默认为11211</li>
+<li><code>-m</code>最大内存大小。默认为64M</li>
+<li><code>-vv</code>用very vrebose模式启动，调试信息和错误输出到控制台</li>
+<li><code>-d</code>作为daemon在后台启动</li>
+</ul>
+<p>上面四个是常用的启动选项，其他还有很多，通过<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ /usr/local/bin/memcached -h</span><br></pre></td></tr></table></figure></p>
+<p>命令可以显示。许多选项可以改变memcached的各种行为， 推荐读一读。</p>
+<h1 id="使用Cache-Memcached"><a href="#使用Cache-Memcached" class="headerlink" title="使用Cache::Memcached"></a>使用Cache::Memcached</h1><p>Perl的memcached客户端有</p>
+<ul>
+<li>Cache::Memcached</li>
+<li>Cache::Memcached::Fast</li>
+<li>Cache::Memcached::libmemcached</li>
+</ul>
+<p>等几个CPAN模块。这里介绍的Cache::Memcached是memcached的作者Brad Fitzpatric的作品， 应该算是memcached的客户端中应用最为广泛的模块了。</p>
+<h2 id="使用Cache-Memcached连接memcached"><a href="#使用Cache-Memcached连接memcached" class="headerlink" title="使用Cache::Memcached连接memcached"></a>使用Cache::Memcached连接memcached</h2><p>下面的源代码为通过Cache::Memcached连接刚才启动的memcached的例子。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">#!/usr/bin/perl</span><br><span class="line"></span><br><span class="line">use strict;</span><br><span class="line">use warnings;</span><br><span class="line">use Cache::Memcached;</span><br><span class="line"></span><br><span class="line">my $key = &quot;foo&quot;;</span><br><span class="line">my $value = &quot;bar&quot;;</span><br><span class="line">my $expires = 3600; # 1 hour</span><br><span class="line">my $memcached = Cache::Memcached-&gt;new(&#123;</span><br><span class="line">    servers =&gt; [&quot;127.0.0.1:11211&quot;],</span><br><span class="line">    compress_threshold =&gt; 10_000</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">$memcached-&gt;add($key, $value, $expires);</span><br><span class="line">my $ret = $memcached-&gt;get($key);</span><br><span class="line">print &quot;$ret\n&quot;;</span><br></pre></td></tr></table></figure></p>
+<p>在这里，为Cache::Memcached指定了memcached服务器的IP地址和一个选项，以生成实例。 Cache::Memcached常用的选项如下所示。</p>
+<ul>
+<li>servers    用数组指定memcached服务器和端口</li>
+<li>compress_threshold    数据压缩时使用的值</li>
+<li>namespace    指定添加到键的前缀</li>
+</ul>
+<p>另外，Cache::Memcached通过Storable模块可以将Perl的复杂数据序列化之后再保存， 因此散列、数组、对象等都可以直接保存到memcached中。</p>
+<h2 id="保存数据"><a href="#保存数据" class="headerlink" title="保存数据"></a>保存数据</h2><p>向memcached保存数据的方法有</p>
+<ul>
+<li>add</li>
+<li>replace</li>
+<li>set</li>
+</ul>
+<p>它们的使用方法都相同：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">my $add = $memcached-&gt;add( &apos;键&apos;, &apos;值&apos;, &apos;期限&apos; );</span><br><span class="line">my $replace = $memcached-&gt;replace( &apos;键&apos;, &apos;值&apos;, &apos;期限&apos; );</span><br><span class="line">my $set = $memcached-&gt;set( &apos;键&apos;, &apos;值&apos;, &apos;期限&apos; );</span><br></pre></td></tr></table></figure></p>
+<p>向memcached保存数据时可以指定期限(秒)。不指定期限时，memcached按照LRU算法保存数据。 这三个方法的区别如下：</p>
+<ul>
+<li>add    仅当存储空间中不存在键相同的数据时才保存</li>
+<li>replace    仅当存储空间中存在键相同的数据时才保存</li>
+<li>set    与add和replace不同，无论何时都保存</li>
+</ul>
+<h2 id="获取数据"><a href="#获取数据" class="headerlink" title="获取数据"></a>获取数据</h2><p>获取数据可以使用get和get_multi方法。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">my $val = $memcached-&gt;get(&apos;键&apos;);</span><br><span class="line">my $val = $memcached-&gt;get_multi(&apos;键1&apos;, &apos;键2&apos;, &apos;键3&apos;, &apos;键4&apos;, &apos;键5&apos;);</span><br></pre></td></tr></table></figure></p>
+<p>一次取得多条数据时使用get_multi。get_multi可以非同步地同时取得多个键值， 其速度要比循环调用get快数十倍。</p>
+<h2 id="删除数据"><a href="#删除数据" class="headerlink" title="删除数据"></a>删除数据</h2><p>删除数据使用delete方法，不过它有个独特的功能。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$memcached-&gt;delete(&apos;键&apos;, &apos;阻塞时间(秒)&apos;);</span><br></pre></td></tr></table></figure></p>
+<p>删除第一个参数指定的键的数据。第二个参数指定一个时间值，可以禁止使用同样的键保存新数据。 此功能可以用于防止缓存数据的不完整。但是要注意，set函数忽视该阻塞，照常保存数据</p>
+<h2 id="增一和减一操作"><a href="#增一和减一操作" class="headerlink" title="增一和减一操作"></a>增一和减一操作</h2><p>可以将memcached上特定的键值作为计数器使用。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">my $ret = $memcached-&gt;incr(&apos;键&apos;);</span><br><span class="line">$memcached-&gt;add(&apos;键&apos;, 0) unless defined $ret;</span><br></pre></td></tr></table></figure></p>
+<p>增一和减一是原子操作，但未设置初始值时，不会自动赋成0。因此， 应当进行错误检查，必要时加入初始化操作。而且，服务器端也不会对 超过2 SUP(32)时的行为进行检查。</p>
+<h1 id="Slab-Allocation机制：整理内存以便重复使用"><a href="#Slab-Allocation机制：整理内存以便重复使用" class="headerlink" title="Slab Allocation机制：整理内存以便重复使用"></a>Slab Allocation机制：整理内存以便重复使用</h1><p>最近的memcached默认情况下采用了名为Slab Allocator的机制分配、管理内存。 在该机制出现以前，内存的分配是通过对所有记录简单地进行malloc和free来进行的。 但是，这种方式会导致内存碎片，加重操作系统内存管理器的负担，最坏的情况下， 会导致操作系统比memcached进程本身还慢。Slab Allocator就是为解决该问题而诞生的。</p>
+<p>下面来看看Slab Allocator的原理。下面是memcached文档中的slab allocator的目标：</p>
+<p>the primary goal of the slabs subsystem in memcached was to eliminate memory fragmentation issues totally by using fixed-size memory chunks coming from a few predetermined size classes.</p>
+<p>也就是说，Slab Allocator的基本原理是按照预先规定的大小，将分配的内存分割成特定长度的块， 以完全解决内存碎片问题。</p>
+<p>Slab Allocation的原理相当简单。 将分配的内存分割成各种尺寸的块（chunk）， 并把尺寸相同的块分成组（chunk的集合）（图1）。<br><img src="/img/20191008003.png" alt="图1 Slab Allocation的构造图"></p>
+<p>而且，slab allocator还有重复使用已分配的内存的目的。 也就是说，分配到的内存不会释放，而是重复利用。</p>
+<h2 id="Slab-Allocation的主要术语"><a href="#Slab-Allocation的主要术语" class="headerlink" title="Slab Allocation的主要术语"></a>Slab Allocation的主要术语</h2><h3 id="Page"><a href="#Page" class="headerlink" title="Page"></a>Page</h3><p>分配给Slab的内存空间，默认是1MB。分配给Slab之后根据slab的大小切分成chunk。</p>
+<h3 id="Chunk"><a href="#Chunk" class="headerlink" title="Chunk"></a>Chunk</h3><p>用于缓存记录的内存空间。</p>
+<h3 id="Slab-Class"><a href="#Slab-Class" class="headerlink" title="Slab Class"></a>Slab Class</h3><p>特定大小的chunk的组。</p>
+<h1 id="在Slab中缓存记录的原理"><a href="#在Slab中缓存记录的原理" class="headerlink" title="在Slab中缓存记录的原理"></a>在Slab中缓存记录的原理</h1><p>下面说明memcached如何针对客户端发送的数据选择slab并缓存到chunk中。</p>
+<p>memcached根据收到的数据的大小，选择最适合数据大小的slab（图2）。 memcached中保存着slab内空闲chunk的列表，根据该列表选择chunk， 然后将数据缓存于其中。</p>
+<p><img src="/img/20191008004.png" alt="图2 选择存储记录的组的方法"></p>
+<p>实际上，Slab Allocator也是有利也有弊。下面介绍一下它的缺点。</p>
+<h1 id="Slab-Allocator的缺点"><a href="#Slab-Allocator的缺点" class="headerlink" title="Slab Allocator的缺点"></a>Slab Allocator的缺点</h1><p>Slab Allocator解决了当初的内存碎片问题，但新的机制也给memcached带来了新的问题。</p>
+<p>这个问题就是，由于分配的是特定长度的内存，因此无法有效利用分配的内存。 例如，将100字节的数据缓存到128字节的chunk中，剩余的28字节就浪费了（图3）。<br><img src="/img/20191008005.png" alt="图3 chunk空间的使用"></p>
+<p>对于该问题目前还没有完美的解决方案，但在文档中记载了比较有效的解决方案。</p>
+<p>The most efficient way to reduce the waste is to use a list of size classes that closely matches (if that’s at all possible) common sizes of objects that the clients of this particular installation of memcached are likely to store.</p>
+<p>就是说，如果预先知道客户端发送的数据的公用大小，或者仅缓存大小相同的数据的情况下， 只要使用适合数据大小的组的列表，就可以减少浪费。</p>
+<p>但是很遗憾，现在还不能进行任何调优，只能期待以后的版本了。 但是，我们可以调节slab class的大小的差别。 接下来说明growth factor选项。</p>
+<h1 id="使用Growth-Factor进行调优"><a href="#使用Growth-Factor进行调优" class="headerlink" title="使用Growth Factor进行调优"></a>使用Growth Factor进行调优</h1><p>memcached在启动时指定 Growth Factor因子（通过-f选项）， 就可以在某种程度上控制slab之间的差异。默认值为1.25。 但是，在该选项出现之前，这个因子曾经固定为2，称为“powers of 2”策略。</p>
+<p>让我们用以前的设置，以verbose模式启动memcached试试看：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ memcached -f 2 -vv</span><br></pre></td></tr></table></figure></p>
+<p>下面是启动后的verbose输出：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">slab class   1: chunk size    128 perslab  8192</span><br><span class="line">slab class   2: chunk size    256 perslab  4096</span><br><span class="line">slab class   3: chunk size    512 perslab  2048</span><br><span class="line">slab class   4: chunk size   1024 perslab  1024</span><br><span class="line">slab class   5: chunk size   2048 perslab   512</span><br><span class="line">slab class   6: chunk size   4096 perslab   256</span><br><span class="line">slab class   7: chunk size   8192 perslab   128</span><br><span class="line">slab class   8: chunk size  16384 perslab    64</span><br><span class="line">slab class   9: chunk size  32768 perslab    32</span><br><span class="line">slab class  10: chunk size  65536 perslab    16</span><br><span class="line">slab class  11: chunk size 131072 perslab     8</span><br><span class="line">slab class  12: chunk size 262144 perslab     4</span><br><span class="line">slab class  13: chunk size 524288 perslab     2</span><br></pre></td></tr></table></figure></p>
+<p>可见，从128字节的组开始，组的大小依次增大为原来的2倍。 这样设置的问题是，slab之间的差别比较大，有些情况下就相当浪费内存。 因此，为尽量减少内存浪费，两年前追加了growth factor这个选项。</p>
+<p>来看看现在的默认设置（f=1.25）时的输出（篇幅所限，这里只写到第10组）：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">slab class   1: chunk size     88 perslab 11915</span><br><span class="line">slab class   2: chunk size    112 perslab  9362</span><br><span class="line">slab class   3: chunk size    144 perslab  7281</span><br><span class="line">slab class   4: chunk size    184 perslab  5698</span><br><span class="line">slab class   5: chunk size    232 perslab  4519</span><br><span class="line">slab class   6: chunk size    296 perslab  3542</span><br><span class="line">slab class   7: chunk size    376 perslab  2788</span><br><span class="line">slab class   8: chunk size    472 perslab  2221</span><br><span class="line">slab class   9: chunk size    592 perslab  1771</span><br><span class="line">slab class  10: chunk size    744 perslab  1409</span><br></pre></td></tr></table></figure></p>
+<p>可见，组间差距比因子为2时小得多，更适合缓存几百字节的记录。 从上面的输出结果来看，可能会觉得有些计算误差， 这些误差是为了保持字节数的对齐而故意设置的。</p>
+<p>将memcached引入产品，或是直接使用默认值进行部署时， 最好是重新计算一下数据的预期平均长度，调整growth factor， 以获得最恰当的设置。内存是珍贵的资源，浪费就太可惜了。</p>
+<p>接下来介绍一下如何使用memcached的stats命令查看slabs的利用率等各种各样的信息。</p>
+<h1 id="查看memcached的内部状态"><a href="#查看memcached的内部状态" class="headerlink" title="查看memcached的内部状态"></a>查看memcached的内部状态</h1><p>memcached有个名为stats的命令，使用它可以获得各种各样的信息。 执行命令的方法很多，用telnet最为简单：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ telnet 主机名 端口号</span><br></pre></td></tr></table></figure></p>
+<p>连接到memcached之后，输入stats再按回车，即可获得包括资源利用率在内的各种信息。 此外，输入”stats slabs”或”stats items”还可以获得关于缓存记录的信息。 结束程序请输入quit。</p>
+<p>这些命令的详细信息可以参考memcached软件包内的protocol.txt文档。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">$ telnet localhost 11211</span><br><span class="line">Trying ::1...</span><br><span class="line">Connected to localhost.</span><br><span class="line">Escape character is &apos;^]&apos;.</span><br><span class="line">stats</span><br><span class="line">STAT pid 481</span><br><span class="line">STAT uptime 16574</span><br><span class="line">STAT time 1213687612</span><br><span class="line">STAT version 1.2.5</span><br><span class="line">STAT pointer_size 32</span><br><span class="line">STAT rusage_user 0.102297</span><br><span class="line">STAT rusage_system 0.214317</span><br><span class="line">STAT curr_items 0</span><br><span class="line">STAT total_items 0</span><br><span class="line">STAT bytes 0</span><br><span class="line">STAT curr_connections 6</span><br><span class="line">STAT total_connections 8</span><br><span class="line">STAT connection_structures 7</span><br><span class="line">STAT cmd_get 0</span><br><span class="line">STAT cmd_set 0</span><br><span class="line">STAT get_hits 0</span><br><span class="line">STAT get_misses 0</span><br><span class="line">STAT evictions 0</span><br><span class="line">STAT bytes_read 20</span><br><span class="line">STAT bytes_written 465</span><br><span class="line">STAT limit_maxbytes 67108864</span><br><span class="line">STAT threads 4</span><br><span class="line">END</span><br><span class="line">quit</span><br></pre></td></tr></table></figure></p>
+<p>另外，如果安装了libmemcached这个面向C/C++语言的客户端库，就会安装 memstat 这个命令。 使用方法很简单，可以用更少的步骤获得与telnet相同的信息，还能一次性从多台服务器获得信息。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ memstat --servers=server1,server2,server3,...</span><br></pre></td></tr></table></figure></p>
+<p>libmemcached可以从下面的地址获得：<a href="http://tangent.org/552/libmemcached.html" target="_blank" rel="noopener">http://tangent.org/552/libmemcached.html</a></p>
+<h1 id="查看slabs的使用状况"><a href="#查看slabs的使用状况" class="headerlink" title="查看slabs的使用状况"></a>查看slabs的使用状况</h1><p>使用memcached的创造者Brad写的名为memcached-tool的Perl脚本，可以方便地获得slab的使用情况 （它将memcached的返回值整理成容易阅读的格式）。可以从下面的地址获得脚本：</p>
+<p><a href="http://code.sixapart.com/svn/memcached/trunk/server/scripts/memcached-tool" target="_blank" rel="noopener">http://code.sixapart.com/svn/memcached/trunk/server/scripts/memcached-tool</a><br>使用方法也极其简单：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ memcached-tool 主机名:端口 选项</span><br></pre></td></tr></table></figure></p>
+<p>查看slabs使用状况时无需指定选项，因此用下面的命令即可：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ memcached-tool 主机名:端口</span><br></pre></td></tr></table></figure></p>
+<p>获得的信息如下所示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"> #  Item_Size   Max_age  1MB_pages Count   Full?</span><br><span class="line"> 1     104 B  1394292 s    1215 12249628    yes</span><br><span class="line"> 2     136 B  1456795 s      52  400919     yes</span><br><span class="line"> 3     176 B  1339587 s      33  196567     yes</span><br><span class="line"> 4     224 B  1360926 s     109  510221     yes</span><br><span class="line"> 5     280 B  1570071 s      49  183452     yes</span><br><span class="line"> 6     352 B  1592051 s      77  229197     yes</span><br><span class="line"> 7     440 B  1517732 s      66  157183     yes</span><br><span class="line"> 8     552 B  1460821 s      62  117697     yes</span><br><span class="line"> 9     696 B  1521917 s     143  215308     yes</span><br><span class="line">10     872 B  1695035 s     205  246162     yes</span><br><span class="line">11     1.1 kB 1681650 s     233  221968     yes</span><br><span class="line">12     1.3 kB 1603363 s     241  183621     yes</span><br><span class="line">13     1.7 kB 1634218 s      94   57197     yes</span><br><span class="line">14     2.1 kB 1695038 s      75   36488     yes</span><br><span class="line">15     2.6 kB 1747075 s      65   25203     yes</span><br><span class="line">16     3.3 kB 1760661 s      78   24167     yes</span><br></pre></td></tr></table></figure></p>
+<p>各列的含义为：</p>
+<ul>
+<li>‘#’    slab class编号</li>
+<li>Item_Size    Chunk大小</li>
+<li>Max_age    LRU内最旧的记录的生存时间</li>
+<li>1MB_pages    分配给Slab的页数</li>
+<li>Count    Slab内的记录数</li>
+<li>Full?    Slab内是否含有空闲chunk</li>
+</ul>
+<p>从这个脚本获得的信息对于调优非常方便，强烈推荐使用。</p>
+<h1 id="memcached在数据删除方面有效利用资源"><a href="#memcached在数据删除方面有效利用资源" class="headerlink" title="memcached在数据删除方面有效利用资源"></a>memcached在数据删除方面有效利用资源</h1><p>数据不会真正从memcached中消失<br>上次介绍过， memcached不会释放已分配的内存。记录超时后，客户端就无法再看见该记录（invisible，透明）， 其存储空间即可重复使用。</p>
+<h2 id="Lazy-Expiration"><a href="#Lazy-Expiration" class="headerlink" title="Lazy Expiration"></a>Lazy Expiration</h2><p>memcached内部不会监视记录是否过期，而是在get时查看记录的时间戳，检查记录是否过期。 这种技术被称为lazy（惰性）expiration。因此，memcached不会在过期监视上耗费CPU时间。</p>
+<h1 id="LRU：从缓存中有效删除数据的原理"><a href="#LRU：从缓存中有效删除数据的原理" class="headerlink" title="LRU：从缓存中有效删除数据的原理"></a>LRU：从缓存中有效删除数据的原理</h1><p>memcached会优先使用已超时的记录的空间，但即使如此，也会发生追加新记录时空间不足的情况， 此时就要使用名为 Least Recently Used（LRU）机制来分配空间。 顾名思义，这是删除“最近最少使用”的记录的机制。 因此，当memcached的内存空间不足时（无法从slab class 获取到新的空间时），就从最近未被使用的记录中搜索，并将其空间分配给新的记录。 从缓存的实用角度来看，该模型十分理想。</p>
+<p>不过，有些情况下LRU机制反倒会造成麻烦。memcached启动时通过“-M”参数可以禁止LRU，如下所示：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ memcached -M -m 1024</span><br></pre></td></tr></table></figure>
+<p>启动时必须注意的是，小写的“-m”选项是用来指定最大内存大小的。不指定具体数值则使用默认值64MB。</p>
+<p>指定“-M”参数启动后，内存用尽时memcached会返回错误。 话说回来，memcached毕竟不是存储器，而是缓存，所以推荐使用LRU。</p>
+<h1 id="memcached的最新发展方向"><a href="#memcached的最新发展方向" class="headerlink" title="memcached的最新发展方向"></a>memcached的最新发展方向</h1><p>memcached的roadmap上有两个大的目标。一个是二进制协议的策划和实现，另一个是外部引擎的加载功能。</p>
+<h2 id="关于二进制协议"><a href="#关于二进制协议" class="headerlink" title="关于二进制协议"></a>关于二进制协议</h2><p>使用二进制协议的理由是它不需要文本协议的解析处理，使得原本高速的memcached的性能更上一层楼， 还能减少文本协议的漏洞。目前已大部分实现，开发用的代码库中已包含了该功能。 memcached的下载页面上有代码库的链接。</p>
+<p><a href="http://danga.com/memcached/download.bml" target="_blank" rel="noopener">http://danga.com/memcached/download.bml</a></p>
+<h3 id="二进制协议的格式"><a href="#二进制协议的格式" class="headerlink" title="二进制协议的格式"></a>二进制协议的格式</h3><p>协议的包为24字节的帧，其后面是键和无结构数据（Unstructured Data）。 实际的格式如下（引自协议文档）：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">Byte/     0       |       1       |       2       |       3       |   </span><br><span class="line">   /              |               |               |               |   </span><br><span class="line">  |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|</span><br><span class="line">  +---------------+---------------+---------------+---------------+</span><br><span class="line"> 0/ HEADER                                                        /   </span><br><span class="line">  /                                                               /   </span><br><span class="line">  /                                                               /   </span><br><span class="line">  /                                                               /   </span><br><span class="line">  +---------------+---------------+---------------+---------------+</span><br><span class="line">24/ COMMAND-SPECIFIC EXTRAS (as needed)                           /   </span><br><span class="line"> +/  (note length in th extras length header field)               /   </span><br><span class="line">  +---------------+---------------+---------------+---------------+</span><br><span class="line"> m/ Key (as needed)                                               /   </span><br><span class="line"> +/  (note length in key length header field)                     /   </span><br><span class="line">  +---------------+---------------+---------------+---------------+</span><br><span class="line"> n/ Value (as needed)                                             /   </span><br><span class="line"> +/  (note length is total body length header field, minus        /   </span><br><span class="line"> +/   sum of the extras and key length body fields)               /   </span><br><span class="line">  +---------------+---------------+---------------+---------------+</span><br><span class="line"> Total 24 bytes</span><br></pre></td></tr></table></figure></p>
+<p>如上所示，包格式十分简单。需要注意的是，占据了16字节的头部(HEADER)分为 请求头（Request Header）和响应头（Response Header）两种。 头部中包含了表示包的有效性的Magic字节、命令种类、键长度、值长度等信息，格式如下：</p>
+<p>Request Header<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">Byte/     0       |       1       |       2       |       3       |</span><br><span class="line">   /              |               |               |               |</span><br><span class="line">  |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|</span><br><span class="line">  +---------------+---------------+---------------+---------------+</span><br><span class="line"> 0| Magic         | Opcode        | Key length                    |</span><br><span class="line">  +---------------+---------------+---------------+---------------+</span><br><span class="line"> 4| Extras length | Data type     | Reserved                      |</span><br><span class="line">  +---------------+---------------+---------------+---------------+</span><br><span class="line"> 8| Total body length                                             |</span><br><span class="line">  +---------------+---------------+---------------+---------------+</span><br><span class="line">12| Opaque                                                        |</span><br><span class="line">  +---------------+---------------+---------------+---------------+</span><br><span class="line">16| CAS                                                           |</span><br><span class="line">  |                                                               |</span><br><span class="line">  +---------------+---------------+---------------+---------------+</span><br></pre></td></tr></table></figure></p>
+<p>Response Header<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">Byte/     0       |       1       |       2       |       3       |</span><br><span class="line">   /              |               |               |               |</span><br><span class="line">  |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|</span><br><span class="line">  +---------------+---------------+---------------+---------------+</span><br><span class="line"> 0| Magic         | Opcode        | Key Length                    |</span><br><span class="line">  +---------------+---------------+---------------+---------------+</span><br><span class="line"> 4| Extras length | Data type     | Status                        |</span><br><span class="line">  +---------------+---------------+---------------+---------------+</span><br><span class="line"> 8| Total body length                                             |</span><br><span class="line">  +---------------+---------------+---------------+---------------+</span><br><span class="line">12| Opaque                                                        |</span><br><span class="line">  +---------------+---------------+---------------+---------------+</span><br><span class="line">16| CAS                                                           |</span><br><span class="line">  |                                                               |</span><br><span class="line">  +---------------+---------------+---------------+---------------+</span><br></pre></td></tr></table></figure></p>
+<p>如希望了解各个部分的详细内容，可以checkout出memcached的二进制协议的代码树， 参考其中的docs文件夹中的protocol_binary.txt文档。</p>
+<h3 id="HEADER中引人注目的地方"><a href="#HEADER中引人注目的地方" class="headerlink" title="HEADER中引人注目的地方"></a>HEADER中引人注目的地方</h3><p>看到HEADER格式后我的感想是，键的上限太大了！现在的memcached规格中，键长度最大为250字节， 但二进制协议中键的大小用2字节表示。因此，理论上最大可使用65536字节（216）长的键。 尽管250字节以上的键并不会太常用，二进制协议发布之后就可以使用巨大的键了。</p>
+<p>二进制协议从下一版本1.3系列开始支持。</p>
+<h2 id="外部引擎支持"><a href="#外部引擎支持" class="headerlink" title="外部引擎支持"></a>外部引擎支持</h2><p>我去年曾经试验性地将memcached的存储层改造成了可扩展的（pluggable）。</p>
+<p><a href="http://alpha.mixi.co.jp/blog/?p=129" target="_blank" rel="noopener">http://alpha.mixi.co.jp/blog/?p=129</a><br>MySQL的Brian Aker看到这个改造之后，就将代码发到了memcached的邮件列表。 memcached的开发者也十分感兴趣，就放到了roadmap中。现在由我和 memcached的开发者Trond Norbye协同开发（规格设计、实现和测试）。 和国外协同开发时时差是个大问题，但抱着相同的愿景， 最后终于可以将可扩展架构的原型公布了。 代码库可以从memcached的下载页面 上访问。</p>
+<h3 id="外部引擎支持的必要性"><a href="#外部引擎支持的必要性" class="headerlink" title="外部引擎支持的必要性"></a>外部引擎支持的必要性</h3><p>世界上有许多memcached的派生软件，其理由是希望永久保存数据、实现数据冗余等， 即使牺牲一些性能也在所不惜。我在开发memcached之前，在mixi的研发部也曾经 考虑过重新发明memcached。</p>
+<p>外部引擎的加载机制能封装memcached的网络功能、事件处理等复杂的处理。 因此，现阶段通过强制手段或重新设计等方式使memcached和存储引擎合作的困难 就会烟消云散，尝试各种引擎就会变得轻而易举了。</p>
+<h3 id="简单API设计的成功的关键"><a href="#简单API设计的成功的关键" class="headerlink" title="简单API设计的成功的关键"></a>简单API设计的成功的关键</h3><p>该项目中我们最重视的是API设计。函数过多，会使引擎开发者感到麻烦； 过于复杂，实现引擎的门槛就会过高。因此，最初版本的接口函数只有13个。 具体内容限于篇幅，这里就省略了，仅说明一下引擎应当完成的操作：</p>
+<ul>
+<li>引擎信息（版本等）</li>
+<li>引擎初始化</li>
+<li>引擎关闭</li>
+<li>引擎的统计信息</li>
+<li>在容量方面，测试给定记录能否保存</li>
+<li>为item（记录）结构分配内存</li>
+<li>释放item（记录）的内存</li>
+<li>删除记录</li>
+<li>保存记录</li>
+<li>回收记录</li>
+<li>更新记录的时间戳</li>
+<li>数学运算处理</li>
+<li>数据的flush</li>
+</ul>
+<p>对详细规格有兴趣的读者，可以checkout engine项目的代码，阅读器中的engine.h。</p>
+<h3 id="重新审视现在的体系"><a href="#重新审视现在的体系" class="headerlink" title="重新审视现在的体系"></a>重新审视现在的体系</h3><p>memcached支持外部存储的难点是，网络和事件处理相关的代码（核心服务器）与 内存存储的代码紧密关联。这种现象也称为tightly coupled（紧密耦合）。 必须将内存存储的代码从核心服务器中独立出来，才能灵活地支持外部引擎。 因此，基于我们设计的API，memcached被重构成下面的样子：<br><img src="/img/20191008006.png" alt></p>
+<p>重构之后，我们与1.2.5版、二进制协议支持版等进行了性能对比，证实了它不会造成性能影响。</p>
+<p>在考虑如何支持外部引擎加载时，让memcached进行并行控制（concurrency control）的方案是最为容易的， 但是对于引擎而言，并行控制正是性能的真谛，因此我们采用了将多线程支持完全交给引擎的设计方案。</p>
+<h1 id="memcached的分布式"><a href="#memcached的分布式" class="headerlink" title="memcached的分布式"></a>memcached的分布式</h1><p>正如第1次中介绍的那样，memcached虽然称为“分布式”缓存服务器，但服务器端并没有“分布式”功能。 服务器端仅包括第2次、第3次前坂介绍的内存存储功能，其实现非常简单。至于memcached的分布式，则是完全由客户端程序库实现的。这种分布式是memcached的最大特点。</p>
+<p>memcached的分布式是什么意思？<br>这里多次使用了“分布式”这个词，但并未做详细解释。 现在开始简单地介绍一下其原理，各个客户端的实现基本相同。</p>
+<p>下面假设memcached服务器有node1～node3三台， 应用程序要保存键名为“tokyo”“kanagawa”“chiba”“saitama”“gunma” 的数据。<br><img src="/img/20191008007.png" alt="图1 分布式简介：准备"></p>
+<p>首先向memcached中添加“tokyo”。将“tokyo”传给客户端程序库后， 客户端实现的算法就会根据“键”来决定保存数据的memcached服务器。 服务器选定后，即命令它保存“tokyo”及其值。</p>
+<p><img src="/img/20191008008.png" alt="图2 分布式简介：添加时"></p>
+<p>同样，“kanagawa”“chiba”“saitama”“gunma”都是先选择服务器再保存。</p>
+<p>接下来获取保存的数据。获取时也要将要获取的键“tokyo”传递给函数库。 函数库通过与数据保存时相同的算法，根据“键”选择服务器。 使用的算法相同，就能选中与保存时相同的服务器，然后发送get命令。 只要数据没有因为某些原因被删除，就能获得保存的值。<br><img src="/img/20191008009.png" alt="图3 分布式简介：获取时"></p>
+<p>这样，将不同的键保存到不同的服务器上，就实现了memcached的分布式。 memcached服务器增多后，键就会分散，即使一台memcached服务器发生故障 无法连接，也不会影响其他的缓存，系统依然能继续运行。</p>
+<p>接下来介绍第1次中提到的Perl客户端函数库Cache::Memcached实现的分布式方法。</p>
+<h1 id="Cache-Memcached的分布式方法"><a href="#Cache-Memcached的分布式方法" class="headerlink" title="Cache::Memcached的分布式方法"></a>Cache::Memcached的分布式方法</h1><p>Perl的memcached客户端函数库Cache::Memcached是 memcached的作者Brad Fitzpatrick的作品，可以说是原装的函数库了。</p>
+<p>Cache::Memcached - search.cpan.org<br>该函数库实现了分布式功能，是memcached标准的分布式方法。</p>
+<h2 id="根据余数计算分散"><a href="#根据余数计算分散" class="headerlink" title="根据余数计算分散"></a>根据余数计算分散</h2><p>Cache::Memcached的分布式方法简单来说，就是“根据服务器台数的余数进行分散”。 求得键的整数哈希值，再除以服务器台数，根据其余数来选择服务器。</p>
+<p>下面将Cache::Memcached简化成以下的Perl脚本来进行说明。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">use strict;</span><br><span class="line">use warnings;</span><br><span class="line">use String::CRC32;</span><br><span class="line"></span><br><span class="line">my @nodes = (&apos;node1&apos;,&apos;node2&apos;,&apos;node3&apos;);</span><br><span class="line">my @keys = (&apos;tokyo&apos;, &apos;kanagawa&apos;, &apos;chiba&apos;, &apos;saitama&apos;, &apos;gunma&apos;);</span><br><span class="line"></span><br><span class="line">foreach my $key (@keys) &#123;</span><br><span class="line">    my $crc = crc32($key);             # CRC値</span><br><span class="line">    my $mod = $crc % ( $#nodes + 1 );</span><br><span class="line">    my $server = $nodes[ $mod ];       # 根据余数选择服务器</span><br><span class="line">    printf &quot;%s =&gt; %s\n&quot;, $key, $server;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>Cache::Memcached在求哈希值时使用了CRC。</p>
+<p>String::CRC32 - search.cpan.org<br>首先求得字符串的CRC值，根据该值除以服务器节点数目得到的余数决定服务器。 上面的代码执行后输入以下结果：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">tokyo       =&gt; node2</span><br><span class="line">kanagawa =&gt; node3</span><br><span class="line">chiba       =&gt; node2</span><br><span class="line">saitama   =&gt; node1</span><br><span class="line">gunma     =&gt; node1</span><br></pre></td></tr></table></figure></p>
+<p>根据该结果，“tokyo”分散到node2，“kanagawa”分散到node3等。 多说一句，当选择的服务器无法连接时，Cache::Memcached会将连接次数 添加到键之后，再次计算哈希值并尝试连接。这个动作称为rehash。 不希望rehash时可以在生成Cache::Memcached对象时指定“rehash =&gt; 0”选项。</p>
+<h2 id="根据余数计算分散的缺点"><a href="#根据余数计算分散的缺点" class="headerlink" title="根据余数计算分散的缺点"></a>根据余数计算分散的缺点</h2><p>余数计算的方法简单，数据的分散性也相当优秀，但也有其缺点。 那就是当添加或移除服务器时，缓存重组的代价相当巨大。 添加服务器后，余数就会产生巨变，这样就无法获取与保存时相同的服务器， 从而影响缓存的命中率。用Perl写段代码来验证其代价。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">use strict;</span><br><span class="line">use warnings;</span><br><span class="line">use String::CRC32;</span><br><span class="line"></span><br><span class="line">my @nodes = @ARGV;</span><br><span class="line">my @keys = (&apos;a&apos;..&apos;z&apos;);</span><br><span class="line">my %nodes;</span><br><span class="line"></span><br><span class="line">foreach my $key ( @keys ) &#123;</span><br><span class="line">    my $hash = crc32($key);</span><br><span class="line">    my $mod = $hash % ( $#nodes + 1 );</span><br><span class="line">    my $server = $nodes[ $mod ];</span><br><span class="line">    push @&#123; $nodes&#123; $server &#125; &#125;, $key;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">foreach my $node ( sort keys %nodes ) &#123;</span><br><span class="line">    printf &quot;%s: %s\n&quot;, $node,  join &quot;,&quot;, @&#123; $nodes&#123;$node&#125; &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这段Perl脚本演示了将“a”到“z”的键保存到memcached并访问的情况。 将其保存为mod.pl并执行。</p>
+<p>首先，当服务器只有三台时：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ mod.pl node1 node2 nod3</span><br><span class="line">node1: a,c,d,e,h,j,n,u,w,x</span><br><span class="line">node2: g,i,k,l,p,r,s,y</span><br><span class="line">node3: b,f,m,o,q,t,v,z</span><br></pre></td></tr></table></figure></p>
+<p>结果如上，node1保存a、c、d、e……，node2保存g、i、k……， 每台服务器都保存了8个到10个数据。</p>
+<p>接下来增加一台memcached服务器。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ mod.pl node1 node2 node3 node4</span><br><span class="line">node1: d,f,m,o,t,v</span><br><span class="line">node2: b,i,k,p,r,y</span><br><span class="line">node3: e,g,l,n,u,w</span><br><span class="line">node4: a,c,h,j,q,s,x,z</span><br></pre></td></tr></table></figure></p>
+<p>添加了node4。可见，只有d、i、k、p、r、y命中了。像这样，添加节点后 键分散到的服务器会发生巨大变化。26个键中只有六个在访问原来的服务器， 其他的全都移到了其他服务器。命中率降低到23%。在Web应用程序中使用memcached时， 在添加memcached服务器的瞬间缓存效率会大幅度下降，负载会集中到数据库服务器上， 有可能会发生无法提供正常服务的情况。</p>
+<p>mixi的Web应用程序运用中也有这个问题，导致无法添加memcached服务器。 但由于使用了新的分布式方法，现在可以轻而易举地添加memcached服务器了。 这种分布式方法称为 Consistent Hashing。</p>
+<h1 id="Consistent-Hashing"><a href="#Consistent-Hashing" class="headerlink" title="Consistent Hashing"></a>Consistent Hashing</h1><h2 id="Consistent-Hashing的简单说明"><a href="#Consistent-Hashing的简单说明" class="headerlink" title="Consistent Hashing的简单说明"></a>Consistent Hashing的简单说明</h2><p>Consistent Hashing如下所示：首先求出memcached服务器（节点）的哈希值， 并将其配置到0～2SUP(32)的圆（continuum）上。 然后用同样的方法求出存储数据的键的哈希值，并映射到圆上。 然后从数据映射到的位置开始顺时针查找，将数据保存到找到的第一个服务器上。 如果超过2SUP(32)仍然找不到服务器，就会保存到第一台memcached服务器上。</p>
+<p><img src="/img/20191008010.png" alt="图4 Consistent Hashing：基本原理"></p>
+<p>从上图的状态中添加一台memcached服务器。余数分布式算法由于保存键的服务器会发生巨大变化 而影响缓存的命中率，但Consistent Hashing中，只有在continuum上增加服务器的地点逆时针方向的 第一台服务器上的键会受到影响。</p>
+<p><img src="/img/20191008011.png" alt="图5 Consistent Hashing：添加服务器"></p>
+<p>因此，Consistent Hashing最大限度地抑制了键的重新分布。 而且，有的Consistent Hashing的实现方法还采用了虚拟节点的思想。 使用一般的hash函数的话，服务器的映射地点的分布非常不均匀。 因此，使用虚拟节点的思想，为每个物理节点（服务器） 在continuum上分配100～200个点。这样就能抑制分布不均匀， 最大限度地减小服务器增减时的缓存重新分布。</p>
+<p>通过下文中介绍的使用Consistent Hashing算法的memcached客户端函数库进行测试的结果是， 由服务器台数（n）和增加的服务器台数（m）计算增加服务器后的命中率计算公式如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(1 - n/(n+m)) * 100</span><br></pre></td></tr></table></figure></p>
+<h2 id="支持Consistent-Hashing的函数库"><a href="#支持Consistent-Hashing的函数库" class="headerlink" title="支持Consistent Hashing的函数库"></a>支持Consistent Hashing的函数库</h2><p>本连载中多次介绍的Cache::Memcached虽然不支持Consistent Hashing， 但已有几个客户端函数库支持了这种新的分布式算法。 第一个支持Consistent Hashing和虚拟节点的memcached客户端函数库是 名为libketama的PHP库，由last.fm开发。<br>至于Perl客户端，连载的第1次中介绍过的Cache::Memcached::Fast和Cache::Memcached::libmemcached支持 Consistent Hashing。</p>
+<p>两者的接口都与Cache::Memcached几乎相同，如果正在使用Cache::Memcached， 那么就可以方便地替换过来。Cache::Memcached::Fast重新实现了libketama， 使用Consistent Hashing创建对象时可以指定ketama_points选项。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">my $memcached = Cache::Memcached::Fast-&gt;new(&#123;</span><br><span class="line">    servers =&gt; [&quot;192.168.0.1:11211&quot;,&quot;192.168.0.2:11211&quot;],</span><br><span class="line">    ketama_points =&gt; 150</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure></p>
+<p>另外，Cache::Memcached::libmemcached 是一个使用了Brain Aker开发的C函数库libmemcached的Perl模块。 libmemcached本身支持几种分布式算法，也支持Consistent Hashing， 其Perl绑定也支持Consistent Hashing。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/积累/" rel="tag"># 积累</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/09/01/cpp强制类型转换运算符/" rel="next" title="C++强制类型转换运算符">
+                <i class="fa fa-chevron-left"></i> C++强制类型转换运算符
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/01/04/背包问题/" rel="prev" title="动态规划之背包问题系列">
+                动态规划之背包问题系列 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">323</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">14</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/xiaomeihao.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#memcached是什么？"><span class="nav-number">1.</span> <span class="nav-text">memcached是什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#memcached的特征"><span class="nav-number">2.</span> <span class="nav-text">memcached的特征</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#协议简单"><span class="nav-number">2.1.</span> <span class="nav-text">协议简单</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基于libevent的事件处理"><span class="nav-number">2.2.</span> <span class="nav-text">基于libevent的事件处理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内置内存存储方式"><span class="nav-number">2.3.</span> <span class="nav-text">内置内存存储方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#memcached不互相通信的分布式"><span class="nav-number">2.4.</span> <span class="nav-text">memcached不互相通信的分布式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#memcached的安装"><span class="nav-number">2.5.</span> <span class="nav-text">memcached的安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#memcached的启动"><span class="nav-number">2.6.</span> <span class="nav-text">memcached的启动</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#使用Cache-Memcached"><span class="nav-number">3.</span> <span class="nav-text">使用Cache::Memcached</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用Cache-Memcached连接memcached"><span class="nav-number">3.1.</span> <span class="nav-text">使用Cache::Memcached连接memcached</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#保存数据"><span class="nav-number">3.2.</span> <span class="nav-text">保存数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#获取数据"><span class="nav-number">3.3.</span> <span class="nav-text">获取数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#删除数据"><span class="nav-number">3.4.</span> <span class="nav-text">删除数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#增一和减一操作"><span class="nav-number">3.5.</span> <span class="nav-text">增一和减一操作</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Slab-Allocation机制：整理内存以便重复使用"><span class="nav-number">4.</span> <span class="nav-text">Slab Allocation机制：整理内存以便重复使用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Slab-Allocation的主要术语"><span class="nav-number">4.1.</span> <span class="nav-text">Slab Allocation的主要术语</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Page"><span class="nav-number">4.1.1.</span> <span class="nav-text">Page</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Chunk"><span class="nav-number">4.1.2.</span> <span class="nav-text">Chunk</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Slab-Class"><span class="nav-number">4.1.3.</span> <span class="nav-text">Slab Class</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#在Slab中缓存记录的原理"><span class="nav-number">5.</span> <span class="nav-text">在Slab中缓存记录的原理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Slab-Allocator的缺点"><span class="nav-number">6.</span> <span class="nav-text">Slab Allocator的缺点</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#使用Growth-Factor进行调优"><span class="nav-number">7.</span> <span class="nav-text">使用Growth Factor进行调优</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#查看memcached的内部状态"><span class="nav-number">8.</span> <span class="nav-text">查看memcached的内部状态</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#查看slabs的使用状况"><span class="nav-number">9.</span> <span class="nav-text">查看slabs的使用状况</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#memcached在数据删除方面有效利用资源"><span class="nav-number">10.</span> <span class="nav-text">memcached在数据删除方面有效利用资源</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Lazy-Expiration"><span class="nav-number">10.1.</span> <span class="nav-text">Lazy Expiration</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#LRU：从缓存中有效删除数据的原理"><span class="nav-number">11.</span> <span class="nav-text">LRU：从缓存中有效删除数据的原理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#memcached的最新发展方向"><span class="nav-number">12.</span> <span class="nav-text">memcached的最新发展方向</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#关于二进制协议"><span class="nav-number">12.1.</span> <span class="nav-text">关于二进制协议</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#二进制协议的格式"><span class="nav-number">12.1.1.</span> <span class="nav-text">二进制协议的格式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HEADER中引人注目的地方"><span class="nav-number">12.1.2.</span> <span class="nav-text">HEADER中引人注目的地方</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#外部引擎支持"><span class="nav-number">12.2.</span> <span class="nav-text">外部引擎支持</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#外部引擎支持的必要性"><span class="nav-number">12.2.1.</span> <span class="nav-text">外部引擎支持的必要性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#简单API设计的成功的关键"><span class="nav-number">12.2.2.</span> <span class="nav-text">简单API设计的成功的关键</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#重新审视现在的体系"><span class="nav-number">12.2.3.</span> <span class="nav-text">重新审视现在的体系</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#memcached的分布式"><span class="nav-number">13.</span> <span class="nav-text">memcached的分布式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Cache-Memcached的分布式方法"><span class="nav-number">14.</span> <span class="nav-text">Cache::Memcached的分布式方法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#根据余数计算分散"><span class="nav-number">14.1.</span> <span class="nav-text">根据余数计算分散</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#根据余数计算分散的缺点"><span class="nav-number">14.2.</span> <span class="nav-text">根据余数计算分散的缺点</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Consistent-Hashing"><span class="nav-number">15.</span> <span class="nav-text">Consistent Hashing</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Consistent-Hashing的简单说明"><span class="nav-number">15.1.</span> <span class="nav-text">Consistent Hashing的简单说明</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#支持Consistent-Hashing的函数库"><span class="nav-number">15.2.</span> <span class="nav-text">支持Consistent Hashing的函数库</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<span id="busuanzi_container_site_uv"> 
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
