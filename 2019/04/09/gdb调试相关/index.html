@@ -94,7 +94,7 @@
 <meta property="og:site_name" content="Hao Yu&#39;s blog">
 <meta property="og:description" content="给师兄debug测试的时候深深觉得自己太垃圾了，gdb用的不熟，所以去找了一篇gdb的博文搬过来整理好，纯当复习了。贴原文链接：https://blog.csdn.net/zb872676223/article/details/37906049 GDB是GNU开源组织发布的一个强大的UNIX下的程序调试工具。或许，各位比较喜欢那种图形界面方式的，像VC、BCB等IDE的调试，但如果你是在UNIX平">
 <meta property="og:locale" content="zn-ch">
-<meta property="og:updated_time" content="2019-04-09T11:28:13.000Z">
+<meta property="og:updated_time" content="2022-01-05T07:59:21.024Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="gdb调试相关">
 <meta name="twitter:description" content="给师兄debug测试的时候深深觉得自己太垃圾了，gdb用的不熟，所以去找了一篇gdb的博文搬过来整理好，纯当复习了。贴原文链接：https://blog.csdn.net/zb872676223/article/details/37906049 GDB是GNU开源组织发布的一个强大的UNIX下的程序调试工具。或许，各位比较喜欢那种图形界面方式的，像VC、BCB等IDE的调试，但如果你是在UNIX平">
@@ -346,13 +346,42 @@
 <li>当程序被停住时，可以检查此时你的程序中所发生的事。 </li>
 <li>动态的改变你程序的执行环境。 </li>
 </ol>
-<h1 id="测试程序"><a href="#测试程序" class="headerlink" title="测试程序"></a>测试程序</h1><p>我们先看看我们的测试程序:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">/* in eg1.c */</span><br><span class="line">int wib(int no1, int no2)</span><br><span class="line">&#123;</span><br><span class="line">    int result, diff;</span><br><span class="line">    diff = no1 - no2;</span><br><span class="line">    result = no1 / diff;</span><br><span class="line">    return result;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">    pid_t pid;</span><br><span class="line"></span><br><span class="line">    pid = fork();</span><br><span class="line">    if (pid &lt;0) &#123;</span><br><span class="line">        printf(&quot;fork err\n&quot;);</span><br><span class="line">        exit(-1);</span><br><span class="line">    &#125; else if (pid == 0) &#123;</span><br><span class="line">        /* in child process */</span><br><span class="line">        sleep(60); ------------------ (!)</span><br><span class="line"></span><br><span class="line">        int value = 10;</span><br><span class="line">        int div = 6;</span><br><span class="line">        int total = 0;</span><br><span class="line">        int i     = 0;</span><br><span class="line">        int result = 0;</span><br><span class="line"></span><br><span class="line">        for (i = 0; i &lt; 10; i++) &#123;</span><br><span class="line">                result = wib(value, div);</span><br><span class="line">                total += result;</span><br><span class="line">                div++;</span><br><span class="line">                value--;</span><br><span class="line">        &#125;</span><br><span class="line">        printf(&quot;%d wibed by %d equals %d\n&quot;, value, div, total);</span><br><span class="line">        exit(0);</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">         /* in parent process */</span><br><span class="line">         sleep(4);</span><br><span class="line">         wait(-1);</span><br><span class="line">         exit(0);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h1><p>在前面几节，我们讲了gdb的命令，以及这些命令在调试时候的作用，并以例子进行了演示。作为C/C++ coder，要知其然，更要知其所以然。所以，借助本节，我们大概讲下GDB调试的原理。</p>
+<p>gdb 通过系统调用 ptrace 来接管一个进程的执行。ptrace 系统调用提供了一种方法使得父进程可以观察和控制其它进程的执行，检查和改变其核心映像以及寄存器。它主要用来实现断点调试和系统调用跟踪。</p>
+<p>ptrace系统调用定义如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/ptrace.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">long</span> <span class="title">ptrace</span><span class="params">(<span class="keyword">enum</span> __ptrace_request request, <span class="keyword">pid_t</span> pid, <span class="keyword">void</span> *addr, <span class="keyword">void</span> *data)</span></span></span><br></pre></td></tr></table></figure></p>
+<ul>
+<li><code>pid_t pid</code>：指示 ptrace 要跟踪的进程</li>
+<li><code>void *addr</code>：指示要监控的内存地址</li>
+<li><code>enum __ptrace_request request</code>：决定了系统调用的功能，几个主要的选项：<ul>
+<li><code>PTRACE_TRACEME</code>：表示此进程将被父进程跟踪，任何信号（除了 SIGKILL）都会暂停子进程，接着阻塞于 wait() 等待的父进程被唤醒。子进程内部对 exec() 的调用将发出 SIGTRAP 信号，这可以让父进程在子进程新程序开始运行之前就完全控制它</li>
+<li><code>PTRACE_ATTACH</code>：attach 到一个指定的进程，使其成为当前进程跟踪的子进程，而子进程的行为等同于它进行了一次 PTRACE_TRACEME 操作。但需要注意的是，虽然当前进程成为被跟踪进程的父进程，但是子进程使用 getppid() 的到的仍将是其原始父进程的pid</li>
+<li><code>PTRACE_CONT</code>：继续运行之前停止的子进程。可同时向子进程交付指定的信号</li>
+</ul>
+</li>
+</ul>
+<h2 id="调试原理"><a href="#调试原理" class="headerlink" title="调试原理"></a>调试原理</h2><p>运行并调试新进程，步骤如下：</p>
+<ul>
+<li>运行gdb exe</li>
+<li>输入run命令，gdb执行以下操作：</li>
+<li>通过fork()系统调用创建一个新进程</li>
+<li>在新创建的子进程中执行ptrace(PTRACE_TRACEME, 0, 0, 0)操作</li>
+<li>在子进程中通过execv()系统调用加载指定的可执行文件</li>
+</ul>
+<h2 id="attach运行的进程"><a href="#attach运行的进程" class="headerlink" title="attach运行的进程"></a>attach运行的进程</h2><p>可以通过gdb attach pid来调试一个运行的进程，gdb将对指定进程执行<code>ptrace(PTRACE_ATTACH, pid, 0, 0)</code>操作。需要注意的是，当我们attach一个进程id时候，可能会报如下错误：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Attaching to process 28849</span><br><span class="line">ptrace: Operation not permitted.</span><br></pre></td></tr></table></figure></p>
+<p>这是因为没有权限进行操作，可以根据启动该进程用户下或者root下进行操作。</p>
+<h2 id="断点原理"><a href="#断点原理" class="headerlink" title="断点原理"></a>断点原理</h2><h3 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h3><p>当我们通过b或者break设置断点时候，就是在指定位置插入断点指令，当被调试的程序运行到断点的时候，产生SIGTRAP信号。该信号被gdb捕获并 进行断点命中判断。</p>
+<h3 id="设置原理"><a href="#设置原理" class="headerlink" title="设置原理"></a>设置原理</h3><p>在程序中设置断点，就是先在该位置保存原指令，然后在该位置写入int 3。当执行到int 3时，发生软中断，内核会向子进程发送SIGTRAP信号。当然，这个信号会转发给父进程。然后用保存的指令替换int 3并等待操作恢复。</p>
+<h3 id="命中判断"><a href="#命中判断" class="headerlink" title="命中判断"></a>命中判断</h3><p>gdb将所有断点位置存储在一个链表中。命中判定将被调试程序的当前停止位置与链表中的断点位置进行比较，以查看断点产生的信号。</p>
+<h3 id="条件判断"><a href="#条件判断" class="headerlink" title="条件判断"></a>条件判断</h3><p>在断点处恢复指令后，增加了一个条件判断。如果表达式为真，则触发断点。由于需要判断一次，添加条件断点后，是否触发条件断点，都会影响性能。在 x86 平台上，部分硬件支持硬件断点。不是在条件断点处插入 int 3，而是插入另一条指令。当程序到达这个地址时，不是发出int 3信号，而是进行比较。特定寄存器的内容和某个地址，然后决定是否发送int 3。因此，当你的断点位置被程序频繁“通过”时，尽量使用硬件断点，这将有助于提高性能。</p>
+<h3 id="单步原理"><a href="#单步原理" class="headerlink" title="单步原理"></a>单步原理</h3><p>这个ptrace函数本身就支持，可以通过ptrace(PTRACE_SINGLESTEP, pid,…)调用来实现单步。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">printf</span>(<span class="string">"attaching to PID %d\n"</span>, pid);</span><br><span class="line">    <span class="keyword">if</span> (ptrace(PTRACE_ATTACH, pid, <span class="number">0</span>, <span class="number">0</span>) != <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        perror(<span class="string">"attach failed"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">int</span> waitStat = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">int</span> waitRes = waitpid(pid, &amp;waitStat, WUNTRACED);</span><br><span class="line">    <span class="keyword">if</span> (waitRes != pid || !WIFSTOPPED(waitStat))</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"unexpected waitpid result!\n"</span>);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">   </span><br><span class="line">    <span class="keyword">int64_t</span> numSteps = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">        <span class="keyword">auto</span> res = ptrace(PTRACE_SINGLESTEP, pid, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p>上述代码，首先接收一个pid，然后对其进行attach，最后调用ptrace进行单步调试。</p>
+<h2 id="测试程序"><a href="#测试程序" class="headerlink" title="测试程序"></a>测试程序</h2><p>我们先看看我们的测试程序:<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* in eg1.c */</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">wib</span><span class="params">(<span class="keyword">int</span> no1, <span class="keyword">int</span> no2)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> result, diff;</span><br><span class="line">    diff = no1 - no2;</span><br><span class="line">    result = no1 / diff;</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">pid_t</span> pid;</span><br><span class="line"></span><br><span class="line">    pid = fork();</span><br><span class="line">    <span class="keyword">if</span> (pid &lt;<span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"fork err\n"</span>);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">-1</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (pid == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">/* in child process */</span></span><br><span class="line">        sleep(<span class="number">60</span>); ------------------ (!)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">int</span> value = <span class="number">10</span>;</span><br><span class="line">        <span class="keyword">int</span> div = <span class="number">6</span>;</span><br><span class="line">        <span class="keyword">int</span> total = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">int</span> i     = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">int</span> result = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; <span class="number">10</span>; i++) &#123;</span><br><span class="line">                result = wib(value, div);</span><br><span class="line">                total += result;</span><br><span class="line">                div++;</span><br><span class="line">                value--;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"%d wibed by %d equals %d\n"</span>, value, div, total);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">         <span class="comment">/* in parent process */</span></span><br><span class="line">         sleep(<span class="number">4</span>);</span><br><span class="line">         wait(<span class="number">-1</span>);</span><br><span class="line">         <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>该测试程序中子进程运行过程中会在wib函数中出现一个’除0’异常。现在我们就要调试该子进程。</p>
-<h1 id="调试原理"><a href="#调试原理" class="headerlink" title="调试原理"></a>调试原理</h1><p>不知道大家发现没有，在(!)处在我们的测试程序在父进程fork后，子进程调用sleep睡了60秒。这就是关键，这个sleep本来是不该存在于子进程代码中的，而是而了使用GDB调试后加入的，它是我们调试的一个关键点。为什么要让子进程刚刚运行就开始sleep呢？因为我们要在子进程睡眠期间，利用 shell命令获取其process id，然后再利用gdb调试外部进程的方法attach到该process id上，调试该进程。<br>我们现在调试的是mpi程序，intel的mpiexec可以直接-gdb进行调试，但是用gnu的话就不行了，只能gdb attach来调试，下述。</p>
-<h1 id="调试过程"><a href="#调试过程" class="headerlink" title="调试过程"></a>调试过程</h1><p>GDB 调试程序的前提条件就是你编译程序时必须加入调试符号信息，即使用’-g’编译选项。首先编译我们的源程序<code>gcc -g -o eg1 eg1.c</code>。编译好之后，我们就有了我们的调试目标eg1。由于我们在调试过程中需要多个工具配合，所以你最好多打开几个终端窗口，另外一点需要注意的是最好在eg1的working directory下执行gdb程序，否则gdb回提示’No symbol table is loaded’。你还得手工load symbol table。好了，下面我们就’按部就班’的开始调试我们的eg1。</p>
-<p>执行eg1:<code>eg1 &amp;   --- 让eg1后台运行</code></p>
-<p>查找进程id:<code>ps -fu YOUR_USER_NAME</code><br>或在linux下使用<code>getpid()</code>函数</p>
-<p>运行gdb:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">gdb</span><br><span class="line">(gdb) attach xxxxx --- xxxxx为利用ps命令获得的子进程process id</span><br><span class="line">(gdb) stop --- 这点很重要，你需要先暂停那个子进程，然后设置一些断点和一些Watch</span><br><span class="line">(gdb) break 37 -- 在result = wib(value, div);这行设置一个断点,可以使用list命令察看源代码</span><br><span class="line">Breakpoint 1 at 0x10808: file eg1.c, line 37.</span><br><span class="line">(gdb) continue</span><br><span class="line">Continuing.</span><br><span class="line">这里一定要continue，要不的话。。。。。。傻呼呼的等那么久还不运行。</span><br><span class="line"></span><br><span class="line">Breakpoint 1, main () at eg1.c:37</span><br><span class="line">37                              result = wib(value, div);</span><br><span class="line">(gdb) step</span><br><span class="line">wib (no1=10, no2=6) at eg1.c:13</span><br><span class="line">13              diff = no1 - no2;</span><br><span class="line">(gdb) continue</span><br><span class="line">Continuing.</span><br><span class="line"></span><br><span class="line">Breakpoint 1, main () at eg1.c:37</span><br><span class="line">37                              result = wib(value, div);</span><br><span class="line">(gdb) step</span><br><span class="line">wib (no1=9, no2=7) at eg1.c:13</span><br><span class="line">13              diff = no1 - no2;</span><br><span class="line">(gdb) continue</span><br><span class="line">Continuing.</span><br><span class="line"></span><br><span class="line">Breakpoint 1, main () at eg1.c:37</span><br><span class="line">37                              result = wib(value, div);</span><br><span class="line">(gdb) step</span><br><span class="line">wib (no1=8, no2=8) at eg1.c:13</span><br><span class="line">13              diff = no1 - no2;</span><br><span class="line">(gdb) next</span><br><span class="line">14              result = no1 / diff;</span><br><span class="line">(gdb) print diff</span><br><span class="line">$6 = 0        ------- 除数为0，我们找到罪魁祸首了。</span><br><span class="line">(gdb) next</span><br><span class="line">Program received signal SIGFPE, Arithmetic exception.</span><br><span class="line">0xff29d830 in .div () from /usr/lib/libc.so.1</span><br></pre></td></tr></table></figure></p>
+<h3 id="调试原理-1"><a href="#调试原理-1" class="headerlink" title="调试原理"></a>调试原理</h3><p>不知道大家发现没有，在(!)处在我们的测试程序在父进程fork后，子进程调用sleep睡了60秒。这就是关键，这个sleep本来是不该存在于子进程代码中的，而是而了使用GDB调试后加入的，它是我们调试的一个关键点。为什么要让子进程刚刚运行就开始sleep呢？因为我们要在子进程睡眠期间，利用 shell命令获取其process id，然后再利用gdb调试外部进程的方法attach到该process id上，调试该进程。<br>我们现在调试的是mpi程序，intel的mpiexec可以直接-gdb进行调试，但是用gnu的话就不行了，只能gdb attach来调试，下述。</p>
+<h3 id="调试过程"><a href="#调试过程" class="headerlink" title="调试过程"></a>调试过程</h3><p>GDB 调试程序的前提条件就是你编译程序时必须加入调试符号信息，即使用’-g’编译选项。首先编译我们的源程序<code>gcc -g -o eg1 eg1.c</code>。编译好之后，我们就有了我们的调试目标eg1。由于我们在调试过程中需要多个工具配合，所以你最好多打开几个终端窗口，另外一点需要注意的是最好在eg1的working directory下执行gdb程序，否则gdb回提示’No symbol table is loaded’。你还得手工load symbol table。好了，下面我们就’按部就班’的开始调试我们的eg1。</p>
+<p>执行eg1:<code>eg1 &amp;   --- 让eg1后台运行</code>；查找进程id:<code>ps -fu YOUR_USER_NAME</code>；或在linux下使用<code>getpid()</code>函数。</p>
+<p>运行gdb:<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">gdb</span><br><span class="line">(gdb) attach xxxxx --- xxxxx为利用ps命令获得的子进程process id</span><br><span class="line">(gdb) stop --- 这点很重要，你需要先暂停那个子进程，然后设置一些断点和一些Watch</span><br><span class="line">(gdb) <span class="keyword">break</span> <span class="number">37</span> -- 在result = wib(value, div);这行设置一个断点,可以使用<span class="built_in">list</span>命令察看源代码</span><br><span class="line">Breakpoint <span class="number">1</span> at <span class="number">0x10808</span>: file eg1.c, line <span class="number">37.</span></span><br><span class="line">(gdb) <span class="keyword">continue</span></span><br><span class="line">Continuing.</span><br></pre></td></tr></table></figure></p>
+<p>这里一定要continue，要不的话。。。。。。傻呼呼的等那么久还不运行。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">Breakpoint 1, main () at eg1.c:37</span><br><span class="line">37                              result = wib(value, div);</span><br><span class="line">(gdb) step</span><br><span class="line">wib (no1=10, no2=6) at eg1.c:13</span><br><span class="line">13              diff = no1 - no2;</span><br><span class="line">(gdb) continue</span><br><span class="line">Continuing.</span><br><span class="line"></span><br><span class="line">Breakpoint 1, main () at eg1.c:37</span><br><span class="line">37                              result = wib(value, div);</span><br><span class="line">(gdb) step</span><br><span class="line">wib (no1=9, no2=7) at eg1.c:13</span><br><span class="line">13              diff = no1 - no2;</span><br><span class="line">(gdb) continue</span><br><span class="line">Continuing.</span><br><span class="line"></span><br><span class="line">Breakpoint 1, main () at eg1.c:37</span><br><span class="line">37                              result = wib(value, div);</span><br><span class="line">(gdb) step</span><br><span class="line">wib (no1=8, no2=8) at eg1.c:13</span><br><span class="line">13              diff = no1 - no2;</span><br><span class="line">(gdb) next</span><br><span class="line">14              result = no1 / diff;</span><br><span class="line">(gdb) print diff</span><br><span class="line">$6 = 0        ------- 除数为0，我们找到罪魁祸首了。</span><br><span class="line">(gdb) next</span><br><span class="line">Program received signal SIGFPE, Arithmetic exception.</span><br><span class="line">0xff29d830 in .div () from /usr/lib/libc.so.1</span><br></pre></td></tr></table></figure></p>
 <p>至此，我们调试完毕。</p>
 <h1 id="GDB调试精粹"><a href="#GDB调试精粹" class="headerlink" title="GDB调试精粹"></a>GDB调试精粹</h1><h2 id="一、列文件清单"><a href="#一、列文件清单" class="headerlink" title="一、列文件清单"></a>一、列文件清单</h2><p><code>list / l</code><br>列出产生执行文件的源代码的一部分</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">//列出 line1 到 line2 行之间的源代码  </span><br><span class="line">(gdb) list line1, line2  </span><br><span class="line">  </span><br><span class="line">//输出从上次调用list命令开始往后的10行程序代码  </span><br><span class="line">(gdb) list  </span><br><span class="line">  </span><br><span class="line">//输出第 n 行附近的10行程序代码  </span><br><span class="line">(gdb) list n  </span><br><span class="line">  </span><br><span class="line">//输出函数function前后的10行程序代码  </span><br><span class="line">(gdb) list function</span><br></pre></td></tr></table></figure>
@@ -361,13 +390,21 @@
 <p><code>show args</code><br>命令就可以查看其缺省参数的列表。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(gdb) set args –b –x  </span><br><span class="line">(gdb) show args</span><br></pre></td></tr></table></figure>
 <h2 id="三、显示数据"><a href="#三、显示数据" class="headerlink" title="三、显示数据"></a>三、显示数据</h2><p><code>print / p</code><br>查看变量的值</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">//利用print 命令可以检查各个变量的值。  </span><br><span class="line">(gdb) print p (p为变量名)  </span><br><span class="line">print 是 gdb 的一个功能很强的命令，利用它可以显示被调试的语言中任何有效的表达式。表达式除了包含你程序中的变量外，还可以包含以下内容：</span><br><span class="line"></span><br><span class="line">//对程序中函数的调用  </span><br><span class="line">(gdb) print find_entry(1, 0)  </span><br><span class="line">  </span><br><span class="line">//数据结构和其他复杂对象  </span><br><span class="line">(gdb) print *table_start  </span><br><span class="line">$8=&#123;e=reference=’\000’,location=0x0,next=0x0&#125;  </span><br><span class="line">  </span><br><span class="line">//值的历史成分  </span><br><span class="line">(gdb)print $1 ($1为历史记录变量,在以后可以直接引用 $1 的值)  </span><br><span class="line">whatis </span><br><span class="line"></span><br><span class="line">查看变量的类型</span><br><span class="line"></span><br><span class="line">//whatis 命令可以显示某个变量的类型  </span><br><span class="line">(gdb) whatis p  </span><br><span class="line">type = int *</span><br></pre></td></tr></table></figure>
-<h2 id="四、设置与清除断点"><a href="#四、设置与清除断点" class="headerlink" title="四、设置与清除断点"></a>四、设置与清除断点</h2><p><code>break / b</code><br>可以用来在调试的程序中设置断点，该命令有如下四种形式：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">//使程序恰好在执行给定行之前停止  </span><br><span class="line">break line-number  </span><br><span class="line">  </span><br><span class="line">//使程序恰好在进入指定的函数之前停止  </span><br><span class="line">  </span><br><span class="line">break function-name  </span><br><span class="line">  </span><br><span class="line">//如果condition（条件）是真，程序到达指定行或函数时停止  </span><br><span class="line">break line-or-function if condition  </span><br><span class="line">   </span><br><span class="line">//在指定例程的入口处设置断点  </span><br><span class="line">break routine-name</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">//利用print 命令可以检查各个变量的值。  </span><br><span class="line">(gdb) print p (p为变量名)  </span><br><span class="line">print 是 gdb 的一个功能很强的命令，利用它可以显示被调试的语言中任何有效的表达式。表达式除了包含你程序中的变量外，还可以包含以下内容：</span><br><span class="line"></span><br><span class="line">//对程序中函数的调用  </span><br><span class="line">(gdb) print find_entry(1, 0)  </span><br><span class="line">  </span><br><span class="line">//数据结构和其他复杂对象  </span><br><span class="line">(gdb) print *table_start  </span><br><span class="line">$8=&#123;e=reference=’\000’,location=0x0,next=0x0&#125;  </span><br><span class="line">  </span><br><span class="line">//值的历史成分  </span><br><span class="line">(gdb)print $1 ($1为历史记录变量,在以后可以直接引用 $1 的值)</span><br></pre></td></tr></table></figure>
+<p>whatis用于查看变量的类型<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">//whatis 命令可以显示某个变量的类型  </span><br><span class="line">(gdb) whatis p  </span><br><span class="line">type = int *</span><br></pre></td></tr></table></figure></p>
+<h2 id="四、设置与清除断点"><a href="#四、设置与清除断点" class="headerlink" title="四、设置与清除断点"></a>四、设置与清除断点</h2><p><code>break / b</code><br>可以用来在调试的程序中设置断点，该命令有如下四种形式：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">//使程序恰好在执行给定行之前停止  </span><br><span class="line">break line-number  </span><br><span class="line">  </span><br><span class="line">//使程序恰好在进入指定的函数之前停止  </span><br><span class="line">break function-name  </span><br><span class="line">  </span><br><span class="line">//如果condition（条件）是真，程序到达指定行或函数时停止  </span><br><span class="line">break line-or-function if condition  </span><br><span class="line">   </span><br><span class="line">//在指定例程的入口处设置断点  </span><br><span class="line">break routine-name</span><br></pre></td></tr></table></figure></p>
 <p>如果该程序是由很多原文件构成的，你可以在各个原文件中设置断点，而不是在当前的原文件中设置断点，其方法如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(gdb) break filename:line-number  </span><br><span class="line">  </span><br><span class="line">(gdb) break filename:function-name  </span><br><span class="line">break  if</span><br></pre></td></tr></table></figure></p>
 <p>要想设置一个条件断点，可以利用break if命令，如下所示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(gdb) break line-or-function if expr  </span><br><span class="line">  </span><br><span class="line">(gdb) break 46 if testsize==100  </span><br><span class="line">clean number</span><br></pre></td></tr></table></figure></p>
 <p>清除原文件中某一代码行上的所有断点</p>
 <p>注：number 为原文件的某个代码行的行号</p>
-<h2 id="五、断点的管理"><a href="#五、断点的管理" class="headerlink" title="五、断点的管理"></a>五、断点的管理</h2><ol>
+<h2 id="五、断点的管理"><a href="#五、断点的管理" class="headerlink" title="五、断点的管理"></a>五、断点的管理</h2><p>断点是我们在调试中经常用的一个功能，我们在指定位置设置断点之后，程序运行到该位置将会暂停，这个时候我们就可以对程序进行更多的操作，比如查看变量内容，堆栈情况等等，以帮助我们调试程序。</p>
+<p>以设置断点的命令分为以下几类：</p>
+<ul>
+<li>breakpoint</li>
+<li>watchpoint</li>
+<li>catchpoint</li>
+</ul>
+<ol>
 <li><p>显示当前gdb的断点信息<br><code>info break</code></p>
 </li>
 <li><p>delete 删除指定的某个断点<br><code>delete breakpoint</code></p>
@@ -379,142 +416,474 @@
 </li>
 </ol>
 <p>该命令将禁止、允许断点 1，同时断点信息的 (Enb)域将变为 n、y</p>
+<p>breakpoint可以根据行号、函数、条件生成断点，下面是相关命令以及对应的作用说明：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>break [file]:function</td>
+<td>在文件file的function函数入口设置断点</td>
+</tr>
+<tr>
+<td>break [file]:line</td>
+<td>在文件file的第line行设置断点</td>
+</tr>
+<tr>
+<td>info breakpoints</td>
+<td>查看断点列表</td>
+</tr>
+<tr>
+<td>break [+-]offset</td>
+<td>在当前位置偏移量为[+-]offset处设置断点</td>
+</tr>
+<tr>
+<td>break *addr</td>
+<td>在地址addr处设置断点</td>
+</tr>
+<tr>
+<td>break … if expr</td>
+<td>设置条件断点，仅仅在条件满足时</td>
+</tr>
+<tr>
+<td>ignore n count</td>
+<td>接下来对于编号为n的断点忽略count次</td>
+</tr>
+<tr>
+<td>clear</td>
+<td>删除所有断点</td>
+</tr>
+<tr>
+<td>clear function</td>
+<td>删除所有位于function内的断点</td>
+</tr>
+<tr>
+<td>delete n</td>
+<td>删除指定编号的断点</td>
+</tr>
+<tr>
+<td>enable n</td>
+<td>启用指定编号的断点</td>
+</tr>
+<tr>
+<td>disable n</td>
+<td>禁用指定编号的断点</td>
+</tr>
+<tr>
+<td>save breakpoints file</td>
+<td>保存断点信息到指定文件</td>
+</tr>
+<tr>
+<td>source file</td>
+<td>导入文件中保存的断点信息</td>
+</tr>
+<tr>
+<td>break</td>
+<td>在下一个指令处设置断点</td>
+</tr>
+<tr>
+<td>clear [file:]line</td>
+<td>删除第line行的断点</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>watchpoint是一种特殊类型的断点，类似于正常断点，是要求GDB暂停程序执行的命令。区别在于watchpoint没有驻留某一行源代码中，而是指示GDB每当某个表达式改变了值就暂停执行的命令。</p>
+<p>watchpoint分为硬件实现和软件实现两种。前者需要硬件系统的支持；后者的原理就是每步执行后都检查变量的值是否改变。GDB在新建数据断点时会优先尝试硬件方式，如果失败再尝试软件实现。</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>watch variable</td>
+<td>设置变量数据断点</td>
+</tr>
+<tr>
+<td>watch var1 + var2</td>
+<td>设置表达式数据断点</td>
+</tr>
+<tr>
+<td>rwatch variable</td>
+<td>设置读断点，仅支持硬件实现</td>
+</tr>
+<tr>
+<td>awatch variable</td>
+<td>设置读写断点，仅支持硬件实现</td>
+</tr>
+<tr>
+<td>info watchpoints</td>
+<td>查看数据断点列表</td>
+</tr>
+<tr>
+<td>set can-use-hw-watchpoints 0</td>
+<td>强制基于软件方式实现</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>使用数据断点时，需要注意：</p>
+<ul>
+<li>当监控变量为局部变量时，一旦局部变量失效，数据断点也会失效</li>
+<li>如果监控的是指针变量p，则watch *p监控的是p所指内存数据的变化情况，而watch p监控的是p指针本身有没有改变指向</li>
+</ul>
+<p>最常见的数据断点应用场景：「定位堆上的结构体内部成员何时被修改」。由于指针一般为局部变量，为了解决断点失效，一般有两种方法。</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>print &amp;variable</td>
+<td>查看变量的内存地址</td>
+</tr>
+<tr>
+<td>watch <em>(type </em>)address</td>
+<td>通过内存地址间接设置断点</td>
+</tr>
+<tr>
+<td>watch -l variable</td>
+<td>指定location参数</td>
+</tr>
+<tr>
+<td>watch variable thread 1</td>
+<td>仅编号为1的线程修改变量var值时会中断</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>catchpoint从字面意思理解，是捕获断点，其主要监测信号的产生。例如c++的throw，或者加载库的时候，产生断点行为。</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>catch fork</td>
+<td>程序调用fork时中断</td>
+</tr>
+<tr>
+<td>tcatch fork</td>
+<td>设置的断点只触发一次，之后被自动删除</td>
+</tr>
+<tr>
+<td>catch syscall ptrace</td>
+<td>为ptrace系统调用设置断点</td>
+</tr>
+</tbody>
+</table>
+</div>
 <h2 id="六、单步执行"><a href="#六、单步执行" class="headerlink" title="六、单步执行"></a>六、单步执行</h2><p><code>next / n</code><br>不进入的单步执行</p>
 <p><code>step</code><br>进入的单步执行</p>
 <p><code>finish</code><br>如果已经进入了某函数，而想退出该函数返回到它的调用函数中，可使用命令finish</p>
 <p><code>until</code><br>结束当前循环</p>
 <h2 id="七、函数的调用"><a href="#七、函数的调用" class="headerlink" title="七、函数的调用"></a>七、函数的调用</h2><p><code>call name</code><br>调用和执行一个函数<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">(gdb) call gen_and_sork( 1234,1,0 )  </span><br><span class="line">(gdb) call printf(“abcd”)  </span><br><span class="line">$1=4</span><br></pre></td></tr></table></figure></p>
-<h2 id="八、-原文件的搜索"><a href="#八、-原文件的搜索" class="headerlink" title="八、 原文件的搜索"></a>八、 原文件的搜索</h2><p>search text</p>
-<p>该命令可显示在当前文件中包含text串的下一行。</p>
-<p>reverse-search text</p>
-<p>该命令可以显示包含text 的前一行。</p>
-<p>小结：常用的 gdb 命令</p>
-<p>backtrace / bt 显示程序中的当前位置和表示如何到达当前位置的栈跟踪（同义词：where）</p>
-<p>breakpoint / b 在程序中设置一个断点</p>
-<p>cd 改变当前工作目录</p>
-<p>clear 删除刚才停止处的断点</p>
-<p>commands 命中断点时，列出将要执行的命令</p>
-<p>continue 从断点开始继续执行</p>
-<p>delete 删除一个断点或监测点；也可与其他命令一起使用</p>
-<p>display 程序停止时显示变量和表达时</p>
-<p>down 下移栈帧，使得另一个函数成为当前函数</p>
-<p>frame 选择下一条continue命令的帧</p>
-<p>info 显示与该程序有关的各种信息</p>
-<p>jump 在源程序中的另一点开始运行</p>
-<p>kill 异常终止在gdb 控制下运行的程序</p>
-<p>list 列出相应于正在执行的程序的原文件内容</p>
-<p>next 执行下一个源程序行，从而执行其整体中的一个函数</p>
-<p>print 显示变量或表达式的值</p>
-<p>pwd 显示当前工作目录</p>
-<p>ptype 显示一个数据结构（如一个结构或C++类）的内容</p>
-<p>quit 退出gdb</p>
-<p>reverse-search 在源文件中反向搜索正规表达式</p>
-<p>run 执行该程序</p>
-<p>search 在源文件中搜索正规表达式</p>
-<p>set variable 给变量赋值</p>
-<p>signal 将一个信号发送到正在运行的进程</p>
-<p>step 执行下一个源程序行，必要时进入下一个函数</p>
-<p>undisplay display 命令的反命令，不要显示表达式</p>
-<p>until 结束当前循环</p>
-<p>up 上移栈帧，使另一函数成为当前函数</p>
-<p>watch 在程序中设置一个监测点（即数据断点）</p>
-<p>whatis 显示变量或函数类型</p>
-<h2 id="九、查看运行时数据"><a href="#九、查看运行时数据" class="headerlink" title="九、查看运行时数据"></a>九、查看运行时数据</h2><p>在你调试程序时，当程序被停住时，你可以使用print命令（简写命令为p），或是同义命令inspect来查看当前程序的运行数据。print命令的格式是：<br><code>print</code></p>
+<h2 id="八、-原文件的搜索"><a href="#八、-原文件的搜索" class="headerlink" title="八、 原文件的搜索"></a>八、 原文件的搜索</h2><p><code>search text</code>：该命令可显示在当前文件中包含text串的下一行。</p>
+<p><code>reverse-search text</code>：该命令可以显示包含text 的前一行。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>常用的 gdb 命令</p>
+<ul>
+<li><code>backtrace / bt</code>：显示程序中的当前位置和表示如何到达当前位置的栈跟踪（同义词：where）</li>
+<li><code>breakpoint / b</code>：在程序中设置一个断点</li>
+<li><code>cd</code>：改变当前工作目录</li>
+<li><code>clear</code>：删除刚才停止处的断点</li>
+<li><code>commands</code>：命中断点时，列出将要执行的命令</li>
+<li><code>continue</code>：从断点开始继续执行</li>
+<li><code>delete</code>：删除一个断点或监测点；也可与其他命令一起使用</li>
+<li><code>display</code>：程序停止时显示变量和表达时</li>
+<li><code>down</code>：下移栈帧，使得另一个函数成为当前函数</li>
+<li><code>frame</code>：选择下一条continue命令的帧</li>
+<li><code>info</code>：显示与该程序有关的各种信息</li>
+<li><code>jump</code>：在源程序中的另一点开始运行</li>
+<li><code>kill</code>：异常终止在gdb 控制下运行的程序</li>
+<li><code>list</code>：列出相应于正在执行的程序的原文件内容</li>
+<li><code>next</code>：执行下一个源程序行，从而执行其整体中的一个函数</li>
+<li><code>print</code>：显示变量或表达式的值</li>
+<li><code>pwd</code>：显示当前工作目录</li>
+<li><code>ptype</code>：显示一个数据结构（如一个结构或C++类）的内容</li>
+<li><code>quit</code>：退出gdb</li>
+<li><code>reverse-search</code>：在源文件中反向搜索正规表达式</li>
+<li><code>run</code>：执行该程序</li>
+<li><code>search</code>：在源文件中搜索正规表达式</li>
+<li><code>set variable</code>：给变量赋值</li>
+<li><code>signal</code>：将一个信号发送到正在运行的进程</li>
+<li><code>step</code>：执行下一个源程序行，必要时进入下一个函数</li>
+<li><code>undisplay display</code>：命令的反命令，不要显示表达式</li>
+<li><code>until</code>：结束当前循环</li>
+<li><code>up</code>：上移栈帧，使另一函数成为当前函数</li>
+<li><code>watch</code>：在程序中设置一个监测点（即数据断点）</li>
+<li><code>whatis</code>：显示变量或函数类型</li>
+</ul>
+<h2 id="九、查看运行时数据"><a href="#九、查看运行时数据" class="headerlink" title="九、查看运行时数据"></a>九、查看运行时数据</h2><p>在你调试程序时，当程序被停住时，你可以使用print命令（简写命令为p），或是同义命令inspect来查看当前程序的运行数据。print命令的格式是：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">print</span><br></pre></td></tr></table></figure></p>
 <p><code>print /</code>是表达式，是你所调试的程序的语言的表达式（GDB可以调试多种编程语言），是输出的格式，比如，如果要把表达式按16进制的格式输出，那么就是/x。 </p>
 <ol>
-<li>表达式<br>print和许多GDB的命令一样，可以接受一个表达式，GDB会根据当前的程序运行的数据来计算这个表达式，既然是表达式，那么就可以是当前程序运行中的const常量、变量、函数等内容。可惜的是GDB不能使用你在程序中所定义的宏。表达式的语法应该是当前所调试的语言的语法，由于C/C++是一种大众型的语言，所以，本文中的例子都是关于C/C++的。（而关于用GDB调试其它语言的章节，我将在后面介绍）。在表达式中，有几种GDB所支持的操作符，它们可以用在任何一种语言中。<br>@是一个和数组有关的操作符，在后面会有更详细的说明。<br><code>::</code><br>指定一个在文件或是一个函数中的变量。<br><code>{}</code><br>表示一个指向内存地址的类型为type的一个对象。 </li>
-<li>程序变量<br>在GDB中，你可以随时查看以下三种变量的值：<br>1、全局变量（所有文件可见的）<br>2、静态全局变量（当前文件可见的）<br>3、局部变量（当前Scope可见的）<br>如果你的局部变量和全局变量发生冲突（也就是重名），一般情况下是局部变量会隐藏全局变量，也就是说，如果一个全局变量和一个函数中的局部变量同名时，如果当前停止点在函数中，用print显示出的变量的值会是函数中的局部变量的值。如果此时你想查看全局变量的值时，你可以使用“::”操作符： <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">file::variable </span><br><span class="line">function::variable</span><br></pre></td></tr></table></figure>
-</li>
+<li>表达式。print和许多GDB的命令一样，可以接受一个表达式，GDB会根据当前的程序运行的数据来计算这个表达式，既然是表达式，那么就可以是当前程序运行中的const常量、变量、函数等内容。可惜的是GDB不能使用你在程序中所定义的宏。表达式的语法应该是当前所调试的语言的语法，由于C/C++是一种大众型的语言，所以，本文中的例子都是关于C/C++的。在表达式中，有几种GDB所支持的操作符，它们可以用在任何一种语言中。 </li>
 </ol>
+<ul>
+<li>@是一个和数组有关的操作符，在后面会有更详细的说明。 </li>
+<li><code>::</code>指定一个在文件或是一个函数中的变量。</li>
+<li><code>{}</code>表示一个指向内存地址的类型为type的一个对象。 </li>
+</ul>
+<ol>
+<li>程序变量。在GDB中，你可以随时查看以下三种变量的值： </li>
+</ol>
+<ul>
+<li>全局变量（所有文件可见的） </li>
+<li>静态全局变量（当前文件可见的） </li>
+<li>局部变量（当前Scope可见的） </li>
+</ul>
+<p>如果你的局部变量和全局变量发生冲突（也就是重名），一般情况下是局部变量会隐藏全局变量，也就是说，如果一个全局变量和一个函数中的局部变量同名时，如果当前停止点在函数中，用print显示出的变量的值会是函数中的局部变量的值。如果此时你想查看全局变量的值时，你可以使用“::”操作符：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">file::variable </span><br><span class="line">function::variable</span><br></pre></td></tr></table></figure></p>
 <p>可以通过这种形式指定你所想查看的变量，是哪个文件中的或是哪个函数中的。例如，查看文件f2.c中的全局变量x的值：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(gdb) p &apos;f2.c&apos;::x</span><br></pre></td></tr></table></figure></p>
 <p>当然，“::”操作符会和C++中的发生冲突，GDB能自动识别“::” 是否C++的操作符，所以你不必担心在调试C++程序时会出现异常。 另外，需要注意的是，如果你的程序编译时开启了优化选项，那么在用GDB调试被优化过的程序时，可能会发生某些变量不能访问，或是取值错误码的情况。这个是很正常的，因为优化程序会删改你的程序，整理你程序的语句顺序，剔除一些无意义的变量等，所以在GDB调试这种程序时，运行时的指令和你所编写指令就有不一样，也就会出现你所想象不到的结果。对付这种情况时，需要在编译程序时关闭编译优化。一般来说，几乎所有的编译器都支持编译优化的开关，例如，GNU的C/C++编译器GCC，你可以使用“-gstabs”选项来解决这个问题。关于编译器的参数，还请查看编译器的使用说明文档。 </p>
 <ol>
-<li>数组<br>有时候，你需要查看一段连续的内存空间的值。比如数组的一段，或是动态分配的数据的大小。你可以使用GDB的“@”操作符，“@”的左边是第一个内存的地址的值，“@”的右边则你你想查看内存的长度。例如，你的程序中有这样的语句：<br><code>int *array = (int *) malloc (len * sizeof (int));</code><br>于是，在GDB调试过程中，你可以以如下命令显示出这个动态数组的取值： <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">p *array@len</span><br></pre></td></tr></table></figure>
-</li>
+<li>数组。有时候，你需要查看一段连续的内存空间的值。比如数组的一段，或是动态分配的数据的大小。你可以使用GDB的“@”操作符，“@”的左边是第一个内存的地址的值，“@”的右边则你你想查看内存的长度。例如，你的程序中有这样的语句：</li>
 </ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> *<span class="built_in">array</span> = (<span class="keyword">int</span> *) <span class="built_in">malloc</span> (len * <span class="keyword">sizeof</span> (<span class="keyword">int</span>));</span><br></pre></td></tr></table></figure>
+<p>于是，在GDB调试过程中，你可以以如下命令显示出这个动态数组的取值： </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">p *array@len</span><br></pre></td></tr></table></figure>
 <p>@的左边是数组的首地址的值，也就是变量array所指向的内容，右边则是数据的长度，其保存在变量len中，其输出结果，大约是下面这个样子的：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(gdb) p *array@len </span><br><span class="line">$1 = &#123;2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40&#125;</span><br></pre></td></tr></table></figure></p>
 <p>如果是静态数组的话，可以直接用print数组名，就可以显示数组中所有数据的内容了。 </p>
 <ol>
-<li><p>输出格式<br>一般来说，GDB会根据变量的类型输出变量的值。但你也可以自定义GDB的输出的格式。例如，你想输出一个整数的十六进制，或是二进制来查看这个整型变量的中的位的情况。要做到这样，你可以使用GDB的数据显示格式： </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">x 按十六进制格式显示变量。 </span><br><span class="line">d 按十进制格式显示变量。 </span><br><span class="line">u 按十六进制格式显示无符号整型。 </span><br><span class="line">o 按八进制格式显示变量。 </span><br><span class="line">t 按二进制格式显示变量。 </span><br><span class="line">a 按十六进制格式显示变量。 </span><br><span class="line">c 按字符格式显示变量。 </span><br><span class="line">f 按浮点数格式显示变量。 </span><br><span class="line">(gdb) p i </span><br><span class="line">$21 = 101 </span><br><span class="line">(gdb) p/a i </span><br><span class="line">$22 = 0x65 </span><br><span class="line">(gdb) p/c i </span><br><span class="line">$23 = 101 &apos;e&apos; </span><br><span class="line">(gdb) p/f i </span><br><span class="line">$24 = 1.41531145e-43 </span><br><span class="line">(gdb) p/x i </span><br><span class="line">$25 = 0x65 </span><br><span class="line">(gdb) p/t i </span><br><span class="line">$26 = 1100101</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>查看内存<br>你可以使用examine命令（简写是x）来查看内存地址中的值。x命令的语法如下所示： </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">x/</span><br></pre></td></tr></table></figure>
-</li>
+<li>输出格式。一般来说，GDB会根据变量的类型输出变量的值。但你也可以自定义GDB的输出的格式。例如，你想输出一个整数的十六进制，或是二进制来查看这个整型变量的中的位的情况。要做到这样，你可以使用GDB的数据显示格式： </li>
 </ol>
-<p>n、f、u是可选的参数。<br>n 是一个正整数，表示显示内存的长度，也就是说从当前地址向后显示几个地址的内容。 f 表示显示的格式，参见上面。如果地址所指的是字符串，那么格式可以是s，如果地址是指令地址，那么格式可以是i。u 表示从当前地址往后请求的字节数，如果不指定的话，GDB默认是4个bytes。u参数可以用下面的字符来代替，b表示单字节，h表示双字节，w表示四字节，g表示八字节。当我们指定了字节长度后，GDB会从指内存定的内存地址开始，读写指定字节，并把其当作一个值取出来。</p>
-<p>n/f/u三个参数可以一起使用。例如：<br>命令：x/3uh 0x54320 表示，从内存地址0x54320读取内容，h表示以双字节为一个单位，3表示三个单位，u表示按十六进制显示。 </p>
+<ul>
+<li><code>x</code> 按十六进制格式显示变量。 </li>
+<li><code>d</code> 按十进制格式显示变量。 </li>
+<li><code>u</code> 按十六进制格式显示无符号整型。 </li>
+<li><code>o</code> 按八进制格式显示变量。 </li>
+<li><code>t</code> 按二进制格式显示变量。 </li>
+<li><code>a</code> 按十六进制格式显示变量。 </li>
+<li><code>c</code> 按字符格式显示变量。 </li>
+<li><code>f</code> 按浮点数格式显示变量。 </li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">(gdb) p i </span><br><span class="line">$21 = 101 </span><br><span class="line">(gdb) p/a i </span><br><span class="line">$22 = 0x65 </span><br><span class="line">(gdb) p/c i </span><br><span class="line">$23 = 101 &apos;e&apos; </span><br><span class="line">(gdb) p/f i </span><br><span class="line">$24 = 1.41531145e-43 </span><br><span class="line">(gdb) p/x i </span><br><span class="line">$25 = 0x65 </span><br><span class="line">(gdb) p/t i </span><br><span class="line">$26 = 1100101</span><br></pre></td></tr></table></figure>
 <ol>
-<li><p>自动显示<br>你可以设置一些自动显示的变量，当程序停住时，或是在你单步跟踪时，这些变量会自动显示。相关的GDB命令是display。<br>display<br>格式i和s同样被display支持，一个非常有用的命令是：<br><code>display/i $pc</code><br>$pc是GDB的环境变量，表示着指令的地址，/i则表示输出格式为机器指令码，也就是汇编。于是当程序停下后，就会出现源代码和机器指令码相对应的情形，这是一个很有意思的功能。<br>info display<br>查看display设置的自动显示的信息。GDB会打出一张表格，向你报告当然调试中设置了多少个自动显示设置，其中包括，设置的编号，表达式，是否enable。 </p>
-</li>
-<li><p>设置显示选项<br>GDB中关于显示的选项比较多，这里我只例举大多数常用的选项。 </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">set print address </span><br><span class="line">set print address on</span><br></pre></td></tr></table></figure>
+<li>查看内存。你可以使用examine命令（简写是x）来查看内存地址中的值。x命令的语法如下所示： <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">x/</span><br></pre></td></tr></table></figure>
 </li>
 </ol>
-<p>打开地址输出，当程序显示函数信息时，GDB会显出函数的参数地址。系统默认为打开的，<br>如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(gdb) f </span><br><span class="line">#0 set_quotes (lq=0x34c78 &quot;&lt;&lt;&quot;, rq=0x34c88 &quot;&gt;&gt;&quot;) </span><br><span class="line">at input.c:530 </span><br><span class="line">530 if (lquote != def_lquote)</span><br></pre></td></tr></table></figure></p>
-<p>set print address off<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">关闭函数的参数地址显示，如：</span><br></pre></td></tr></table></figure></p>
-<p>(gdb) set print addr off<br>(gdb) f </p>
-<h1 id="0-set-quotes-lq-”-lt-lt-”-rq-”-gt-gt-”-at-input-c-530"><a href="#0-set-quotes-lq-”-lt-lt-”-rq-”-gt-gt-”-at-input-c-530" class="headerlink" title="0 set_quotes (lq=”&lt;&lt;”, rq=”&gt;&gt;”) at input.c:530"></a>0 set_quotes (lq=”&lt;&lt;”, rq=”&gt;&gt;”) at input.c:530</h1><p>530 if (lquote != def_lquote) </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show print address</span><br></pre></td></tr></table></figure>
-<p>查看当前地址显示选项是否打开。 </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">set print array </span><br><span class="line">set print array on</span><br></pre></td></tr></table></figure>
-<p>打开数组显示，打开后当数组显示时，每个元素占一行，如果不打开的话，每个元素则以逗号分隔。这个选项默认是关闭的。与之相关的两个命令如下，我就不再多说了。<br>set print array off<br>show print array </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set print elements</span><br></pre></td></tr></table></figure>
-<p>这个选项主要是设置数组的，如果你的数组太大了，那么就可以指定一个来指定数据显示的最大长度，当到达这个长度时，GDB就不再往下显示了。如果设置为0，则表示不限制。 </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show print elements</span><br></pre></td></tr></table></figure>
-<p>查看print elements的选项信息。 </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set print null-stop</span><br></pre></td></tr></table></figure>
-<p>如果打开了这个选项，那么当显示字符串时，遇到结束符则停止显示。这个选项默认为off。 </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set print pretty on</span><br></pre></td></tr></table></figure>
-<p>如果打开printf pretty这个选项，那么当GDB显示结构体时会比较漂亮。如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$1 = &#123; </span><br><span class="line">next = 0x0, </span><br><span class="line">flags = &#123; </span><br><span class="line">sweet = 1, </span><br><span class="line">sour = 1 </span><br><span class="line">&#125;, </span><br><span class="line">meat = 0x54 &quot;Pork&quot; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set print pretty off</span><br></pre></td></tr></table></figure>
-<p>关闭printf pretty这个选项，GDB显示结构体时会如下显示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$1 = &#123;next = 0x0, flags = &#123;sweet = 1, sour = 1&#125;, meat = 0x54 &quot;Pork&quot;&#125;</span><br></pre></td></tr></table></figure></p>
+<p>n、f、u是可选的参数。 </p>
+<ul>
+<li>n 是一个正整数，表示显示内存的长度，也就是说从当前地址向后显示几个地址的内容。</li>
+<li>f 表示显示的格式，参见上面。如果地址所指的是字符串，那么格式可以是s，如果地址是指令地址，那么格式可以是i。</li>
+<li>u 表示从当前地址往后请求的字节数，如果不指定的话，GDB默认是4个bytes。</li>
+</ul>
+<p>u参数可以用下面的字符来代替，b表示单字节，h表示双字节，w表示四字节，g表示八字节。当我们指定了字节长度后，GDB会从指内存定的内存地址开始，读写指定字节，并把其当作一个值取出来。</p>
+<p>n/f/u三个参数可以一起使用。例如： </p>
+<ul>
+<li>命令：x/3uh 0x54320 表示，从内存地址0x54320读取内容，h表示以双字节为一个单位，3表示三个单位，u表示按十六进制显示。 </li>
+</ul>
+<ol>
+<li>自动显示。你可以设置一些自动显示的变量，当程序停住时，或是在你单步跟踪时，这些变量会自动显示。相关的GDB命令是display。 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">display</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>格式i和s同样被display支持，一个非常有用的命令是：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">display/i $pc</span><br></pre></td></tr></table></figure></p>
+<p><code>$pc</code>是GDB的环境变量，表示着指令的地址，<code>/i</code>则表示输出格式为机器指令码，也就是汇编。于是当程序停下后，就会出现源代码和机器指令码相对应的情形，这是一个很有意思的功能。 </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">info display</span><br></pre></td></tr></table></figure>
+<p>查看display设置的自动显示的信息。GDB会打出一张表格，向你报告当然调试中设置了多少个自动显示设置，其中包括，设置的编号，表达式，是否enable。 </p>
+<ol>
+<li>设置显示选项。GDB中关于显示的选项比较多，这里我只例举大多数常用的选项。 </li>
+</ol>
+<p><code>set print address</code>打开地址输出，当程序显示函数信息时，GDB会显出函数的参数地址。系统默认为打开的，如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(gdb) f </span><br><span class="line">#0 set_quotes (lq=0x34c78 &quot;&lt;&lt;&quot;, rq=0x34c88 &quot;&gt;&gt;&quot;) </span><br><span class="line">at input.c:530 </span><br><span class="line">530 if (lquote != def_lquote)</span><br></pre></td></tr></table></figure></p>
+<p><code>set print address off</code>关闭函数的参数地址显示，如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(gdb) set print addr off </span><br><span class="line">(gdb) f </span><br><span class="line">#0 set_quotes (lq=&quot;&lt;&lt;&quot;, rq=&quot;&gt;&gt;&quot;) at input.c:530 </span><br><span class="line">530 if (lquote != def_lquote)</span><br></pre></td></tr></table></figure></p>
+<p><code>show print address</code>查看当前地址显示选项是否打开。 </p>
+<p><code>set print array on</code>打开数组显示，打开后当数组显示时，每个元素占一行，如果不打开的话，每个元素则以逗号分隔。这个选项默认是关闭的。</p>
+<p><code>set print elements</code>这个选项主要是设置数组的，如果你的数组太大了，那么就可以指定一个来指定数据显示的最大长度，当到达这个长度时，GDB就不再往下显示了。如果设置为0，则表示不限制。 </p>
+<p><code>show print elements</code>查看print elements的选项信息。 </p>
+<p><code>set print null-stop</code>如果打开了这个选项，那么当显示字符串时，遇到结束符则停止显示。这个选项默认为off。 </p>
+<p><code>set print pretty on</code>如果打开printf pretty这个选项，那么当GDB显示结构体时会比较漂亮。如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$1 = &#123; </span><br><span class="line">    next = 0x0, </span><br><span class="line">    flags = &#123; </span><br><span class="line">        sweet = 1, </span><br><span class="line">        sour = 1 </span><br><span class="line">    &#125;, </span><br><span class="line">    meat = 0x54 &quot;Pork&quot; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><code>set print pretty off</code>关闭printf pretty这个选项，GDB显示结构体时会如下显示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$1 = &#123;next = 0x0, flags = &#123;sweet = 1, sour = 1&#125;, meat = 0x54 &quot;Pork&quot;&#125;</span><br></pre></td></tr></table></figure></p>
 <p><code>show print pretty</code>查看GDB是如何显示结构体的。 </p>
-<p><code>set print sevenbit-strings</code><br>设置字符显示，是否按“/nnn”的格式显示，如果打开，则字符串或字符数据按/nnn显示，<br>如“/065”。 </p>
-<p><code>show print sevenbit-strings</code><br>查看字符显示开关是否打开。 </p>
-<p><code>set print union</code><br>设置显示结构体时，是否显式其内的联合体数据。例如有以下数据结构：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">typedef enum &#123;Tree, Bug&#125; Species; </span><br><span class="line">typedef enum &#123;Big_tree, Acorn, Seedling&#125; Tree_forms; </span><br><span class="line">typedef enum &#123;Caterpillar, Cocoon, Butterfly&#125; </span><br><span class="line">Bug_forms; </span><br><span class="line">struct thing &#123; </span><br><span class="line">Species it; </span><br><span class="line">union &#123;</span><br><span class="line"></span><br><span class="line">Tree_forms tree; </span><br><span class="line">Bug_forms bug; </span><br><span class="line">&#125; form; </span><br><span class="line">&#125;; </span><br><span class="line">struct thing foo = &#123;Tree, &#123;Acorn&#125;&#125;;</span><br></pre></td></tr></table></figure></p>
-<p>当打开这个开关时，执行 p foo 命令后，会如下显示：<br><code>$1 = {it = Tree, form = {tree = Acorn, bug = Cocoon}}</code><br>当关闭这个开关时，执行 p foo 命令后，会如下显示：<br><code>$1 = {it = Tree, form = {...}}</code></p>
-<p><code>show print union</code><br>查看联合体数据的显示方式<br><code>set print object</code><br>在C++中，如果一个对象指针指向其派生类，如果打开这个选项，GDB会自动按照虚方法调用的规则显示输出，如果关闭这个选项的话，GDB就不管虚函数表了。这个选项默认是off。 </p>
-<p><code>show print object</code><br>查看对象选项的设置。</p>
-<p><code>set print static-members</code><br>这个选项表示，当显示一个C++对象中的内容是，是否显示其中的静态数据成员。默认是on。 </p>
-<p><code>show print static-members</code><br>查看静态数据成员选项设置。 </p>
-<p><code>set print vtbl</code><br>当此选项打开时，GDB将用比较规整的格式来显示虚函数表时。其默认是关闭的。 </p>
-<p><code>show print vtbl</code><br>查看虚函数显示格式的选项。</p>
+<p><code>set print sevenbit-strings</code>设置字符显示，是否按“/nnn”的格式显示，如果打开，则字符串或字符数据按/nnn显示，如“/065”。 </p>
+<p><code>show print sevenbit-strings</code>查看字符显示开关是否打开。 </p>
+<p><code>set print union</code>设置显示结构体时，是否显式其内的联合体数据。例如有以下数据结构：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="keyword">enum</span> &#123;Tree, Bug&#125; Species; </span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">enum</span> &#123;Big_tree, Acorn, Seedling&#125; Tree_forms; </span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">enum</span> &#123;Caterpillar, Cocoon, Butterfly&#125; </span><br><span class="line">Bug_forms; </span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">thing</span> &#123;</span> </span><br><span class="line">    Species it; </span><br><span class="line">    <span class="keyword">union</span> &#123;</span><br><span class="line">        Tree_forms tree; </span><br><span class="line">        Bug_forms bug; </span><br><span class="line">    &#125; form; </span><br><span class="line">&#125;; </span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">thing</span> <span class="title">foo</span> = &#123;</span>Tree, &#123;Acorn&#125;&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>当打开这个开关时，执行 p foo 命令后，会如下显示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$1 = &#123;it = Tree, form = &#123;tree = Acorn, bug = Cocoon&#125;&#125;</span><br></pre></td></tr></table></figure></p>
+<p>当关闭这个开关时，执行 p foo 命令后，会如下显示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$1 = &#123;it = Tree, form = &#123;...&#125;&#125;</span><br></pre></td></tr></table></figure></p>
+<p><code>show print union</code>查看联合体数据的显示方式 </p>
+<p><code>set print object</code>在C++中，如果一个对象指针指向其派生类，如果打开这个选项，GDB会自动按照虚方法调用的规则显示输出，如果关闭这个选项的话，GDB就不管虚函数表了。这个选项默认是off。 </p>
+<p><code>show print object</code>查看对象选项的设置。</p>
+<p><code>set print static-members</code>这个选项表示，当显示一个C++对象中的内容是，是否显示其中的静态数据成员。默认是on。 </p>
+<p><code>show print static-members</code>查看静态数据成员选项设置。 </p>
+<p><code>set print vtbl</code>当此选项打开时，GDB将用比较规整的格式来显示虚函数表时。其默认是关闭的。 </p>
+<p><code>show print vtbl</code>查看虚函数显示格式的选项。</p>
 <ol>
-<li><p>历史记录<br>当你用GDB的print查看程序运行时的数据时，你每一个print都会被GDB记录下来。GDB会以$1, $2, $3 …..这样的方式为你每一个print命令编上号。于是，你可以使用这个编号访问以前的表达式，如$1。这个功能所带来的好处是，如果你先前输入了一个比较长的表达式，如果你还想查看这个表达式的值，你可以使用历史记录来访问，省去了重复输入。</p>
+<li><p>历史记录。当你用GDB的print查看程序运行时的数据时，你每一个print都会被GDB记录下来。GDB会以$1, $2, $3 …..这样的方式为你每一个print命令编上号。于是，你可以使用这个编号访问以前的表达式，如$1。这个功能所带来的好处是，如果你先前输入了一个比较长的表达式，如果你还想查看这个表达式的值，你可以使用历史记录来访问，省去了重复输入。</p>
 </li>
-<li><p>GDB环境变量<br>你可以在GDB的调试环境中定义自己的变量，用来保存一些调试程序中的运行数据。要定义一个GDB的变量很简单只需。使用GDB的set命令。GDB的环境变量和UNIX一样，也是以$起头。如：<code>set $foo = *object_ptr</code></p>
+<li><p>GDB环境变量。你可以在GDB的调试环境中定义自己的变量，用来保存一些调试程序中的运行数据。要定义一个GDB的变量很简单只需。使用GDB的set命令。GDB的环境变量和UNIX一样，也是以$起头。如：<code>set $foo = *object_ptr</code></p>
 </li>
 </ol>
 <p>使用环境变量时，GDB会在你第一次使用时创建这个变量，而在以后的使用中，则直接对其賦值。环境变量没有类型，你可以给环境变量定义任一的类型。包括结构体和数组。 </p>
-<p><code>show convenience</code><br>该命令查看当前所设置的所有的环境变量。<br>这是一个比较强大的功能，环境变量和程序变量的交互使用，将使得程序调试更为灵活便捷。<br>例如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">set $i = 0 </span><br><span class="line">print bar[$i++]-&gt;contents</span><br></pre></td></tr></table></figure></p>
+<p><code>show convenience</code>该命令查看当前所设置的所有的环境变量。 这是一个比较强大的功能，环境变量和程序变量的交互使用，将使得程序调试更为灵活便捷。<br>例如：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">set</span> $i = <span class="number">0</span> </span><br><span class="line">print bar[$i++]-&gt;contents</span><br></pre></td></tr></table></figure></p>
 <p>于是，当你就不必，print bar[0]-&gt;contents, print bar[1]-&gt;contents地输入命令了。输入这样的命令后，只用敲回车，重复执行上一条语句，环境变量会自动累加，从而完成逐个输出的功能。</p>
 <ol>
 <li>查看寄存器<br>要查看寄存器的值，很简单，可以使用如下命令： </li>
 </ol>
 <p><code>info registers</code><br>查看寄存器的情况。（除了浮点寄存器） </p>
 <p><code>info all-registers</code><br>查看所有寄存器的情况。（包括浮点寄存器） </p>
-<p><code>info registers</code><br>查看所指定的寄存器的情况。<br>寄存器中放置了程序运行时的数据，比如程序当前运行的指令地址（ip），程序的当前堆栈地址（sp）等等。你同样可以使用print命令来访问寄存器的情况，只需要在寄存器名字前加一个$符号就可以了。如：p $eip。</p>
+<p><code>info registers</code><br>查看所指定的寄存器的情况。 </p>
+<p>寄存器中放置了程序运行时的数据，比如程序当前运行的指令地址（ip），程序的当前堆栈地址（sp）等等。你同样可以使用print命令来访问寄存器的情况，只需要在寄存器名字前加一个$符号就可以了。如：p $eip。</p>
 <ol>
 <li>改变程序的执行 </li>
 </ol>
 <p>一旦使用GDB挂上被调试程序，当程序运行起来后，你可以根据自己的调试思路来动态地在GDB中更改当前被调试程序的运行线路或是其变量的值，这个强大的功能能够让你更好的调试你的程序，比如，你可以在程序的一次运行中走遍程序的所有分支。 </p>
-<p>修改变量值<br>修改被调试程序运行时的变量值，在GDB中很容易实现，使用GDB的print命令即可完成。<br>如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(gdb) print x=4</span><br></pre></td></tr></table></figure></p>
-<p>x=4这个表达式是C/C++的语法，意为把变量x的值修改为4，如果你当前调试的语言是Pascal，那么你可以使用Pascal的语法：x:=4。<br>在某些时候，很有可能你的变量和GDB中的参数冲突，如： </p>
+<p>修改被调试程序运行时的变量值，在GDB中很容易实现，使用GDB的print命令即可完成。如：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(gdb) print x=<span class="number">4</span></span><br></pre></td></tr></table></figure></p>
+<p>x=4这个表达式是C/C++的语法，意为把变量x的值修改为4，如果你当前调试的语言是Pascal，那么你可以使用Pascal的语法：x:=4。 </p>
+<p>在某些时候，很有可能你的变量和GDB中的参数冲突，如： </p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">(gdb) whatis width </span><br><span class="line">type = double </span><br><span class="line">(gdb) p width </span><br><span class="line">$4 = 13 </span><br><span class="line">(gdb) set width=47 </span><br><span class="line">Invalid syntax in expression.</span><br></pre></td></tr></table></figure>
-<p>因为，set width是GDB的命令，所以，出现了“Invalid syntax in expression”的设置错误，此时，你可以使用set var命令来告诉GDB，width不是你GDB的参数，而是程序的变量名，如：<br><code>(gdb) set var width=47</code></p>
+<p>因为，set width是GDB的命令，所以，出现了“Invalid syntax in expression”的设置错误，此时，你可以使用set var命令来告诉GDB，width不是你GDB的参数，而是程序的变量名，如： <code>(gdb) set var width=47</code></p>
 <p>另外，还可能有些情况，GDB并不报告这种错误，所以保险起见，在你改变程序变量取值时，最好都使用set var格式的GDB命令。 </p>
-<p>跳转执行<br>一般来说，被调试程序会按照程序代码的运行顺序依次执行。GDB提供了乱序执行的功能，也就是说，GDB可以修改程序的执行顺序，可以让程序执行随意跳跃。这个功能可以由GDB的jump命令来完：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jump</span><br></pre></td></tr></table></figure></p>
-<p>指定下一条语句的运行点。可以是文件的行号，可以是file:line格式，可以是+num这种偏移量格式。表式着下一条运行语句从哪里开始。<br>注意，jump命令不会改变当前的程序栈中的内容，所以，当你从一个函数跳到另一个函数时，当函数运行完返回时进行弹栈操作时必然会发生错误，可能结果还是非常奇怪的，甚至于产生程序Core Dump。所以最好是同一个函数中进行跳转。 熟悉汇编的人都知道，程序运行时，有一个寄存器用于保存当前代码所在的内存地址。所以，jump命令也就是改变了这个寄存器中的值。于是，你可以使用“set $pc”来更改跳转执行的地址。如：<br><code>set $pc = 0x485</code></p>
-<p>产生信号量<br>使用singal命令，可以产生一个信号量给被调试的程序。如：中断信号Ctrl+C。这非常方便于程序的调试，可以在程序运行的任意位置设置断点，并在该断点用GDB产生一个信号量，这种精确地在某处产生信号非常有利程序的调试。 语法是：signal ，UNIX的系统信号量通常从1到15。所以取值也在这个范围。<br>single命令和shell的kill命令不同，系统的kill命令发信号给被调试程序时，是由GDB截获的，而single命令所发出一信号则是直接发给被调试程序的。 </p>
-<p>强制函数返回<br>如果你的调试断点在某个函数中，并还有语句没有执行完。你可以使用return命令强制函数忽略还没有执行的语句并返回。<br><code>return</code><br>使用return命令取消当前函数的执行，并立即返回，如果指定了，那么该表达式的值会被认作函数的返回值。 </p>
-<p>强制调用函数</p>
-<p><code>call</code>表达式中可以一是函数，以此达到强制调用函数的目的。并显示函数的返回值，如果函数返回值是void，那么就不显示。 另一个相似的命令也可以完成这一功能——print，print后面可以跟表达式，所以也可以用他来调用函数，print和call的不同是，如果函数返回void，call则不显示，print则显示函数返回值，并把该值存入历史数据中。 </p>
-<p>GDB支持下列语言：C, C++, Fortran, PASCAL, Java, Chill, assembly, 和 Modula-2。一般说来，GDB会根据你所调试的程序来确定当然的调试语言，比如：发现文件名后缀为“.c”的，GDB会认为是C程序。文件名后缀为“.C, .cc, .cp, .cpp, .cxx, .c++”的，GDB会认为是C++程序。而后缀是“.f, .F”的，GDB会认为是Fortran程序，还有，后缀为如果是“.s, .S”的会认为是汇编语言。 也就是说，GDB会根据你所调试的程序的语言，来设置自己的语言环境，并让GDB的命令跟着语言环境的改变而改变。比如一些GDB命令需要用到表达式或变量时，这些表达式或变量的语法，完全是根据当前的语言环境而改变的。例如C/C++中对指针的语法是*p，而在Modula-2中则是p^。并且，如果你当前的程序是由几种不同语言一同编译成的，那到在调试过程中，GDB也能根据不同的语言自动地切换语言环境。这种跟着语言环境而改变的功能，真是体贴开发人员的一种设计。 </p>
-<p>下面是几个相关于GDB语言环境的命令：<br><code>show language</code><br>查看当前的语言环境。如果GDB不能识为你所调试的编程语言，那么，C语言被认为是默<br>认的环境。 </p>
-<p><code>info frame</code><br>查看当前函数的程序语言。 </p>
-<p><code>info source</code><br>查看当前文件的程序语言。<br>如果GDB没有检测出当前的程序语言，那么你也可以手动设置当前的程序语言。使用set language命令即可做到。<br>当set language命令后什么也不跟的话，你可以查看GDB所支持的语言种类：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">(gdb) set language </span><br><span class="line">The currently understood settings are: </span><br><span class="line">local or auto Automatic setting based on source file </span><br><span class="line">c Use the C language </span><br><span class="line">c++ Use the C++ language </span><br><span class="line">asm Use the Asm language </span><br><span class="line">chill Use the Chill language </span><br><span class="line">fortran Use the Fortran language </span><br><span class="line">java Use the Java language </span><br><span class="line">modula-2 Use the Modula-2 language </span><br><span class="line">pascal Use the Pascal language </span><br><span class="line">scheme Use the Scheme language</span><br></pre></td></tr></table></figure></p>
+<ol>
+<li>跳转执行。一般来说，被调试程序会按照程序代码的运行顺序依次执行。GDB提供了乱序执行的功能，也就是说，GDB可以修改程序的执行顺序，可以让程序执行随意跳跃。这个功能可以由GDB的jump命令来完： <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jump</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>指定下一条语句的运行点。可以是文件的行号，可以是file:line格式，可以是+num这种偏移量格式。表式着下一条运行语句从哪里开始。 </p>
+<p>注意，jump命令不会改变当前的程序栈中的内容，所以，当你从一个函数跳到另一个函数时，当函数运行完返回时进行弹栈操作时必然会发生错误，可能结果还是非常奇怪的，甚至于产生程序Core Dump。所以最好是同一个函数中进行跳转。 熟悉汇编的人都知道，程序运行时，有一个寄存器用于保存当前代码所在的内存地址。所以，jump命令也就是改变了这个寄存器中的值。于是，你可以使用“set $pc”来更改跳转执行的地址。如：<br><code>set $pc = 0x485</code></p>
+<ol>
+<li>产生信号量。使用singal命令，可以产生一个信号量给被调试的程序。如：中断信号Ctrl+C。这非常方便于程序的调试，可以在程序运行的任意位置设置断点，并在该断点用GDB产生一个信号量，这种精确地在某处产生信号非常有利程序的调试。 语法是：signal ，UNIX的系统信号量通常从1到15。所以取值也在这个范围。 </li>
+</ol>
+<p>single命令和shell的kill命令不同，系统的kill命令发信号给被调试程序时，是由GDB截获的，而single命令所发出一信号则是直接发给被调试程序的。 </p>
+<ol>
+<li>强制函数返回。如果你的调试断点在某个函数中，并还有语句没有执行完。你可以使用return命令强制函数忽略还没有执行的语句并返回。</li>
+</ol>
+<p><code>return</code>使用return命令取消当前函数的执行，并立即返回，如果指定了，那么该表达式的值会被认作函数的返回值。 </p>
+<ol>
+<li>强制调用函数。<code>call</code>表达式中可以一是函数，以此达到强制调用函数的目的。并显示函数的返回值，如果函数返回值是void，那么就不显示。 另一个相似的命令也可以完成这一功能——print，print后面可以跟表达式，所以也可以用他来调用函数，print和call的不同是，如果函数返回void，call则不显示，print则显示函数返回值，并把该值存入历史数据中。 </li>
+</ol>
+<p>GDB支持下列语言：C, C++, Fortran, PASCAL, Java, Chill, assembly, 和 Modula-2。一般说来，GDB会根据你所调试的程序来确定当然的调试语言，比如：发现文件名后缀为“.c”的，GDB会认为是C程序。文件名后缀为“.C, .cc, .cp, .cpp, .cxx, .c++”的，GDB会认为是C++程序。而后缀是“.f, .F”的，GDB会认为是Fortran程序，还有，后缀为如果是“.s, .S”的会认为是汇编语言。 也就是说，GDB会根据你所调试的程序的语言，来设置自己的语言环境，并让GDB的命令跟着语言环境的改变而改变。比如一些GDB命令需要用到表达式或变量时，这些表达式或变量的语法，完全是根据当前的语言环境而改变的。</p>
+<p>下面是几个相关于GDB语言环境的命令： </p>
+<p><code>show language</code>查看当前的语言环境。如果GDB不能识为你所调试的编程语言，那么，C语言被认为是默认的环境。 </p>
+<p><code>info frame</code>查看当前函数的程序语言。 </p>
+<p><code>info source</code>查看当前文件的程序语言。 </p>
+<p>如果GDB没有检测出当前的程序语言，那么你也可以手动设置当前的程序语言。使用set language命令即可做到。 </p>
+<p>当set language命令后什么也不跟的话，你可以查看GDB所支持的语言种类：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">(gdb) set language </span><br><span class="line">The currently understood settings are: </span><br><span class="line">local or auto Automatic setting based on source file </span><br><span class="line">c Use the C language </span><br><span class="line">c++ Use the C++ language </span><br><span class="line">asm Use the Asm language </span><br><span class="line">chill Use the Chill language </span><br><span class="line">fortran Use the Fortran language </span><br><span class="line">java Use the Java language </span><br><span class="line">modula-2 Use the Modula-2 language </span><br><span class="line">pascal Use the Pascal language </span><br><span class="line">scheme Use the Scheme language</span><br></pre></td></tr></table></figure></p>
 <p>于是你可以在set language后跟上被列出来的程序语言名，来设置当前的语言环境。 </p>
+<h1 id="多进程、多线程"><a href="#多进程、多线程" class="headerlink" title="多进程、多线程"></a>多进程、多线程</h1><h2 id="多进程"><a href="#多进程" class="headerlink" title="多进程"></a>多进程</h2><p>GDB在调试多进程程序（程序含fork调用）时，默认只追踪父进程。可以通过命令设置，实现只追踪父进程或子进程，或者同时调试父进程和子进程。</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>info inferiors</td>
+<td>查看进程列表</td>
+</tr>
+<tr>
+<td>attach pid</td>
+<td>绑定进程id</td>
+</tr>
+<tr>
+<td>inferior num</td>
+<td>切换到指定进程上进行调试</td>
+</tr>
+<tr>
+<td>print $_exitcode</td>
+<td>显示程序退出时的返回值</td>
+</tr>
+<tr>
+<td>set follow-fork-mode child</td>
+<td>追踪子进程</td>
+</tr>
+<tr>
+<td>set follow-fork-mode parent</td>
+<td>追踪父进程</td>
+</tr>
+<tr>
+<td>set detach-on-fork on</td>
+<td>fork调用时只追踪其中一个进程</td>
+</tr>
+<tr>
+<td>set detach-on-fork off</td>
+<td>fork调用时会同时追踪父子进程</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>在调试多进程程序时候，默认情况下，除了当前调试的进程，其他进程都处于挂起状态，所以，如果需要在调试当前进程的时候，其他进程也能正常执行，那么通过设置set schedule-multiple on即可。</p>
+<p>同上面一样，我们仍然以一个例子进行模拟多进程调试，代码如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">pid_t</span> pid = fork();</span><br><span class="line">    <span class="keyword">if</span> (pid == <span class="number">-1</span>) &#123;</span><br><span class="line">       perror(<span class="string">"fork error\n"</span>);</span><br><span class="line">       <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  </span><br><span class="line">    <span class="keyword">if</span>(pid == <span class="number">0</span>) &#123; <span class="comment">// 子进程</span></span><br><span class="line">        <span class="keyword">int</span> num = <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">while</span>(num == <span class="number">1</span>)&#123;</span><br><span class="line">          sleep(<span class="number">10</span>);</span><br><span class="line">         &#125;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"this is child,pid = %d\n"</span>, getpid());</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123; <span class="comment">// 父进程</span></span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"this is parent,pid = %d\n"</span>, getpid());</span><br><span class="line">      wait(<span class="literal">NULL</span>); <span class="comment">// 等待子进程退出</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在上面代码中，包含两个进程，一个是父进程(也就是main进程)，另外一个是由fork()函数创建的子进程。</p>
+<p>在默认情况下，在多进程程序中，GDB只调试main进程，也就是说无论程序调用了多少次fork()函数创建了多少个子进程，GDB在默认情况下，只调试父进程。为了支持多进程调试，从GDB版本7.0开始支持单独调试(调试父进程或者子进程)和同时调试多个进程。</p>
+<p>那么，我们该如何调试子进程呢？我们可以使用如下几种方式进行子进程调试。</p>
+<h3 id="attach"><a href="#attach" class="headerlink" title="attach"></a>attach</h3><p>首先，无论是父进程还是子进程，都可以通过attach命令启动gdb进行调试。我们都知道，对于每个正在运行的程序，操作系统都会为其分配一个唯一ID号，也就是进程ID。如果我们知道了进程ID，就可以使用attach命令对其进行调试了。</p>
+<p>在上面代码中，fork()函数创建的子进程内部，首先会进入while循环sleep，然后在while循环之后调用printf函数。这样做的目的有如下：</p>
+<p>帮助attach捕获要调试的进程id<br>在使用gdb进行调试的时候，真正的代码(即print函数)没有被执行，这样就可以从头开始对子进程进行调试</p>
+<p>使用如下命令编译生成可执行文件test_process<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">g++ -g test_process.cc -o test_process</span><br></pre></td></tr></table></figure></p>
+<p>现在，我们开始尝试启动调试。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">gdb -q ./test_process</span><br><span class="line">Reading symbols from /root/test_process...done.</span><br><span class="line">(gdb)</span><br></pre></td></tr></table></figure></p>
+<p>这里需要说明下，之所以加-q选项，是想去掉其他不必要的输出，q为quite的缩写。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">(gdb) r</span><br><span class="line">Starting program: /root/./test_process</span><br><span class="line">Detaching after fork from child process 37482.</span><br><span class="line">this is parent,pid = 37478</span><br><span class="line">[Inferior 1 (process 37478) exited normally]</span><br><span class="line">Missing separate debuginfos, use: debuginfo-install glibc-2.17-260.el7.x86_64 libgcc-4.8.5-36.el7.x86_64 libstdc++-4.8.5-36.el7.x86_64</span><br><span class="line">(gdb) attach 37482</span><br><span class="line">//符号类输出，此处略去</span><br><span class="line">(gdb) n</span><br><span class="line">Single stepping until exit from function __nanosleep_nocancel,</span><br><span class="line">which has no line number information.</span><br><span class="line">0x00007ffff72b3cc4 in sleep () from /lib64/libc.so.6</span><br><span class="line">(gdb)</span><br><span class="line">Single stepping until exit from function sleep,</span><br><span class="line">which has no line number information.</span><br><span class="line">main () at test_process.cc:8</span><br><span class="line">8       while(num==10)&#123;</span><br><span class="line">(gdb)</span><br></pre></td></tr></table></figure></p>
+<p>在上述命令中，我们执行了n(next的缩写)，使其重新对while循环的判断体进行判断。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">(gdb) set num = 1</span><br><span class="line">(gdb) n</span><br><span class="line">12       printf(&quot;this is child,pid = %d\n&quot;,getpid());</span><br><span class="line">(gdb) c</span><br><span class="line">Continuing.</span><br><span class="line">this is child,pid = 37482</span><br><span class="line">[Inferior 1 (process 37482) exited normally]</span><br><span class="line">(gdb)</span><br></pre></td></tr></table></figure></p>
+<p>为了退出while循环，我们使用set命令设置了num的值为1，这样条件就会失效退出while循环，进而执行下面的printf()函数；在最后我们执行了c(continue的缩写)命令，支持程序退出。</p>
+<h3 id="指定进程"><a href="#指定进程" class="headerlink" title="指定进程"></a>指定进程</h3><p>默认情况下，GDB调试多进程程序时候，只调试父进程。GDB提供了两个命令，可以通过follow-fork-mode和detach-on-fork来指定调试父进程还是子进程。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">follow-fork-mode</span><br></pre></td></tr></table></figure></p>
+<p>该命令的使用方式为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(gdb) set follow-fork-mode mode</span><br></pre></td></tr></table></figure></p>
+<p>其中，mode有以下两个选项：</p>
+<ul>
+<li>parent:父进程，mode的默认选项</li>
+<li>child:子进程，其目的是告诉 gdb 在目标应用调用fork之后接着调试子进程而不是父进程，因为在Linux系统中fork()系统调用成功会返回两次，一次在父进程，一次在子进程</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">(gdb) show follow-fork-mode</span><br><span class="line">Debugger response to a program call of fork or vfork is &quot;parent&quot;.</span><br><span class="line">(gdb) set follow-fork-mode child</span><br><span class="line">(gdb) r</span><br><span class="line">Starting program: /root/./test_process</span><br><span class="line">[New process 37830]</span><br><span class="line">this is parent,pid = 37826</span><br><span class="line"></span><br><span class="line">^C</span><br><span class="line">Program received signal SIGINT, Interrupt.</span><br><span class="line">[Switching to process 37830]</span><br><span class="line">0x00007ffff72b3e10 in __nanosleep_nocancel () from /lib64/libc.so.6</span><br><span class="line">Missing separate debuginfos, use: debuginfo-install glibc-2.17-260.el7.x86_64 libgcc-4.8.5-36.el7.x86_64 libstdc++-4.8.5-36.el7.x86_64</span><br><span class="line">(gdb) n</span><br><span class="line">Single stepping until exit from function __nanosleep_nocancel,</span><br><span class="line">which has no line number information.</span><br><span class="line">0x00007ffff72b3cc4 in sleep () from /lib64/libc.so.6</span><br><span class="line">(gdb) n</span><br><span class="line">Single stepping until exit from function sleep,</span><br><span class="line">which has no line number information.</span><br><span class="line">main () at test_process.cc:8</span><br><span class="line">8       while(num==10)&#123;</span><br><span class="line">(gdb) show follow-fork-mode</span><br><span class="line">Debugger response to a program call of fork or vfork is &quot;child&quot;.</span><br><span class="line">(gdb)</span><br></pre></td></tr></table></figure>
+<p>在上述命令中，我们做了如下操作：</p>
+<ul>
+<li>show follow-fork-mode:通过该命令来查看当前处于什么模式下，通过输出可以看出，处于parent即父进程模式</li>
+<li>set follow-fork-mode child:指定调试子进程模式</li>
+<li>r:运行程序，直接运行程序，此时会进入子进程，然后执行while循环</li>
+<li>ctrl + c:通过该命令，可以使得GDB收到SIGINT命令，从而暂停执行while循环</li>
+<li>n(next):继续执行，进而进入到while循环的条件判断处</li>
+<li>show follow-fork-mode:再次执行该命令，通过输出可以看出，当前处于child模式下</li>
+</ul>
+<p>如果一开始指定要调试子进程还是父进程，那么使用follow-fork-mode命令完全可以满足需求;但是如果想在调试过程中，想根据实际情况在父进程和子进程之间来回切换调试呢？</p>
+<p>GDB提供了另外一个命令：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(gdb) set detach-on-fork mode</span><br></pre></td></tr></table></figure></p>
+<p>其中mode有如下两个值：</p>
+<ul>
+<li>on:默认值，即表明只调试一个进程，可以是子进程，也可以是父进程</li>
+<li>off:程序中的每个进程都会被记录，进而我们可以对所有的进程进行调试</li>
+</ul>
+<p>如果选择关闭detach-on-fork模式(mode为off)，那么GDB将保留对所有被fork出来的进程控制，即可用调试所有被fork出来的进程。可用 使用info forks命令列出所有的可被GDB调试的fork进程，并可用使用fork命令从一个fork进程切换到另一个fork进程。</p>
+<ul>
+<li>info forks: 打印DGB控制下的所有被fork出来的进程列表。该列表包括fork id、进程id和当前进程的位置</li>
+<li>fork fork-id: 参数fork-id是GDB分配的内部fork编号，该编号可用通过上面的命令info forks获取</li>
+</ul>
+<h2 id="多线程"><a href="#多线程" class="headerlink" title="多线程"></a>多线程</h2><p>多线程开发在日常开发工作中很常见，所以多线程的调试技巧非常有必要掌握。</p>
+<p>默认调试多线程时，一旦程序中断，所有线程都将暂停。如果此时再继续执行当前线程，其他线程也会同时执行。</p>
+<p>|命令|作用|<br>|info threads|查看线程列表|<br>|print $_thread|显示当前正在调试的线程编号|<br>|set scheduler-locking on|调试一个线程时，其他线程暂停执行|<br>|set scheduler-locking off|调试一个线程时，其他线程同步执行|<br>|set scheduler-locking step|仅用step调试线程时其他线程不执行，用其他命令如next调试时仍执行|</p>
+<p>如果只关心当前线程，建议临时设置 scheduler-locking 为 on，避免其他线程同时运行，导致命中其他断点分散注意力。</p>
+<p>为了方便进行演示，我们创建一个简单的例子，代码如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;chrono&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;thread&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;vector&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">fun_int</span><span class="params">(<span class="keyword">int</span> n)</span> </span>&#123;</span><br><span class="line">  <span class="built_in">std</span>::this_thread::sleep_for(<span class="built_in">std</span>::chrono::seconds(<span class="number">10</span>));</span><br><span class="line">  <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"in fun_int n = "</span> &lt;&lt; n &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">fun_string</span><span class="params">(<span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span> &amp;s)</span> </span>&#123;</span><br><span class="line">  <span class="built_in">std</span>::this_thread::sleep_for(<span class="built_in">std</span>::chrono::seconds(<span class="number">10</span>));</span><br><span class="line">  <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"in fun_string s = "</span> &lt;&lt; s &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; v;</span><br><span class="line">  v.emplace_back(<span class="number">1</span>);</span><br><span class="line">  v.emplace_back(<span class="number">2</span>);</span><br><span class="line">  v.emplace_back(<span class="number">3</span>);</span><br><span class="line"></span><br><span class="line">  <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; v.size() &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">  <span class="built_in">std</span>::<span class="function">thread <span class="title">t1</span><span class="params">(fun_int, <span class="number">1</span>)</span></span>;</span><br><span class="line">  <span class="built_in">std</span>::<span class="function">thread <span class="title">t2</span><span class="params">(fun_string, <span class="string">"test"</span>)</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"after thread create"</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">  t1.join();</span><br><span class="line">  t2.join();</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>上述代码比较简单：</p>
+<ul>
+<li>函数fun_int的功能是休眠10s，然后打印其参数</li>
+<li>函数fun_string功能是休眠10s，然后打印其参数</li>
+<li>main函数中，创建两个线程，分别执行上述两个函数</li>
+</ul>
+<p>下面是一个完整的调试过程：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line">(gdb) b 27</span><br><span class="line">Breakpoint 1 at 0x4013d5: file test.cc, line 27.</span><br><span class="line">(gdb) b test.cc:32</span><br><span class="line">Breakpoint 2 at 0x40142d: file test.cc, line 32.</span><br><span class="line">(gdb) info b</span><br><span class="line">Num     Type           Disp Enb Address            What</span><br><span class="line">1       breakpoint     keep y   0x00000000004013d5 in main() at test.cc:27</span><br><span class="line">2       breakpoint     keep y   0x000000000040142d in main() at test.cc:32</span><br><span class="line">(gdb) r</span><br><span class="line">Starting program: /root/test</span><br><span class="line">[Thread debugging using libthread_db enabled]</span><br><span class="line">Using host libthread_db library &quot;/lib64/libthread_db.so.1&quot;.</span><br><span class="line"></span><br><span class="line">Breakpoint 1, main () at test.cc:27</span><br><span class="line">(gdb) c</span><br><span class="line">Continuing.</span><br><span class="line">3</span><br><span class="line">[New Thread 0x7ffff6fd2700 (LWP 44996)]</span><br><span class="line">in fun_int n = 1</span><br><span class="line">[New Thread 0x7ffff67d1700 (LWP 44997)]</span><br><span class="line"></span><br><span class="line">Breakpoint 2, main () at test.cc:32</span><br><span class="line">32   std::cout &lt;&lt; &quot;after thread create&quot; &lt;&lt; std::endl;</span><br><span class="line">(gdb) info threads</span><br><span class="line">  Id   Target Id         Frame</span><br><span class="line">  3    Thread 0x7ffff67d1700 (LWP 44997) &quot;test&quot; 0x00007ffff7051fc3 in new_heap () from /lib64/libc.so.6</span><br><span class="line">  2    Thread 0x7ffff6fd2700 (LWP 44996) &quot;test&quot; 0x00007ffff7097e2d in nanosleep () from /lib64/libc.so.6</span><br><span class="line">* 1    Thread 0x7ffff7fe7740 (LWP 44987) &quot;test&quot; main () at test.cc:32</span><br><span class="line">(gdb) thread 2</span><br><span class="line">[Switching to thread 2 (Thread 0x7ffff6fd2700 (LWP 44996))]</span><br><span class="line">#0  0x00007ffff7097e2d in nanosleep () from /lib64/libc.so.6</span><br><span class="line">(gdb) bt</span><br><span class="line">#0  0x00007ffff7097e2d in nanosleep () from /lib64/libc.so.6</span><br><span class="line">#1  0x00007ffff7097cc4 in sleep () from /lib64/libc.so.6</span><br><span class="line">#2  0x00007ffff796ceb9 in std::this_thread::__sleep_for(std::chrono::duration&lt;long, std::ratio&lt;1l, 1l&gt; &gt;, std::chrono::duration&lt;long, std::ratio&lt;1l, 1000000000l&gt; &gt;) () from /lib64/libstdc++.so.6</span><br><span class="line">#3  0x00000000004018cc in std::this_thread::sleep_for&lt;long, std::ratio&lt;1l, 1l&gt; &gt; (__rtime=...) at /usr/include/c++/4.8.2/thread:281</span><br><span class="line">#4  0x0000000000401307 in fun_int (n=1) at test.cc:9</span><br><span class="line">#5  0x0000000000404696 in std::_Bind_simple&lt;int (*(int))(int)&gt;::_M_invoke&lt;0ul&gt;(std::_Index_tuple&lt;0ul&gt;) (this=0x609080)</span><br><span class="line">    at /usr/include/c++/4.8.2/functional:1732</span><br><span class="line">#6  0x000000000040443d in std::_Bind_simple&lt;int (*(int))(int)&gt;::operator()() (this=0x609080) at /usr/include/c++/4.8.2/functional:1720</span><br><span class="line">#7  0x000000000040436e in std::thread::_Impl&lt;std::_Bind_simple&lt;int (*(int))(int)&gt; &gt;::_M_run() (this=0x609068) at /usr/include/c++/4.8.2/thread:115</span><br><span class="line">#8  0x00007ffff796d070 in ?? () from /lib64/libstdc++.so.6</span><br><span class="line">#9  0x00007ffff7bc6dd5 in start_thread () from /lib64/libpthread.so.0</span><br><span class="line">#10 0x00007ffff70d0ead in clone () from /lib64/libc.so.6</span><br><span class="line">(gdb) c</span><br><span class="line">Continuing.</span><br><span class="line">after thread create</span><br><span class="line">in fun_int n = 1</span><br><span class="line">[Thread 0x7ffff6fd2700 (LWP 45234) exited]</span><br><span class="line">in fun_string s = test</span><br><span class="line">[Thread 0x7ffff67d1700 (LWP 45235) exited]</span><br><span class="line">[Inferior 1 (process 45230) exited normally]</span><br><span class="line">(gdb) q</span><br></pre></td></tr></table></figure></p>
+<p>在上述调试过程中：</p>
+<ul>
+<li>b 27 在第27行加上断点</li>
+<li>b test.cc:32 在第32行加上断点(效果与b 32一致)</li>
+<li>info b 输出所有的断点信息</li>
+<li>r 程序开始运行，并在第一个断点处暂停</li>
+<li>c 执行c命令，在第二个断点处暂停，在第一个断点和第二个断点之间，创建了两个线程t1和t2</li>
+<li>info threads 输出所有的线程信息，从输出上可以看出，总共有3个线程，分别为main线程、t1和t2</li>
+<li>thread 2 切换至线程2</li>
+<li>bt 输出线程2的堆栈信息</li>
+<li>c 直至程序结束</li>
+<li>q 退出gdb</li>
+</ul>
 
       
     </div>
@@ -635,7 +1004,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">300</span>
+                  <span class="site-state-item-count">301</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -698,7 +1067,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#测试程序"><span class="nav-number">1.</span> <span class="nav-text">测试程序</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#调试原理"><span class="nav-number">2.</span> <span class="nav-text">调试原理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#调试过程"><span class="nav-number">3.</span> <span class="nav-text">调试过程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#GDB调试精粹"><span class="nav-number">4.</span> <span class="nav-text">GDB调试精粹</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、列文件清单"><span class="nav-number">4.1.</span> <span class="nav-text">一、列文件清单</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、执行程序"><span class="nav-number">4.2.</span> <span class="nav-text">二、执行程序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、显示数据"><span class="nav-number">4.3.</span> <span class="nav-text">三、显示数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四、设置与清除断点"><span class="nav-number">4.4.</span> <span class="nav-text">四、设置与清除断点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#五、断点的管理"><span class="nav-number">4.5.</span> <span class="nav-text">五、断点的管理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#六、单步执行"><span class="nav-number">4.6.</span> <span class="nav-text">六、单步执行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#七、函数的调用"><span class="nav-number">4.7.</span> <span class="nav-text">七、函数的调用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#八、-原文件的搜索"><span class="nav-number">4.8.</span> <span class="nav-text">八、 原文件的搜索</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#九、查看运行时数据"><span class="nav-number">4.9.</span> <span class="nav-text">九、查看运行时数据</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0-set-quotes-lq-”-lt-lt-”-rq-”-gt-gt-”-at-input-c-530"><span class="nav-number">5.</span> <span class="nav-text">0 set_quotes (lq=”&lt;&lt;”, rq=”&gt;&gt;”) at input.c:530</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#原理"><span class="nav-number">1.</span> <span class="nav-text">原理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#调试原理"><span class="nav-number">1.1.</span> <span class="nav-text">调试原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#attach运行的进程"><span class="nav-number">1.2.</span> <span class="nav-text">attach运行的进程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#断点原理"><span class="nav-number">1.3.</span> <span class="nav-text">断点原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#实现原理"><span class="nav-number">1.3.1.</span> <span class="nav-text">实现原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#设置原理"><span class="nav-number">1.3.2.</span> <span class="nav-text">设置原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#命中判断"><span class="nav-number">1.3.3.</span> <span class="nav-text">命中判断</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#条件判断"><span class="nav-number">1.3.4.</span> <span class="nav-text">条件判断</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#单步原理"><span class="nav-number">1.3.5.</span> <span class="nav-text">单步原理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#测试程序"><span class="nav-number">1.4.</span> <span class="nav-text">测试程序</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#调试原理-1"><span class="nav-number">1.4.1.</span> <span class="nav-text">调试原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#调试过程"><span class="nav-number">1.4.2.</span> <span class="nav-text">调试过程</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#GDB调试精粹"><span class="nav-number">2.</span> <span class="nav-text">GDB调试精粹</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、列文件清单"><span class="nav-number">2.1.</span> <span class="nav-text">一、列文件清单</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、执行程序"><span class="nav-number">2.2.</span> <span class="nav-text">二、执行程序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、显示数据"><span class="nav-number">2.3.</span> <span class="nav-text">三、显示数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四、设置与清除断点"><span class="nav-number">2.4.</span> <span class="nav-text">四、设置与清除断点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#五、断点的管理"><span class="nav-number">2.5.</span> <span class="nav-text">五、断点的管理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#六、单步执行"><span class="nav-number">2.6.</span> <span class="nav-text">六、单步执行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#七、函数的调用"><span class="nav-number">2.7.</span> <span class="nav-text">七、函数的调用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#八、-原文件的搜索"><span class="nav-number">2.8.</span> <span class="nav-text">八、 原文件的搜索</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">2.9.</span> <span class="nav-text">小结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#九、查看运行时数据"><span class="nav-number">2.10.</span> <span class="nav-text">九、查看运行时数据</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#多进程、多线程"><span class="nav-number">3.</span> <span class="nav-text">多进程、多线程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#多进程"><span class="nav-number">3.1.</span> <span class="nav-text">多进程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#attach"><span class="nav-number">3.1.1.</span> <span class="nav-text">attach</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#指定进程"><span class="nav-number">3.1.2.</span> <span class="nav-text">指定进程</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#多线程"><span class="nav-number">3.2.</span> <span class="nav-text">多线程</span></a></li></ol></li></ol></div>
             
 
           </div>
