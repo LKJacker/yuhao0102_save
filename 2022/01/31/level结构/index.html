@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="数据库,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Architecture整体架构leveldb 的架构图如下 LSM-Treeleveldb 是以 LSM-tree 为模型实现的。LSM-tree 将随机写转换为顺序写从而获得更高的写性能，大致思路如下：  数据分为2部分存储，共同维护一个有序的空间： 内存中维护最新的写数据 memtable，所有的写操作都在内存中进行，同时顺序写 WAL。 磁盘上维护较老的数据 sstable。 读操作先读内">
+<meta name="keywords" content="数据库">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LevelDB架构设计">
+<meta property="og:url" content="http://yoursite.com/2022/01/31/level结构/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="Architecture整体架构leveldb 的架构图如下 LSM-Treeleveldb 是以 LSM-tree 为模型实现的。LSM-tree 将随机写转换为顺序写从而获得更高的写性能，大致思路如下：  数据分为2部分存储，共同维护一个有序的空间： 内存中维护最新的写数据 memtable，所有的写操作都在内存中进行，同时顺序写 WAL。 磁盘上维护较老的数据 sstable。 读操作先读内">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/20220131150600.png">
+<meta property="og:image" content="http://yoursite.com/img/20220131150601.png">
+<meta property="og:image" content="http://yoursite.com/img/20220131150602.png">
+<meta property="og:image" content="http://yoursite.com/img/20220131150603.png">
+<meta property="og:image" content="http://yoursite.com/img/20220131150604.png">
+<meta property="og:image" content="http://yoursite.com/img/20220131150605.png">
+<meta property="og:image" content="http://yoursite.com/img/20220131150606.png">
+<meta property="og:image" content="http://yoursite.com/img/20220131150607.png">
+<meta property="og:image" content="http://yoursite.com/img/20220131150608.png">
+<meta property="og:image" content="http://yoursite.com/img/20220131150609.png">
+<meta property="og:updated_time" content="2022-01-31T14:56:00.999Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="LevelDB架构设计">
+<meta name="twitter:description" content="Architecture整体架构leveldb 的架构图如下 LSM-Treeleveldb 是以 LSM-tree 为模型实现的。LSM-tree 将随机写转换为顺序写从而获得更高的写性能，大致思路如下：  数据分为2部分存储，共同维护一个有序的空间： 内存中维护最新的写数据 memtable，所有的写操作都在内存中进行，同时顺序写 WAL。 磁盘上维护较老的数据 sstable。 读操作先读内">
+<meta name="twitter:image" content="http://yoursite.com/img/20220131150600.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2022/01/31/level结构/">
+
+
+
+
+
+  <title>LevelDB架构设计 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/resume.pdf" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-mybetterhalf">
+          <a href="/mybetterhalf/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            mybetterhalf
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2022/01/31/level结构/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">LevelDB架构设计</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2022-01-31T15:00:00+08:00">
+                2022-01-31
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Architecture"><a href="#Architecture" class="headerlink" title="Architecture"></a>Architecture</h1><h2 id="整体架构"><a href="#整体架构" class="headerlink" title="整体架构"></a>整体架构</h2><p>leveldb 的架构图如下<br><img src="/img/20220131150600.png" alt></p>
+<h2 id="LSM-Tree"><a href="#LSM-Tree" class="headerlink" title="LSM-Tree"></a>LSM-Tree</h2><p>leveldb 是以 LSM-tree 为模型实现的。LSM-tree 将随机写转换为顺序写从而获得更高的写性能，大致思路如下：</p>
+<ul>
+<li>数据分为2部分存储，共同维护一个有序的空间：<ul>
+<li>内存中维护最新的写数据 memtable，所有的写操作都在内存中进行，同时顺序写 WAL。</li>
+<li>磁盘上维护较老的数据 sstable。</li>
+<li>读操作先读内存中的数据，然后读磁盘上的数据。</li>
+</ul>
+</li>
+<li>在合适的时机进行 compaction:<ul>
+<li>当内存中的数据大小超过阈值时，刷新到磁盘上。</li>
+<li>在合适的时机清理、合并磁盘上的数据。</li>
+</ul>
+</li>
+</ul>
+<p>LSM-tree 是一种设计思想，没有固定的实现方式，其中最重要的是 compaction 的实现，涉及到 compaction 的时机、 sstable 的组织方式、 memtable 和 sstable 间的合并方式。compaction 对读写性能起着至关重要的影响，它会清理无用数据，能够降低磁盘空间使用并降低读的延迟，但是也会带来极大的 I/O 压力。 compaction 主要考虑如下几个因素:</p>
+<ul>
+<li>写放大: 要减少 compaction 时涉及到的无关数据量。</li>
+<li>读放大: 减少读数据时，读取的无关数据量。</li>
+<li>随机 I/O: 尽量减少随机 I/O。</li>
+</ul>
+<p>考虑最基本的情况，磁盘上维护一个大的 sstable，当 memtable 大小超过阈值时，就与磁盘上的 sstable 合并。可以是 in-place 的修改，可能伴随着很多随机 I/O，或者顺序写生成新的 sstable， 但可能要将整个 sstable 进行重写，会带来极大的写放大。现在只关注后面一种方式，一步步进行优化:</p>
+<ol>
+<li>不是每次 memtable 大小超过阈值就与 sstable 合并，而是将 memtable 转储为 sstable，当到了一定数量后批量合并，从而减少合并的次数。同时需要控制 sstable 的数量，因为读可能需要读每个 sstable，数量太多会降低读的性能。</li>
+<li>但每次合并仍有可能将整个 sstable 重写，为了降低写放大，将大的 sstable 划分为多个小的、不重叠的 sstable，这样 sstable 就分为2层：level-0 是 memtable 直接转换而来，文件之间有重叠；level-1 由 level-0 合并而来，文件之间无重叠。当 level-0 的文件个数达到上限时，只要挑选 level-1 中和 level-0 文件有重叠的合并即可，读 level-1 也只要读一个文件。 但仍有可能 level-1 中所有的 sstable 都需要合并，所以又要限制 level-1 的大小。</li>
+<li>当 level-1 的 sstable 达到上限时，使用类似的方法 compaction 为 level-2 的 sstable。level-2 达到上限，再 compaction 为 level-3……</li>
+</ol>
+<p>leveldb 就是类似上面的思路分层管理 sstable，所以叫 leveldb。现在看一下它的实现：</p>
+<ul>
+<li>memtable 由 skiplist 实现，只有追加操作，每个操作先顺序写到 log 中。</li>
+<li>当 memtable 大小超过阈值时(默认为 4MB)，变为 immutable memtable，在后台线程 compaction 为 level-0 的 sstable。</li>
+<li>sstable 的大小固定，默认为 2MB。</li>
+<li>共分为 7 层:<ul>
+<li>level-0 由 memtable 直接转化而来，文件之间有重叠。当 level-0 的 sstable 数量到达阈值时，会将 level-0 中相互重叠的 sstable 和 level-1 中重叠的 sstable 合并为新的 level-1 的 sstable。</li>
+<li>其余 level 由低层 compaction 而来，除最高层外，每层有大小限制，level-(N+1) 的大小限制是 level-N 的 10 倍，其中level-1 为 10MB。相同 level 的文件之间无重叠。当 level-N 的 sstable 大小到达阈值时，会挑选一个文件(可能不止一个)和 level-(N+1) 中有重叠的 sstable 合并为新的 level-(N+1) 的 sstable。</li>
+</ul>
+</li>
+<li>所有的写操作，包括 compacion 都是顺序写。</li>
+<li>读的顺序如下，只要读到对应的 key 就会停止:<ul>
+<li>memtable</li>
+<li>immutable memtable</li>
+<li>level-0 中文件有重叠，从新到旧读取</li>
+<li>其余 level 文件不重叠，每层最多只要读 1 个文件，按照层的顺序从低到高读取</li>
+</ul>
+</li>
+</ul>
+<h2 id="并发控制"><a href="#并发控制" class="headerlink" title="并发控制"></a>并发控制</h2><p>leveldb 使用 MVCC 实现并发控制，不支持事务，支持单个写操作和多个读操作同时执行:</p>
+<ul>
+<li>每个成功的写操作会更新 db 内部维护的顺序递增的 sequence，sequence 会追加到 key 后一同保存。</li>
+<li>读操作会使用当前最新的 sequence(或者使用传入的 snapshot)，只会读到小于等于自己的最大的 sequence 数据。</li>
+</ul>
+<p>因为 compaction 会改变磁盘上文件的组织，为了不影响正在进行的操作，leveldb 使用 VersionSet 维护不同版本的 sstable 组织，每当有文件删除或增加时，就会创建新的 Version 插入到 VersionSet。只有当一个 sstable 不再被任意 Version 使用时才会进行删除。</p>
+<h2 id="数据恢复"><a href="#数据恢复" class="headerlink" title="数据恢复"></a>数据恢复</h2><p>leveldb 中每个 db 对应一个目录，目录名即 dbname。目录下有如下几种文件:</p>
+<ul>
+<li><code>LOG</code>: 记录操作日志。</li>
+<li><code>*.log</code>: 记录 memtable 的 WAL。</li>
+<li><code>*.ldb(*.sst)</code>: sstable 文件。</li>
+<li><code>MANIFEST-*</code>: 记录元信息，如 sstable 的组织结构，每个 sstable 的 key range 等。</li>
+<li><code>CURRENT</code>: 记录当前的 MANIFEST 文件名。</li>
+<li><code>LOCK</code>: leveldb 不支持多个进程同时打开相同 db，会加文件锁。</li>
+</ul>
+<p>数据恢复主要就是通过 CURRENT 文件找到当前的 MANIFEST 文件读取之后进行清理和恢复操作。</p>
+<h1 id="Write"><a href="#Write" class="headerlink" title="Write"></a>Write</h1><p>leveldb 的写操作很简单，先写 WAL，然后写到 memtable:</p>
+<ul>
+<li>每个写操作都有 sequence，会一同记录在 key 中，通过 sequence 实现 MVCC。</li>
+<li>删除 key 时是插入一个 tombstone。</li>
+<li>所有的操作顺序追加到 log 中。</li>
+</ul>
+<h2 id="写操作执行"><a href="#写操作执行" class="headerlink" title="写操作执行"></a>写操作执行</h2><p>leveldb 不支持多个写操作同时执行，写操作会保存在 deque 中，只有队首的才会执行：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">Status DBImpl::Write(<span class="keyword">const</span> WriteOptions&amp; options, WriteBatch* my_batch) &#123;</span><br><span class="line">  <span class="function">Writer <span class="title">w</span><span class="params">(&amp;mutex_)</span></span>;</span><br><span class="line">  w.batch = my_batch;</span><br><span class="line">  w.sync = options.sync;</span><br><span class="line">  w.done = <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">  <span class="function">MutexLock <span class="title">l</span><span class="params">(&amp;mutex_)</span></span>;</span><br><span class="line">  writers_.push_back(&amp;w);</span><br><span class="line">  <span class="keyword">while</span> (!w.done &amp;&amp; &amp;w != writers_.front()) &#123;</span><br><span class="line">    w.cv.Wait();</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (w.done) &#123;</span><br><span class="line">    <span class="keyword">return</span> w.status;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure></p>
+<p>leveldb 会将写操作合并执行：队首的线程将 deque 中正在等待执行的写操作 batch 到当前线程中一起执行，执行后设置 done 通知其他线程完成。batch 能够提高写 WAL 的效率。</p>
+<h2 id="WAL"><a href="#WAL" class="headerlink" title="WAL"></a>WAL</h2><p>leveldb 不是直接将 kv 插入到 memtable 中，而是先生成 WAL，然后解析 WAL 插入，目的是为了减少重复代码，复用了重启时用 WAL 恢复 memtable 的代码。 WAL 的格式如下：</p>
+<p><img src="/img/20220131150601.png" alt></p>
+<p>WriteBatch 记录了当前 batch 的起始 Sequence，会追加在 key 后用于实现 MVCC，写操作合并就是修改 WriteBatch 的 Count 并追加 Record。</p>
+<h3 id="varint"><a href="#varint" class="headerlink" title="varint"></a>varint</h3><p>leveldb 中对 int 编码有2种格式:</p>
+<ul>
+<li>fixedint: 固定字节数的 little-endian 编码。</li>
+<li>varint: 变长字节数的 int 编码，目的是为了节省空间，把每个字节的最高位作为进位标志。因为编码后的每个字节只用到了 7 位，所以在最坏的情况下会比定长编码用的空间多， int32 最多用到 5 字节，int64 最多用到 10 字节：</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">char</span>* <span class="title">EncodeVarint32</span><span class="params">(<span class="keyword">char</span>* dst, <span class="keyword">uint32_t</span> v)</span> </span>&#123;</span><br><span class="line">  <span class="comment">// Operate on characters as unsigneds</span></span><br><span class="line">  <span class="keyword">unsigned</span> <span class="keyword">char</span>* ptr = <span class="keyword">reinterpret_cast</span>&lt;<span class="keyword">unsigned</span> <span class="keyword">char</span>*&gt;(dst);</span><br><span class="line">  <span class="keyword">static</span> <span class="keyword">const</span> <span class="keyword">int</span> B = <span class="number">128</span>;</span><br><span class="line">  <span class="keyword">if</span> (v &lt; (<span class="number">1</span>&lt;&lt;<span class="number">7</span>)) &#123;</span><br><span class="line">      *(ptr++) = v;</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (v &lt; (<span class="number">1</span>&lt;&lt;<span class="number">14</span>)) &#123;</span><br><span class="line">      *(ptr++) = v | B;</span><br><span class="line">      *(ptr++) = v&gt;&gt;<span class="number">7</span>;</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (v &lt; (<span class="number">1</span>&lt;&lt;<span class="number">21</span>)) &#123;</span><br><span class="line">      *(ptr++) = v | B;</span><br><span class="line">      *(ptr++) = (v&gt;&gt;<span class="number">7</span>) | B;</span><br><span class="line">      *(ptr++) = v&gt;&gt;<span class="number">14</span>;</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (v &lt; (<span class="number">1</span>&lt;&lt;<span class="number">28</span>)) &#123;</span><br><span class="line">      *(ptr++) = v | B;</span><br><span class="line">      *(ptr++) = (v&gt;&gt;<span class="number">7</span>) | B;</span><br><span class="line">      *(ptr++) = (v&gt;&gt;<span class="number">14</span>) | B;</span><br><span class="line">      *(ptr++) = v&gt;&gt;<span class="number">21</span>;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      *(ptr++) = v | B;</span><br><span class="line">      *(ptr++) = (v&gt;&gt;<span class="number">7</span>) | B;</span><br><span class="line">      *(ptr++) = (v&gt;&gt;<span class="number">14</span>) | B;</span><br><span class="line">      *(ptr++) = (v&gt;&gt;<span class="number">21</span>) | B;</span><br><span class="line">      *(ptr++) = v&gt;&gt;<span class="number">28</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">reinterpret_cast</span>&lt;<span class="keyword">char</span>*&gt;(ptr);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="log"><a href="#log" class="headerlink" title="log"></a>log</h3><p>leveldb 使用 log::Writer 写 log，包括 WAL 和 MANIFEST。log::Writer 会在具体内容之外增加如 checksum 之类的保护，用于检测 corruption，它的格式如下：</p>
+<p><img src="/img/20220131150602.png" alt></p>
+<p>log::Writer 将文件划分为固定大小的 Block(32 KB)，Record 不能跨越 Block，每个 Block 开始一定是一个新的 Record，这么做的目的是当一个 Block 的数据发生 corruption 时不会影响到其他的 Block。显然，单条 log 的大小可能会超过 Block size，通过 Record 中的 Type 区分：</p>
+<ul>
+<li>kFullType：当前 Block 中是完整的一条 log。</li>
+<li>kFirstType、kMiddleType、kLastType：组装成一条完整的 log。</li>
+</ul>
+<h2 id="memtable"><a href="#memtable" class="headerlink" title="memtable"></a>memtable</h2><p>个人认为 memtable 是 leveldb 里实现最复杂的部分。任意有序的结构都可以实现 memtable，leveldb 使用 skiplist 实现，因为结构简单， 更容易实现 lock-free 的支持一写多读的。</p>
+<h3 id="InternalKey"><a href="#InternalKey" class="headerlink" title="InternalKey"></a>InternalKey</h3><p>为了实现并发控制，每个写入的 key 会携带着 sequence，并且不能够修改之前写入的数据，而是插入新的数据。InternalKey 的格式如下：</p>
+<p><img src="/img/20220131150603.png" alt></p>
+<p>InternalKey 的比较按照：</p>
+<ul>
+<li>UserKey 升序：使用用户传入的 comparator 比较，默认是 memcmp。</li>
+<li>Sequence 降序。</li>
+<li>ValueType 降序：每个写操作都有不同的 sequence，所以 ValueType 用不到。</li>
+</ul>
+<p>查找的时候会根据传入的 snapshot 或者最新的 sequence 构造出 InternalKey 查询，只要查找到第一个大于等于自己的即可。</p>
+<p>leveldb 中 skiplist node 结构如下所示，只有 key 用于存储数据，所以 memtable 会构造如上所示的 Add/Delete 结构插入到 skiplist 中，通过 InternalKey 即可比较出大小， 后面追加的 value 不会影响先后顺序。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> Key, <span class="class"><span class="keyword">class</span> <span class="title">Comparator</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">SkipList</span>&lt;Key,Comparator&gt;:</span>:Node &#123;</span><br><span class="line">  Key <span class="keyword">const</span> key;</span><br><span class="line"> <span class="keyword">private</span>:</span><br><span class="line">  port::AtomicPointer next_[<span class="number">1</span>];</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<h3 id="skiplist"><a href="#skiplist" class="headerlink" title="skiplist"></a>skiplist</h3><p>leveldb 在插入和读取 memtable 的时候是不加锁的，全依赖 skiplist 实现并发控制。leveldb 实现的是支持一写多读的、lock-free 的 skiplist，skiplist 的原理不再赘述，主要看一下是如何实现并发控制的。 想要知道原理必须先理解 atomic pointer 的实现。</p>
+<p>leveldb 自己实现了 atomic pointer，具体原因可以查看 port/atomic_pointer.h 上面的注释，实现如下:<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">if</span> defined(ARCH_CPU_X86_FAMILY) &amp;&amp; defined(__GNUC__)</span></span><br><span class="line"><span class="function"><span class="keyword">inline</span> <span class="keyword">void</span> <span class="title">MemoryBarrier</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  __asm__ __volatile__(<span class="string">""</span> : : : <span class="string">"memory"</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AtomicPointer</span> &#123;</span></span><br><span class="line"> <span class="keyword">private</span>:</span><br><span class="line">  <span class="keyword">void</span>* rep_;</span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">  AtomicPointer() &#123; &#125;</span><br><span class="line">  explicit AtomicPointer(void* p) : rep_(p) &#123;&#125;</span><br><span class="line">  <span class="function"><span class="keyword">inline</span> <span class="keyword">void</span>* <span class="title">NoBarrier_Load</span><span class="params">()</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> rep_; &#125;</span><br><span class="line">  <span class="function"><span class="keyword">inline</span> <span class="keyword">void</span> <span class="title">NoBarrier_Store</span><span class="params">(<span class="keyword">void</span>* v)</span> </span>&#123; rep_ = v; &#125;</span><br><span class="line">  <span class="function"><span class="keyword">inline</span> <span class="keyword">void</span>* <span class="title">Acquire_Load</span><span class="params">()</span> <span class="keyword">const</span> </span>&#123;</span><br><span class="line">    <span class="keyword">void</span>* result = rep_; <span class="comment">// read-acquire</span></span><br><span class="line">    MemoryBarrier();</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="keyword">inline</span> <span class="keyword">void</span> <span class="title">Release_Store</span><span class="params">(<span class="keyword">void</span>* v)</span> </span>&#123;</span><br><span class="line">    MemoryBarrier();</span><br><span class="line">    rep_ = v; <span class="comment">// write-release</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>AtomicPointer 提供了以下语义(我认为的，可能这里就已经出错了)：</p>
+<ul>
+<li>原子性: store/load 是原子的，不会被其他线程看到 half-write，这里的原子性不包括原子变量的可见性。</li>
+<li>可见性: Release_Store/Acquire_Load 提供了 release/acquire 语义。Release_Store 立即对接下来的 Acquire_Load 可见(原子变量的可见性)；Release_Store 之前的写命令对 Acquire_Load 之后的读命令可见。</li>
+</ul>
+<p>我主要关注 linux on x86/64 下的实现，为了搞懂有一些细节需要了解：</p>
+<ul>
+<li>多核体系下，每个 CPU 有独占的 cache，使用 MESI 协议来保证 cache coherence。为了降低同步对性能的影响，每个 CPU 有 store buffer 和 invalidate queue 来缓冲相应的同步消息，对同步消息处理 的时机和顺序是不确定的。</li>
+<li>CPU 在保证单线程程序的正确运行的前提下，为了提高性能会对命令做乱序处理。多线程情况下，因为 store buffer 和 invalidate queue 的存在，其他线程的修改不会立即对另外的线程可见；受到 CPU 乱序和 对同步消息处理的顺序影响，可见的顺序也不能保证。</li>
+<li>memory barrier 用于保证多核之间操作的执行顺序，包含4类:<ul>
+<li>LoadLoad-barrier: memory barrier 前(后)的 load 不会乱序到 memory barrier 后(前)。</li>
+<li>LoadStore-barrier: memory barrier 前的 load(后的 store)不会乱序到 memory barrier 后(前)。</li>
+<li>StoreStore-barrier: memory barrier 前(后) 的 store 不会乱序到 memory barrier 后(前)。</li>
+<li>StoreLoad-barrier: memory barrier 前的 store(后的 load)不会乱序到 memory barrier 后(前)。</li>
+</ul>
+</li>
+<li>memory barrier 只能保证 memory oder，也即可见性顺序，如 x 操作完成可见，则 y 操作也一定完成可见，但并不能保证可见性，CPU 会尽最大努力保证可见性。memory barrier 一般成对使用，否则一个线程有序另一个乱序，最终的结果还是乱序。</li>
+<li>比 memory barrier 更高一层的语义是 acquire/release，同样也要成对使用:<ul>
+<li>acquire: 保证了在 acquire 之后的读写操作不会乱序到 acquire 前。</li>
+<li>release: 保证了在 release 之前的读写操作不会乱序到 release 后。</li>
+</ul>
+</li>
+<li>acquire/release 同样只保证可见性顺序，对可见的时机不能保证，需要有方法判断 acquire 或者 release 完成。一般将 load(RMW)/store(RMW) 操作和 memory barrier 搭配使用构成 acquire/release 语义， 对 load/store 操作和 memory barrier 的顺序有要求：<ul>
+<li>acquire: load/RMW 在前，memory barrier 在后，load/RMW 操作构成 read-acquire，防止了 LoadLoad/LoadStore 乱序。</li>
+<li>release: store/RMW 在后，memory barrier 在前，store/RMW 操作构成 write-release，防止了 LoadStore/StoreStore 乱序。</li>
+<li>这种顺序很符合逻辑，只有这样才能够确保 store 操作完成，之前的 release 操作一定完成；load 操作不会在 memory barrier 之后执行。</li>
+</ul>
+</li>
+<li>构成 acquire/release 语义的读写操作要操作相同的变量，同时需要是原子操作。</li>
+<li>除了 CPU 乱序，编译器也会在保证单线程程序正确性的前提下，对命令乱序处理，同样有 compiler barrier 保证编译的命令顺序。</li>
+</ul>
+<p>x86/64 是 strong memory model，load/store 自带 acquire/release 语义，只会出现操作不同地址的 StoreLoad 乱序。对于 naturally aligned native types 且大小不超过 memory bus 的变量读写操作是原子的 ，所以只要防止编译器乱序即可。所以 leveldb 的 AtomicPointer 在 gcc on x86 的实现中只使用了 compiler barrier。</p>
+<p>比较奇怪的是，按照我的理解 acquire/release 语义只能保证可见性顺序，所以不能保证对 AtomicPointer 的修改立即对其他线程可见，难道是可见的时间很短可以忽略不计，atomic variable 是如何保证可见性？ 可能是我什么地方疏漏了或者理解有误，这方面比较薄弱，以后会进一步需学习。后面分析 lock-free 时默认对 AtomicPointer 的 Release_Store 立即对 Acquire_Load 可见。</p>
+<h3 id="lock-free"><a href="#lock-free" class="headerlink" title="lock-free"></a>lock-free</h3><p>skiplist 只需要支持如下场景的线程安全即可：</p>
+<ul>
+<li>一写多读：写操作不影响正在进行的读操作。</li>
+<li>写之后读：写操作之后的读要立刻读到最新的写入。</li>
+<li>写之后写：写操作之后继续写入要保证线程安全。</li>
+</ul>
+<p>先来看一下 skiplist 的结构:<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> Key, <span class="class"><span class="keyword">class</span> <span class="title">Comparator</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">class</span> <span class="title">SkipList</span> &#123;</span></span><br><span class="line"> <span class="keyword">private</span>:</span><br><span class="line">  <span class="keyword">enum</span> &#123; kMaxHeight = <span class="number">12</span> &#125;;</span><br><span class="line"></span><br><span class="line">  Comparator <span class="keyword">const</span> compare_;</span><br><span class="line">  Arena* <span class="keyword">const</span> arena_;</span><br><span class="line"></span><br><span class="line">  Node* <span class="keyword">const</span> head_;</span><br><span class="line"></span><br><span class="line">  port::AtomicPointer max_height_;</span><br><span class="line"></span><br><span class="line">  Random rnd_;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> Key, <span class="class"><span class="keyword">class</span> <span class="title">Comparator</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">SkipList</span>&lt;Key,Comparator&gt;:</span>:Node &#123;</span><br><span class="line">  explicit Node(const Key&amp; k) : key(k) &#123; &#125;</span><br><span class="line"></span><br><span class="line">  Key <span class="keyword">const</span> key;</span><br><span class="line"></span><br><span class="line">  <span class="function">Node* <span class="title">Next</span><span class="params">(<span class="keyword">int</span> n)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">reinterpret_cast</span>&lt;Node*&gt;(next_[n].Acquire_Load());</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">SetNext</span><span class="params">(<span class="keyword">int</span> n, Node* x)</span> </span>&#123;</span><br><span class="line">    next_[n].Release_Store(x);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function">Node* <span class="title">NoBarrier_Next</span><span class="params">(<span class="keyword">int</span> n)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">reinterpret_cast</span>&lt;Node*&gt;(next_[n].NoBarrier_Load());</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">NoBarrier_SetNext</span><span class="params">(<span class="keyword">int</span> n, Node* x)</span> </span>&#123;</span><br><span class="line">    next_[n].NoBarrier_Store(x);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line"> <span class="keyword">private</span>:</span><br><span class="line">  port::AtomicPointer next_[<span class="number">1</span>];</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>leveldb 的 skiplist 的结构没什么特别的，查找和插入算法和不支持并发的区别也不大:</p>
+<p>查找：从最高层开始向右、向下查找。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> Key, <span class="class"><span class="keyword">class</span> <span class="title">Comparator</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">typename</span> <span class="title">SkipList</span>&lt;Key,Comparator&gt;:</span>:Node* SkipList&lt;Key,Comparator&gt;::FindGreaterOrEqual(<span class="keyword">const</span> Key&amp; key, Node** prev)</span><br><span class="line">  <span class="keyword">const</span> &#123;</span><br><span class="line">    Node* x = head_;</span><br><span class="line">    <span class="keyword">int</span> level = GetMaxHeight() - <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">    Node* next = x-&gt;Next(level); <span class="comment">// read-acquire</span></span><br><span class="line">    <span class="keyword">if</span> (KeyIsAfterNode(key, next)) &#123;</span><br><span class="line">        x = next;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (prev != <span class="literal">NULL</span>) prev[level] = x;</span><br><span class="line">        <span class="keyword">if</span> (level == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> next;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        level--;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>插入：查找算法会保存查找过程中每层中向下的结点，也就是被插入节点每层的 prev 结点，最后将被插入结点插入在 prev[] 后。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> Key, <span class="class"><span class="keyword">class</span> <span class="title">Comparator</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">void</span> <span class="title">SkipList</span>&lt;Key,Comparator&gt;:</span>:Insert(<span class="keyword">const</span> Key&amp; key) &#123;</span><br><span class="line">    Node* prev[kMaxHeight];</span><br><span class="line">    Node* x = FindGreaterOrEqual(key, prev);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> height = RandomHeight();</span><br><span class="line">    <span class="keyword">if</span> (height &gt; GetMaxHeight()) &#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = GetMaxHeight(); i &lt; height; i++) &#123;</span><br><span class="line">        prev[i] = head_;</span><br><span class="line">    &#125;</span><br><span class="line">    max_height_.NoBarrier_Store(<span class="keyword">reinterpret_cast</span>&lt;<span class="keyword">void</span>*&gt;(height));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    x = NewNode(key, height);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; height; i++) &#123;</span><br><span class="line">    x-&gt;NoBarrier_SetNext(i, prev[i]-&gt;NoBarrier_Next(i));</span><br><span class="line">    prev[i]-&gt;SetNext(i, x); <span class="comment">// write-release</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>需要注意的是使用 AtomicPointer 的地方:</p>
+<ul>
+<li>Skiplist::AtomicPointer max_height_：<ul>
+<li>插入：使用 NoBarrier_Store 设置。</li>
+<li>查找：使用 NoBarrier_Load 读取。</li>
+</ul>
+</li>
+<li>Node::AtomicPointer next_[1]：<ul>
+<li>插入：设置被插入结点的 next_[] 时用的是 NoBarrier_Store，设置 prev 结点的 next_[] 时使用 Release_Store。</li>
+<li>查找：使用 AcquireLoad 读取 next_[]。</li>
+</ul>
+</li>
+</ul>
+<p>前面的 AtomicPointer 分析可知：成对 Acquire_Load/Release_Store 能够保证在不同线程间立刻可见，且 Release_Store 之前的修改对 Acquire_Load 之后立即可见。因为查找是按照从高层向低层、从小 到大的顺序遍历，而插入的时候是按照从低层到高层、用 Release_Store 设置 prev 结点的 next_[]，确保了当观察到新插入的结点时，后续的遍历一定是个完好的 skiplist。</p>
+<p><img src="/img/20220131150604.png" alt></p>
+<p>查找操作只会有下面2种情形：</p>
+<ul>
+<li>观察不到新插入的结点。</li>
+<li>在某一层观察到新插入的结点，且更低层也会观察到，也就是完好的 skiplist。</li>
+</ul>
+<p>当读写同时发生时，上述两种情况都有可能发生，但都不会影响正确的结果，因为不会查找正在插入的 key(Sequence 只有写操作完成才会更新)。 需要注意一点，max_height_ 只保证了原子性，没有保证对 max_height_ 可见性，也没有保证对 next_[] 的可见性，但都不会影响读的结果。假设插入增大了 max_height_:</p>
+<ul>
+<li>读操作观察到了 max_height_ 的更新，对应上面两种情况分别是:</li>
+<li>新增的 level 的 head_ 都指向 NULL，leveldb 保证了 skiplist 中 NULL 是最大的，所以会立刻向下层查找。</li>
+<li>在某一层观察到了新插入的 key，继续遍历。</li>
+<li>读操作未观察到 max_height_ 的更新，直接从低层开始遍历不影响 skiplist 的查找。</li>
+</ul>
+<p>而当写之后再读刚写入的 key 时，因为写已经完成，一定会观察到新插入的 key。写之后写我个人觉得有点问题，写操作使用了查找操作来获取需要设置的 prev 结点，但是遍历的时候不能保证获取到最新的 max_height_， 所以设置 prev[] 时高层会有问题。但是注释写到插入操作时有外部同步：</p>
+<blockquote>
+<p>TODO(opt): We can use a barrier-free variant of FindGreaterOrEqual() here since Insert() is externally synchronized.</p>
+</blockquote>
+<h3 id="arena"><a href="#arena" class="headerlink" title="arena"></a>arena</h3><p>leveldb 自己实现了一个内存分配器 arena，用于分配 Node 和 Key 的空间，实现很简单，分配大小一般为 4KB 的 block，然后从 block 中分配需要的大小和对齐要求，对齐很重要，否则 AtomicPointer 就不是 原子操作了。</p>
+<p>leveldb 使用了类似 C 语言柔性数组的特性分配 Node，多分配的内存会用作 next_[]：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> Key, <span class="class"><span class="keyword">class</span> <span class="title">Comparator</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">SkipList</span>&lt;Key,Comparator&gt;:</span>:Node &#123;</span><br><span class="line">  Key <span class="keyword">const</span> key;</span><br><span class="line"> <span class="keyword">private</span>:</span><br><span class="line">  port::AtomicPointer next_[<span class="number">1</span>];</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> Key, <span class="class"><span class="keyword">class</span> <span class="title">Comparator</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">typename</span> <span class="title">SkipList</span>&lt;Key,Comparator&gt;:</span>:Node*</span><br><span class="line">SkipList&lt;Key,Comparator&gt;::NewNode(<span class="keyword">const</span> Key&amp; key, <span class="keyword">int</span> height) &#123;</span><br><span class="line">  <span class="keyword">char</span>* mem = arena_-&gt;AllocateAligned(</span><br><span class="line">      <span class="keyword">sizeof</span>(Node) + <span class="keyword">sizeof</span>(port::AtomicPointer) * (height - <span class="number">1</span>));</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">new</span> (mem) Node(key);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>使用 arena 带来的另一个问题是，因为 skiplist 是线程安全的，所以要保证 arena 也是线程安全的，leveldb 中 arena 的实现并不是线程安全的.</p>
+<h1 id="Compaction"><a href="#Compaction" class="headerlink" title="Compaction"></a>Compaction</h1><p>compaction 和读密切相关，sstable 文件的格式、sstable 的组织都会影响读的性能。leveldb 的 compaction 有两种：</p>
+<ul>
+<li>memtable 大小超过阈值时，转储为 level-0 的 sstable。</li>
+<li>sstable 的 compaction。</li>
+</ul>
+<h2 id="sstable"><a href="#sstable" class="headerlink" title="sstable"></a>sstable</h2><p>对 sstable 的操作只有2种：从 sstable 中查找 key和遍历 sstable。所以对 sstable 的要求如下：</p>
+<ul>
+<li>生成时要顺序写。</li>
+<li>支持高效的查找。</li>
+<li>要支持遍历。</li>
+</ul>
+<p>sstable 的格式如下：</p>
+<p><img src="/img/20220131150605.png" alt></p>
+<p>sstable 划分为 Block 存储，不同 Block 存储不同的数据：</p>
+<ul>
+<li>Data Block：有序存储 key value 数据。</li>
+<li>Meta Block：存储 metadata，目前 leveldb 中只存储 filter 信息。</li>
+<li>Metaindex Block：handle 用于索引 Block，包括 Block 的 offset 和 size。Metaindex Block 保存 Meta Block 的索引，目前只保存 filter.name 和 filter Block 索引。</li>
+<li>Index Block：保存每个 Data Block 最后一个 key 和该 Data Block 的索引。</li>
+<li>Footer：固定 48 Bytes，保存 Metaindex Block 和 Index Block 的索引，是解析的起点。</li>
+</ul>
+<p>sstable 生成时按顺序写入。当读取某个 key 时，按照如下顺序：</p>
+<ul>
+<li>解析 Footer，找到 Metaindex Block 和 Index Block 的位置。</li>
+<li>查找 Index Block 找到 key 属于的 Data Block 的位置。</li>
+<li>在 Data Block 中查找 key。</li>
+<li>若是有 filter，会在查找 Data Block 前先查找 filter，只有存在时才查找 Data Block。</li>
+</ul>
+<p>leveldb 在读取 sstable 时会把整个文件映射进来(mmap)，查找很高效。</p>
+<h3 id="Block"><a href="#Block" class="headerlink" title="Block"></a>Block</h3><p>Block 保存 key/value 对，并会进行压缩和校验(checksum)，格式如下：</p>
+<p><img src="/img/20220131150606.png" alt></p>
+<p>Block 中第一个 key 是完整的，按顺序解析时，通过拼接和前一个 key 重叠的加上 Delta 部分即可得到当前完整的 key。按顺序存放的 key 之间很可能会有重叠， 尤其是 leveldb 中很多 key 只有 sequence 不同，使用这种存储方式能够极大的降低数据存储量。因为 Block 的大小可能很大， 如 leveldb 默认配置 Data Block 大小为 4KB，存放的 key/value 可能很多，每次查找都要从头开始会很慢，而且只要开头的完整 key 有损坏，整个 Block 的数据都无法使用。 Block 增加了 restart points 来解决这些问题：</p>
+<ul>
+<li>每隔一定数量的 key/value 会有一个 restart point，如 Data Block 默认间隔为 16。restart point 的 shared bytes 为 0，存放完整的 key。</li>
+<li>Trailer 中记录 restart points 的 offset，查找时先二分查找 restart points 找到 key 所在的起始 restart point，然后顺序查找即可，避免了从头开始查找。</li>
+</ul>
+<p>Block 的查找算法如下：</p>
+<ul>
+<li>二分查找 restart points：找到最后一个 key &lt; target 的 restart point。</li>
+<li>然后从 restart point 开始顺序遍历，直到找到第一个 key &gt;= target。</li>
+</ul>
+<p>Block 还会进行压缩和校验，目前只支持 snappy 压缩。Block 不强制存放 key/value，如 filter Block 中只存放了 filter。</p>
+<h3 id="Data-Block"><a href="#Data-Block" class="headerlink" title="Data Block"></a>Data Block</h3><p>Data Block 按照上面格式存放 key/value，其中 key 是 InternalKey 的格式，包括 sequence 和 type，value 格式不变。当 Data Block 的大小超过配置的 block_size(默认为 4KB)时， 会创建一个新的 Data Block。</p>
+<p>需要注意根据 Block 的查找算法，若查找的 key 正好是 restart point，那么会从上一个 restart point 开始查找，不影响功能正确，但会多遍历一些 key。</p>
+<h3 id="Meta-Block"><a href="#Meta-Block" class="headerlink" title="Meta Block"></a>Meta Block</h3><p>目前 leveldb 中只有 filter 一种 metadata。leveldb 中使用 bloom filter，用于快速判断 key 是否存在，它的原理如下:</p>
+<ul>
+<li>对于一个 key 集合，使用固定大小的位图，假设 key 的个数为 n，位图大小为 m bits。</li>
+<li>集合内每个 key 计算出一组 hash 值，将对应的 bit 置位，假设每个 key 使用 k bits。</li>
+<li>查询 key 时使用相同的算法计算出 k bits，若每个 bit 都为 1，则这个 key 很可能存在；若不都为 1，则这个 key 一定不在。</li>
+</ul>
+<p>bloom filter 的关键就是降低 false positive 的概率，false positive 即 bloom filter 认为这个 key 存在但不存在</p>
+<p>一般情况下，key 的数量是已知的，位图的大小是根据 key 个数决定的，那么 n 和 m 是固定，最优的 k 为： k = ln2 * m/n。m/n 即 bits_per_key， 所以 leveldb 中 bloom filter 会乘以 ln2(0.69) 得到 hash 的次数，不过并不是计算多次 hash，而是计算一次 hash， 之后的 bit 直接加上一个 delta 得到，避免了多次 hash 带来的性能消耗：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">explicit</span> <span class="title">BloomFilterPolicy</span><span class="params">(<span class="keyword">int</span> bits_per_key)</span></span></span><br><span class="line">    : bits_per_key_(bits_per_key) &#123;</span><br><span class="line">  <span class="comment">// We intentionally round down to reduce probing cost a little bit</span></span><br><span class="line">  k_ = <span class="keyword">static_cast</span>&lt;<span class="keyword">size_t</span>&gt;(bits_per_key * <span class="number">0.69</span>);  <span class="comment">// 0.69 =~ ln(2)</span></span><br><span class="line">  <span class="keyword">if</span> (k_ &lt; <span class="number">1</span>) k_ = <span class="number">1</span>;</span><br><span class="line">  <span class="keyword">if</span> (k_ &gt; <span class="number">30</span>) k_ = <span class="number">30</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>Filter Block 的格式如下:<br><img src="/img/20220131150607.png" alt></p>
+<p>leveldb 是为每个 Data Block 创建一个 bloom filter，要注意创建 bloom filter 的 key 要是 UserKey 而不是 InternalKey。 需要查找某个 Data Block 前，先查找该 Block 对应的 bloom filter，这就带来另一个需求，快速查找 Data Block对应的 bloom filter。leveldb 使用如下方式:</p>
+<ul>
+<li>为每个 Data Block 生成一个 Filter。</li>
+<li>按照 Data Block 的 offset 生成 filter 索引，目前是每 2KB(1 &lt;&lt; kFilterBaseLg) 生成一个。当查找 Data Block 对应的 filter 时，只要 查找第 Data Block Offset &gt;&gt; kFilterBaseLg 个 Filter Offset 即可。按照 2KB 划分的原因是因为 Data Block 的大小不固定，超过 4KB 会切换到新的，但可能会超很多。</li>
+</ul>
+<h3 id="Metaindex-Block"><a href="#Metaindex-Block" class="headerlink" title="Metaindex Block"></a>Metaindex Block</h3><p>目前只存放 filter.name 到 Filter Block 的索引。</p>
+<h3 id="Index-Block"><a href="#Index-Block" class="headerlink" title="Index Block"></a>Index Block</h3><p>Index Block 保存 Data Block 的索引，且每个 key 都是 restart point:</p>
+<ul>
+<li>key：大于等于该 DataBlock 最后一个 key，小于后一个 DataBlock 第一个 key。这么做可以降低存储的数据量，比如最后一个 key 很长，但比它大且比后一个小的 key 很短。</li>
+<li>Value：该 Block 的 offset 和 size。</li>
+</ul>
+<p>存放每个 DataBlock 最后一个 Key 而不是第一个 Key 的原因是，DataBlock 找到的是第一个大于等于 target 的。</p>
+<h3 id="Footer"><a href="#Footer" class="headerlink" title="Footer"></a>Footer</h3><p>Footer 是解析的起点，大小固定为 48 Bytes：</p>
+<ul>
+<li>Metaindex Block Handle：20 bytes，offset 和 size 都使用 varint64 存储。</li>
+<li>Index Block Handle：同上。</li>
+<li>Magic Number：用于判断检测文件有效性。</li>
+</ul>
+<h2 id="Compaction-1"><a href="#Compaction-1" class="headerlink" title="Compaction"></a>Compaction</h2><p>之前提到过 leveldb 是分层管理 sstable 的，level-0 的 sstable 之间有重叠，其他 level 的 sstable 之间无重叠。读是从 level-0 开始从低往高查找， 当查找到第一个 key 相同且 sequence 小于等于 target key 的就会停止，需要保证一个 key 的高版本(sequence 大)所在的 sstable 层高一定要小于等于低版本的层高， 这样才能保证查找到的 key 是最新的。</p>
+<p>compaction 分为两种：</p>
+<ul>
+<li>memtable compaction：memtable 直接转储为 sstable。</li>
+<li>sstable compaction：将 level-n 的一个 sstable 和 level-(n+1) 重叠的 sstable 合并生成新的 level-(n+1) 的 sstable。</li>
+</ul>
+<p>因为 level-0 的 sstable 间有重叠，为了保证上面的结构，会把 level-0 中所有重叠的 sstable 和 level-1 中重叠的 sstable 合并生成新的 level-1 的 sstable。 将 level-0 所有重叠 sstable 合并保证了旧的 key 不会在更低层；低层和高层的重叠 sstable 合并保证了高层的 sstable 之间无重叠。</p>
+<p>sstable 由 file number 区分，file number 顺序递增，越大文件越新，查找 level-0 时就会按照新旧程度排序，先查找新的 sstable。还会记录每个 sstable 的 key range， 只要查找相匹配的即可。</p>
+<h3 id="Memtable-Compaction"><a href="#Memtable-Compaction" class="headerlink" title="Memtable Compaction"></a>Memtable Compaction</h3><p>当 memtable 大小超过 Options.write_buffer_size 时(默认 4MB)，会在下一次写操作时将当前的 memtable 转为 immutable memtable，创建新的 memtable，并触发 immutable memtable 的 compaction。compaction 会由单独的线程来执行。</p>
+<p>memtable compaction 的过程很简单，顺序遍历 memtable 将所有的 key/value 转储为 sstable 格式即可(不会清理无用数据)，生成的 sstable 不一定在 level-0，只要满足上面的保证即可。 要注意的是，leveldb 为了防止 sstable 数量太多会对写操作进行流控：</p>
+<ul>
+<li>当 level-0 sstable 数量达到 kL0_SlowdownWritesTrigger(8) 时，每个写操作会 sleep(1ms)。</li>
+<li>当前 memtable 已满需要 compaction 但之前的 immutable memtable compaction 还未完成时，会等待之前的完成。</li>
+<li>当 level-0 sstable 数量达到 kL0_StopWritesTrigger(12) 时，会等待 level-0 compaction 完成。</li>
+</ul>
+<h3 id="Sstable-Compaction"><a href="#Sstable-Compaction" class="headerlink" title="Sstable Compaction"></a>Sstable Compaction</h3><p>触发 sstable compaction 的条件如下：</p>
+<ul>
+<li>level-0：sstable 文件个数超过 kL0_CompactionTrigger(4)。因为 level-0 是从 sstable 直接转储而来，所以用个数限制而不是大小。</li>
+<li>其他 level：高层的 sstable 会按照 max_file_size(2MB) 进行切割，当一层的 sstable 总大小超过阈值时会触发，最高层无大小限制。</li>
+<li>每个文件还有 seek 的次数限制，超过次数会进行 compaction，防止读多写少的场景下，compaction 不会触发。</li>
+</ul>
+<p>挑选参与 compaction 的文件分2步：</p>
+<ol>
+<li>执行 compaction 的 level：leveldb 会记录每个 level 上次 compaction 的最大的 key，下一次时会挑选在这之后的文件，防止后面的文件一直不会被选到。</li>
+<li>高一层的文件：挑选和低一层的文件有重叠的所有文件。高一层的总的 key range 可能会覆盖到更多的低一层的文件，所以会进行 expand，同时为了防止 compaction 太大， 会有一定的限制。</li>
+</ol>
+<p>sstable compaction 的过程也比较简单，和 memtable compaction 的区别在于，这里是多个文件，类似 merge sort 的流程，leveldb 中也实现了 MergingIterator 用于 在多个迭代器的情况下有序迭代。需要关注的是无用数据的清理，每个 key 会有多个版本，再也不会访问到的版本不需要保留。leveldb 支持 snapshot，也就是 sequence，在其内部维护了一个 SnapshotList， 保存着所有正在使用的 snapshot，会根据当前使用到的 smallest snapshot 进行清理(若没有则是 last sequence)：</p>
+<ul>
+<li>只需要保存 smallest snapshot 能够访问到的及更高版本的，即保存第一个小于等于 smallest snapshot 的版本及更高版本即可。</li>
+<li>若第一个小于等于 smallest snapshot 的版本是删除操作，只要高层没有这个 key 也可以丢弃这个版本。</li>
+</ul>
+<p>高层的 sstable 会进行切割，除了大小限制 max_file_size(2MB) 外，还会防止该文件与更高一层的 sstable 重叠太多，会导致该文件的 compaction 消耗很大。同时在 sstable compaction 的过程中若发现存在 immutable memtable，会进行 memtable compaction，防止阻塞写操作。</p>
+<h2 id="Manifest"><a href="#Manifest" class="headerlink" title="Manifest"></a>Manifest</h2><p>除了 sstable 文件，还有一些 metadata 需要保存，如当前的 sequence、file number 和 sstable 的组织结构等，manifest 文件就用来保存这些数据。leveldb 不是 每次 metadata 发生变化就修改 manifest，而是当 compaction 完成时，写入一条 VersionEdit 数据，因为大部分 metadata 只有 compaction 完成才会变化。 VersionEdit 结构如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">VersionEdit</span> &#123;</span></span><br><span class="line">  <span class="keyword">typedef</span> <span class="built_in">std</span>::<span class="built_in">set</span>&lt; <span class="built_in">std</span>::pair&lt;<span class="keyword">int</span>, <span class="keyword">uint64_t</span>&gt; &gt; DeletedFileSet;</span><br><span class="line"></span><br><span class="line">  <span class="built_in">std</span>::<span class="built_in">string</span> comparator_; <span class="comment">// 用于检测文件是否和 db 的 comparator 匹配</span></span><br><span class="line">  <span class="keyword">uint64_t</span> log_number_; <span class="comment">// 当前 memtable 的 log file number</span></span><br><span class="line">  <span class="keyword">uint64_t</span> prev_log_number_; <span class="comment">// 之前的 memtable 的 log file number</span></span><br><span class="line">  <span class="keyword">uint64_t</span> next_file_number_; <span class="comment">// 最新的 file number</span></span><br><span class="line">  SequenceNumber last_sequence_; <span class="comment">// 最新的 sequence</span></span><br><span class="line">  <span class="built_in">std</span>::<span class="built_in">vector</span>&lt; <span class="built_in">std</span>::pair&lt;<span class="keyword">int</span>, InternalKey&gt; &gt; compact_pointers_; <span class="comment">// 每层下一次 compaction 的位置</span></span><br><span class="line">  DeletedFileSet deleted_files_; <span class="comment">// 删除的文件</span></span><br><span class="line">  <span class="built_in">std</span>::<span class="built_in">vector</span>&lt; <span class="built_in">std</span>::pair&lt;<span class="keyword">int</span>, FileMetaData&gt; &gt; new_files_; <span class="comment">// 新增的文件</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>manifest 结构和 memtable log 相同，VersionEdit 的编码也很简单，通过前缀 type 区分数据类别，就不再赘述了。 VersionEdit 中大多是增量数据，顺序累积回放 mainifest 即可得到完整的最新的 metadata。这种记录方式使得 manifest 也都是顺序写，同时减少了 需要记录的数据量。</p>
+<p>manifest 中除了记录当前 memtable 对应的 log file 还需要记录 immutable memtable 的 log file，只有当 immutable memtable compaction 时 才可以删除对应的 log file。manifest 中记录的 sequence 并不是最新的，重启 db 时会根据 log file 恢复到最新。</p>
+<p>manifest 在 db 打开时一直追加，不会进行清理，只有下一次打开时才会清理。若不幸 manifest 文件有所损坏或者被删除了，leveldb 也提供了修复的方式，所有的 metadata 除了 sstable 的组织结构外，都可以 通过 sstable 和 log 文件恢复，同时会将 log 转换为 sstable 并认为所有的 sstable 都处于 level-0，然后将修复后的 metadata 写入 manifest。会在打开 db 时立刻触发一次 compaction，因为 所有文件都在 level-0 所以 compaction 耗时会很久。</p>
+<h2 id="Write-Error"><a href="#Write-Error" class="headerlink" title="Write Error"></a>Write Error</h2><p>值得一提的是若和写文件相关的操作出错，leveldb 会设置 bg_error_，此时会拒绝写请求并不会触发 compaction，而且没有方式清空 bg_error_，只能重启进行修复。其实这里可以使用类似 Redis 的策略，当写操作失败时，truncate 掉 short write 部分并进行重试，当成功写入时恢复状态并接收写请求。</p>
+<h1 id="Read"><a href="#Read" class="headerlink" title="Read"></a>Read</h1><p>有了之前的铺垫，leveldb 的读操作就很显然了。按照数据的新旧依次读：</p>
+<ul>
+<li>memtable</li>
+<li>immutable memtable</li>
+<li>level-0 中按照 file number 倒序</li>
+<li>level1 -&gt; level-6</li>
+</ul>
+<p>因为 leveldb 保证了更新的数据一定会比旧的数据先找到，所以当找到第一个 key 相同且 sequence 小于等于 target key 的就停止。</p>
+<h2 id="Cache"><a href="#Cache" class="headerlink" title="Cache"></a>Cache</h2><p>leveldb 中使用 LRU cache 来提高读的性能，compaction 时也会从 cache 中获取数据，有两种 cache：</p>
+<ul>
+<li>TableCache：缓存打开的 sstable，容量为 max_open_files(1000)。</li>
+<li>BlockCache：缓存读取的 Data Block，默认容量为 8MB。</li>
+</ul>
+<p>leveldb 中优先使用 mmap 将整个 sstable 映射进内存，失败时才会打开为文件读取，两种实现分别继承 RandomAccessFile 实现多态。 在创建 Table 时会读取 index block 和 filter block，data block 会按需读取。当 sstable 是 mmap 进来的时，BlockCache 就没用了，因为所有 数据都已缓存在 TableCache 中，只有文件类型的 Table 才会使用 BlockCache。</p>
+<h3 id="LRU-Cache"><a href="#LRU-Cache" class="headerlink" title="LRU Cache"></a>LRU Cache</h3><p>leveldb 中实现的是并发安全的 LRU cache。实现也很简单：</p>
+<ul>
+<li>由 list、hashtable 实现的 LRUCache，由 mutex 保护，保证并发安全。</li>
+<li>为了减少锁的竞争，在 LRUCache 基础之上实现了 ShardedLRUCache，共有 16 个 LRUCache，使用时会 shard 到指定的 LRUCache。</li>
+</ul>
+<p>因为 LRUCache 会有多个线程使用，需要做一些特殊处理：</p>
+<ul>
+<li>引用计数：使用引用计数保证数据使用时的有效性，因为有可能被淘汰的数据仍有线程在使用。</li>
+<li>使用 2 个链表保存数据：<ul>
+<li>lru_：保存存放在 cache 中且没有线程使用的数据，链表尾保存最近使用的数据。</li>
+<li>in_use_：保存存放在 cache 中且被使用到的数据，无特定顺序，只有当没有使用到时(ref==1)才会追加到 lru_ 尾部，保证了是按照 least-recently used 而不是 least-recently requested 淘汰。</li>
+</ul>
+</li>
+</ul>
+<h2 id="Snapshot"><a href="#Snapshot" class="headerlink" title="Snapshot"></a>Snapshot</h2><p>之前也提到过 leveldb 支持 snapshot：使用 SnapshotList 记录所有的 snapshot，在 compaction 时会保留所有有可能被 snapshot 访问到的数据，ReleaseSnapshot 就是 把该 snapshot 从 SnapshotList 中移除，就不再赘述了。</p>
+<p>leveldb 不会持久化 snapshots，因为重启时所有 snapshots 就无效了。</p>
+<h2 id="VersionSet"><a href="#VersionSet" class="headerlink" title="VersionSet"></a>VersionSet</h2><p>还有很重要的一环是保证读取数据时的有效性，比如读 memtable 时，要保证该 memtable 是有效的；使用 snapshot 时，要保证对应版本的数据要存在；遍历 db 时，要保证提供 一致的数据。memtable 使用引用计数保证了有效性，compaction 的实现保证了 snapshot 对应的数据不会被清理，而对外提供 db 一致的数据就由 VersionSet 保证。</p>
+<p>VersionSet 记录了所有的 metadata，同时保存了一个 Version 链表，Version 记录的是当时版本的 sstable 组织结构，只有每次 compaction 完成时才会改变 sstable 的 组织结构并增加一个新的 Version</p>
+<p><img src="/img/20220131150608.png" alt></p>
+<p>Version 与 Version 之间的增量就是 manifest 中记录的数据 VersionEdit:</p>
+<p><img src="/img/20220131150609.png" alt></p>
+<p>Version 同样使用引用计数保护，当引用计数为 0 时会从 VersionSet 中移除，leveldb 保证了所有被 Version 使用到的 sstable 文件不会被删除，从而提供了一致的数据。当用 Iterator 遍历 整个 DB 的数据时，就会增加当前 Version 的引用计数。</p>
+<p>重启时会根据 manifest 中的 VersionEdit 恢复并只保留最新的 Version，并清理无用数据。</p>
+<h2 id="Iterator"><a href="#Iterator" class="headerlink" title="Iterator"></a>Iterator</h2><p>leveldb 支持对 db 的遍历，在其内部也实现了多种 Iterator 用于查询、顺序遍历数据，Iterator 为上层提供了统一的接口，封装了底层的存储细节。Iterator 按功能分为如下几类：</p>
+<ul>
+<li>Iterator：提供最基本的查询数据的能力，用在 memtable 的查询、block 的查询等。</li>
+<li>TwoLevelIterator：传入一个 Iterator 和函数指针，以 Iterator 的数据作为参数调用函数生成新的 Iterator，相当于传入的是 Iterator 的 Iterator，用在 遍历非 0 层的 sstable、遍历 sstable 等。</li>
+<li>MergingIterator：传入多个 Iterator，用类似 merge sort 的思路，产生有序的结果，用在不同 level 间的 sstable 遍历等。</li>
+</ul>
+<p>TwoLevelIterator 和 MergingIterator 将基本的 Iterator 组合起来，提供了极大的灵活性。以遍历整个 db 为例，会将 memtable Iterator、immutable memtable Iterator、 level-0 的各个 sstable Iterator、其他 level 的 ConcatenatingIterator 组合为 MergingIterator 来遍历，需要注意的是，遍历 db 时会有许多版本(sequence)的 key， 需要返回的是能访问到的最新的版本(若不传入 snapshot 则默认 snapshot 为当时最新的)。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/数据库/" rel="tag"># 数据库</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2022/01/30/leveldb源码分析/" rel="next" title="leveldb源码分析">
+                <i class="fa fa-chevron-left"></i> leveldb源码分析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">274</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/xiaomeihao.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Architecture"><span class="nav-number">1.</span> <span class="nav-text">Architecture</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#整体架构"><span class="nav-number">1.1.</span> <span class="nav-text">整体架构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#LSM-Tree"><span class="nav-number">1.2.</span> <span class="nav-text">LSM-Tree</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#并发控制"><span class="nav-number">1.3.</span> <span class="nav-text">并发控制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据恢复"><span class="nav-number">1.4.</span> <span class="nav-text">数据恢复</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Write"><span class="nav-number">2.</span> <span class="nav-text">Write</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#写操作执行"><span class="nav-number">2.1.</span> <span class="nav-text">写操作执行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#WAL"><span class="nav-number">2.2.</span> <span class="nav-text">WAL</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#varint"><span class="nav-number">2.2.1.</span> <span class="nav-text">varint</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#log"><span class="nav-number">2.2.2.</span> <span class="nav-text">log</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#memtable"><span class="nav-number">2.3.</span> <span class="nav-text">memtable</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#InternalKey"><span class="nav-number">2.3.1.</span> <span class="nav-text">InternalKey</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#skiplist"><span class="nav-number">2.3.2.</span> <span class="nav-text">skiplist</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#lock-free"><span class="nav-number">2.3.3.</span> <span class="nav-text">lock-free</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#arena"><span class="nav-number">2.3.4.</span> <span class="nav-text">arena</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Compaction"><span class="nav-number">3.</span> <span class="nav-text">Compaction</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#sstable"><span class="nav-number">3.1.</span> <span class="nav-text">sstable</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Block"><span class="nav-number">3.1.1.</span> <span class="nav-text">Block</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Data-Block"><span class="nav-number">3.1.2.</span> <span class="nav-text">Data Block</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Meta-Block"><span class="nav-number">3.1.3.</span> <span class="nav-text">Meta Block</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Metaindex-Block"><span class="nav-number">3.1.4.</span> <span class="nav-text">Metaindex Block</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Index-Block"><span class="nav-number">3.1.5.</span> <span class="nav-text">Index Block</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Footer"><span class="nav-number">3.1.6.</span> <span class="nav-text">Footer</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Compaction-1"><span class="nav-number">3.2.</span> <span class="nav-text">Compaction</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Memtable-Compaction"><span class="nav-number">3.2.1.</span> <span class="nav-text">Memtable Compaction</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Sstable-Compaction"><span class="nav-number">3.2.2.</span> <span class="nav-text">Sstable Compaction</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Manifest"><span class="nav-number">3.3.</span> <span class="nav-text">Manifest</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Write-Error"><span class="nav-number">3.4.</span> <span class="nav-text">Write Error</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Read"><span class="nav-number">4.</span> <span class="nav-text">Read</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Cache"><span class="nav-number">4.1.</span> <span class="nav-text">Cache</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#LRU-Cache"><span class="nav-number">4.1.1.</span> <span class="nav-text">LRU Cache</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Snapshot"><span class="nav-number">4.2.</span> <span class="nav-text">Snapshot</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#VersionSet"><span class="nav-number">4.3.</span> <span class="nav-text">VersionSet</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Iterator"><span class="nav-number">4.4.</span> <span class="nav-text">Iterator</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<span id="busuanzi_container_site_uv"> 
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
