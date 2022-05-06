@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="C++,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="c++11 最基础最简单的：123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979">
+<meta name="keywords" content="C++">
+<meta property="og:type" content="article">
+<meta property="og:title" content="c++11&#x2F;14、c++17&#x2F;20 最简单的线程池">
+<meta property="og:url" content="http://yoursite.com/2022/03/21/不同cpp版本的线程池/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="c++11 最基础最简单的：123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:updated_time" content="2022-04-14T02:51:31.818Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="c++11&#x2F;14、c++17&#x2F;20 最简单的线程池">
+<meta name="twitter:description" content="c++11 最基础最简单的：123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2022/03/21/不同cpp版本的线程池/">
+
+
+
+
+
+  <title>c++11/14、c++17/20 最简单的线程池 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/resume.pdf" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-mybetterhalf">
+          <a href="/mybetterhalf/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            mybetterhalf
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2022/03/21/不同cpp版本的线程池/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">c++11/14、c++17/20 最简单的线程池</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2022-03-21T11:07:00+08:00">
+                2022-03-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="c-11-最基础最简单的："><a href="#c-11-最基础最简单的：" class="headerlink" title="c++11 最基础最简单的："></a>c++11 最基础最简单的：</h1><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> once</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;vector&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;queue&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;memory&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;thread&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;mutex&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;condition_variable&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;future&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;functional&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;stdexcept&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;type_traits&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ThreadPool</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    ThreadPool();</span><br><span class="line">    ThreadPool(<span class="keyword">int</span> num);</span><br><span class="line">    ~ThreadPool();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">template</span>&lt;<span class="class"><span class="keyword">class</span> <span class="title">F</span>, <span class="title">class</span>... <span class="title">Args</span>&gt;</span></span><br><span class="line"><span class="class">    <span class="title">std</span>:</span>:future&lt;<span class="keyword">int</span>&gt; enqueue(F&amp; f, Args&amp;... args);</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">vector</span> &lt;<span class="built_in">std</span>::thread&gt; workers; <span class="comment">//thread array</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">queue</span>&lt;<span class="built_in">std</span>::function&lt;<span class="keyword">void</span>()&gt;&gt;tasks; <span class="comment">//task queue</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">std</span>::mutex queue_mutex;</span><br><span class="line">    <span class="built_in">std</span>::condition_variable cond;</span><br><span class="line">    <span class="keyword">bool</span> stop;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">inline</span> ThreadPool::ThreadPool()</span><br><span class="line">&#123;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">ThreadPool::ThreadPool(<span class="keyword">int</span> num) :stop(<span class="literal">false</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; num; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">auto</span> thread = [<span class="keyword">this</span>] &#123;</span><br><span class="line">            <span class="keyword">for</span> (;;)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="built_in">std</span>::function&lt;<span class="keyword">void</span>()&gt; task;</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="built_in">std</span>::unique_lock&lt;<span class="built_in">std</span>::mutex&gt; lock(<span class="keyword">this</span>-&gt;queue_mutex);</span><br><span class="line">                    <span class="keyword">this</span>-&gt;cond.wait(lock, [<span class="keyword">this</span>] &#123;</span><br><span class="line">                        <span class="keyword">return</span> <span class="keyword">this</span>-&gt;stop || !<span class="keyword">this</span>-&gt;tasks.empty();<span class="comment">//stop 或许任务队列不为空时唤醒。</span></span><br><span class="line">                        &#125;</span><br><span class="line">                    );</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">if</span> (stop &amp;&amp; tasks.empty())</span><br><span class="line">                        <span class="keyword">return</span>;</span><br><span class="line">                    task = <span class="built_in">std</span>::move(tasks.front());</span><br><span class="line">                    tasks.pop();<span class="comment">//有点类似bfs的思路</span></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                task();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br><span class="line">        workers.emplace_back(thread);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">inline</span> ThreadPool::~ThreadPool()</span><br><span class="line">&#123;</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">std</span>::unique_lock&lt;<span class="built_in">std</span>::mutex&gt; lock(queue_mutex);</span><br><span class="line">        stop = <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    cond.notify_all();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">auto</span>&amp; worker : workers)</span><br><span class="line">    &#123;</span><br><span class="line">        worker.join();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span>&lt;<span class="class"><span class="keyword">class</span> <span class="title">F</span>, <span class="title">class</span>... <span class="title">Args</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">std</span>:</span>:future&lt;<span class="keyword">int</span>&gt; ThreadPool::enqueue(F&amp; f, Args&amp;... args)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">std</span>::function&lt;<span class="keyword">decltype</span>(f(args...))()&gt; func = </span><br><span class="line">        <span class="built_in">std</span>::bind(<span class="built_in">std</span>::forward&lt;F&gt;(f), <span class="built_in">std</span>::forward&lt;Args&gt;(args)...); <span class="comment">// 连接函数和参数定义，特殊函数类型，避免左右值错误</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">auto</span> task = <span class="built_in">std</span>::make_shared&lt; <span class="built_in">std</span>::packaged_task&lt;<span class="keyword">int</span>()&gt; &gt;(</span><br><span class="line">     func</span><br><span class="line">        );</span><br><span class="line"></span><br><span class="line">    <span class="built_in">std</span>::function&lt;<span class="keyword">void</span>()&gt; warpper_func = [task]()&#123;(*task)();&#125;;</span><br><span class="line">      <span class="built_in">std</span>::unique_lock&lt;<span class="built_in">std</span>::mutex&gt; lock(queue_mutex);</span><br><span class="line">      tasks.emplace(warpper_func);</span><br><span class="line">     cond.notify_one();</span><br><span class="line">    <span class="keyword">return</span> task-&gt;get_future();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>test:<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123; </span><br><span class="line"><span class="function">ThreadPool <span class="title">pool</span><span class="params">(<span class="number">4</span>)</span></span>;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="built_in">std</span>::future&lt;<span class="keyword">int</span>&gt;&gt;results;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; <span class="number">8</span>; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">auto</span> tp = [i] &#123;</span><br><span class="line">            <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"hello "</span> &lt;&lt; i &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">           <span class="comment">// std::this_thread::sleep_for(std::chrono::seconds(1));</span></span><br><span class="line">            <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"world "</span> &lt;&lt; i &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">            <span class="keyword">return</span> i * i;</span><br><span class="line"></span><br><span class="line">        &#125;;</span><br><span class="line">        results.emplace_back(</span><br><span class="line">            pool.enqueue((tp))</span><br><span class="line">        );</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">  </span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">auto</span>&amp;&amp; result : results)</span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; result.get() &lt;&lt; <span class="string">' '</span>;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="C-11-14-一般性的线程池"><a href="#C-11-14-一般性的线程池" class="headerlink" title="C++11/14 一般性的线程池"></a>C++11/14 一般性的线程池</h1><p>上面我们有很多不足，比如限定了task function的返回值，而且逻辑不够优美。我们接着进行优化！</p>
+<p>关于task function的 return type 是未定的问题，c++11 给出了两种方式。一个是decltype(expr),另外一个是std::result_of. 都可以通过尾置返回值类型进行处理。</p>
+<p>我们首先使用decltype. 完整代码如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> once</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;vector&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;queue&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;memory&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;thread&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;mutex&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;condition_variable&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;future&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;functional&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;stdexcept&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;type_traits&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ThreadPool</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	ThreadPool();</span><br><span class="line">	ThreadPool(<span class="keyword">int</span> num);</span><br><span class="line">	~ThreadPool();</span><br><span class="line">	<span class="keyword">template</span>&lt;<span class="class"><span class="keyword">class</span> <span class="title">F</span>, <span class="title">class</span>... <span class="title">Args</span>&gt;</span></span><br><span class="line"><span class="class">	<span class="title">auto</span> <span class="title">enqueue</span>(<span class="title">F</span>&amp;&amp; <span class="title">f</span>, <span class="title">Args</span>&amp;&amp;... <span class="title">args</span>)</span></span><br><span class="line"><span class="class">//		-&gt;<span class="title">std</span>:</span>:future&lt;<span class="keyword">decltype</span>(f(args...))&gt;;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	<span class="built_in">std</span>::<span class="built_in">vector</span> &lt;<span class="built_in">std</span>::thread&gt; workers; <span class="comment">//thread array</span></span><br><span class="line"></span><br><span class="line">	<span class="built_in">std</span>::<span class="built_in">queue</span>&lt;<span class="built_in">std</span>::function&lt;<span class="keyword">void</span>()&gt;&gt;tasks; <span class="comment">//task queue</span></span><br><span class="line"></span><br><span class="line">	<span class="built_in">std</span>::mutex queue_mutex;</span><br><span class="line">	<span class="built_in">std</span>::condition_variable cond;</span><br><span class="line">	<span class="keyword">bool</span> stop;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">inline</span> ThreadPool::ThreadPool()</span><br><span class="line">&#123;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">ThreadPool::ThreadPool(<span class="keyword">int</span> num) :stop(<span class="literal">false</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; num; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">auto</span> thread = [<span class="keyword">this</span>] &#123;</span><br><span class="line">            <span class="keyword">for</span> (;;)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="built_in">std</span>::function&lt;<span class="keyword">void</span>()&gt; task;</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="built_in">std</span>::unique_lock&lt;<span class="built_in">std</span>::mutex&gt; lock(<span class="keyword">this</span>-&gt;queue_mutex);</span><br><span class="line">                    <span class="keyword">this</span>-&gt;cond.wait(lock, [<span class="keyword">this</span>] &#123;</span><br><span class="line">                        <span class="keyword">return</span> <span class="keyword">this</span>-&gt;stop || !<span class="keyword">this</span>-&gt;tasks.empty();<span class="comment">//stop 或许任务队列不为空时唤醒。</span></span><br><span class="line">                        &#125;</span><br><span class="line">                    );</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">if</span> (stop &amp;&amp; tasks.empty())</span><br><span class="line">                        <span class="keyword">return</span>;</span><br><span class="line">                    task = <span class="built_in">std</span>::move(tasks.front());</span><br><span class="line">                    tasks.pop();<span class="comment">//有点类似bfs的思路</span></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                task();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br><span class="line">        workers.emplace_back(thread);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">inline</span> ThreadPool::~ThreadPool()</span><br><span class="line">&#123;</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">std</span>::unique_lock&lt;<span class="built_in">std</span>::mutex&gt; lock(queue_mutex);</span><br><span class="line">		stop = <span class="literal">true</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	cond.notify_all();</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">auto</span>&amp; worker : workers)</span><br><span class="line">	&#123;</span><br><span class="line">		worker.join();</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span>&lt;<span class="class"><span class="keyword">class</span> <span class="title">F</span>, <span class="title">class</span>... <span class="title">Args</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">auto</span> <span class="title">ThreadPool</span>:</span>:enqueue(F&amp;&amp; f, Args&amp;&amp;... args)</span><br><span class="line">-&gt; <span class="built_in">std</span>::future&lt;<span class="keyword">decltype</span>(f(args...))&gt;</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">using</span> ret_type = <span class="built_in">std</span>::future&lt;<span class="keyword">decltype</span>(f(args...))&gt;;</span><br><span class="line">	<span class="built_in">std</span>::function&lt;<span class="keyword">decltype</span>(f(args...))()&gt; func =</span><br><span class="line">		<span class="built_in">std</span>::bind(<span class="built_in">std</span>::forward&lt;F&gt;(f), <span class="built_in">std</span>::forward&lt;Args&gt;(args)...); <span class="comment">// 连接函数和参数定义，特殊函数类型，避免左右值错误</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">auto</span> task = <span class="built_in">std</span>::make_shared&lt; <span class="built_in">std</span>::packaged_task&lt;<span class="keyword">decltype</span>(f(args...))()&gt; &gt;(</span><br><span class="line">		func</span><br><span class="line">		);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">std</span>::function&lt;<span class="keyword">void</span>()&gt; warpper_func = [task]() &#123;(*task)(); &#125;;</span><br><span class="line">	ret_type res = task-&gt;get_future();</span><br><span class="line">	<span class="keyword">if</span> (stop)</span><br><span class="line">		<span class="keyword">throw</span> <span class="built_in">std</span>::runtime_error(<span class="string">"enqueue on stopped ThreadPool"</span>);</span><br><span class="line">	<span class="built_in">std</span>::unique_lock&lt;<span class="built_in">std</span>::mutex&gt; lock(queue_mutex);</span><br><span class="line">	tasks.emplace(warpper_func);</span><br><span class="line">	cond.notify_one();</span><br><span class="line">	<span class="keyword">return</span> res;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>优化版createthread 单独抽出来组成一个接口。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> once</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;vector&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;queue&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;memory&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;thread&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;mutex&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;condition_variable&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;future&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;functional&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;stdexcept&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;type_traits&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;utility&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ThreadPool</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	ThreadPool();</span><br><span class="line">	ThreadPool(<span class="keyword">int</span> num);</span><br><span class="line">	~ThreadPool();</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">CreateThread</span><span class="params">(<span class="keyword">void</span>)</span></span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//template&lt;class F, class...Args&gt;</span></span><br><span class="line">	<span class="comment">//auto enqueue(F&amp;&amp; f, Args&amp;&amp;...args)-&gt;std::future&lt;typename std::_Forced_result_type&lt;F(Args...)&gt;::type&gt;;</span></span><br><span class="line">	<span class="keyword">template</span>&lt;<span class="class"><span class="keyword">class</span> <span class="title">F</span>, <span class="title">class</span>... <span class="title">Args</span>&gt;</span></span><br><span class="line"><span class="class">	<span class="title">auto</span> <span class="title">enqueue</span>(<span class="title">F</span> &amp;&amp;<span class="title">f</span>, <span class="title">Args</span>&amp;&amp;... <span class="title">args</span>)</span></span><br><span class="line"><span class="class">	-&gt;<span class="title">std</span>:</span>:future&lt;<span class="keyword">decltype</span>(f(args...))&gt;;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	<span class="built_in">std</span>::<span class="built_in">vector</span> &lt;<span class="built_in">std</span>::thread&gt; workers; <span class="comment">//thread array</span></span><br><span class="line"></span><br><span class="line">	<span class="built_in">std</span>::<span class="built_in">queue</span>&lt;<span class="built_in">std</span>::function&lt;<span class="keyword">void</span>()&gt;&gt;tasks; <span class="comment">//task queue</span></span><br><span class="line"></span><br><span class="line">	<span class="built_in">std</span>::mutex queue_mutex;</span><br><span class="line">	<span class="built_in">std</span>::condition_variable cond;</span><br><span class="line">	<span class="keyword">bool</span> stop;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">inline</span> ThreadPool::ThreadPool()</span><br><span class="line">&#123;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">inline</span> <span class="keyword">void</span> ThreadPool::CreateThread(<span class="keyword">void</span>)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">for</span> (;;)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">std</span>::function&lt;<span class="keyword">void</span>()&gt; task;</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="built_in">std</span>::unique_lock&lt;<span class="built_in">std</span>::mutex&gt; lock(<span class="keyword">this</span>-&gt;queue_mutex);</span><br><span class="line">			<span class="keyword">this</span>-&gt;cond.wait(lock, [<span class="keyword">this</span>] &#123;</span><br><span class="line">				<span class="keyword">return</span> <span class="keyword">this</span>-&gt;stop || !<span class="keyword">this</span>-&gt;tasks.empty();<span class="comment">//stop 或许任务队列不为空时唤醒。</span></span><br><span class="line">				&#125;</span><br><span class="line">			);</span><br><span class="line"></span><br><span class="line">			<span class="keyword">if</span> (stop &amp;&amp; tasks.empty())</span><br><span class="line">				<span class="keyword">return</span>;</span><br><span class="line">			task = <span class="built_in">std</span>::move(tasks.front());</span><br><span class="line">			tasks.pop();<span class="comment">//有点类似bfs的思路</span></span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		task();</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">ThreadPool::ThreadPool(<span class="keyword">int</span> num) :stop(<span class="literal">false</span>)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; num; i++)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">auto</span> thread = <span class="built_in">std</span>::bind(&amp;ThreadPool::CreateThread,<span class="keyword">this</span>);<span class="comment">//&amp;，this 不能丢</span></span><br><span class="line">		workers.emplace_back(thread);</span><br><span class="line"></span><br><span class="line">		<span class="comment">//或者直接下面</span></span><br><span class="line">		<span class="comment">//workers.emplace_back(std::bind(&amp;ThreadPool::CreateThread, this));</span></span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">inline</span> ThreadPool::~ThreadPool()</span><br><span class="line">&#123;</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">std</span>::unique_lock&lt;<span class="built_in">std</span>::mutex&gt; lock(queue_mutex);</span><br><span class="line">		stop = <span class="literal">true</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	cond.notify_all();</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">auto</span>&amp; worker : workers)</span><br><span class="line">	&#123;</span><br><span class="line">		worker.join();</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span>&lt;<span class="class"><span class="keyword">class</span> <span class="title">F</span>, <span class="title">class</span>... <span class="title">Args</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">auto</span> <span class="title">ThreadPool</span>:</span>:enqueue(F&amp;&amp; f, Args&amp;&amp;... args)</span><br><span class="line">-&gt;<span class="built_in">std</span>::future&lt;<span class="keyword">decltype</span>(f(args...))&gt;</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">using</span> ret_type = <span class="built_in">std</span>::future&lt; <span class="keyword">decltype</span>(f(args...))&gt;; <span class="comment">//typename 此处加不加均可以的，下面同</span></span><br><span class="line">	<span class="built_in">std</span>::function&lt; <span class="keyword">decltype</span>(f(args...))()&gt; func =</span><br><span class="line">		<span class="built_in">std</span>::bind(<span class="built_in">std</span>::forward&lt;F&gt;(f), <span class="built_in">std</span>::forward&lt;Args&gt;(args)...); <span class="comment">// 连接函数和参数定义，特殊函数类型，避免左右值错误</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">auto</span> task = <span class="built_in">std</span>::make_shared&lt; <span class="built_in">std</span>::packaged_task&lt; <span class="keyword">decltype</span>(f(args...))()&gt; &gt;(</span><br><span class="line">		func</span><br><span class="line">		);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">std</span>::function&lt;<span class="keyword">void</span>()&gt; warpper_func = [task]() &#123;(*task)(); &#125;;</span><br><span class="line">	ret_type res = task-&gt;get_future();</span><br><span class="line">	<span class="keyword">if</span> (stop)</span><br><span class="line">		<span class="keyword">throw</span> <span class="built_in">std</span>::runtime_error(<span class="string">"enqueue on stopped ThreadPool"</span>);</span><br><span class="line">	<span class="built_in">std</span>::unique_lock&lt;<span class="built_in">std</span>::mutex&gt; lock(queue_mutex);</span><br><span class="line">	tasks.emplace(warpper_func);</span><br><span class="line">	cond.notify_one();</span><br><span class="line">	<span class="keyword">return</span> res;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>test 代码：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="function">ThreadPool <span class="title">pool</span><span class="params">(<span class="number">4</span>)</span></span>;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="built_in">std</span>::future&lt;<span class="keyword">int</span>&gt;&gt;results;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">8</span>; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">auto</span> tp = [i] &#123;</span><br><span class="line">            <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"hello "</span> &lt;&lt; i &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">            <span class="built_in">std</span>::this_thread::sleep_for(<span class="built_in">std</span>::chrono::seconds(<span class="number">1</span>));</span><br><span class="line">            <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"world "</span> &lt;&lt; i &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">            <span class="keyword">return</span> i * i;</span><br><span class="line"></span><br><span class="line">        &#125;;</span><br><span class="line">        <span class="keyword">auto</span> ans = pool.enqueue(<span class="built_in">std</span>::move(tp));</span><br><span class="line">        results.emplace_back(<span class="built_in">std</span>::move(ans));</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  </span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">auto</span>&amp;&amp; result : results)</span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; result.get() &lt;&lt; <span class="string">' '</span>;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>那我们现在采用第二种方式。</p>
+<p>需要更改的地方如下：</p>
+<p>enqueue 的声明：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="class"><span class="keyword">class</span> <span class="title">F</span>, <span class="title">class</span>... <span class="title">Args</span>&gt;</span></span><br><span class="line"><span class="class">	<span class="title">auto</span> <span class="title">enqueue</span>(<span class="title">F</span>&amp;&amp; <span class="title">f</span>, <span class="title">Args</span>&amp;&amp;... <span class="title">args</span>)</span></span><br><span class="line"><span class="class">	-&gt;<span class="title">std</span>:</span>:future&lt;<span class="keyword">typename</span> <span class="built_in">std</span>::result_of&lt;F(Args...)&gt;::type&gt;;</span><br></pre></td></tr></table></figure></p>
+<p>enqueue 的定义：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="class"><span class="keyword">class</span> <span class="title">F</span>, <span class="title">class</span>... <span class="title">Args</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">auto</span> <span class="title">ThreadPool</span>:</span>:enqueue(F&amp;&amp; f, Args&amp;&amp;... args)</span><br><span class="line">-&gt;<span class="built_in">std</span>::future&lt;<span class="keyword">typename</span> <span class="built_in">std</span>::result_of&lt;F(Args...)&gt;::type&gt;</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">using</span> ret_type = <span class="built_in">std</span>::future&lt;<span class="keyword">typename</span> <span class="built_in">std</span>::result_of&lt;F(Args...)&gt;::type&gt;; <span class="comment">//typename 此处加不加均可以的，下面同</span></span><br><span class="line">	<span class="built_in">std</span>::function&lt;<span class="keyword">typename</span> <span class="built_in">std</span>::result_of&lt;F(Args...)&gt;::type()&gt; func =</span><br><span class="line">		<span class="built_in">std</span>::bind(<span class="built_in">std</span>::forward&lt;F&gt;(f), <span class="built_in">std</span>::forward&lt;Args&gt;(args)...); <span class="comment">// 连接函数和参数定义，特殊函数类型，避免左右值错误</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">auto</span> task = <span class="built_in">std</span>::make_shared&lt; <span class="built_in">std</span>::packaged_task&lt;<span class="keyword">typename</span> <span class="built_in">std</span>::result_of&lt;F(Args...)&gt;::type()&gt; &gt;(</span><br><span class="line">		func</span><br><span class="line">		);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">std</span>::function&lt;<span class="keyword">void</span>()&gt; warpper_func = [task]() &#123;(*task)(); &#125;;</span><br><span class="line">	ret_type res = task-&gt;get_future();</span><br><span class="line">	<span class="keyword">if</span> (stop)</span><br><span class="line">		<span class="keyword">throw</span> <span class="built_in">std</span>::runtime_error(<span class="string">"enqueue on stopped ThreadPool"</span>);</span><br><span class="line">	<span class="built_in">std</span>::unique_lock&lt;<span class="built_in">std</span>::mutex&gt; lock(queue_mutex);</span><br><span class="line">	tasks.emplace(warpper_func);</span><br><span class="line">	cond.notify_one();</span><br><span class="line">	<span class="keyword">return</span> res;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/C/" rel="tag"># C++</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2022/03/19/Leetcode1651_1700/" rel="next" title="Leetcode1651 - 1700">
+                <i class="fa fa-chevron-left"></i> Leetcode1651 - 1700
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">281</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/xiaomeihao.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#c-11-最基础最简单的："><span class="nav-number">1.</span> <span class="nav-text">c++11 最基础最简单的：</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#C-11-14-一般性的线程池"><span class="nav-number">2.</span> <span class="nav-text">C++11/14 一般性的线程池</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<span id="busuanzi_container_site_uv"> 
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
