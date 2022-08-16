@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zn-ch">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-center-simple.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="积累,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="————————————————版权声明：本文为CSDN博主「zongy17」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。原文链接：https://blog.csdn.net/weixin_43614211/article/details/122105195———————————————— 稀疏矩阵串行优化作业提供的稀疏矩阵格式为常见的CSR存储格式。最简单的">
+<meta name="keywords" content="积累">
+<meta property="og:type" content="article">
+<meta property="og:title" content="稠密或稀疏矩阵向量乘">
+<meta property="og:url" content="http://yoursite.com/2022/08/11/稠密稀疏矩阵向量乘/index.html">
+<meta property="og:site_name" content="Hao Yu&#39;s blog">
+<meta property="og:description" content="————————————————版权声明：本文为CSDN博主「zongy17」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。原文链接：https://blog.csdn.net/weixin_43614211/article/details/122105195———————————————— 稀疏矩阵串行优化作业提供的稀疏矩阵格式为常见的CSR存储格式。最简单的">
+<meta property="og:locale" content="zn-ch">
+<meta property="og:image" content="http://yoursite.com/img/ea8dc9d59c4e446db98396f10fc56540.png">
+<meta property="og:updated_time" content="2022-08-11T04:00:05.869Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="稠密或稀疏矩阵向量乘">
+<meta name="twitter:description" content="————————————————版权声明：本文为CSDN博主「zongy17」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。原文链接：https://blog.csdn.net/weixin_43614211/article/details/122105195———————————————— 稀疏矩阵串行优化作业提供的稀疏矩阵格式为常见的CSR存储格式。最简单的">
+<meta name="twitter:image" content="http://yoursite.com/img/ea8dc9d59c4e446db98396f10fc56540.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2022/08/11/稠密稀疏矩阵向量乘/">
+
+
+
+
+
+  <title>稠密或稀疏矩阵向量乘 | Hao Yu's blog</title>
+  
+
+
+
+
+
+
+
+
+ 
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zn-ch">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hao Yu's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">The program monkey was eaten by the siege lion.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/resume.pdf" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-mybetterhalf">
+          <a href="/mybetterhalf/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            mybetterhalf
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2022/08/11/稠密稀疏矩阵向量乘/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hao Yu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hao Yu's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">稠密或稀疏矩阵向量乘</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2022-08-11T11:36:00+08:00">
+                2022-08-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>————————————————<br>版权声明：本文为CSDN博主「zongy17」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。<br>原文链接：<a href="https://blog.csdn.net/weixin_43614211/article/details/122105195" target="_blank" rel="noopener">https://blog.csdn.net/weixin_43614211/article/details/122105195</a><br>————————————————</p>
+<h1 id="稀疏矩阵"><a href="#稀疏矩阵" class="headerlink" title="稀疏矩阵"></a>稀疏矩阵</h1><h2 id="串行优化"><a href="#串行优化" class="headerlink" title="串行优化"></a>串行优化</h2><p>作业提供的稀疏矩阵格式为常见的CSR存储格式。最简单的naive写法，可不做预处理，简单地对每一行进行遍历，如下所示。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">spmv</span><span class="params">(<span class="keyword">dist_matrix_t</span> *mat, <span class="keyword">const</span> <span class="keyword">data_t</span>* x, <span class="keyword">data_t</span>* y)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> m = mat-&gt;global_m;</span><br><span class="line">    <span class="keyword">index_t</span> *r_pos = mat-&gt;r_pos;</span><br><span class="line">    <span class="keyword">index_t</span> *c_idx = mat-&gt;c_idx;</span><br><span class="line">    <span class="keyword">data_t</span> *values = mat-&gt;values;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; m; ++i) &#123;</span><br><span class="line">        <span class="keyword">int</span> p, begin = r_pos[i], end = r_pos[i+<span class="number">1</span>];</span><br><span class="line">        <span class="keyword">data_t</span> s = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">for</span>(p = begin; p &lt; end; ++p) &#123;</span><br><span class="line">            <span class="keyword">int</span> j = c_idx[p];</span><br><span class="line">            s += values[p] * x[j];</span><br><span class="line">        &#125;</span><br><span class="line">        y[i] = s;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="向量化编译选项"><a href="#向量化编译选项" class="headerlink" title="向量化编译选项"></a>向量化编译选项</h2><p>对于大部分代码，都可以首先“无脑”地加上自动向量化的编译选项，看看效果如何。-O3 -fomit-frame-pointer -march=armv8-a -ffast-math的编译选项加上后，效果还是相当明显的。</p>
+<h2 id="循环展开"><a href="#循环展开" class="headerlink" title="循环展开"></a>循环展开</h2><p>对于串行程序优化，循环展开是常用的方法。将最内层的p循环按步长为4展开，这种写法（下图中所有注释对应成一套）实际上跟用intrinsics的向量化指令（下图中没有注释的对应成一套，arm v8架构的neon intrinsics指令）是效果等价的。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">spmv</span><span class="params">(<span class="keyword">dist_matrix_t</span> * mat, <span class="keyword">const</span> <span class="keyword">data_t</span> * x, <span class="keyword">data_t</span>* y)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> m = mat-&gt;global_m;</span><br><span class="line">    <span class="keyword">index_t</span> *r_pos = mat-&gt;r_pos;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; m; ++i) &#123;</span><br><span class="line">        <span class="keyword">int</span> cnt = r_pos[i+<span class="number">1</span>] - r_pos[i];</span><br><span class="line">        <span class="comment">// data_t s0 = 0, s1 = 0, s2 = 0, s3 = 0;</span></span><br><span class="line">        <span class="keyword">float32x4_t</span> temp, matrix, <span class="built_in">vector</span>; temp = vdupq_n_f32(<span class="number">0.0</span>); <span class="keyword">data_t</span> s0 = <span class="number">0</span>;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">int</span> p, max_4p = cnt &amp; (~<span class="number">3</span>);</span><br><span class="line">        <span class="keyword">data_t</span> * values = mat-&gt;values + r_pos[i];</span><br><span class="line">        <span class="keyword">index_t</span> * c_idx = mat-&gt;c_idx + r_pos[i];</span><br><span class="line">        <span class="keyword">for</span> (p = <span class="number">0</span>; p &lt; max_4p; p += <span class="number">4</span>) &#123;</span><br><span class="line">            <span class="keyword">int</span> j0 = c_idx[p  ];</span><br><span class="line">            <span class="keyword">int</span> j1 = c_idx[p+<span class="number">1</span>];</span><br><span class="line">            <span class="keyword">int</span> j2 = c_idx[p+<span class="number">2</span>];</span><br><span class="line">            <span class="keyword">int</span> j3 = c_idx[p+<span class="number">3</span>];</span><br><span class="line">            <span class="comment">// s0 += values[p  ] * x[j0];</span></span><br><span class="line">            <span class="comment">// s1 += values[p+1] * x[j1];</span></span><br><span class="line">            <span class="comment">// s2 += values[p+2] * x[j2];</span></span><br><span class="line">            <span class="comment">// s3 += values[p+3] * x[j3];</span></span><br><span class="line">            matrix = vld1q_f32(values + p);</span><br><span class="line">            <span class="built_in">vector</span> = vld1q_lane_f32(x + j0, <span class="built_in">vector</span>, <span class="number">0</span>);</span><br><span class="line">            <span class="built_in">vector</span> = vld1q_lane_f32(x + j1, <span class="built_in">vector</span>, <span class="number">1</span>);</span><br><span class="line">            <span class="built_in">vector</span> = vld1q_lane_f32(x + j2, <span class="built_in">vector</span>, <span class="number">2</span>);</span><br><span class="line">            <span class="built_in">vector</span> = vld1q_lane_f32(x + j3, <span class="built_in">vector</span>, <span class="number">3</span>);</span><br><span class="line">            temp   = vmlaq_f32(temp, matrix, <span class="built_in">vector</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> (; p &lt; cnt; p++) &#123;</span><br><span class="line">            <span class="keyword">int</span> j0 = c_idx[p];</span><br><span class="line">            s0 += values[p] * x[j0];</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// y[i] = s0 + s1 + s2 + s3;</span></span><br><span class="line">        y[i] = s0 + vgetq_lane_f32(temp, <span class="number">0</span>) + vgetq_lane_f32(temp, <span class="number">1</span>) + vgetq_lane_f32(temp, <span class="number">2</span>) + vgetq_lane_f32(temp, <span class="number">3</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>其实理论上来说，稀疏矩阵计算应该是memory bound的类型，循环展开这种提高SIMD效率的优化应该是起不到什么作用的。但在这里大部分算例效果有提升，小部分算例没什么效果甚至有一点倒退。除了上述两者，还尝试了内存对齐、消除指针别名等常用方法，但用在此处后发现并没有什么明显的效果。</p>
+<h2 id="CSRL格式"><a href="#CSRL格式" class="headerlink" title="CSRL格式"></a>CSRL格式</h2><p>本部分详细介绍可以参见刘芳芳、杨超等的文章。CSRL格式适用于具有局部性特征的矩阵，通过对该格式的SpMV进行向量化，使A和x的访问和计算都可以采用SIMD intrinsics来完成，提高了访问速度，进而提高性能。</p>
+<p>CSRL格式相对于CSR格式的主要改进在于：对稀疏矩阵中列下标连续的非零元段，存储首个非零元的列下标及段长度。</p>
+<p>因此需要四个数组（ 其中矩阵A是mxn矩阵，有nnz个非零元，有nzseg个非零元段）：</p>
+<ul>
+<li><code>val[nnz]</code>：记录每个非零元的值</li>
+<li><code>jas[nnz]</code>：记录每个非零元段的首个非零元所在的列下标</li>
+<li><code>jan[nnz]</code>：记录每个非零元段的段长度</li>
+<li><code>ptr[m+1]</code>：记录每行的第一个非零元段的索引，其中ptr[m]=nzseg+1</li>
+</ul>
+<h2 id="分块COO格式"><a href="#分块COO格式" class="headerlink" title="分块COO格式"></a>分块COO格式</h2><p>COO格式是更为简单直接的格式，对于每个非零元直接存储其行索引、列索引和值，即一个三元组（r_idx, c_idx, values）。虽然看起来比CSR格式要多存许多行索引，但它对于高度稀疏的矩阵而言是有利的。最极端地，对于只有一个非零元的稀疏矩阵，COO格式只需要3个数，而CSR格式需要m+1+2个数（m为矩阵行数）。所以COO格式对于分块后的小矩阵存储较为有利。</p>
+<p>更有利的是，当分拆成小矩阵后，小矩阵的维度可能小于65536（uint16_t可覆盖）甚至256（uint8_t可覆盖），则可以使用更低精度的无符号数来存储行索引和列索引（小矩阵内部的索引），需要计算时再加上该小矩阵的偏移量（小矩阵在原矩阵中相对于(0,0)的位置）即可，由此可以节省内存带宽，提高性能。</p>
+<h2 id="基于OpenMP并行改写"><a href="#基于OpenMP并行改写" class="headerlink" title="基于OpenMP并行改写"></a>基于OpenMP并行改写</h2><p>OpenMP的并行非常直观，直接在对矩阵行的遍历上按行做任务划分和并行。如下图所示，实验发现dynamic的调度策略会非常慢。这大概是因为每一行的非零元不算很多，每个线程很快完成一行的计算，然后根据work-stealing的策略，又向调度方申请新的任务，如此频繁的询问、调度带来较大开销。因此尽可能放大并行任务的粒度（调整chunk值）。经过简单调试，static的策略性能最好。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">spmv</span><span class="params">(<span class="keyword">dist_matrix_t</span> *mat, <span class="keyword">const</span> <span class="keyword">data_t</span>* x, <span class="keyword">data_t</span>* y)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> m = mat-&gt;global_m;</span><br><span class="line">    <span class="keyword">index_t</span> *r_pos = mat-&gt;r_pos;</span><br><span class="line">    <span class="meta">#<span class="meta-keyword">pragma</span> omp parallel for schedule(static)</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; m; ++i) &#123;</span><br><span class="line">        <span class="keyword">int</span> cnt = r_pos[i+<span class="number">1</span>] - r_pos[i];</span><br><span class="line">        <span class="keyword">data_t</span> s0 = <span class="number">0</span>, s1 = <span class="number">0</span>, s2 = <span class="number">0</span>, s3 = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">int</span> p, max_4p = cnt &amp; (~<span class="number">3</span>);</span><br><span class="line">        <span class="keyword">data_t</span> * values = mat-&gt;values + r_pos[i];</span><br><span class="line">        <span class="keyword">index_t</span> * c_idx = mat-&gt;c_idx + r_pos[i];</span><br><span class="line">        <span class="keyword">for</span> (p = <span class="number">0</span>; p &lt; max_4p; p += <span class="number">4</span>) &#123;</span><br><span class="line">            <span class="keyword">int</span> j0 = c_idx[p  ];</span><br><span class="line">            <span class="keyword">int</span> j1 = c_idx[p+<span class="number">1</span>];</span><br><span class="line">            <span class="keyword">int</span> j2 = c_idx[p+<span class="number">2</span>];</span><br><span class="line">            <span class="keyword">int</span> j3 = c_idx[p+<span class="number">3</span>];</span><br><span class="line">            s0 += values[p  ] * x[j0];</span><br><span class="line">            s1 += values[p+<span class="number">1</span>] * x[j1];</span><br><span class="line">            s2 += values[p+<span class="number">2</span>] * x[j2];</span><br><span class="line">            s3 += values[p+<span class="number">3</span>] * x[j3];</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> (; p &lt; cnt; p++) &#123;</span><br><span class="line">            <span class="keyword">int</span> j0 = c_idx[p];</span><br><span class="line">            s0 += values[p] * x[j0];</span><br><span class="line">        &#125;</span><br><span class="line">        y[i] = s0 + s1 + s2 + s3;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>但即使如此，（在后面与MPI的对比中可见）基于OpenMP并行的效果非常差。大概的原因来自两方面：上述的线程在并行区内启动、调度和销毁的开销；以及线程-线程之间的伪共享。虽然对于向量y的伪共享，已经通过尽可能大的任务粒度、先存局部变量s0,s1,s2,s3最后再写y[i]的措施降低了，但总还是有些影响。</p>
+<h2 id="基于MPI并行改写"><a href="#基于MPI并行改写" class="headerlink" title="基于MPI并行改写"></a>基于MPI并行改写</h2><p>基于MPI的并行首先要考虑负载均衡的任务划分。由于划分必须要静态的，所以还像OpenMP一样以行来做动态的任务分配（你分几行，我分几行，如此往复）显然是不行的。必须要有合理的负载分配方式。</p>
+<p>平均分配矩阵各行显然是不行的，因为可能有的行非零元多，有的行少。因此可用非零元个数来做依据，尽量使每个进程分到的那些行所包括的非零元个数尽可能相近。所以在创建分布式矩阵和向量前，首先要由进程0统计矩阵的非零元信息，做出一个尽可能“公平”的划分。如下图所示。</p>
+<p>虽然有一个理论上公平的均摊任务量avg_workload，但实际上不可能总是切得这么精准，使得满足avg_workload的划分刚好落在行与行之间。如果每次总是向下取整（即做得比avg_workload少一点，则最后的那个进程会累积下特别多的任务，导致负载极度不均衡。而如果每次总是向上取整（即做得比avg_workload多一点，则最后的几个进程可能会无任务可做，全程空等，但这总比前者要好得多。为了获得更合理的划分，这里采用均匀随机的方法，即进程按照进程号奇偶，交替地多做一点和少做一点。使得不至于最后有不少的进程无任务可做。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line">MPI_Bcast(&amp;mat.global_m,   <span class="number">1</span>, MPI_INT, <span class="number">0</span>, MPI_COMM_WORLD);</span><br><span class="line">MPI_Bcast(&amp;mat.global_nnz, <span class="number">1</span>, MPI_INT, <span class="number">0</span>, MPI_COMM_WORLD);</span><br><span class="line"><span class="keyword">if</span> (p_id == <span class="number">0</span>) &#123;<span class="comment">// 进程0负责记录和分配各个进程计算的范围</span></span><br><span class="line">    p_ibeg      = (<span class="keyword">uint32_t</span>*)<span class="built_in">malloc</span>(<span class="keyword">sizeof</span>(<span class="keyword">uint32_t</span>) * p_num);</span><br><span class="line">    p_local_m   = (<span class="keyword">uint32_t</span>*)<span class="built_in">malloc</span>(<span class="keyword">sizeof</span>(<span class="keyword">uint32_t</span>) * p_num);</span><br><span class="line">    p_local_nnz = (<span class="keyword">uint32_t</span>*)<span class="built_in">malloc</span>(<span class="keyword">sizeof</span>(<span class="keyword">uint32_t</span>) * p_num);</span><br><span class="line">    assert(mat.r_pos[mat.global_m] == mat.global_nnz);</span><br><span class="line">    <span class="keyword">int</span> avg_workload = mat.global_nnz / p_num;<span class="comment">// 尽可能平均分</span></span><br><span class="line">    <span class="keyword">int</span> ptr_last, ptr_curr = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">bool</span> shrink = <span class="literal">false</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> p = <span class="number">0</span>; p &lt; p_num; p++) &#123;</span><br><span class="line">        <span class="comment">// p_ibeg[p] = (p &gt; 0) ? (--ptr_curr) : ptr_curr;</span></span><br><span class="line">        p_ibeg[p] = ptr_curr;</span><br><span class="line">        ptr_last = ptr_curr;</span><br><span class="line">        <span class="keyword">while</span> (ptr_curr &lt;= mat.global_m &amp;&amp;  mat.r_pos[ptr_curr] - mat.r_pos[ptr_last] &lt; avg_workload) </span><br><span class="line">            ptr_curr++;</span><br><span class="line">        <span class="keyword">if</span> (ptr_curr &lt;= mat.global_m) &#123;</span><br><span class="line">            <span class="comment">// 如果ptr_curr还落在有效的范围内</span></span><br><span class="line">            <span class="comment">// 此时ptr_curr减一则会比avg_workload小，但直接用avg_workload就会比avg_workload大</span></span><br><span class="line">            <span class="comment">// 因此均匀随机地取</span></span><br><span class="line">            <span class="keyword">if</span> (shrink == <span class="literal">true</span>)</span><br><span class="line">                ptr_curr--;</span><br><span class="line">            shrink = !shrink;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;<span class="comment">// 后面的进程不再有工作了</span></span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> remain_p = p+<span class="number">1</span>; remain_p &lt; p_num; remain_p++) </span><br><span class="line">                p_ibeg[remain_p] = mat.global_m;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> p = <span class="number">0</span>; p &lt; p_num; p++) &#123;<span class="comment">// 确定每个进程负责计算的局部范围local_m，和实际有的</span></span><br><span class="line">        <span class="keyword">if</span> (p != p_num - <span class="number">1</span>) &#123;</span><br><span class="line">            p_local_m[p]   = p_ibeg[p+<span class="number">1</span>]            - p_ibeg[p];</span><br><span class="line">            p_local_nnz[p] = mat.r_pos[p_ibeg[p+<span class="number">1</span>]] - mat.r_pos[p_ibeg[p]];</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;<span class="comment">// p_num - 1</span></span><br><span class="line">            p_local_m[p]   = mat.global_m            - p_ibeg[p];</span><br><span class="line">            p_local_nnz[p] = mat.r_pos[mat.global_m] - mat.r_pos[p_ibeg[p]];</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// printf("p_id: %d, row_beg: %d, work_nnz: %d\n", p, p_ibeg[p], p_local_nnz[p]);</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 0号进程负责计算的区域</span></span><br><span class="line">    mat.local_ibeg = <span class="number">0</span>;</span><br><span class="line">    mat.local_m = p_local_m[<span class="number">0</span>];</span><br><span class="line">    mat.local_nnz = p_local_nnz[<span class="number">0</span>];</span><br><span class="line">    <span class="comment">// 告诉其它进程负责计算的区域</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> p = <span class="number">1</span>; p &lt; p_num; p++) &#123;</span><br><span class="line">        MPI_Send(&amp;p_ibeg[p]     , <span class="number">1</span>, MPI_INT, p,  <span class="number">10</span>, MPI_COMM_WORLD);<span class="comment">// tag =  10</span></span><br><span class="line">        MPI_Send(&amp;p_local_m[p]  , <span class="number">1</span>, MPI_INT, p, <span class="number">110</span>, MPI_COMM_WORLD);<span class="comment">// tag = 110</span></span><br><span class="line">        MPI_Send(&amp;p_local_nnz[p], <span class="number">1</span>, MPI_INT, p, <span class="number">210</span>, MPI_COMM_WORLD);<span class="comment">// tag = 210</span></span><br><span class="line">        MPI_Send(&amp;mat.global_m  , <span class="number">1</span>, MPI_INT, p, <span class="number">310</span>, MPI_COMM_WORLD);<span class="comment">// tag = 310</span></span><br><span class="line">        MPI_Send(&amp;mat.global_nnz, <span class="number">1</span>, MPI_INT, p, <span class="number">410</span>, MPI_COMM_WORLD);<span class="comment">// tag = 410</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>而其它进程接收到0号进程的任务分配后，按照各自的需求来开辟分布式矩阵和向量的内存空间。注意这里向量x仍然是全局的，而向量y可以是局部的。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line"><span class="keyword">else</span> &#123;<span class="comment">// 其它进程负责接收</span></span><br><span class="line">    MPI_Recv(&amp;mat.local_ibeg, <span class="number">1</span>, MPI_INT, <span class="number">0</span>,  <span class="number">10</span>, MPI_COMM_WORLD, &amp;status);<span class="comment">// tag =  10</span></span><br><span class="line">    MPI_Recv(&amp;mat.local_m   , <span class="number">1</span>, MPI_INT, <span class="number">0</span>, <span class="number">110</span>, MPI_COMM_WORLD, &amp;status);<span class="comment">// tag = 110</span></span><br><span class="line">    MPI_Recv(&amp;mat.local_nnz , <span class="number">1</span>, MPI_INT, <span class="number">0</span>, <span class="number">210</span>, MPI_COMM_WORLD, &amp;status);<span class="comment">// tag = 210</span></span><br><span class="line">    MPI_Recv(&amp;mat.global_m  , <span class="number">1</span>, MPI_INT, <span class="number">0</span>, <span class="number">310</span>, MPI_COMM_WORLD, &amp;status);<span class="comment">// tag = 310</span></span><br><span class="line">    MPI_Recv(&amp;mat.global_nnz, <span class="number">1</span>, MPI_INT, <span class="number">0</span>, <span class="number">410</span>, MPI_COMM_WORLD, &amp;status);<span class="comment">// tag = 410</span></span><br><span class="line">    <span class="comment">// 分配矩阵内存空间</span></span><br><span class="line">    mat.r_pos = (<span class="keyword">index_t</span>*)<span class="built_in">malloc</span>(<span class="keyword">sizeof</span>(<span class="keyword">index_t</span>) * (mat.local_m + <span class="number">1</span>));<span class="comment">// 按照行数+1分配正向表的r_pos空间</span></span><br><span class="line">    mat.c_idx = (<span class="keyword">index_t</span>*)<span class="built_in">malloc</span>(<span class="keyword">sizeof</span>(<span class="keyword">index_t</span>) * mat.local_nnz);<span class="comment">// 按照整个矩阵的非零元数目分配非零元的列序号的存储空间</span></span><br><span class="line">    mat.values = (<span class="keyword">data_t</span>*)<span class="built_in">malloc</span>(<span class="keyword">sizeof</span>(<span class="keyword">data_t</span>)  * mat.local_nnz);<span class="comment">// 按照整个矩阵的非零元数目分配非零元的数据的存储空间</span></span><br><span class="line">    <span class="comment">// 分配向量内存空间：注意！右端向量x仍然是全局的！只是结果向量是只开一部分</span></span><br><span class="line">    x = (<span class="keyword">data_t</span>*)<span class="built_in">malloc</span>(<span class="keyword">sizeof</span>(<span class="keyword">data_t</span>) * mat.global_m);</span><br><span class="line">    y = (<span class="keyword">data_t</span>*)<span class="built_in">malloc</span>(<span class="keyword">sizeof</span>(<span class="keyword">data_t</span>) * mat.local_m);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在开辟好内存空间后，由进程0（因为只有它读入了文件中的数据）向其它进程分发数据。此处需要注意因为对矩阵的行做了划分（前面进程的数据相当于抛弃掉了），各个进程记录每行数据存储位置的r_pos需要做一个偏移。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (p_id == <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> p = <span class="number">1</span>; p &lt; p_num; p++) &#123;</span><br><span class="line">        <span class="comment">// printf(" Sending for %d\n", p);</span></span><br><span class="line">        MPI_Send(&amp;mat.r_pos[p_ibeg[p]]            , p_local_m[p]  , MPI_UNSIGNED, p,  <span class="number">10</span>, MPI_COMM_WORLD);</span><br><span class="line">        MPI_Send(&amp;mat.c_idx[mat.r_pos[p_ibeg[p]]] , p_local_nnz[p], MPI_UNSIGNED, p, <span class="number">110</span>, MPI_COMM_WORLD);</span><br><span class="line">        MPI_Send(&amp;mat.values[mat.r_pos[p_ibeg[p]]], p_local_nnz[p], MPI_DATA,     p, <span class="number">210</span>, MPI_COMM_WORLD);</span><br><span class="line">        <span class="comment">// MPI_Send(&amp;x[p_ibeg[p]]                    , p_local_m[p]  , MPI_DATA,     p, 310, MPI_COMM_WORLD);</span></span><br><span class="line">        MPI_Send(&amp;x[<span class="number">0</span>]                            , mat.global_m  , MPI_DATA,     p, <span class="number">310</span>, MPI_COMM_WORLD);</span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    MPI_Recv(&amp;mat.r_pos[<span class="number">0</span>],  mat.local_m  , MPI_UNSIGNED, <span class="number">0</span>,  <span class="number">10</span>, MPI_COMM_WORLD, &amp;status);</span><br><span class="line">    MPI_Recv(&amp;mat.c_idx[<span class="number">0</span>],  mat.local_nnz, MPI_UNSIGNED, <span class="number">0</span>, <span class="number">110</span>, MPI_COMM_WORLD, &amp;status);</span><br><span class="line">    MPI_Recv(&amp;mat.values[<span class="number">0</span>], mat.local_nnz, MPI_DATA,     <span class="number">0</span>, <span class="number">210</span>, MPI_COMM_WORLD, &amp;status);</span><br><span class="line">    MPI_Recv(&amp;x[<span class="number">0</span>],          mat.global_m , MPI_DATA,     <span class="number">0</span>, <span class="number">310</span>, MPI_COMM_WORLD, &amp;status);</span><br><span class="line">    <span class="comment">// 其他进程的数据得到之后需要做个偏移！！！</span></span><br><span class="line">    <span class="keyword">uint32_t</span> r_pos_0 = mat.r_pos[<span class="number">0</span>];</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">uint32_t</span> i = <span class="number">0</span>; i &lt; mat.local_m; i++)</span><br><span class="line">        mat.r_pos[i] -= r_pos_0;</span><br><span class="line">    mat.r_pos[mat.local_m] = mat.local_nnz;<span class="comment">// r_pos的最后一个元素指向末尾</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="CSR混合CSRL格式"><a href="#CSR混合CSRL格式" class="headerlink" title="CSR混合CSRL格式"></a>CSR混合CSRL格式</h2><p>如前所述，CSRL格式在nzseg/nnz值很小时，性能远胜于CSR格式。但大部分情况下，CSR仍占优。因此在此采用两者混合的格式。注意到在划分为进行分布式数组后，相当于每一个进程都在做一个local_mxglobal_m的矩阵和global_m的向量的乘法，所以它们可以独立地使用CSRL格式，从预处理到计算都是互不干扰的。</p>
+<p>这样的好处的优化更能“包裹”住原问题的一些奇性。比如，某个矩阵某些行很稠密、元素连成一片，很适合于CSRL格式；但也有很多行很稀疏，更适合于CSR格式。如果不做行划分，它最后只有一个nzseg/nnz值，做和不做CSRL格式的优化都是一锤子买卖，总会亏欠另一方。而行划分之后，相当于有了#procs个nzseg/nnz值，可以各自局部地决定是否要做CSRL格式的优化，具备了一点“自适应性”。这也是MPI划分相比OpenMP要更优胜的地方。在这里决定是否做CSRL格式优化的nzseg/nnz阈值为0.3，小于0.3则该进程转换成CSRL格式，否则不动。</p>
+<h2 id="GPU版本（单卡）"><a href="#GPU版本（单卡）" class="headerlink" title="GPU版本（单卡）"></a>GPU版本（单卡）</h2><p>GPU版本的SpMV优化的参考资料远比CPU的丰富。作业也只要求做CPU或GPU中一种，因此这里文字介绍较为简单。各种方法的原理是类似的，采用尽可能紧致的存储格式，节省带宽，提高访存效率，然后再考虑SIMD效率。</p>
+<p>naive版本的算法非常直接，对矩阵做一维行划分，每一个cuda thread负责矩阵一行的计算。如下图所示。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">__<span class="function">global__ <span class="keyword">void</span> <span class="title">spmv_naive_kernel</span><span class="params">(<span class="keyword">int</span> m, <span class="keyword">const</span> <span class="keyword">uint32_t</span> *r_pos, \</span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="keyword">const</span> <span class="keyword">uint32_t</span> *c_idx, <span class="keyword">const</span> <span class="keyword">data_t</span> *values, <span class="keyword">const</span> <span class="keyword">data_t</span> *x, <span class="keyword">data_t</span> *y)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i = blockIdx.x * blockDim.x + threadIdx.x;</span><br><span class="line">    <span class="keyword">if</span>(i &lt; m) &#123;</span><br><span class="line">        <span class="keyword">int</span> p, begin = r_pos[i], end = r_pos[i+<span class="number">1</span>];</span><br><span class="line">        <span class="keyword">data_t</span> s = y[i];</span><br><span class="line">        <span class="keyword">for</span>(p = begin; p &lt; end; ++p) &#123;</span><br><span class="line">            <span class="keyword">int</span> j = c_idx[p];</span><br><span class="line">            s += values[p] * x[j];</span><br><span class="line">        &#125;</span><br><span class="line">        y[i] = s;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">spmv</span><span class="params">(<span class="keyword">dist_matrix_t</span> *mat, <span class="keyword">const</span> <span class="keyword">data_t</span>* x, <span class="keyword">data_t</span>* y)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> m = mat-&gt;global_m;</span><br><span class="line">    <span class="function">dim3 <span class="title">grid_size</span> <span class="params">(ceiling(m, <span class="number">512</span>), <span class="number">1</span>, <span class="number">1</span>)</span></span>;</span><br><span class="line">    <span class="function">dim3 <span class="title">block_size</span> <span class="params">(<span class="number">512</span>, <span class="number">1</span>, <span class="number">1</span>)</span></span>;</span><br><span class="line">    spmv_naive_kernel&lt;&lt;&lt;grid_size, block_size&gt;&gt;&gt;(m, \</span><br><span class="line">        mat-&gt;gpu_r_pos, mat-&gt;gpu_c_idx, mat-&gt;gpu_values, x, y);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="稠密矩阵"><a href="#稠密矩阵" class="headerlink" title="稠密矩阵"></a>稠密矩阵</h1><h2 id="编译选项"><a href="#编译选项" class="headerlink" title="编译选项"></a>编译选项</h2><p>对于naïve版本的代码，如下所示，不妨先“无脑”地加上-O3 -fomit-frame-pointer -march=armv8-a -ffast-math等编译选项来让编译器尽可能提供些自动向量化的效果。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">square_sgemm</span> <span class="params">(<span class="keyword">int</span> n, <span class="keyword">float</span>* A, <span class="keyword">float</span>* B, <span class="keyword">float</span>* C)</span> </span>&#123;</span><br><span class="line">  <span class="comment">/* For each row i of A */</span></span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; n; ++i)</span><br><span class="line">    <span class="comment">/* For each column j of B */</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; n; ++j)  &#123;</span><br><span class="line">      <span class="comment">/* Compute C(i,j) */</span></span><br><span class="line">      <span class="keyword">float</span> cij = C[i+j*n];</span><br><span class="line">      <span class="keyword">for</span>( <span class="keyword">int</span> k = <span class="number">0</span>; k &lt; n; k++ )</span><br><span class="line">        cij += A[i+k*n] * B[k+j*n];</span><br><span class="line">      C[i+j*n] = cij;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>仅仅是如此，在不同规模的算例上性能就已经有2~10倍的提升，n每逢4的倍数便有显著的性能下降，这是cache thrashing导致的。可做半定量分析：课程集群L1 cache为64B/line，4路组相联，256个组，可知地址低6位为Offset，中间8位为Index，高位为Tag。N-way set associativity只是提供了conflict miss时的“容错性”，因此不失一般性，假定为direct-mapped来分析。地址每隔2^14B就会拥有相同的Index而被映射到同一个set上，对于单精度浮点数而言就是4096个数，因此当n满足(n*m)%4096==0时（m=1,2,…,n-1），就会在一轮k维的循环中产生cache conflict miss，m就是冲突发生时两个B元素相隔的行数。因此冲突频率随n增大而增大，当n≥4096时，就是每两次相邻的对B元素读取都会造成冲突。</p>
+<h2 id="循环变换"><a href="#循环变换" class="headerlink" title="循环变换"></a>循环变换</h2><p>注意到在naïve的代码中，由于矩阵采用列主序的存储方式，因此先行后列的方式来计算C中元素的值，虽然对B元素访存是连续的，但对于C和A矩阵的访存都是不利的。尤其在循环最内维的k维，A[i+k*n]是大跨步跳跃式访存。</p>
+<p>因此可以采用对i和j维的循环交换，来发掘数据复用的空间局部性。代码如下所示。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">square_sgemm</span> <span class="params">(<span class="keyword">int</span> n, <span class="keyword">float</span>* A, <span class="keyword">float</span>* B, <span class="keyword">float</span>* C)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; n; j++)&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; n; i++)&#123;</span><br><span class="line">      <span class="keyword">register</span> <span class="keyword">float</span> b = B[j*n + i];</span><br><span class="line">      <span class="keyword">for</span> (<span class="keyword">int</span> p = <span class="number">0</span>; p &lt; n; p++)</span><br><span class="line">        C[j*n+p] += A[i*n+p] * b;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>相当于按列主序遍历B中元素，对于其中的每个元素b，找到它对应有贡献的C和A中的元素所在的列，进行乘加计算。最内维的p维循环对A和C都是连续的，可以有效利用向量化。由于更改循环后，在整轮最内维的p循环中，b的元素是固定不变的寄存器变量，因此不再出现步骤一中的cache conflict miss，反而是矩阵规模n每逢4的倍数就比相邻的有提升，这是因为n为4的倍数能刚好被向量化指令覆盖，而不会多出额外的数据需要标量运算。</p>
+<h2 id="消除指针别名"><a href="#消除指针别名" class="headerlink" title="消除指针别名"></a>消除指针别名</h2><p>消除指针别名告诉编译器修改指针指向的内存内容只能经过该指针之手，使编译器有更大优化空间。主要方法是给函数形参中的指针添加<code>__restrict__</code>关键字。其它局部的指针变量在定义时也可用此修饰。</p>
+<h2 id="循环展开-1"><a href="#循环展开-1" class="headerlink" title="循环展开"></a>循环展开</h2><p>将循环展开，同时做多列的乘加操作，即取同行不同列的B矩阵元素b0, b1, b2, b3，均与相同的A列做乘法后加到不同的C列上。代码如下所示，需要注意处理余下不足4的列。。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> j, i, p;</span><br><span class="line"><span class="keyword">for</span> ( j = <span class="number">0</span>; j &lt; ((n)&amp;(~<span class="number">3</span>)); j+=<span class="number">4</span>)<span class="comment">//for each colum j of B</span></span><br><span class="line">  <span class="keyword">for</span> ( i = <span class="number">0</span>; i &lt; n; i++)&#123;<span class="comment">//for each row i of B</span></span><br><span class="line">    <span class="keyword">register</span> <span class="keyword">float</span> b0 = B(i,j);</span><br><span class="line">    <span class="keyword">register</span> <span class="keyword">float</span> b1 = B(i,j+<span class="number">1</span>);</span><br><span class="line">    <span class="keyword">register</span> <span class="keyword">float</span> b2 = B(i,j+<span class="number">2</span>);</span><br><span class="line">    <span class="keyword">register</span> <span class="keyword">float</span> b3 = B(i,j+<span class="number">3</span>);</span><br><span class="line">    <span class="keyword">for</span> ( p = <span class="number">0</span>; p &lt; n; p++)&#123;</span><br><span class="line">      C(p,j  ) += A(p,i) * b0;</span><br><span class="line">      C(p,j+<span class="number">1</span>) += A(p,i) * b1;</span><br><span class="line">      C(p,j+<span class="number">2</span>) += A(p,i) * b2;</span><br><span class="line">      C(p,j+<span class="number">3</span>) += A(p,i) * b3;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"><span class="keyword">for</span> ( ; j &lt; n; j++)<span class="comment">//for each remaining colum j of B</span></span><br><span class="line">  <span class="keyword">for</span> ( i = <span class="number">0</span>; i &lt; n; i++)&#123;<span class="comment">//for each row i of B</span></span><br><span class="line">    <span class="keyword">register</span> <span class="keyword">float</span> b0 = B(i,j);</span><br><span class="line">    <span class="keyword">for</span> ( p = <span class="number">0</span>; p &lt; n; p++)</span><br><span class="line">      C(p,j  ) += A(p,i  ) * b0;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure></p>
+<p>实验效果显示选4列为一批做乘加效果较好，而大于4列则效果开始下降。循环展开常见的是对最内层做，优势在于循环开销（如终止条件上的分支和计数器变量的更新）的减少。至于为什么要在最外层循环做展开（而不是最内层循环），需要从访存优化的角度来看。对比上一节《循环变换》中最内层循环只有一句C[j<em>n+p] += A[i</em>n+p] <em> b;，展开后此处最内层循环有四句C(p,j ) += A(p,i) </em> b0;。注意，改写后，A(p,i)只需要载入寄存器一次，就能服务于C(p,j )，C(p,j+1)，C(p,j+2)，C(p,j+3)等的计算；而原来，相同的A[i<em>n+p]值需要为每个C[j</em>n+p]加载一次。因此，外层循环的展开将矩阵A元素加载次数减少了nb倍（nb为循环展开的项数，这里是4）。</p>
+<h2 id="内存对齐和简单Blocking"><a href="#内存对齐和简单Blocking" class="headerlink" title="内存对齐和简单Blocking"></a>内存对齐和简单Blocking</h2><p>利用分块技术提高计算访存比获得更高的性能是常用的优化手段。从之前的代码来看，有三层循环（从外到内依次是j -&gt; i -&gt; p），因此可以在这3个维度上采取分块，分别设为SET_J_BLOCK_SIZE, SET_I_BLOCK_SIZE, SET_P_BLOCK_SIZE。越内维访存越连续，因此设的分块大小更大。此处同时配合内存对齐的手段，是因为对于每一个分块矩阵的乘法，单独将A和B拷贝到一块对齐的连续的内存A_local和B_local中，计算结果存到同样对齐的连续的C_local中。一个好处是A_local和B_local矩阵在拷贝时已经预热，放进了CPU的cache里；另一个好处是在真正计算时，读取和存储都是连续的，提高了cache效率。将一块realMxrealN大小的矩阵拷贝到setMxsetN大小的内存中的代码如下所示。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">float</span> C_local[SET_P_BLOCK_SIZE*SET_J_BLOCK_SIZE] __attribute__((aligned(<span class="number">64</span>)));</span><br><span class="line"><span class="keyword">float</span> A_local[SET_P_BLOCK_SIZE*SET_I_BLOCK_SIZE] __attribute__((aligned(<span class="number">64</span>)));</span><br><span class="line"><span class="keyword">float</span> B_local[SET_I_BLOCK_SIZE*SET_J_BLOCK_SIZE] __attribute__((aligned(<span class="number">64</span>)));</span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">copy_into_MxN_nopadding</span><span class="params">(<span class="keyword">int</span> n, <span class="keyword">int</span> realM, <span class="keyword">int</span> realN, <span class="keyword">int</span> setM, \</span></span></span><br><span class="line"><span class="function"><span class="params">      <span class="keyword">const</span> <span class="keyword">float</span>* __restrict__ <span class="built_in">array</span>, <span class="keyword">float</span>* __restrict__ array_local)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">int</span> local_col = <span class="number">0</span>; local_col &lt; realN; local_col++)&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> local_row = <span class="number">0</span>; local_row &lt; realM; local_row++)</span><br><span class="line">      array_local[local_row] = <span class="built_in">array</span>[local_row];</span><br><span class="line">    array_local += setM;</span><br><span class="line">    <span class="built_in">array</span> += n;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>整体的计算逻辑如下所示，仅做了一级分块，其中计算部分类似前面步骤四中的j以步长4为单位做循环。区别在于分块后为减低寻址开销，每个分块用局部的指针 xxx_local_ptr指示当前计算的位置。拷贝分块矩阵的函数copy_into_MxN_nopadding与步骤六中的函数copy_PxI_nopadding()几乎一样。为了寻找这组最优的分块，可以通过编一个简单的Shell脚本，设置环境变量来指定各维度的分块，然后在Makefile里根据环境变量定义宏，再编译和运行。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">square_sgemm</span> <span class="params">(<span class="keyword">int</span> n, <span class="keyword">float</span>* __restrict__ A, <span class="keyword">float</span>* __restrict__ B, <span class="keyword">float</span>* __restrict__ C)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">int</span> j_block = <span class="number">0</span>; j_block &lt; n; j_block += SET_J_BLOCK_SIZE)&#123;<span class="comment">//对于B而言的水平划分</span></span><br><span class="line">    <span class="keyword">int</span> REAL_J_BLOCK_SIZE = min(SET_J_BLOCK_SIZE, n - j_block);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i_block = <span class="number">0</span>; i_block &lt; n; i_block += SET_I_BLOCK_SIZE)&#123;<span class="comment">//对于B而言的垂直划分</span></span><br><span class="line">      <span class="keyword">int</span> REAL_I_BLOCK_SIZE = min(SET_I_BLOCK_SIZE, n - i_block);</span><br><span class="line"></span><br><span class="line">      copy_into_MxN_nopadding(n, REAL_I_BLOCK_SIZE, REAL_J_BLOCK_SIZE, SET_I_BLOCK_SIZE,\</span><br><span class="line">                              B + j_block*n + i_block, B_local);</span><br><span class="line"></span><br><span class="line">      <span class="keyword">for</span> (<span class="keyword">int</span> p_block = <span class="number">0</span>; p_block &lt; n; p_block += SET_P_BLOCK_SIZE) &#123;</span><br><span class="line">        <span class="keyword">int</span> REAL_P_BLOCK_SIZE = min(SET_P_BLOCK_SIZE, n - p_block);</span><br><span class="line"></span><br><span class="line">        copy_into_MxN_nopadding(n, REAL_P_BLOCK_SIZE, REAL_I_BLOCK_SIZE, SET_P_BLOCK_SIZE,\</span><br><span class="line">                                A + i_block*n + p_block, A_local);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// local_C清零</span></span><br><span class="line">        <span class="keyword">float</span> * C_local_ptr = C_local;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; REAL_J_BLOCK_SIZE; j++)&#123;<span class="comment">//拷贝的时候是部分</span></span><br><span class="line">          <span class="keyword">for</span> (<span class="keyword">int</span> p = <span class="number">0</span>; p &lt; REAL_P_BLOCK_SIZE; p++)</span><br><span class="line">            C_local_ptr[p] = <span class="number">0.0</span>;</span><br><span class="line">          C_local_ptr += SET_P_BLOCK_SIZE;<span class="comment">//而指针前进的时候是全步长！</span></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 计算</span></span><br><span class="line">        <span class="keyword">float</span> * B_local_ptr = B_local;</span><br><span class="line">        <span class="keyword">float</span> * A_local_ptr = A_local;</span><br><span class="line">        C_local_ptr = C_local;</span><br><span class="line">        <span class="keyword">int</span> j;</span><br><span class="line">        <span class="keyword">for</span> ( j = <span class="number">0</span>; j &lt; ((REAL_J_BLOCK_SIZE)&amp;(~<span class="number">3</span>)); j+=<span class="number">4</span>)&#123;<span class="comment">//计算的时候是部分</span></span><br><span class="line">          <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; REAL_I_BLOCK_SIZE; i++)&#123;</span><br><span class="line">            <span class="keyword">register</span> <span class="keyword">float</span> b0 = B_local_ptr[i];</span><br><span class="line">            <span class="keyword">register</span> <span class="keyword">float</span> b1 = B_local_ptr[SET_I_BLOCK_SIZE + i];</span><br><span class="line">            <span class="keyword">register</span> <span class="keyword">float</span> b2 = B_local_ptr[<span class="number">2</span>*SET_I_BLOCK_SIZE + i];</span><br><span class="line">            <span class="keyword">register</span> <span class="keyword">float</span> b3 = B_local_ptr[<span class="number">3</span>*SET_I_BLOCK_SIZE + i];</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> p = <span class="number">0</span>; p &lt; REAL_P_BLOCK_SIZE; p++)&#123;</span><br><span class="line">              C_local_ptr[p] += A_local_ptr[p] * b0;</span><br><span class="line">              C_local_ptr[SET_P_BLOCK_SIZE + p] += A_local_ptr[p] * b1;</span><br><span class="line">              C_local_ptr[<span class="number">2</span>*SET_P_BLOCK_SIZE + p] += A_local_ptr[p] * b2;</span><br><span class="line">              C_local_ptr[<span class="number">3</span>*SET_P_BLOCK_SIZE + p] += A_local_ptr[p] * b3;</span><br><span class="line">            &#125;</span><br><span class="line">            A_local_ptr += SET_P_BLOCK_SIZE;<span class="comment">//而指针前进的时候是全步长！</span></span><br><span class="line">          &#125;</span><br><span class="line">          A_local_ptr = A_local;<span class="comment">//A重新归位</span></span><br><span class="line">          B_local_ptr += <span class="number">4</span>*SET_I_BLOCK_SIZE;</span><br><span class="line">          C_local_ptr += <span class="number">4</span>*SET_P_BLOCK_SIZE;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> ( ; j &lt; REAL_J_BLOCK_SIZE; j++)&#123;<span class="comment">//计算的时候是部分</span></span><br><span class="line">          <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; REAL_I_BLOCK_SIZE; i++)&#123;</span><br><span class="line">            <span class="keyword">register</span> <span class="keyword">float</span> b0 = B_local_ptr[i];</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> p = <span class="number">0</span>; p &lt; REAL_P_BLOCK_SIZE; p++)&#123;</span><br><span class="line">              C_local_ptr[p] += A_local_ptr[p] * b0;</span><br><span class="line">            &#125;</span><br><span class="line">            A_local_ptr += SET_P_BLOCK_SIZE;<span class="comment">//而指针前进的时候是全步长！</span></span><br><span class="line">          &#125;</span><br><span class="line">          A_local_ptr = A_local;<span class="comment">//A重新归位</span></span><br><span class="line">          B_local_ptr += SET_I_BLOCK_SIZE;</span><br><span class="line">          C_local_ptr += SET_P_BLOCK_SIZE;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 计算完拷贝回去</span></span><br><span class="line">        C += j_block*n + p_block;</span><br><span class="line">        C_local_ptr = C_local;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; REAL_J_BLOCK_SIZE; j++)&#123;<span class="comment">//拷贝的时候是部分</span></span><br><span class="line">          <span class="keyword">for</span> (<span class="keyword">int</span> p = <span class="number">0</span>; p &lt; REAL_P_BLOCK_SIZE; p++)</span><br><span class="line">            C[p] += C_local_ptr[p];</span><br><span class="line">          C += n;</span><br><span class="line">          C_local_ptr += SET_P_BLOCK_SIZE;<span class="comment">//而指针前进的时候是全步长！</span></span><br><span class="line">        &#125;</span><br><span class="line">        C -= (j_block+REAL_J_BLOCK_SIZE)*n + p_block;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="两级Blocking-转置重组"><a href="#两级Blocking-转置重组" class="headerlink" title="两级Blocking+转置重组"></a>两级Blocking+转置重组</h2><p>为了更细致的优化，可以做二级分块，在原有基础上，在拷贝出来的对齐且连续的A_local和B_local内做进一步的分块，每次计算一个KERNEL_SIZE_ROW x KERNEL_SIZE_COL大小的矩阵乘法。需要说明的是，此部分二级分块的内容参考了Github上的代码，改写融入到原有一级分块的框架中。由于使用了arm neon的intrinsics，每次一次性对A_local和C_local内的4个浮点数操作，故在此处拷贝A和B时使用padding 0来补齐原矩阵分块无法填满A_local和B_local的地方。下图在一级分块中调用二级分块的矩阵乘法subblock_sgemm()函数。类似地，下图的二级分块的乘法调用最内核的sgemm_kernel()完成固定大小的KERNEL_SIZE的小矩阵乘法。此处设置KERNEL_SIZE_ROW = KERNEL_SIZE_COL=8.<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">subblock_sgemm</span><span class="params">(<span class="keyword">int</span> n, <span class="keyword">int</span> REAL_P_BLOCK_SIZE, <span class="keyword">int</span> REAL_J_BLOCK_SIZE, \</span></span></span><br><span class="line"><span class="function"><span class="params">                           <span class="keyword">int</span> REAL_I_BLOCK_SIZE, <span class="keyword">float</span> * C)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">int</span> subj = <span class="number">0</span>; subj &lt; REAL_J_BLOCK_SIZE; subj += KERNEL_SIZE_COL) &#123;</span><br><span class="line">    <span class="keyword">int</span> subj_block_size = min(KERNEL_SIZE_COL, REAL_J_BLOCK_SIZE - subj);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> subp = <span class="number">0</span>; subp &lt; REAL_P_BLOCK_SIZE; subp += KERNEL_SIZE_ROW) &#123;</span><br><span class="line">      <span class="keyword">int</span> subp_block_size = min(KERNEL_SIZE_ROW, REAL_P_BLOCK_SIZE - subp);</span><br><span class="line"></span><br><span class="line">      <span class="keyword">float</span> * <span class="keyword">const</span> <span class="keyword">restrict</span> C_ptr = C + subj*n + subp;</span><br><span class="line">      <span class="keyword">if</span> (subp_block_size==KERNEL_SIZE_ROW &amp;&amp; subj_block_size==KERNEL_SIZE_COL)</span><br><span class="line">        sgemm_kernel(REAL_I_BLOCK_SIZE, A_local + subp*REAL_I_BLOCK_SIZE, \</span><br><span class="line">                     B_local + subj*REAL_I_BLOCK_SIZE, C_ptr, <span class="number">1</span>, n);</span><br><span class="line">      <span class="keyword">else</span>&#123;</span><br><span class="line">        sgemm_kernel(REAL_I_BLOCK_SIZE, A_local + subp*REAL_I_BLOCK_SIZE, \</span><br><span class="line">                     B_local + subj*REAL_I_BLOCK_SIZE, C_buffer, <span class="number">0</span>, KERNEL_SIZE_ROW);</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; subj_block_size; j++)</span><br><span class="line">          <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; subp_block_size; i++)</span><br><span class="line">            C_ptr[n*j + i] += C_buffer[j*KERNEL_SIZE_ROW + i];</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">square_sgemm</span><span class="params">(<span class="keyword">int</span> n, <span class="keyword">float</span>* __restrict__ A, <span class="keyword">float</span>* __restrict__ B, <span class="keyword">float</span>* __restrict__ C)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">int</span> j_block = <span class="number">0</span>; j_block &lt; n; j_block += SET_J_BLOCK_SIZE)&#123;<span class="comment">//对于B而言的水平划分</span></span><br><span class="line">    <span class="keyword">int</span> REAL_J_BLOCK_SIZE = min(SET_J_BLOCK_SIZE, n - j_block);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i_block = <span class="number">0</span>; i_block &lt; n; i_block += SET_I_BLOCK_SIZE)&#123;<span class="comment">//对于B而言的垂直划分</span></span><br><span class="line">      <span class="keyword">int</span> REAL_I_BLOCK_SIZE = min(SET_I_BLOCK_SIZE, n - i_block);</span><br><span class="line">      <span class="comment">// 拷贝并转置B的子块到local_B</span></span><br><span class="line">      copy_transpose_B_into_IxJ(n, REAL_I_BLOCK_SIZE, REAL_J_BLOCK_SIZE,\</span><br><span class="line">                                B + j_block*n + i_block, B_local);</span><br><span class="line">      <span class="keyword">for</span> (<span class="keyword">int</span> p_block = <span class="number">0</span>; p_block &lt; n; p_block += SET_P_BLOCK_SIZE) &#123;</span><br><span class="line">        <span class="keyword">int</span> REAL_P_BLOCK_SIZE = min(SET_P_BLOCK_SIZE, n - p_block);</span><br><span class="line">        <span class="comment">// 拷贝A的子块到local_A</span></span><br><span class="line">        copy_A_into_PxI(n, REAL_P_BLOCK_SIZE, REAL_I_BLOCK_SIZE, A + i_block*n + p_block, A_local);</span><br><span class="line">        <span class="comment">// 子块的乘法</span></span><br><span class="line">        subblock_sgemm(n, REAL_P_BLOCK_SIZE, REAL_J_BLOCK_SIZE, REAL_I_BLOCK_SIZE, &amp;C(p_block, j_block));</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在内核函数sgemm_kernel中，利用CPU提供的128bits定长寄存器，通过intrinsics指令完成SIMD操作。基本逻辑是</p>
+<ul>
+<li>从小分块内存加载到定长寄存器</li>
+<li>乘加操作得到结果</li>
+<li>结果从寄存器存储回小分块内存</li>
+<li>拷回C矩阵或为补齐而设的缓冲区中</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">sgemm_kernel</span><span class="params">(<span class="keyword">int</span> REAL_I_BLOCK_SIZE, <span class="keyword">const</span> <span class="keyword">float</span>* __restrict__ a, <span class="keyword">const</span> <span class="keyword">float</span>* \</span></span></span><br><span class="line"><span class="function"><span class="params">    __restrict__ b, <span class="keyword">float</span>* __restrict__ CorCBuffer, <span class="keyword">int</span> C_direct, <span class="keyword">int</span> row_CorCBuffer)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">float32x4_t</span> c00 = &#123;<span class="number">0</span>&#125;, c01 = &#123;<span class="number">0</span>&#125;, c02 = &#123;<span class="number">0</span>&#125;, c03 = &#123;<span class="number">0</span>&#125;;</span><br><span class="line">  <span class="keyword">float32x4_t</span> c04 = &#123;<span class="number">0</span>&#125;, c05 = &#123;<span class="number">0</span>&#125;, c06 = &#123;<span class="number">0</span>&#125;, c07 = &#123;<span class="number">0</span>&#125;;</span><br><span class="line">  <span class="keyword">float32x4_t</span> c40 = &#123;<span class="number">0</span>&#125;, c41 = &#123;<span class="number">0</span>&#125;, c42 = &#123;<span class="number">0</span>&#125;, c43 = &#123;<span class="number">0</span>&#125;;</span><br><span class="line">  <span class="keyword">float32x4_t</span> c44 = &#123;<span class="number">0</span>&#125;, c45 = &#123;<span class="number">0</span>&#125;, c46 = &#123;<span class="number">0</span>&#125;, c47 = &#123;<span class="number">0</span>&#125;;</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">int</span> l = <span class="number">0</span>; l &lt; REAL_I_BLOCK_SIZE; l++) &#123;</span><br><span class="line">    <span class="keyword">float32x4_t</span> value_a0 = vld1q_f32(a + KERNEL_SIZE_ROW*l    );</span><br><span class="line">    <span class="keyword">float32x4_t</span> value_a4 = vld1q_f32(a + KERNEL_SIZE_ROW*l + <span class="number">4</span>);</span><br><span class="line">    <span class="keyword">float32x4_t</span> value_b0 = vld1q_f32(b + KERNEL_SIZE_COL*l    );</span><br><span class="line">    <span class="keyword">float32x4_t</span> value_b4 = vld1q_f32(b + KERNEL_SIZE_COL*l + <span class="number">4</span>);</span><br><span class="line">    c00 = vmlaq_laneq_f32(c00, value_a0, value_b0, <span class="number">0</span>);</span><br><span class="line">    c01 = vmlaq_laneq_f32(c01, value_a0, value_b0, <span class="number">1</span>);</span><br><span class="line">    c02 = vmlaq_laneq_f32(c02, value_a0, value_b0, <span class="number">2</span>);</span><br><span class="line">    c03 = vmlaq_laneq_f32(c03, value_a0, value_b0, <span class="number">3</span>);</span><br><span class="line">    c04 = vmlaq_laneq_f32(c04, value_a0, value_b4, <span class="number">0</span>);</span><br><span class="line">    c05 = vmlaq_laneq_f32(c05, value_a0, value_b4, <span class="number">1</span>);</span><br><span class="line">    c06 = vmlaq_laneq_f32(c06, value_a0, value_b4, <span class="number">2</span>);</span><br><span class="line">    c07 = vmlaq_laneq_f32(c07, value_a0, value_b4, <span class="number">3</span>);</span><br><span class="line">    c40 = vmlaq_laneq_f32(c40, value_a4, value_b0, <span class="number">0</span>);</span><br><span class="line">    c41 = vmlaq_laneq_f32(c41, value_a4, value_b0, <span class="number">1</span>);</span><br><span class="line">    c42 = vmlaq_laneq_f32(c42, value_a4, value_b0, <span class="number">2</span>);</span><br><span class="line">    c43 = vmlaq_laneq_f32(c43, value_a4, value_b0, <span class="number">3</span>);</span><br><span class="line">    c44 = vmlaq_laneq_f32(c44, value_a4, value_b4, <span class="number">0</span>);</span><br><span class="line">    c45 = vmlaq_laneq_f32(c45, value_a4, value_b4, <span class="number">1</span>);</span><br><span class="line">    c46 = vmlaq_laneq_f32(c46, value_a4, value_b4, <span class="number">2</span>);</span><br><span class="line">    c47 = vmlaq_laneq_f32(c47, value_a4, value_b4, <span class="number">3</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 存到临时变量</span></span><br><span class="line">  vst1q_f32(tmp     , c00);</span><br><span class="line">  vst1q_f32(tmp + <span class="number">4</span> , c40);</span><br><span class="line">  vst1q_f32(tmp + <span class="number">8</span> , c01);</span><br><span class="line">  vst1q_f32(tmp + <span class="number">12</span>, c41);</span><br><span class="line">  vst1q_f32(tmp + <span class="number">16</span>, c02);</span><br><span class="line">  vst1q_f32(tmp + <span class="number">20</span>, c42);</span><br><span class="line">  vst1q_f32(tmp + <span class="number">24</span>, c03);</span><br><span class="line">  vst1q_f32(tmp + <span class="number">28</span>, c43);</span><br><span class="line">  vst1q_f32(tmp + <span class="number">32</span>, c04);</span><br><span class="line">  vst1q_f32(tmp + <span class="number">36</span>, c44);</span><br><span class="line">  vst1q_f32(tmp + <span class="number">40</span>, c05);</span><br><span class="line">  vst1q_f32(tmp + <span class="number">44</span>, c45);</span><br><span class="line">  vst1q_f32(tmp + <span class="number">48</span>, c06);</span><br><span class="line">  vst1q_f32(tmp + <span class="number">52</span>, c46);</span><br><span class="line">  vst1q_f32(tmp + <span class="number">56</span>, c07);</span><br><span class="line">  vst1q_f32(tmp + <span class="number">60</span>, c47);</span><br><span class="line">  <span class="comment">// 拷贝回矩阵C或缓冲区</span></span><br><span class="line">  <span class="keyword">if</span> (C_direct == <span class="number">0</span>)&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; KERNEL_SIZE_COL; j++)</span><br><span class="line">      <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; KERNEL_SIZE_ROW; i++)</span><br><span class="line">        CorCBuffer[j*row_CorCBuffer + i] = <span class="number">0.0</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; KERNEL_SIZE_COL; j++)</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; KERNEL_SIZE_ROW; i++)</span><br><span class="line">      CorCBuffer[j*row_CorCBuffer + i] += tmp[j*KERNEL_SIZE_ROW + i];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>值得一提的是，原作者在这里拷贝A和B矩阵时，使元素位置重组，设计得很精妙，使得后续计算时对B_local的访存与A_local保持一致的pattern，连续高效。这部分较为难懂，按个人理解，计算逻辑的示意图如下。下图中setX即为上文提到的SET_X_BLOCK_SIZE，realX即为REAL_X_BLOCK_SIZE，而KernelRow和KernelCol分别为KERNEL_SIZE_ROW和KERNEL_SIZE_COL。</p>
+<p><img src="/img/ea8dc9d59c4e446db98396f10fc56540.png" alt></p>
+<p>拷贝并重组存储顺序的代码如下。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">copy_PxI_nopadding</span><span class="params">(<span class="keyword">int</span> n, <span class="keyword">int</span> REAL_I_BLOCK_SIZE, \</span></span></span><br><span class="line"><span class="function"><span class="params">            <span class="keyword">const</span> <span class="keyword">float</span>* __restrict__ A, <span class="keyword">float</span>* __restrict__ A_local)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">int</span> local_col = <span class="number">0</span>; local_col &lt; REAL_I_BLOCK_SIZE; local_col++)&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> local_row = <span class="number">0</span>; local_row &lt; KERNEL_SIZE_ROW; local_row++)</span><br><span class="line">      A_local[local_row] = A(local_row, <span class="number">0</span>);<span class="comment">//相当于把原A中一个块在内存中离散的数据拷贝成A_local中连续的一大片</span></span><br><span class="line">    A_local += KERNEL_SIZE_ROW;</span><br><span class="line">    A += n;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">copy_A_into_PxI</span><span class="params">(<span class="keyword">int</span> n, <span class="keyword">int</span> REAL_P_BLOCK_SIZE, <span class="keyword">int</span> REAL_I_BLOCK_SIZE, \</span></span></span><br><span class="line"><span class="function"><span class="params">                      <span class="keyword">const</span> <span class="keyword">float</span>* __restrict__ A, <span class="keyword">float</span>* __restrict__ A_local)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">int</span> part = REAL_P_BLOCK_SIZE / KERNEL_SIZE_ROW;</span><br><span class="line">  <span class="keyword">int</span> remain_rows = REAL_P_BLOCK_SIZE % KERNEL_SIZE_ROW;</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">int</span> pa = <span class="number">0</span>; pa &lt; part; pa++)&#123;</span><br><span class="line">    copy_PxI_nopadding(n, REAL_I_BLOCK_SIZE, A, A_local);</span><br><span class="line">    A_local += KERNEL_SIZE_ROW * REAL_I_BLOCK_SIZE;</span><br><span class="line">    A += KERNEL_SIZE_ROW;<span class="comment">//指针指向下一个块</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (remain_rows &gt; <span class="number">0</span>) &#123;<span class="comment">//余下还有</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> local_col = <span class="number">0</span>; local_col &lt; REAL_I_BLOCK_SIZE; local_col++)&#123;</span><br><span class="line">      <span class="keyword">for</span> (<span class="keyword">int</span> local_row = <span class="number">0</span>; local_row &lt; remain_rows; local_row++)</span><br><span class="line">        A_local[local_row] = A(local_row, <span class="number">0</span>);</span><br><span class="line">      <span class="keyword">for</span> (<span class="keyword">int</span> local_row = remain_rows; local_row &lt; KERNEL_SIZE_ROW; local_row++)</span><br><span class="line">        A_local[local_row] = <span class="number">0.0</span>;</span><br><span class="line">      A_local += KERNEL_SIZE_ROW;</span><br><span class="line">      A += n;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">copy_transpose_IxJ_nopadding</span><span class="params">(<span class="keyword">int</span> n, <span class="keyword">int</span> REAL_I_BLOCK_SIZE, \</span></span></span><br><span class="line"><span class="function"><span class="params">            <span class="keyword">const</span> <span class="keyword">float</span>* __restrict__ B, <span class="keyword">float</span>* __restrict__ B_local)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">int</span> local_col = <span class="number">0</span>; local_col &lt; REAL_I_BLOCK_SIZE; local_col++)&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> local_row = <span class="number">0</span>; local_row &lt; KERNEL_SIZE_COL; local_row++)</span><br><span class="line">      B_local[local_row] = B(<span class="number">0</span>, local_row);</span><br><span class="line">    B_local += KERNEL_SIZE_COL;</span><br><span class="line">    B += <span class="number">1</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">copy_transpose_B_into_IxJ</span><span class="params">(<span class="keyword">int</span> n, <span class="keyword">int</span> REAL_I_BLOCK_SIZE, <span class="keyword">int</span> REAL_J_BLOCK_SIZE,\</span></span></span><br><span class="line"><span class="function"><span class="params">                               <span class="keyword">const</span> <span class="keyword">float</span>* __restrict__ B, <span class="keyword">float</span>* __restrict__ B_local)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">int</span> part = REAL_J_BLOCK_SIZE / KERNEL_SIZE_COL;</span><br><span class="line">  <span class="keyword">int</span> remain_cols = REAL_J_BLOCK_SIZE % KERNEL_SIZE_COL;</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">int</span> pa = <span class="number">0</span>; pa &lt; part; pa++)&#123;</span><br><span class="line">    copy_transpose_IxJ_nopadding(n, REAL_I_BLOCK_SIZE, B, B_local);</span><br><span class="line">    B_local += KERNEL_SIZE_COL * REAL_I_BLOCK_SIZE;</span><br><span class="line">    B += KERNEL_SIZE_COL * n;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (remain_cols &gt; <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> local_col = <span class="number">0</span>; local_col &lt; REAL_I_BLOCK_SIZE; local_col++) &#123;</span><br><span class="line">      <span class="keyword">for</span> (<span class="keyword">int</span> local_row = <span class="number">0</span>; local_row &lt; remain_cols; local_row++)</span><br><span class="line">        B_local[local_row] = B(<span class="number">0</span>, local_row);</span><br><span class="line">      <span class="keyword">for</span> (<span class="keyword">int</span> local_row = remain_cols; local_row &lt; KERNEL_SIZE_COL; local_row++)</span><br><span class="line">        B_local[local_row] = <span class="number">0.0</span>;</span><br><span class="line">      B_local += KERNEL_SIZE_COL;</span><br><span class="line">      B += <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><a href="https://github.com/zongy17/sgemm-serial" target="_blank" rel="noopener">https://github.com/zongy17/sgemm-serial</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/积累/" rel="tag"># 积累</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2022/05/28/面经整理发布版/" rel="next" title="面经整理">
+                <i class="fa fa-chevron-left"></i> 面经整理
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2022/08/11/Stencil计算/" rel="prev" title="Stencil计算">
+                Stencil计算 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="Hao Yu">
+            
+              <p class="site-author-name" itemprop="name">Hao Yu</p>
+              <p class="site-description motion-element" itemprop="description">Introduce something interesting and recode learning process, some articles are written by others, the original link has been given as much as possible, thanks to the original author</p>
+          </div>
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">287</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+        	<audio controls="controls" loop="loop" preload="auto" src="/resource/xiaomeihao.mp3">
+	        </audio>
+	
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuhao0102" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:yuh18@mails.tsinghua.edu.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#稀疏矩阵"><span class="nav-number">1.</span> <span class="nav-text">稀疏矩阵</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#串行优化"><span class="nav-number">1.1.</span> <span class="nav-text">串行优化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#向量化编译选项"><span class="nav-number">1.2.</span> <span class="nav-text">向量化编译选项</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#循环展开"><span class="nav-number">1.3.</span> <span class="nav-text">循环展开</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CSRL格式"><span class="nav-number">1.4.</span> <span class="nav-text">CSRL格式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分块COO格式"><span class="nav-number">1.5.</span> <span class="nav-text">分块COO格式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基于OpenMP并行改写"><span class="nav-number">1.6.</span> <span class="nav-text">基于OpenMP并行改写</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基于MPI并行改写"><span class="nav-number">1.7.</span> <span class="nav-text">基于MPI并行改写</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CSR混合CSRL格式"><span class="nav-number">1.8.</span> <span class="nav-text">CSR混合CSRL格式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GPU版本（单卡）"><span class="nav-number">1.9.</span> <span class="nav-text">GPU版本（单卡）</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#稠密矩阵"><span class="nav-number">2.</span> <span class="nav-text">稠密矩阵</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#编译选项"><span class="nav-number">2.1.</span> <span class="nav-text">编译选项</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#循环变换"><span class="nav-number">2.2.</span> <span class="nav-text">循环变换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#消除指针别名"><span class="nav-number">2.3.</span> <span class="nav-text">消除指针别名</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#循环展开-1"><span class="nav-number">2.4.</span> <span class="nav-text">循环展开</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内存对齐和简单Blocking"><span class="nav-number">2.5.</span> <span class="nav-text">内存对齐和简单Blocking</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#两级Blocking-转置重组"><span class="nav-number">2.6.</span> <span class="nav-text">两级Blocking+转置重组</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="DvelopmentTarget">     
+  </div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart" aria-hidden="false"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Yu</span>
+
+  
+</div>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<span id="busuanzi_container_site_uv"> 
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/love.js"></script>
+
+</body>
+</html>
