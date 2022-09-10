@@ -103,9 +103,18 @@
 <meta property="og:image" content="http://yoursite.com/img/20220907141616.png">
 <meta property="og:image" content="http://yoursite.com/img/20220907141617.png">
 <meta property="og:image" content="http://yoursite.com/img/20220907141618.png">
-<meta property="og:image" content="c:/Users/69033/Desktop/image-20220910105700518.png">
-<meta property="og:image" content="c:/Users/69033/Desktop/image-20220910105840559.png">
-<meta property="og:updated_time" content="2022-09-10T03:08:01.624Z">
+<meta property="og:image" content="http://yoursite.com/img/image-20220910105700518.png">
+<meta property="og:image" content="http://yoursite.com/img/image-20220910105840559.png">
+<meta property="og:image" content="http://yoursite.com/img/image-20220910110833322.png">
+<meta property="og:image" content="http://yoursite.com/img/image-20220910111100141.png">
+<meta property="og:image" content="http://yoursite.com/img/image-20220910112226266.png">
+<meta property="og:image" content="http://yoursite.com/img/image-20220910112303270.png">
+<meta property="og:image" content="http://yoursite.com/img/image-20220910113212684.png">
+<meta property="og:image" content="http://yoursite.com/img/image-20220910113231769.png">
+<meta property="og:image" content="http://yoursite.com/img/image-20220910113248353.png">
+<meta property="og:image" content="http://yoursite.com/img/image-20220910113311093.png">
+<meta property="og:image" content="http://yoursite.com/img/image-20220910113413684.png">
+<meta property="og:updated_time" content="2022-09-10T03:34:30.880Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Colab上使用cuda">
 <meta name="twitter:description" content="https://colab.research.google.com/drive/1-dkuFrfver70j-UCpAp0XQZszsJexHkH#scrollTo=GJHxLzmGfb3G CUDA编程模型为应用和硬件设备之间的桥梁，所以CUDA C是编译型语言，不是解释型语言，OpenCL就有点类似于解释型语言，通过编译器和链接，给操作系统执行（操作系统包括GPU在内的系统） 首先安装插件并加">
@@ -888,11 +897,11 @@
 <li>cudaMemcpyDeviceToDevice</li>
 </ul>
 <p>这个例子也不用说了，前面随便找个有数据传输的都有这两步：从主机到设备，然后计算，最后从设备到主机。</p>
-<p><img src="C:\Users\69033\Desktop\image-20220910105700518.png" alt="image-20220910105700518"></p>
+<p><img src="/img/image-20220910105700518.png" alt="image-20220910105700518"></p>
 <p>GPU的内存理论峰值带宽非常高，对于Fermi C2050 有144GB/s，这个值估计现在的GPU应该都超过了，CPU和GPU之间通信要经过PCIe总线，总线的理论峰值要低很多——8GB/s左右，也就是说所，管理不当，算到半路需要从主机读数据，那效率瞬间全挂在PCIe上了。</p>
 <p><strong>CUDA编程需要大家减少主机和设备之间的内存传输</strong>。</p>
 <h2 id="固定内存"><a href="#固定内存" class="headerlink" title="固定内存"></a>固定内存</h2><p>主机内存采用分页式管理，通俗的说法就是操作系统把物理内存分成一些“页”，然后给一个应用程序一大块内存，而操作系统可能随时更换物理地址的页，但是从主机传输到设备上的时候，如果此时发生了页面移动，对于传输操作来说是致命的，所以在数据传输之前，CUDA驱动会锁定页面，或者直接分配固定的主机内存，将主机源数据复制到固定内存上，然后从固定内存传输数据到设备上：</p>
-<p><img src="C:\Users\69033\Desktop\image-20220910105840559.png" alt="image-20220910105840559"></p>
+<p><img src="/img/image-20220910105840559.png" alt="image-20220910105840559"></p>
 <p>上图左边是正常分配内存，传输过程是：锁页-复制到固定内存-复制到设备。右边时分配时就是固定内存，直接传输到设备上。</p>
 <p>下面函数用来分配固定内存：</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">cudaError_t <span class="title">cudaMallocHost</span><span class="params">(<span class="keyword">void</span> ** devPtr,<span class="keyword">size_t</span> count)</span></span></span><br></pre></td></tr></table></figure>
@@ -1005,6 +1014,109 @@
 </tbody>
 </table>
 </div>
+<h2 id="统一虚拟寻址"><a href="#统一虚拟寻址" class="headerlink" title="统一虚拟寻址"></a>统一虚拟寻址</h2><p>设备架构2.0以后，Nvida又有新创意，他们搞了一套称为同一寻址方式（UVA）的内存机制，这样，设备内存和主机内存被映射到同一虚拟内存地址中。如图</p>
+<p><img src="/img/image-20220910110833322.png" alt="image-20220910110833322"></p>
+<p>UVA之前，我们要管理所有的设备和主机内存，尤其是他们的指针。通过UVA，<code>cudaHostAlloc</code>函数分配的固定主机内存具有相同的主机和设备地址，可以直接将返回的地址传递给核函数。</p>
+<p>前面的零拷贝内存，可以知道以下几个方面：</p>
+<ul>
+<li>分配映射的固定主机内存</li>
+<li>使用CUDA运行时函数获取映射到固定内存的设备指针</li>
+<li>将设备指针传递给核函数</li>
+</ul>
+<p>有了UVA，可以不用上面的那个获得设备上访问零拷贝内存的函数了：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">cudaError_t <span class="title">cudaHostGetDevicePointer</span><span class="params">(<span class="keyword">void</span> ** pDevice,<span class="keyword">void</span> * pHost,<span class="keyword">unsigned</span> flags)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>UVA来了以后，此函数基本失业了。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">  float *a_host,*b_host,*res_d;</span><br><span class="line">  CHECK(cudaHostAlloc((float**)&amp;a_host,nByte,cudaHostAllocMapped));</span><br><span class="line">  CHECK(cudaHostAlloc((float**)&amp;b_host,nByte,cudaHostAllocMapped));</span><br><span class="line">  CHECK(cudaMalloc((float**)&amp;res_d,nByte));</span><br><span class="line">  res_from_gpu_h=(float*)malloc(nByte);</span><br><span class="line"></span><br><span class="line">  initialData(a_host,nElem);</span><br><span class="line">  initialData(b_host,nElem);</span><br><span class="line"></span><br><span class="line">  dim3 block(1024);</span><br><span class="line">  dim3 grid(nElem/block.x);</span><br><span class="line">  sumArraysGPU&lt;&lt;&lt;grid,block&gt;&gt;&gt;(a_host,b_host,res_d);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>UVA代码主要就是差个获取指针，UVA可以直接使用主机端的地址。</p>
+<h1 id="内存访问模式"><a href="#内存访问模式" class="headerlink" title="内存访问模式"></a>内存访问模式</h1><p>多数GPU程序容易受到内存带宽的限制，所以最大程度的利用全局内存带宽，提高全局加载效率，是调控内核函数性能的基本条件。</p>
+<p>CUDA执行模型告诉我们，CUDA执行的基本单位是线程束，所以，内存访问也是以线程束为基本单位发布和执行的，存储也一致。</p>
+<h2 id="对齐与合并访问"><a href="#对齐与合并访问" class="headerlink" title="对齐与合并访问"></a>对齐与合并访问</h2><p>全局内存通过缓存实现加载和存储的过程如下图</p>
+<p><img src="/img/image-20220910111100141.png" alt="image-20220910111100141"></p>
+<p>全局内存是一个逻辑层面的模型，我们编程的时候有两种模型考虑：一种是逻辑层面的，也就是我们在写程序的时候（包括串行程序和并行程序），写的一维（多维）数组，结构体，定义的变量，这些都是在逻辑层面的；一种是硬件角度，就是一块DRAM上的电信号，以及最底层内存驱动代码所完成数字信号的处理。</p>
+<p>L1表示一级缓存，每个SM都有自己L1，但是L2是所有SM公用的，除了L1缓存外，还有只读缓存和常量缓存。</p>
+<p>核函数运行时需要从全局内存（DRAM）中读取数据，只有两种粒度，这个是关键的：</p>
+<ul>
+<li>128字节</li>
+<li>32字节</li>
+</ul>
+<p>解释下“粒度”，可以理解为最小单位，也就是核函数运行时每次读内存，哪怕是读一个字节的变量，也要读128字节，或者32字节，而具体是到底是32还是128还是要看访问方式：</p>
+<ul>
+<li>使用一级缓存</li>
+<li>不使用一级缓存</li>
+</ul>
+<p>对于CPU来说，一级缓存或者二级缓存是不能被编程的，但是CUDA是支持通过编译指令停用一级缓存的。如果启用一级缓存，那么每次从DRAM上加载数据的粒度是128字节，如果不适用一级缓存，只是用二级缓存，那么粒度是32字节。</p>
+<p>还要强调一下CUDA内存模型的内存读写，我们现在讨论的都是单个SM上的情况，多个SM只是下面我们描述的情形的复制：SM执行的基础是线程束，也就是说，当一个SM中正在被执行的某个线程需要访问内存，那么，和它同线程束的其他31个线程也要访问内存，这个基础就表示，即使每个线程只访问一个字节，那么在执行的时候，只要有内存请求，至少是32个字节，所以不使用一级缓存的内存加载，一次粒度是32字节而不是更小。</p>
+<p>在优化内存的时候，我们要最关注的是以下两个特性</p>
+<ul>
+<li>对齐内存访问</li>
+<li>合并内存访问</li>
+</ul>
+<p>我们把一次内存请求——也就是从内核函数发起请求，到硬件响应返回数据这个过程称为一个内存事务（加载和存储都行）。</p>
+<p>当一个内存事务的首个访问地址是缓存粒度（32或128字节）的偶数倍的时候：比如二级缓存32字节的偶数倍64，128字节的偶数倍256的时候，这个时候被称为对齐内存访问，非对齐访问就是除上述的其他情况，非对齐的内存访问会造成带宽浪费。</p>
+<p>当一个线程束内的线程访问的内存都在一个内存块里的时候，就会出现合并访问。</p>
+<p>对齐合并访问的状态是理想化的，也是最高速的访问方式，当线程束内的所有线程访问的数据在一个内存块，并且数据是从内存块的首地址开始被需要的，那么对齐合并访问出现了。为了最大化全局内存访问的理想状态，尽量将线程束访问内存组织成对齐合并的方式，这样的效率是最高的。下面看一个例子。</p>
+<ul>
+<li>一个线程束加载数据，使用一级缓存，并且这个事务所请求的所有数据在一个128字节的对齐的地址段上（对齐的地址段是我自己发明的名字，就是首地址是粒度的偶数倍，那么上面这句话的意思是，所有请求的数据在某个首地址是粒度偶数倍的后128个字节里），具体形式如下图，这里请求的数据是连续的，其实可以不连续，但是不要越界就好。</li>
+</ul>
+<p><img src="/img/image-20220910112226266.png" alt="image-20220910112226266"></p>
+<p>上面蓝色表示全局内存，下面橙色是线程束要的数据，绿色就是我称为对齐的地址段。</p>
+<ul>
+<li>如果一个事务加载的数据分布在不一个对齐的地址段上，就会有以下两种情况：<ul>
+<li>连续的，但是不在一个对齐的段上，比如，请求访问的数据分布在内存地址1~128，那么0~127和128~255这两段数据要传递两次到SM</li>
+<li>不连续的，也不在一个对齐的段上，比如，请求访问的数据分布在内存地址0~63和128~191上，明显这也需要两次加载。</li>
+</ul>
+</li>
+</ul>
+<p><img src="/img/image-20220910112303270.png" alt="image-20220910112303270"></p>
+<p>上图就是典型的一个线程束，数据分散开了，thread0的请求在128之前，后面还有请求在256之后，所以需要三个内存事务，而利用率，也就是从主存取回来的数据被使用到的比例，只有 1/3 的比例。这个比例低会造成带宽的浪费，最极端的表现，就是如果每个线程的请求都在不同的段，也就是一个128字节的事务只有1个字节是有用的，那么利用率只有 1/128</p>
+<h2 id="全局内存读取"><a href="#全局内存读取" class="headerlink" title="全局内存读取"></a>全局内存读取</h2><p>注意我们说的都是读取，也就是加载过程，写或者叫做存储是另外一回事！SM加载数据，根据不同的设备和类型分为三种路径：</p>
+<ol>
+<li>一级和二级缓存</li>
+<li>常量缓存</li>
+<li>只读缓存</li>
+</ol>
+<p>常规的路径是一级和二级缓存，需要使用常量和只读缓存的需要在代码中显式声明。但是提高性能，主要还是要取决于访问模式。</p>
+<p>控制全局加载操作是否通过一级缓存可以通过编译选项来控制，当然比较老的设备可能就没有一级缓存。</p>
+<p>编译器禁用一级缓存的选项是：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-Xptxas -dlcm=cg</span><br></pre></td></tr></table></figure>
+<p>编译器启用一级缓存的选项是：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-Xptxas -dlcm=ca</span><br></pre></td></tr></table></figure>
+<p>当一级缓存被禁用的时候，对全局内存的加载请求直接进入二级缓存，如果二级缓存缺失，则由DRAM完成请求。</p>
+<p>每次内存事务可由一个两个或者四个部分执行，每个部分有32个字节，也就是32，64或者128字节一次（注意前面我们讲到是否使用一级缓存决定了读取粒度是128还是32字节，这里增加的64并不在此情况，所以需要注意）。</p>
+<p>启用一级缓存后，当SM有全局加载请求会首先通过尝试一级缓存，如果一级缓存缺失，则尝试二级缓存，如果二级缓存也没有，那么直接DRAM。</p>
+<p>在有些设备上一级缓存不用来缓存全局内存访问，而是只用来存储寄存器溢出的本地数据，比如Kepler 的K10,K20。</p>
+<p>内存加载可以分为两类：</p>
+<ul>
+<li>缓存加载</li>
+<li>没有缓存的加载</li>
+</ul>
+<p>内存访问有以下特点：</p>
+<ul>
+<li>是否使用缓存：一级缓存是否介入加载过程</li>
+<li>对齐与非对齐的：如果访问的第一个地址是32的倍数（前面说是32或者128的偶数倍，这里似乎产生了矛盾，为什么我现在也很迷惑）</li>
+<li>合并与非合并，访问连续数据块则是合并的</li>
+</ul>
+<h3 id="缓存加载"><a href="#缓存加载" class="headerlink" title="缓存加载"></a>缓存加载</h3><p>下面是使用一级缓存的加载过程，图片表达很清楚，我们只用少量文字进行说明：</p>
+<ol>
+<li>对齐合并的访问，利用率100%</li>
+</ol>
+<p><img src="/img/image-20220910113212684.png" alt="image-20220910113212684"></p>
+<ol>
+<li>对齐的，但是不是连续的，每个线程访问的数据都在一个块内，但是位置是交叉的，利用率100%</li>
+</ol>
+<p><img src="/img/image-20220910113231769.png" alt="image-20220910113231769"></p>
+<ol>
+<li>连续非对齐的，线程束请求一个连续的非对齐的，32个4字节数据，那么会出现，数据横跨两个块，但是没有对齐，当启用一级缓存的时候，就要两个128字节的事务来完成</li>
+</ol>
+<p><img src="/img/image-20220910113248353.png" alt="image-20220910113248353"></p>
+<ol>
+<li>线程束所有线程请求同一个地址，那么肯定落在一个缓存行范围（缓存行的概念没提到过，就是主存上一个可以被一次读到缓存中的一段数据。），那么如果按照请求的是4字节数据来说，使用一级缓存的利用率是 4/128=3.125%</li>
+</ol>
+<p><img src="/img/image-20220910113311093.png" alt="image-20220910113311093"></p>
+<ol>
+<li>比较坏的情况，前面提到过最坏的，就是每个线程束内的线程请求的都是不同的缓存行内，这里比较坏的情况就是，所有数据分布在 N 个缓存行上，其中 1≤N≤32，那么请求32个4字节的数据，就需要 N 个事务来完成，利用率也是 1/N</li>
+</ol>
+<p><img src="/img/image-20220910113413684.png" alt="image-20220910113413684"></p>
 
       
     </div>
@@ -1184,7 +1296,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#线程管理"><span class="nav-number">1.1.</span> <span class="nav-text">线程管理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#核函数概述"><span class="nav-number">1.2.</span> <span class="nav-text">核函数概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编写核函数"><span class="nav-number">1.3.</span> <span class="nav-text">编写核函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#验证核函数"><span class="nav-number">1.4.</span> <span class="nav-text">验证核函数</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#给核函数计时"><span class="nav-number">2.</span> <span class="nav-text">给核函数计时</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#用nvprof计时"><span class="nav-number">2.1.</span> <span class="nav-text">用nvprof计时</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#组织并行线程"><span class="nav-number">3.</span> <span class="nav-text">组织并行线程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用块和线程建立矩阵索引"><span class="nav-number">3.1.</span> <span class="nav-text">使用块和线程建立矩阵索引</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二维矩阵加法"><span class="nav-number">3.2.</span> <span class="nav-text">二维矩阵加法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二维网格和二维块"><span class="nav-number">3.3.</span> <span class="nav-text">二维网格和二维块</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一维网格和一维块"><span class="nav-number">3.4.</span> <span class="nav-text">一维网格和一维块</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#GPU设备信息"><span class="nav-number">4.</span> <span class="nav-text">GPU设备信息</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CUDA执行模型概述"><span class="nav-number">5.</span> <span class="nav-text">CUDA执行模型概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#GPU架构概述"><span class="nav-number">5.1.</span> <span class="nav-text">GPU架构概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#线程束"><span class="nav-number">5.1.1.</span> <span class="nav-text">线程束</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SIMD-vs-SIMT"><span class="nav-number">5.1.2.</span> <span class="nav-text">SIMD vs SIMT</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#32"><span class="nav-number">5.1.3.</span> <span class="nav-text">32</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CUDA编程的组件与逻辑"><span class="nav-number">5.2.</span> <span class="nav-text">CUDA编程的组件与逻辑</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#理解线程束执行的本质"><span class="nav-number">5.3.</span> <span class="nav-text">理解线程束执行的本质</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#延迟隐藏"><span class="nav-number">5.4.</span> <span class="nav-text">延迟隐藏</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#同步"><span class="nav-number">5.5.</span> <span class="nav-text">同步</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#并行性表现"><span class="nav-number">5.6.</span> <span class="nav-text">并行性表现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#避免分支分化"><span class="nav-number">5.7.</span> <span class="nav-text">避免分支分化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#并行规约问题"><span class="nav-number">5.7.1.</span> <span class="nav-text">并行规约问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#并行规约中的分化"><span class="nav-number">5.7.2.</span> <span class="nav-text">并行规约中的分化</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#展开循环"><span class="nav-number">5.8.</span> <span class="nav-text">展开循环</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#cuda内存模型"><span class="nav-number">6.</span> <span class="nav-text">cuda内存模型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#寄存器"><span class="nav-number">6.1.</span> <span class="nav-text">寄存器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#本地内存"><span class="nav-number">6.2.</span> <span class="nav-text">本地内存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#共享内存"><span class="nav-number">6.3.</span> <span class="nav-text">共享内存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#常量内存"><span class="nav-number">6.4.</span> <span class="nav-text">常量内存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#纹理内存"><span class="nav-number">6.5.</span> <span class="nav-text">纹理内存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#全局内存"><span class="nav-number">6.6.</span> <span class="nav-text">全局内存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GPU缓存"><span class="nav-number">6.7.</span> <span class="nav-text">GPU缓存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#静态全局内存"><span class="nav-number">6.8.</span> <span class="nav-text">静态全局内存</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#内存管理"><span class="nav-number">7.</span> <span class="nav-text">内存管理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#内存分配和释放"><span class="nav-number">7.1.</span> <span class="nav-text">内存分配和释放</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内存传输"><span class="nav-number">7.2.</span> <span class="nav-text">内存传输</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#固定内存"><span class="nav-number">7.3.</span> <span class="nav-text">固定内存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#零拷贝内存"><span class="nav-number">7.4.</span> <span class="nav-text">零拷贝内存</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#线程管理"><span class="nav-number">1.1.</span> <span class="nav-text">线程管理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#核函数概述"><span class="nav-number">1.2.</span> <span class="nav-text">核函数概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编写核函数"><span class="nav-number">1.3.</span> <span class="nav-text">编写核函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#验证核函数"><span class="nav-number">1.4.</span> <span class="nav-text">验证核函数</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#给核函数计时"><span class="nav-number">2.</span> <span class="nav-text">给核函数计时</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#用nvprof计时"><span class="nav-number">2.1.</span> <span class="nav-text">用nvprof计时</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#组织并行线程"><span class="nav-number">3.</span> <span class="nav-text">组织并行线程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用块和线程建立矩阵索引"><span class="nav-number">3.1.</span> <span class="nav-text">使用块和线程建立矩阵索引</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二维矩阵加法"><span class="nav-number">3.2.</span> <span class="nav-text">二维矩阵加法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二维网格和二维块"><span class="nav-number">3.3.</span> <span class="nav-text">二维网格和二维块</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一维网格和一维块"><span class="nav-number">3.4.</span> <span class="nav-text">一维网格和一维块</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#GPU设备信息"><span class="nav-number">4.</span> <span class="nav-text">GPU设备信息</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CUDA执行模型概述"><span class="nav-number">5.</span> <span class="nav-text">CUDA执行模型概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#GPU架构概述"><span class="nav-number">5.1.</span> <span class="nav-text">GPU架构概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#线程束"><span class="nav-number">5.1.1.</span> <span class="nav-text">线程束</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SIMD-vs-SIMT"><span class="nav-number">5.1.2.</span> <span class="nav-text">SIMD vs SIMT</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#32"><span class="nav-number">5.1.3.</span> <span class="nav-text">32</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CUDA编程的组件与逻辑"><span class="nav-number">5.2.</span> <span class="nav-text">CUDA编程的组件与逻辑</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#理解线程束执行的本质"><span class="nav-number">5.3.</span> <span class="nav-text">理解线程束执行的本质</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#延迟隐藏"><span class="nav-number">5.4.</span> <span class="nav-text">延迟隐藏</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#同步"><span class="nav-number">5.5.</span> <span class="nav-text">同步</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#并行性表现"><span class="nav-number">5.6.</span> <span class="nav-text">并行性表现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#避免分支分化"><span class="nav-number">5.7.</span> <span class="nav-text">避免分支分化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#并行规约问题"><span class="nav-number">5.7.1.</span> <span class="nav-text">并行规约问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#并行规约中的分化"><span class="nav-number">5.7.2.</span> <span class="nav-text">并行规约中的分化</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#展开循环"><span class="nav-number">5.8.</span> <span class="nav-text">展开循环</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#cuda内存模型"><span class="nav-number">6.</span> <span class="nav-text">cuda内存模型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#寄存器"><span class="nav-number">6.1.</span> <span class="nav-text">寄存器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#本地内存"><span class="nav-number">6.2.</span> <span class="nav-text">本地内存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#共享内存"><span class="nav-number">6.3.</span> <span class="nav-text">共享内存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#常量内存"><span class="nav-number">6.4.</span> <span class="nav-text">常量内存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#纹理内存"><span class="nav-number">6.5.</span> <span class="nav-text">纹理内存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#全局内存"><span class="nav-number">6.6.</span> <span class="nav-text">全局内存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GPU缓存"><span class="nav-number">6.7.</span> <span class="nav-text">GPU缓存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#静态全局内存"><span class="nav-number">6.8.</span> <span class="nav-text">静态全局内存</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#内存管理"><span class="nav-number">7.</span> <span class="nav-text">内存管理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#内存分配和释放"><span class="nav-number">7.1.</span> <span class="nav-text">内存分配和释放</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内存传输"><span class="nav-number">7.2.</span> <span class="nav-text">内存传输</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#固定内存"><span class="nav-number">7.3.</span> <span class="nav-text">固定内存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#零拷贝内存"><span class="nav-number">7.4.</span> <span class="nav-text">零拷贝内存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#统一虚拟寻址"><span class="nav-number">7.5.</span> <span class="nav-text">统一虚拟寻址</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#内存访问模式"><span class="nav-number">8.</span> <span class="nav-text">内存访问模式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#对齐与合并访问"><span class="nav-number">8.1.</span> <span class="nav-text">对齐与合并访问</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#全局内存读取"><span class="nav-number">8.2.</span> <span class="nav-text">全局内存读取</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#缓存加载"><span class="nav-number">8.2.1.</span> <span class="nav-text">缓存加载</span></a></li></ol></li></ol></li></ol></div>
             
 
           </div>
